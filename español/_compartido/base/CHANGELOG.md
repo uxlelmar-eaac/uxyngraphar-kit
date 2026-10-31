@@ -4,6 +4,14 @@ Evolución versionada del pack. Este archivo **viaja dentro de cada pack**: el r
 
 Formato: una entrada por lote de cambios; origen (plan/EVO/decisión humana) siempre citado.
 
+## [1.0.2] — 2026-10-31
+
+Origen: decisión humana (uxlelmar, 2026-10-31: el repositorio de GitHub pasa a llamarse **uxyngraphar-kit**; y «quiero elegir la carpeta desde la propia interfaz», tras ver que «Examinar…» fallaba en Linux sin selector del sistema; publicar como **v1.0.2**). Aplica a **ambos packs**. Parche: sin cambios de reglas, de estructura del pack ni migraciones.
+
+### Herramienta (`uxyngraphar`)
+- **Repositorio renombrado:** las descargas, el instalador de una línea y los enlaces usan `https://github.com/uxlelmar-eaac/uxyngraphar-kit`. GitHub redirige el nombre anterior, así que las instalaciones 1.0.0 y 1.0.1 siguen encontrando las versiones nuevas con `uxyngraphar autoactualizar`.
+- **Explorador de carpetas en la página:** todos los botones «Examinar…» (asistente de instalación, panel → «Añadir un proyecto que ya tiene uxyngraphar», asistente de actualización) abren un explorador dentro de la misma página: ruta pulsable, cuadro para escribir la ruta, atajos (carpeta personal, Escritorio, Documentos, proyectos registrados y unidades en Windows), subcarpetas con etiquetas «git» y «uxyngraphar», «Subir», «Mostrar carpetas ocultas», «Cancelar» y «Usar esta carpeta». Ya no depende del selector del sistema ni muestra avisos del navegador. Solo lee nombres de carpetas.
+
 ## [1.0.1] — 2026-10-31
 
 Origen: decisión humana (uxlelmar, 2026-10-31: pasar toda la documentación a `español/documentacion/`, mejorar cómo se ve la consola y publicar el resultado como **v1.0.1**). Aplica a **ambos packs**. Parche: sin cambios de reglas, de estructura del pack ni migraciones.
