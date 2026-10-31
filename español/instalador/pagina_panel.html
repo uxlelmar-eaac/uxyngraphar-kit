@@ -26,7 +26,7 @@ table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:8px 6px;
 .et{display:inline-block;border-radius:999px;padding:0 8px;font-size:.82rem;border:1px solid var(--bd)}.et.ok{color:var(--ok)}.et.av{color:var(--av)}.et.er{color:var(--er)}
 pre.diff{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px;overflow:auto;font-size:.85rem;max-height:320px}
 .barra{position:sticky;bottom:0;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
-@media(max-width:640px){table,tbody,tr,td{display:block;width:100%}thead{display:none}td{border:0;padding:4px 0}tr{border-bottom:1px solid var(--bd);padding:8px 0}code{word-break:break-all}}
+@media(max-width:640px){table,tbody,tr,td{display:block;width:100%!important}thead{display:none}td{border:0;padding:4px 0}tr{border-bottom:1px solid var(--bd);padding:8px 0}code{word-break:break-all}}
 .perfiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin:8px 0 12px}.perfil{text-align:left;display:block}.perfil small{display:block;color:var(--mut);margin-top:4px;font-size:.85rem}.perfil.on{border:2px solid var(--ac)}
 ul.pl{padding-left:20px;margin:6px 0}code{font-size:.9em}.oculto{display:none}
 </style>
@@ -35,7 +35,7 @@ ul.pl{padding-left:20px;margin:6px 0}code{font-size:.9em}.oculto{display:none}
 <main>
 <h1>Panel de uxyngraphar</h1>
 <p class="mut">Configura tus proyectos y tu equipo desde aquí. Solo funciona en tu ordenador; nada se guarda sin que veas antes qué cambia.</p>
-<nav class="tabs" aria-label="Secciones"><button data-t="bienvenida" id="tabBien" class="oculto">Bienvenida</button><button data-t="proyectos">Mis proyectos</button><button data-t="proyecto">Configuración del proyecto</button><button data-t="plantilla">Plantilla y sistema</button><button onclick="salir()" style="margin-left:auto">Cerrar</button></nav>
+<nav class="tabs" aria-label="Secciones"><button data-t="bienvenida" id="tabBien" class="oculto">Bienvenida</button><button data-t="proyectos">Mis proyectos</button><button data-t="proyecto">Configuración del proyecto</button><button data-t="plantilla">Plantilla y sistema</button><button data-t="atajos">Atajos y comandos</button><button onclick="salir()" style="margin-left:auto">Cerrar</button></nav>
 <div id="vista" aria-live="polite"></div>
 </main>
 <script>
@@ -96,7 +96,7 @@ function formulario(lista,base,actual,pref){return lista.map((f,i)=>f.g?`<h3>${e
  `<div class="campo ${igual(get(actual,f.p),get(base,f.p))?"":"mod"}"><label for="${pref}${i}">${esc(f.l)}</label><small>${esc(f.h)}</small><div class="ctl">${control(f,get(actual,f.p),pref+i)}</div></div>`).join("")}
 function cambiosDe(lista,base,pref){const c={};lista.forEach((f,i)=>{if(f.g)return;const v=leerCampo(f,pref+i);if(v!==undefined&&!igual(v,get(base,f.p)))put(c,f.p,v)});return c}
 function tabs(){document.querySelectorAll("nav.tabs button[data-t]").forEach(b=>{b.classList.toggle("on",b.dataset.t===S.tab);b.onclick=()=>{S.tab=b.dataset.t;S.msg="";dibujar()}})}
-function dibujar(){tabs();({bienvenida:vBienvenida,proyectos:vProyectos,proyecto:vProyecto,plantilla:vPlantilla})[S.tab]()}
+function dibujar(){tabs();({atajos:vAtajos,bienvenida:vBienvenida,proyectos:vProyectos,proyecto:vProyecto,plantilla:vPlantilla})[S.tab]()}
 const aviso=()=>S.res&&S.res.sin_persona?`<div class="aviso er">${esc(S.res.sin_persona)}</div>`:"";
 
 // ---------- Bienvenida (tras el comando de una línea) ----------
@@ -212,6 +212,39 @@ function vistaPlantilla(p){if(p.error)return `<div class="aviso er">${esc(p.erro
   +(p.destinos.some(d=>d.aplicado)?"":`<div class="fila" style="margin-top:8px"><button class="pri" onclick="aplicarPlantilla()">Aplicar a estos proyectos</button></div>`)}
 async function aplicarPlantilla(){const d=S.plPrev.destinos.map(x=>({ruta:x.ruta,docs:x.docs,huella:x.huella}));const r=await post("/api/panel/plantilla/aplicar",{destinos:d,aplicar:true});
  r.destinos=(r.destinos||[]).map(x=>({...x,aplicado:true}));S.plPrev=r;dibujar()}
+
+// ---------- Atajos y comandos ----------
+// Agrupados por lo que quieres hacer. Regla para recordarlos: «uxyngraphar» + un verbo; dentro de un proyecto, «docs/scripts/» + un nombre.
+const ATAJOS=[
+ {g:"Empezar",d:"Una vez por equipo y una vez por proyecto.",c:[
+  ["curl -fsSL https://github.com/uxlelmar-eaac/uxyngraphar/releases/latest/download/instalar-uxyngraphar.py | python3 -","Instala la herramienta en este equipo y abre este panel (Windows: irm … | py -)."],
+  ["uxyngraphar panel","Abre este panel: todo lo de abajo se puede hacer desde aquí."],
+  ["uxyngraphar instalar","Pone uxyngraphar en el proyecto de la carpeta donde estás (asistente en el navegador)."]]},
+ {g:"Mantener al día",d:"Primero la herramienta, después los proyectos.",c:[
+  ["uxyngraphar estado","¿Qué versión tengo y hay una nueva?"],
+  ["uxyngraphar autoactualizar","Descarga la última versión de la herramienta. No toca tus proyectos."],
+  ["uxyngraphar actualizar","Lleva el proyecto de esta carpeta a tu versión (con copia de seguridad antes)."],
+  ["uxyngraphar actualizar --todos","Lo mismo para todos tus proyectos registrados."],
+  ["uxyngraphar usar 1.7.1","Vuelve a una versión anterior de la herramienta."]]},
+ {g:"Mis proyectos",d:"La lista de proyectos de este equipo.",c:[
+  ["uxyngraphar proyectos","Lista tus proyectos y su versión."],
+  ["uxyngraphar proyectos --salud","Lo mismo, diciendo si cada uno está sano."],
+  ["uxyngraphar proyectos --agregar RUTA","Añade a la lista un proyecto que ya tiene uxyngraphar."],
+  ["uxyngraphar configuracion","Muestra en texto la configuración del proyecto de esta carpeta."]]},
+ {g:"Dentro de un proyecto",d:"Desde la raíz del proyecto. En Windows escribe py -3 en lugar de python3.",c:[
+  ["python3 docs/scripts/doctor.py","Chequeo completo: ¿está todo bien? Con --fix arregla lo seguro."],
+  ["python3 docs/scripts/controlar.py --staged","Pasa los controles a lo que vas a commitear, como hará el CI."],
+  ["python3 docs/scripts/decisiones/decisiones.py scan","Lo que está esperando tu decisión."],
+  ["python3 docs/scripts/reglas.py listar","Las reglas de tu equipo que están activas."],
+  ["python3 docs/scripts/respaldos.py listar","Las copias de seguridad; restaurar para deshacer."],
+  ["python3 docs/scripts/memoria.py buscar TEXTO","Busca en la memoria del sistema (fichas antiguas)."],
+  ["python3 docs/scripts/feedback.py previsualizar","Qué saldría exactamente si colaboras. No envía nada."]]},
+ {g:"Quitar",d:"",c:[["uxyngraphar desinstalar","Quita la herramienta de este equipo. Tus proyectos no se tocan."]]}];
+function vAtajos(){let i=0;
+ $("#vista").innerHTML=`<div class="card"><h2>Atajos y comandos</h2><p class="mut">Para recordarlos: <b>uxyngraphar + un verbo</b> (panel, instalar, actualizar, estado…) para la herramienta, y <b>python3 docs/scripts/ + un nombre</b> dentro de un proyecto. ¿Dudas? <code>uxyngraphar ayuda</code> los lista todos.</p></div>`+
+ ATAJOS.map(x=>`<div class="card"><h2>${esc(x.g)}</h2>${x.d?`<p class="mut">${esc(x.d)}</p>`:""}<table><tbody>${x.c.map(([cmd,txt])=>`<tr><td style="width:55%"><code>${esc(cmd)}</code></td><td>${esc(txt)}</td><td style="width:1%"><button id="cp${i}" onclick='copiar(${JSON.stringify(cmd)},"cp${i++}")'>Copiar</button></td></tr>`).join("")}</tbody></table></div>`).join("")}
+async function copiar(t,id){try{await navigator.clipboard.writeText(t)}catch(e){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();document.execCommand("copy");a.remove()}
+ const b=document.getElementById(id);if(b){b.textContent="Copiado";setTimeout(()=>{b.textContent="Copiar"},1500)}}
 
 async function salir(){await post("/api/salir");document.querySelector("main").innerHTML=`<div class="card"><h2>Panel cerrado</h2><p>Ya puedes cerrar esta pestaña. Para volver a abrirlo: <code>uxyngraphar panel</code></p></div>`}
 async function cargar(){S.res=await post("/api/panel/resumen");dibujar()}
