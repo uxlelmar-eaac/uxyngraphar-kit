@@ -28,7 +28,7 @@ Si no tienes `py`, usa `python`.
 1. Cierra y abre la terminal (el instalador puede haber tocado `.bashrc` / `.zshrc` / PATH de usuario).
 2. Comprueba: `uxyngraphar version`
 3. Si instalaste con `--sin-path`, añade a mano el `bin` de la herramienta al PATH o invoca `python3 ~/.uxyngraphar/…` según la estructura instalada.
-4. Variables: `UXYNGRAPHAR_HOME` (cambia la carpeta base), `UXYNGRAPHAR_SIN_PATH`.
+4. Variables: `UXYNGRAPHAR_HOME` (cambia la carpeta base; el comando queda en `<carpeta>/bin` y no se toca el PATH), `UXYNGRAPHAR_BIN` (carpeta del comando), `UXYNGRAPHAR_SIN_PATH`.
 
 ## Opciones del instalador de una línea
 

@@ -84,8 +84,15 @@ def carpeta_home():
     return os.path.join(os.path.expanduser("~"), ".uxyngraphar")
 
 
+def home_propio():
+    """True si UXYNGRAPHAR_HOME cambia la carpeta base y no hay UXYNGRAPHAR_BIN que diga dónde va el comando."""
+    return bool(os.environ.get("UXYNGRAPHAR_HOME")) and not os.environ.get("UXYNGRAPHAR_BIN")
+
+
 def carpeta_bin(home):
-    if ES_WINDOWS:
+    # Con una carpeta base propia (pruebas, instalaciones aparte) el comando va dentro de ella:
+    # así nunca pisa el ~/.local/bin de la instalación normal ni deja un comando que apunte a una carpeta temporal.
+    if ES_WINDOWS or home_propio():
         return os.path.join(home, "bin")
     return os.path.abspath(os.path.expanduser(os.environ.get("UXYNGRAPHAR_BIN") or os.path.join("~", ".local", "bin")))
 

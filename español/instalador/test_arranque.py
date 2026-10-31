@@ -113,6 +113,21 @@ class TestPublicado(Entorno):
 
 
 class TestInstalacion(Entorno):
+    def test_home_propio_no_toca_local_bin_ni_perfil(self):
+        """Con UXYNGRAPHAR_HOME propio (p. ej. una prueba en una carpeta temporal) el comando va dentro de esa carpeta."""
+        self.servir()
+        otra = self.t / "otra-casa"
+        self.env.update(UXYNGRAPHAR_HOME=str(otra))
+        self.env.pop("UXYNGRAPHAR_SIN_PATH", None)
+        r = self.por_tuberia(self.instalador())
+        self.assertEqual(r.returncode, 0, r.stdout.decode() + r.stderr.decode())
+        self.assertFalse((self.home / ".local" / "bin").exists(), "no debe escribir en el ~/.local/bin de la persona")
+        self.assertFalse([p.name for p in self.home.iterdir() if p.name.startswith((".bash", ".profile", ".zsh"))])
+        lanzador = otra / "bin" / ("uxyngraphar-lanzador.py" if WINDOWS else "uxyngraphar")
+        self.assertTrue(lanzador.is_file())
+        v = subprocess.run([sys.executable, str(lanzador), "version"], capture_output=True, text=True, env=self.env, encoding="utf-8")
+        self.assertIn(VERSION, v.stdout)
+
     def test_instala_por_tuberia(self):
         self.servir()
         r = self.por_tuberia(self.instalador())

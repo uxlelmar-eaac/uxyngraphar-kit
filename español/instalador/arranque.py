@@ -152,6 +152,9 @@ def _path_windows(carpeta, agregar):
 
 def asegurar_path(home, registro):
     bin_dir = carpeta_bin(home)
+    if home_propio() and not en_path(bin_dir):
+        # Carpeta base propia: no toco el PATH ni los perfiles de la persona; solo digo dónde quedó.
+        return "El comando quedó en {} (UXYNGRAPHAR_HOME propio): no toqué tu PATH. Añádelo tú si lo quieres en el PATH.".format(bin_dir)
     if ES_WINDOWS:
         if _path_windows(bin_dir, True):
             registro["path_windows"] = bin_dir
