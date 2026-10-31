@@ -28,12 +28,13 @@ pre.diff{background:var(--bg);border:1px solid var(--bd);border-radius:8px;paddi
 .barra{position:sticky;bottom:0;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 @media(max-width:640px){table,tbody,tr,td{display:block;width:100%!important}thead{display:none}td{border:0;padding:4px 0}tr{border-bottom:1px solid var(--bd);padding:8px 0}code{word-break:break-all}}
 .perfiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin:8px 0 12px}.perfil{text-align:left;display:block}.perfil small{display:block;color:var(--mut);margin-top:4px;font-size:.85rem}.perfil.on{border:2px solid var(--ac)}
+.cab{display:flex;justify-content:space-between;align-items:center;gap:8px 16px;flex-wrap:wrap}.cab h1{margin:0}#ver{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.9rem}#ver button{padding:4px 10px}
 ul.pl{padding-left:20px;margin:6px 0}code{font-size:.9em}.oculto{display:none}
 </style>
 </head>
 <body>
 <main>
-<h1>Panel de uxyngraphar</h1>
+<div class="cab"><h1>Panel de uxyngraphar</h1><div id="ver" aria-live="polite"></div></div>
 <p class="mut">Configura tus proyectos y tu equipo desde aquí. Solo funciona en tu ordenador; nada se guarda sin que veas antes qué cambia.</p>
 <nav class="tabs" aria-label="Secciones"><button data-t="bienvenida" id="tabBien" class="oculto">Bienvenida</button><button data-t="proyectos">Mis proyectos</button><button data-t="proyecto">Configuración del proyecto</button><button data-t="plantilla">Plantilla y sistema</button><button data-t="atajos">Atajos y comandos</button><button onclick="salir()" style="margin-left:auto">Cerrar</button></nav>
 <div id="vista" aria-live="polite"></div>
@@ -171,7 +172,7 @@ function vPlantilla(){const r=S.res,u=S.ult,pl=S.pl;if(!r||!pl){$("#vista").inne
  const base=pl.defecto,actual=JSON.parse(JSON.stringify(base));(function f(d,o){for(const k in o){if(o[k]&&typeof o[k]==="object"&&!Array.isArray(o[k])){d[k]=d[k]||{};f(d[k],o[k])}else d[k]=o[k]}})(actual,S.plBorrador||pl.plantilla);
  const lista=campos(pl.opciones,true),proy=r.proyectos.flatMap(p=>p.packs.map(k=>({ruta:p.ruta,docs:k.docs,nombre:p.nombre})));
  $("#vista").innerHTML=aviso()+`<div class="card"><h2>Sistema</h2><p>Herramienta <b>${esc(r.version)}</b> · carpeta <code>${esc(r.carpeta)}</code></p>
- <p>${u?(u.ultima?(u.hay_nueva?`<span class="et av">Hay una versión nueva: ${esc(u.ultima)}</span> Para instalarla: <code>uxyngraphar autoactualizar</code> (no cambia tus proyectos; luego actualízalos desde «Mis proyectos»).`:`<span class="et ok">Al día</span> (última publicada: ${esc(u.ultima)})`):`<span class="mut">Sin conexión: no sé cuál es la última versión.</span>`):`<span class="mut">Comprobando la última versión…</span>`}</p></div>
+ <p>${estadoVersion(true)}</p>${S.actMsg||""}</div>
  <div class="card"><h2>Plantilla para tus proyectos</h2><p class="mut">Tus valores preferidos. Se aplican solos al <b>instalar</b> uxyngraphar en un proyecto nuevo. En los proyectos que ya tienes solo se aplican si tú lo pides abajo, viendo antes qué cambia. Cada proyecto sigue mandando con su propio archivo (va en git: tu equipo y el CI ven lo mismo). Lo propio de cada repositorio (tipo, carpetas de código, exenciones) y la respuesta a «colaborar» no van en la plantilla.</p>
  <p class="mut"><code>${esc(pl.archivo)}</code>${Object.keys(pl.plantilla).length?"":" · aún vacía: todo con los valores por defecto"}</p>
  <h3>Configuración rápida</h3><p class="mut">Elige un punto de partida: rellena el formulario de abajo. No se guarda nada hasta que revises los cambios y pulses «Guardar plantilla».</p>
@@ -246,11 +247,28 @@ function vAtajos(){let i=0;
 async function copiar(t,id){try{await navigator.clipboard.writeText(t)}catch(e){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();document.execCommand("copy");a.remove()}
  const b=document.getElementById(id);if(b){b.textContent="Copiado";setTimeout(()=>{b.textContent="Copiar"},1500)}}
 
+// ---------- Versión y actualización ----------
+function estadoVersion(largo){const u=S.ult;
+ if(S.actualizando)return `<span class="et">Actualizando…</span> <span class="mut">Puede tardar un minuto.</span>`;
+ if(S.actualizada)return `<span class="et ok">Versión ${esc(S.actualizada)} instalada</span>${largo?" Cierra el panel y ábrelo de nuevo para usarla.":""}`;
+ if(!u)return `<span class="mut">Comprobando si hay versiones nuevas…</span>`;
+ if(!u.ultima)return `<span class="mut">Sin conexión: no sé si hay versiones nuevas.</span>`;
+ if(u.hay_nueva)return `<span class="et av">Hay una versión nueva: ${esc(u.ultima)}</span> <button class="pri" onclick="actualizarHerr()">Actualizar a ${esc(u.ultima)}</button>${largo?` <span class="mut">No cambia tus proyectos: luego los actualizas desde «Mis proyectos».</span>`:""}`;
+ return `<span class="et ok">Al día</span>${largo?` <span class="mut">(última publicada: ${esc(u.ultima)})</span>`:""}`}
+function dibujarVer(){const v=S.res&&S.res.version;$("#ver").innerHTML=v?`<span>Versión <b>${esc(v)}</b></span>${estadoVersion(false)}`:""}
+async function actualizarHerr(){const u=S.ult;if(!u||!u.hay_nueva||S.actualizando)return;
+ if(!confirm(`¿Instalar uxyngraphar ${u.ultima}? Tus proyectos no cambian.`))return;
+ S.actualizando=true;S.actMsg="";dibujarVer();dibujar();const r=await post("/api/panel/autoactualizar");S.actualizando=false;
+ const det=r.salida?`<details><summary>Ver lo que hizo</summary><pre class="diff">${esc(r.salida)}</pre></details>`:"";
+ if(r.ok){S.actualizada=u.ultima;S.actMsg=`<div class="aviso ok">Listo: uxyngraphar ${esc(u.ultima)} está instalado. Este panel sigue con la versión anterior: ciérralo y vuelve a abrirlo con <code>uxyngraphar panel</code>. Tus proyectos no han cambiado; actualízalos desde «Mis proyectos» cuando quieras.${det}</div>`}
+ else S.actMsg=`<div class="aviso er">${esc(r.error||"No se pudo actualizar.")}${det}</div>`;
+ S.msg=S.tab==="plantilla"?"":S.actMsg;dibujarVer();dibujar()}
+
 async function salir(){await post("/api/salir");document.querySelector("main").innerHTML=`<div class="card"><h2>Panel cerrado</h2><p>Ya puedes cerrar esta pestaña. Para volver a abrirlo: <code>uxyngraphar panel</code></p></div>`}
-async function cargar(){S.res=await post("/api/panel/resumen");dibujar()}
+async function cargar(){S.res=await post("/api/panel/resumen");dibujarVer();dibujar()}
 (async()=>{const ini=await post("/api/inicio");if(ini.bienvenida){S.bien=ini.bienvenida;S.tab="bienvenida";$("#tabBien").classList.remove("oculto")}await cargar();S.pl=await post("/api/panel/plantilla");const q=new URLSearchParams(location.search);
  if(q.get("ruta"))await abrirProyecto(q.get("ruta"),q.get("docs")||"docs");
- S.ult=await post("/api/panel/ultima");if(S.tab==="plantilla")dibujar()})();
+ S.ult=await post("/api/panel/ultima");dibujarVer();if(S.tab==="plantilla")dibujar()})();
 </script>
 </body>
 </html>

@@ -11,6 +11,7 @@ import copy
 import difflib
 import hashlib
 import json
+import os
 import subprocess
 import sys
 from datetime import datetime
@@ -78,6 +79,24 @@ def resumen() -> dict:
 def ultima() -> dict:
     v, propia = sistema.ultima_publicada(espera=4), sistema.version_herramienta()
     return {"ok": True, "ultima": v, "propia": propia, "hay_nueva": bool(v) and sistema.tupla(v) > sistema.tupla(propia)}
+
+
+def autoactualizar() -> dict:
+    """Instala la última versión de la herramienta (lo mismo que «uxyngraphar autoactualizar»). No toca ningún proyecto."""
+    motivo = persona_presente()
+    if motivo:
+        return {"ok": False, "error": motivo}
+    antes = sistema.version_herramienta()
+    orden = [sys.executable, str(sistema.ES / "uxyngraphar.py"), "autoactualizar"]
+    entorno = {**os.environ, "UXYNGRAPHAR_CONSOLA": "1"}   # sin abrir otra ventana del navegador
+    try:
+        r = subprocess.run(orden, capture_output=True, text=True, stdin=subprocess.DEVNULL, env=entorno, timeout=600)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return {"ok": False, "error": f"No se pudo actualizar: {exc}", "antes": antes}
+    salida = (r.stdout + r.stderr).strip()
+    if r.returncode != 0:
+        return {"ok": False, "error": "La actualización falló. Tu versión actual sigue funcionando.", "salida": salida, "antes": antes}
+    return {"ok": True, "salida": salida, "antes": antes}
 
 
 def agregar(ruta: str) -> dict:

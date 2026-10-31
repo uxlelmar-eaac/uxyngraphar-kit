@@ -136,6 +136,21 @@ class TestSistema(Base):
             self.assertIn("/x/uxyngraphar", panel.decidir_path(False)["texto"])
             self.assertFalse(panel.bienvenida()["path_pendiente"])
 
+    def test_autoactualizar_solo_con_persona(self):
+        with mock.patch.dict(os.environ, {"CLAUDECODE": "1"}), mock.patch.object(panel.subprocess, "run") as run:
+            self.assertFalse(panel.autoactualizar()["ok"])
+            run.assert_not_called()
+        hecho = subprocess.CompletedProcess([], 0, "Instalado 9.9.9\n", "")
+        with mock.patch.object(panel.subprocess, "run", return_value=hecho) as run:
+            r = panel.autoactualizar()
+        self.assertTrue(r["ok"], r)
+        self.assertIn("Instalado 9.9.9", r["salida"])
+        self.assertEqual(run.call_args.args[0][-1], "autoactualizar")
+        self.assertEqual(run.call_args.kwargs["env"]["UXYNGRAPHAR_CONSOLA"], "1")
+        fallo = subprocess.CompletedProcess([], 1, "", "ERROR: sin red")
+        with mock.patch.object(panel.subprocess, "run", return_value=fallo):
+            self.assertFalse(panel.autoactualizar()["ok"])
+
 
 class TestHttp(Base):
     def test_rutas_del_panel_con_token(self):
