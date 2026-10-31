@@ -6,6 +6,8 @@ En Windows, si no tienes `python3`, usa `py -3` (o `python`) en lugar de `python
 
 | Comando | Qué hace |
 |---------|----------|
+| `uxyngraphar` · `uxyngraphar ayuda` | Ayuda: los comandos agrupados (Empezar, Tus proyectos, La herramienta) |
+| `uxyngraphar ayuda COMANDO` | Sintaxis completa y opciones de ese comando |
 | `uxyngraphar panel` | Panel local en el navegador |
 | `uxyngraphar panel --bienvenida` | Panel tras el instalador de una línea |
 | `uxyngraphar instalar [RUTA]` | Siembra el pack (sin args → UI) |
@@ -23,6 +25,8 @@ En Windows, si no tienes `python3`, usa `py -3` (o `python`) en lugar de `python
 | `uxyngraphar version` | Versión actual de la herramienta |
 | `uxyngraphar desinstalar` | Quita la herramienta del equipo |
 | `uxyngraphar desinstalar --si` | Sin confirmación |
+
+**Colores:** la herramienta y los instaladores usan color y las marcas ✓ (hecho), ! (aviso) y ✕ (error) solo cuando escriben en una terminal. Para desactivar el color define `NO_COLOR=1`; si la terminal no puede mostrar ✓/✕, se usan `+`/`x`. `uxyngraphar autoactualizar` ya no abre el panel cuando no hay versión nueva que instalar.
 
 **Importante:** `desinstalar` **no** elimina el pack de tus repos. Solo borra `~/.uxyngraphar/` (o `%LOCALAPPDATA%\uxyngraphar\`). Para dejar de usar el pack en un proyecto, quita `docs/` / `AGENTES.md` a mano y, si hace falta, `proyectos --quitar`.
 

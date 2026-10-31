@@ -39,17 +39,67 @@ class ErrorInstalacion(Exception):
     pass
 
 
-PASOS = []   # todo lo que se dice en la consola; el panel de bienvenida lo muestra al terminar
+PASOS = []   # todo lo que se dice en la consola, en texto plano; el panel de bienvenida lo muestra al terminar
+
+# Copia mínima de instalador/estilo.py (este archivo se publica solo y no puede importarlo): mismas marcas y colores.
+MARCAS = {"ok": "\u2713", "aviso": "!", "error": "\u2715", "paso": "\u2022"}
+MARCAS_ASCII = {"ok": "+", "aviso": "!", "error": "x", "paso": "-"}
+COLORES = {"ok": "32", "aviso": "33", "error": "31", "paso": "2", "titulo": "1", "seccion": "1"}
 
 
-def decir(texto=""):
+def color_activo(flujo):
+    if os.environ.get("NO_COLOR") or os.environ.get("TERM") == "dumb":
+        return False
+    try:
+        if not flujo.isatty():
+            return False
+    except (AttributeError, ValueError):
+        return False
+    if ES_WINDOWS:
+        try:
+            os.system("")   # activa los colores de la consola en Windows 10+
+        except Exception:  # noqa: BLE001
+            return False
+    return True
+
+
+def _pintar(texto, tipo, flujo):
+    return "\x1b[{}m{}\x1b[0m".format(COLORES[tipo], texto) if texto and color_activo(flujo) else texto
+
+
+def _marca(tipo, flujo):
+    simbolo = MARCAS[tipo]
+    try:
+        simbolo.encode(getattr(flujo, "encoding", None) or "utf-8")
+    except (UnicodeEncodeError, LookupError):
+        simbolo = MARCAS_ASCII[tipo]
+    return _pintar(simbolo, tipo, flujo)
+
+
+def formatear(texto, tipo, flujo):
+    """Respeta los saltos y la sangría del texto; pone la marca delante y colorea la primera línea."""
+    if not tipo:
+        return texto
+    cuerpo = texto.lstrip("\n ")
+    prefijo = texto[:len(texto) - len(cuerpo)]
+    primera, _, resto = cuerpo.partition("\n")
+    if tipo in MARCAS:
+        color = _pintar(primera, tipo, flujo) if tipo in ("error", "aviso") else primera
+        primera = _marca(tipo, flujo) + " " + color
+    else:
+        primera = _pintar(primera, tipo, flujo)
+    return prefijo + primera + ("\n" + resto if resto else "")
+
+
+def decir(texto="", tipo=""):
+    """Escribe en la consola. tipo: ok, aviso, paso (con marca) o titulo, seccion (resaltado)."""
     PASOS.append(texto)
-    print(texto, flush=True)
+    print(formatear(texto, tipo, sys.stdout), flush=True)
 
 
 def fallo(texto):
     PASOS.append("ERROR: " + texto)
-    print("\nERROR: " + texto, file=sys.stderr, flush=True)
+    print("\n" + formatear("ERROR: " + texto, "error", sys.stderr), file=sys.stderr, flush=True)
 
 
 def preparar_consola():
@@ -255,7 +305,7 @@ def instalar_version(home, version):
     tmp = final + ".tmp"
     try:
         nombre_zip = "uxyngraphar-{}.zip".format(version)
-        decir("  Descargando la versión {}...".format(version))
+        decir("  Descargando la versión {}...".format(version), "paso")
         ruta_sumas = os.path.join(trabajo, "SHA256SUMS")
         descargar(url_de(version, "SHA256SUMS"), ruta_sumas)
         sumas = leer_sumas(ruta_sumas)
@@ -265,7 +315,7 @@ def instalar_version(home, version):
         descargar(url_de(version, nombre_zip), ruta_zip)
         if sha256(ruta_zip) != sumas[nombre_zip]:
             raise ErrorInstalacion("La descarga no coincide con su huella SHA256; no instalo nada. Vuelve a intentarlo y, si se repite, avísalo en el repositorio.")
-        decir("  Huella SHA256 verificada.")
+        decir("  Huella SHA256 verificada.", "ok")
         try:
             extraer_seguro(ruta_zip, tmp, "uxyngraphar-{}/".format(version))
         except zipfile.BadZipFile:

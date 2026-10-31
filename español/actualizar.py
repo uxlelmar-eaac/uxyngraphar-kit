@@ -21,10 +21,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent / "instalador"))
 
 import api  # noqa: E402
+import estilo as est  # noqa: E402
 import flujo  # noqa: E402
-
-MARCA = {"ok": "✓", "aviso": "!", "error": "✗"}
-
 
 def _pregunta(texto: str, auto: bool) -> bool:
     if auto:
@@ -45,49 +43,49 @@ def _colaborar(auto: bool) -> dict:
 def actualizar_carpeta(ruta: str, auto: bool) -> int:
     info = api.inspeccionar(ruta)
     if not info["ok"]:
-        print(f"✗ {info['error']}")
+        est.error(info["error"])
         return 2
     if not info["instalados"]:
-        print(f"«{info['nombre']}» no tiene uxyngraphar instalado. Para instalarlo usa python3 instalar.py.")
+        est.aviso(f"«{info['nombre']}» no tiene uxyngraphar instalado. Para instalarlo usa python3 instalar.py.", "")
         return 1
     codigo = 0
     for inst in info["instalados"]:
         repo, docs = Path(info["ruta"]), inst["docs"]
         pack = api.PACKS.get(inst["pack"])
         if pack is None:
-            print(f"✗ {docs}: el lock indica un pack desconocido ({inst['pack']!r}).")
+            est.error(f"{docs}: el lock indica un pack desconocido ({inst['pack']!r}).")
             codigo = 2
             continue
         p = flujo.plan_actualizacion(pack, repo, docs)
-        print(f"\n● {info['nombre']} · {docs} · pack {inst['pack']} · instalado {p['actual']} → disponible {p['nueva']}")
+        est.seccion(f"{info['nombre']} · {docs} · pack {inst['pack']} · instalado {p['actual']} → disponible {p['nueva']}")
         if p.get("degradacion"):
-            print(f"  ✗ Este pack ({p['nueva']}) es más antiguo que lo instalado ({p['actual']}). No se aplica nada: usa una versión igual o más reciente de uxyngraphar.")
+            print(est.linea("error", f"Este pack ({p['nueva']}) es más antiguo que lo instalado ({p['actual']}). No se aplica nada: usa una versión igual o más reciente de uxyngraphar."))
             codigo = 2
             continue
         if p["mayor"]:
-            print("  ✗ Salto de versión mayor: requiere una instrucción aprobada. Sigue 10-guias/actualizar-nucleo.md (actualizar-pack.py --migracion-aprobada).")
+            print(est.linea("error", "Salto de versión mayor: requiere una instrucción aprobada. Sigue 10-guias/actualizar-nucleo.md (actualizar-pack.py --migracion-aprobada)."))
             codigo = 2
             continue
         if p["al_dia"]:
-            print("  El núcleo ya está al día; solo se revisarán las protecciones (CI, reglas de agentes, .gitignore…).")
+            est.ok("El núcleo ya está al día; solo se revisarán las protecciones (CI, reglas de agentes, .gitignore…).")
         else:
             print(f"  {p['nuevos']} archivos nuevos · {p['reemplazar']} reemplazados · {len(p['conflictos'])} en conflicto (quedarán como .uxyngraphar-nuevo).")
-            print("  Tu contenido no se toca. Se hace copia de seguridad en .uxyngraphar-respaldo/.")
+            print("  " + est.dim("Tu contenido no se toca. Se hace copia de seguridad en .uxyngraphar-respaldo/."))
         if not _pregunta("  ¿Aplicar?", auto):
-            print("  Sin cambios.")
+            print("  " + est.dim("Sin cambios."))
             continue
         r = flujo.actualizar_completo(pack, repo, docs)
         for paso in r.pasos:
-            print(f"  {MARCA.get(paso.estado, '·')} {paso.texto}" + (f"\n      {paso.detalle}" if paso.detalle else ""))
+            print(est.linea(paso.estado, paso.texto) + ("\n      " + est.dim(paso.detalle) if paso.detalle else ""))
         if r.ok:
             s = _colaborar(auto) if api.colaboracion_pendiente(repo, docs) else {}
             for texto, estado in api.aplicar_colaboracion(repo, docs, s, "actualizador"):
-                print(f"  {MARCA.get(estado, '·')} {texto}")
+                print(est.linea(estado, texto))
         d = flujo.diagnostico(repo, docs)
         pend = [x for x in d.pasos if x.estado != "ok"]
-        print(f"  Diagnóstico: {len(d.pasos) - len(pend)} ok · {len(pend)} pendiente(s)")
+        print("  " + est.pintar("Diagnóstico:", "titulo") + f" {len(d.pasos) - len(pend)} ok · {len(pend)} pendiente(s)")
         for x in pend:
-            print(f"    {MARCA.get(x.estado, '·')} {x.texto}" + (f"\n        → {x.detalle}" if x.detalle else ""))
+            print(est.linea(x.estado, x.texto, "    ") + ("\n        → " + est.dim(x.detalle) if x.detalle else ""))
         codigo = max(codigo, 0 if r.ok else 2)
     return codigo
 

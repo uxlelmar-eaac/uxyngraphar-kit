@@ -6,9 +6,7 @@ import argparse
 import sys
 
 import api
-
-
-ICONO = {"ok": "✓", "aviso": "!", "error": "✕"}
+import estilo as est
 
 
 def preguntar(texto: str, defecto: str, auto: bool) -> str:
@@ -62,19 +60,20 @@ def parser() -> argparse.ArgumentParser:
 
 def main(a: argparse.Namespace) -> int:
     auto = a.si
-    print("=== uxyngraphar — asistente de instalación ===\n")
+    est.titulo("uxyngraphar · asistente de instalación\n")
     ruta = a.proyecto or preguntar("Carpeta raíz de tu proyecto", "", auto)
     info = api.inspeccionar(ruta)
     if not info["ok"]:
-        print(f"ERROR: {info['error']}")
+        est.error(f"ERROR: {info['error']}")
         return 2
-    print(f"Proyecto: {info['ruta']}  ·  git: {'sí' if info['git'] else 'no (se inicializará)'}  ·  pila: {', '.join(info['pila']) or 'no detectada'}")
+    print(est.dim("Proyecto: ") + f"{info['ruta']}  ·  git: {'sí' if info['git'] else 'no (se inicializará)'}  ·  pila: {', '.join(info['pila']) or 'no detectada'}")
     if not info["git"] and not info["git_disponible"]:
-        print("ERROR: no encuentro git instalado (git-scm.com).")
+        est.error("ERROR: no encuentro git instalado (git-scm.com).")
         return 2
     pack = a.pack
     if not pack:
-        print("\n¿Qué quieres instalar?\n  1 = Servidor (API, servicios, workers, CLI, librerías)\n  2 = Cliente (web, móvil, escritorio)\n  3 = Los dos")
+        est.seccion("¿Qué quieres instalar?")
+        print("  1 = Servidor (API, servicios, workers, CLI, librerías)\n  2 = Cliente (web, móvil, escritorio)\n  3 = Los dos")
         r = preguntar("Elige 1, 2 o 3", "1" if info["rol_sugerido"] == "servidor" else "2", auto)
         pack = {"1": "servidor", "2": "cliente", "3": "ambos"}.get(r, info["rol_sugerido"])
     s = {"proyecto": info["ruta"], "pack": pack, "proteger": not a.sin_proteger, "propietario": a.propietario, "estricto": a.estricto}
@@ -98,33 +97,33 @@ def main(a: argparse.Namespace) -> int:
 
     plan = api.planificar(s)
     for e in plan["errores"]:
-        print(f"ERROR: {e}")
-    print("\n--- Plan (todavía no se ha escrito nada) ---")
+        est.error(f"ERROR: {e}")
+    est.seccion("Plan " + est.dim("(todavía no se ha escrito nada)"))
     for d in plan["destinos"]:
-        print(f"\n{d['titulo']} [{d['modo']}]")
+        print(f"\n{est.pintar(d['titulo'], 'titulo')} " + est.dim(f"[{d['modo']}]"))
         for l in d["lineas"]:
-            print(f"  • {l}")
+            est.paso(l)
     if not plan["ok"]:
         return 2
     actualiza = any(d["modo"] == "actualizar" for d in plan["destinos"])
     if not confirmar("\n¿" + ("Aplicar la actualización" if actualiza else "Instalar ahora") + "?", not actualiza, auto):
-        print("Sin cambios aplicados: no se escribió nada.")
+        print(est.dim("Sin cambios aplicados: no se escribió nada."))
         return 0
     res = api.ejecutar({**s, "aplicar_actualizacion": True})
     for d in res["destinos"]:
-        print(f"\n=== {d['titulo']} ===")
+        est.seccion(d["titulo"])
         for p in d["pasos"]:
-            print(f"  {ICONO[p['estado']]} {p['texto']}")
+            print(est.linea(p["estado"], p["texto"]))
             if p["detalle"]:
-                print(f"      {p['detalle']}")
+                print("      " + est.dim(p["detalle"]))
         if d["diagnostico"]:
             n = len(d["diagnostico"])
-            print(f"  Te {'queda' if n == 1 else 'quedan'} {n} {'cosa' if n == 1 else 'cosas'} por hacer:")
+            print(f"\n  Te {'queda' if n == 1 else 'quedan'} {n} {'cosa' if n == 1 else 'cosas'} por hacer:")
             for p in d["diagnostico"]:
-                print(f"   ! {p['texto']}" + (f"\n       → {p['detalle']}" if p["detalle"] else ""))
-    print("\n=== Qué sigue ===")
+                print(est.linea("aviso", p["texto"], "   ") + ("\n       → " + est.dim(p["detalle"]) if p["detalle"] else ""))
+    est.seccion("Qué sigue")
     for i, t in enumerate(api.siguientes_pasos(s), 1):
-        print(f" {i}. {t}")
+        print(f"  {est.pintar(str(i) + '.', 'titulo')} {t}")
     return 0 if res["ok"] else 1
 
 

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """uxyngraphar: la herramienta que instala y actualiza el pack en tus proyectos.
 
+La ayuda que ve la persona (uxyngraphar, uxyngraphar ayuda <comando>) se genera desde AYUDA y GRUPOS.
+
   uxyngraphar panel                        abre el panel del navegador: tus proyectos, su configuración y tu plantilla
   uxyngraphar instalar [RUTA] [opciones]   siembra el pack en un proyecto (sin argumentos abre la pantalla del navegador)
   uxyngraphar actualizar [RUTA…] [--todos] lleva proyectos a la versión de la herramienta (con respaldo; --consola, --si)
@@ -21,6 +23,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import textwrap
 from datetime import date
 from pathlib import Path
 
@@ -28,9 +31,66 @@ RAIZ = Path(__file__).resolve().parent   # versiones/X.Y.Z/ (instalada) o españ
 sys.path.insert(0, str(RAIZ / "instalador"))
 
 import arranque as ar  # noqa: E402
+import estilo as est  # noqa: E402  (colores, marcas y tablas de la consola)
 import sistema  # noqa: E402  (carpeta de la herramienta, registro de proyectos, plantilla)
 
 COMANDOS = ("panel", "instalar", "actualizar", "estado", "proyectos", "configuracion", "autoactualizar", "usar", "version", "desinstalar")
+
+# Ayuda: comando -> (sintaxis corta, qué hace en una línea, explicación larga, opciones [(opción, qué hace)]).
+AYUDA = {
+    "panel": ("panel", "Abre el panel del navegador: tus proyectos, su configuración y tu plantilla.",
+              "Abre en tu navegador (solo en tu equipo) el panel de uxyngraphar: tus proyectos con su versión y salud, "
+              "la configuración de cada uno con vista previa y copia de seguridad, y tu plantilla para proyectos nuevos.",
+              [("--bienvenida", "Primera pantalla tras el instalador de una línea: qué se hizo y qué queda por decidir.")]),
+    "instalar": ("instalar [RUTA] [opciones]", "Siembra el pack en un proyecto (sin argumentos abre la pantalla del navegador).",
+                 "Siembra el pack en un proyecto y lo registra. Sin argumentos abre la pantalla del navegador; "
+                 "con RUTA u opciones funciona en texto. No borra nada: lo que choque queda como *.uxyngraphar-nuevo.",
+                 [("RUTA", "Carpeta raíz del proyecto."),
+                  ("--pack servidor|cliente|ambos", "Qué sembrar."),
+                  ("--proyecto2 RUTA", "Con --pack ambos en repositorios distintos: el repositorio del cliente."),
+                  ("--mismo-repo", "Con --pack ambos: los dos en el mismo repositorio (monorepo)."),
+                  ("--sub-servidor DIR", "Subcarpeta de la app servidor (p. ej. apps/api); vacío = raíz."),
+                  ("--sub-cliente DIR", "Subcarpeta de la app cliente (p. ej. apps/web); vacío = raíz."),
+                  ("--propietario @usuario", "Usuario o equipo de GitHub que aprueba los cambios al núcleo (CODEOWNERS)."),
+                  ("--estricto", "Protecciones estrictas."),
+                  ("--sin-proteger", "No añadir reglas de agentes, CODEOWNERS, CI ni ganchos."),
+                  ("--colaborar si|no", "Respuesta a «¿Te gustaría colaborar en la mejora de uxyngraphar?»."),
+                  ("--si", "No preguntar: usa los valores por defecto (una actualización no se aplica sola)."),
+                  ("--consola", "Todo en la terminal, sin navegador.")]),
+    "actualizar": ("actualizar [RUTA…] [--todos]", "Lleva proyectos a la versión de la herramienta, con copia de seguridad.",
+                   "Lleva proyectos a la versión de la herramienta: muestra qué cambiaría, respalda en .uxyngraphar-respaldo/, "
+                   "toca solo el núcleo y deja los conflictos como *.uxyngraphar-nuevo. Sin RUTA usa la carpeta actual.",
+                   [("RUTA…", "Una o varias carpetas de proyecto."),
+                    ("--todos", "Todos los proyectos registrados en este equipo."),
+                    ("--consola", "En texto, sin navegador."),
+                    ("--si", "Aplicar sin preguntar (para scripts)."),
+                    ("--colaborar si|no", "Respuesta a la pregunta de colaboración.")]),
+    "estado": ("estado [RUTA]", "Versión del proyecto, de la herramienta y la última publicada.",
+               "Compara la versión del pack del proyecto (por defecto la carpeta actual) con la de tu herramienta "
+               "y con la última publicada, y dice qué hacer.", []),
+    "proyectos": ("proyectos [opciones]", "Proyectos registrados en este equipo.",
+                  "Lista los proyectos registrados en este equipo con su versión. Se registran solos al instalar o actualizar.",
+                  [("--agregar RUTA", "Registra un proyecto que ya tiene uxyngraphar."),
+                   ("--quitar RUTA", "Lo quita del registro (la carpeta no se toca)."),
+                   ("--salud", "Añade un diagnóstico rápido de cada proyecto.")]),
+    "configuracion": ("configuracion [RUTA]", "Configuración del proyecto (docs/uxyngraphar.config.json) y sus problemas.",
+                      "Muestra cómo queda la configuración del proyecto (docs/uxyngraphar.config.json) con los valores "
+                      "por defecto aplicados y qué valores son inválidos. Para editarla en pantalla: uxyngraphar panel.", []),
+    "autoactualizar": ("autoactualizar [--version X.Y.Z]", "Descarga e instala la última versión de la herramienta.",
+                       "Descarga e instala la última versión publicada de la herramienta (o la indicada). "
+                       "No cambia ningún proyecto: después, uxyngraphar actualizar.",
+                       [("--version X.Y.Z", "Instalar esa versión en lugar de la última.")]),
+    "usar": ("usar X.Y.Z", "Vuelve a una versión (la descarga si hace falta).",
+             "Activa una versión guardada de la herramienta, o la descarga si no está. Tus proyectos no cambian.", []),
+    "version": ("version", "Versión activa y versiones guardadas.",
+                "Muestra la versión activa de la herramienta, su carpeta y las versiones guardadas.", []),
+    "desinstalar": ("desinstalar [--si]", "Quita la herramienta de este equipo (tus proyectos no se tocan).",
+                    "Borra la carpeta de la herramienta y el comando uxyngraphar. Los proyectos conservan su copia del pack en docs/.",
+                    [("--si", "Sin pedir confirmación.")]),
+}
+GRUPOS = (("Empezar", ("panel", "instalar")),
+          ("Tus proyectos", ("actualizar", "estado", "proyectos", "configuracion")),
+          ("La herramienta", ("autoactualizar", "usar", "version", "desinstalar")))
 
 
 def home() -> Path:
@@ -83,7 +143,7 @@ def cmd_panel(args: list[str]) -> int:
     try:
         return servidor.servir(modo="panel", bienvenida="--bienvenida" in args)
     except OSError as exc:
-        print(f"No pude abrir el panel ({exc}). En texto:  uxyngraphar proyectos  ·  uxyngraphar configuracion [RUTA]")
+        est.error(f"No pude abrir el panel ({exc}). En texto:  uxyngraphar proyectos  ·  uxyngraphar configuracion [RUTA]")
         return 1
 
 
@@ -94,16 +154,17 @@ def cmd_instalar(args: list[str]) -> int:
     candidatas = [args[i + 1] for i, a in enumerate(args[:-1]) if a in ("--proyecto", "--proyecto2")] or [os.getcwd()]
     if codigo == 0:
         for r in registrar(candidatas):
-            print(f"Proyecto registrado: {r}  (uxyngraphar proyectos para verlos todos)")
+            est.ok(f"Proyecto registrado: {r}  " + est.dim("(uxyngraphar proyectos para verlos todos)"), "")
         if not args:
-            print("Si lo instalaste en otra carpeta, regístrala con:  uxyngraphar proyectos --agregar RUTA")
+            print(est.dim("Si lo instalaste en otra carpeta, regístrala con:  ") + est.comando("uxyngraphar proyectos --agregar RUTA"))
     return codigo
 
 
 def cmd_actualizar(args: list[str]) -> int:
     ultima, propia = ultima_publicada(espera=3), version_herramienta()
     if ultima and _tupla(ultima) > _tupla(propia):
-        print(f"Aviso: ya está publicada la {ultima} (tu herramienta es la {propia}). Para llevar tus proyectos a ella: uxyngraphar autoactualizar y luego uxyngraphar actualizar.\n")
+        est.aviso(f"Ya está publicada la {ultima} (tu herramienta es la {propia}). Para llevar tus proyectos a ella: "
+                  "uxyngraphar autoactualizar y luego uxyngraphar actualizar.\n", "")
     colaborar: list[str] = []
     if "--colaborar" in args:   # opción con valor (si|no): no es una ruta
         i = args.index("--colaborar")
@@ -113,7 +174,7 @@ def cmd_actualizar(args: list[str]) -> int:
     if "--todos" in args:
         rutas += [p for p in leer_proyectos() if Path(p).is_dir()]
         if not rutas:
-            print("No hay proyectos registrados. Regístralos con:  uxyngraphar proyectos --agregar RUTA")
+            est.aviso("No hay proyectos registrados. Regístralos con:  uxyngraphar proyectos --agregar RUTA", "")
             return 1
     elif not rutas and _api().inspeccionar(os.getcwd()).get("instalados"):
         rutas = [os.getcwd()]
@@ -128,26 +189,26 @@ def ultima_publicada(espera: int = 5) -> str:
 
 def cmd_estado(args: list[str]) -> int:
     propia, ultima = version_herramienta(), ultima_publicada()
-    print(f"Herramienta: {propia}" + (f" · última publicada: {ultima}" if ultima else " · (sin conexión: no sé cuál es la última)"))
+    print(est.pintar("Herramienta:", "titulo") + f" {propia}" + (f" · última publicada: {ultima}" if ultima else est.dim(" · (sin conexión: no sé cuál es la última)")))
     if ultima and _tupla(ultima) > _tupla(propia):
-        print("  Hay una versión más nueva:  uxyngraphar autoactualizar")
+        est.aviso("Hay una versión más nueva:  " + est.comando("uxyngraphar autoactualizar"))
     ruta = args[0] if args else os.getcwd()
     info = _api().inspeccionar(ruta)
     if not info["ok"]:
-        print(info["error"])
+        est.error(info["error"])
         return 2
     if not info["instalados"]:
-        print(f"«{info['nombre']}» no tiene uxyngraphar. Para sembrarlo:  uxyngraphar instalar")
+        est.aviso(f"«{info['nombre']}» no tiene uxyngraphar. Para sembrarlo:  uxyngraphar instalar", "")
         return 1
     for inst in info["instalados"]:
         v = inst["version"]
         if _tupla(v) < _tupla(propia):
-            nota = "puedes actualizarlo:  uxyngraphar actualizar"
+            tipo, nota = "aviso", "puedes actualizarlo:  uxyngraphar actualizar"
         elif _tupla(v) > _tupla(propia):
-            nota = "usa una versión más nueva que tu herramienta:  uxyngraphar autoactualizar"
+            tipo, nota = "aviso", "usa una versión más nueva que tu herramienta:  uxyngraphar autoactualizar"
         else:
-            nota = "al día"
-        print(f"{info['nombre']} · {inst['docs']} · pack {inst['pack']} · versión {v} → {nota}")
+            tipo, nota = "ok", "al día"
+        print(est.linea(tipo, f"{info['nombre']} · {inst['docs']} · pack {inst['pack']} · versión {v} → {nota}", ""))
     return 0
 
 
@@ -163,25 +224,30 @@ def cmd_proyectos(args: list[str]) -> int:
     lista = leer_proyectos()
     if args[:1] == ["--agregar"] and len(args) > 1:
         nuevas = registrar(args[1:])
-        print("Registrado: " + ", ".join(nuevas) if nuevas else "Nada que registrar: esa carpeta no tiene uxyngraphar o ya estaba.")
+        if nuevas:
+            est.ok("Registrado: " + ", ".join(nuevas), "")
+        else:
+            est.aviso("Nada que registrar: esa carpeta no tiene uxyngraphar o ya estaba.", "")
         return 0 if nuevas or all(str(Path(a).resolve()) in lista for a in args[1:]) else 1
     if args[:1] == ["--quitar"] and len(args) > 1:
         quitar = {str(Path(a).expanduser().resolve()) for a in args[1:]}
         guardar_proyectos([p for p in lista if p not in quitar])
-        print("Quitado del registro (la carpeta no se toca).")
+        est.ok("Quitado del registro (la carpeta no se toca).", "")
         return 0
     if not lista:
-        print("No hay proyectos registrados. Se registran solos con  uxyngraphar instalar  o con  uxyngraphar proyectos --agregar RUTA")
+        print("No hay proyectos registrados. Se registran solos con  " + est.comando("uxyngraphar instalar")
+              + "  o con  " + est.comando("uxyngraphar proyectos --agregar RUTA"))
         return 0
     propia = version_herramienta()
     for p in lista:
         if not Path(p).is_dir():
-            print(f"✗ {p}  (ya no existe; quítalo con  uxyngraphar proyectos --quitar {p})")
+            print(est.linea("error", f"{p}  (ya no existe; quítalo con  uxyngraphar proyectos --quitar {p})", ""))
             continue
         for inst in _api().inspeccionar(p).get("instalados", []):
             estado = "al día" if inst["version"] == propia else ("actualizable" if _tupla(inst["version"]) < _tupla(propia) else "más nuevo que tu herramienta")
             salud = f" · {_salud(p, inst['docs'])}" if "--salud" in args else ""
-            print(f"• {Path(p).name} · {inst['docs']} · {inst['version']} ({estado}){salud}\n    {p}")
+            tipo = "ok" if estado == "al día" else "aviso"
+            print(est.linea(tipo, f"{Path(p).name} · {inst['docs']} · {inst['version']} ({estado}){salud}", "") + "\n    " + est.dim(p))
     return 0
 
 
@@ -192,10 +258,10 @@ def _modulo_config(repo: Path, docs: str):
 def cmd_configuracion(args: list[str]) -> int:
     info = _api().inspeccionar(args[0] if args else os.getcwd())
     if not info["ok"]:
-        print(info["error"])
+        est.error(info["error"])
         return 2
     if not info["instalados"]:
-        print(f"«{info['nombre']}» no tiene uxyngraphar. Para sembrarlo:  uxyngraphar instalar")
+        est.aviso(f"«{info['nombre']}» no tiene uxyngraphar. Para sembrarlo:  uxyngraphar instalar", "")
         return 1
     codigo = 0
     for inst in info["instalados"]:
@@ -203,12 +269,13 @@ def cmd_configuracion(args: list[str]) -> int:
         cfgmod = _modulo_config(repo, inst["docs"])
         archivo = repo / inst["docs"] / cfgmod.NOMBRE
         cfg, problemas = cfgmod.cargar(repo, inst["docs"])
-        print(f"{archivo}" + ("" if archivo.is_file() else "  (no existe: se usan los valores por defecto)"))
+        print(est.pintar(str(archivo), "titulo") + ("" if archivo.is_file() else est.dim("  (no existe: se usan los valores por defecto)")))
         for p in problemas:
-            print(f"  ✗ {p}")
+            print(est.linea("error", p))
         codigo = codigo or (1 if problemas else 0)
         print(json.dumps(cfg, ensure_ascii=False, indent=2))
-        print(f"Qué significa cada sección y cómo cambiarla: {inst['docs']}/10-guias/configuracion-uxyngraphar.md  ·  en pantalla: uxyngraphar panel\n")
+        print(est.dim("Qué significa cada sección y cómo cambiarla: ") + f"{inst['docs']}/10-guias/configuracion-uxyngraphar.md"
+              + est.dim("  ·  en pantalla: ") + est.comando("uxyngraphar panel") + "\n")
     return codigo
 
 
@@ -221,7 +288,7 @@ def cmd_autoactualizar(args: list[str]) -> int:
         try:
             ar.descargar(url, destino)
         except ar.ErrorInstalacion as exc:
-            print(f"ERROR: {exc}", file=sys.stderr)
+            est.error(f"ERROR: {exc}")
             return 1
         extra = ["--sin-path"] if not ar.leer_registro(str(home())).get("perfil") and not ar.ES_WINDOWS else []
         return subprocess.call([sys.executable, destino, *extra])
@@ -229,24 +296,24 @@ def cmd_autoactualizar(args: list[str]) -> int:
 
 def cmd_usar(args: list[str]) -> int:
     if not args or not ar.VERSION_RE.match(args[0].lstrip("v")):
-        print("Uso:  uxyngraphar usar X.Y.Z   (versiones guardadas:  uxyngraphar version)")
+        est.error("Uso:  uxyngraphar usar X.Y.Z   (versiones guardadas:  uxyngraphar version)")
         return 2
     v = args[0].lstrip("v")
     if v in ar.versiones_guardadas(str(home())):
         ar.escribir_atomico(str(home() / "actual"), v + "\n")
-        print(f"Versión activa: {v}. Tus proyectos no cambian hasta que ejecutes  uxyngraphar actualizar.")
+        est.ok(f"Versión activa: {v}. Tus proyectos no cambian hasta que ejecutes  uxyngraphar actualizar.", "")
         return 0
     return cmd_autoactualizar(["--version", v])
 
 
 def cmd_version(_args: list[str]) -> int:
     h = str(home())
-    print(f"uxyngraphar {version_herramienta()}")
-    print(f"Carpeta: {h}")
+    est.titulo(f"uxyngraphar {version_herramienta()}")
+    print(est.dim("Carpeta: ") + h)
     guardadas = ar.versiones_guardadas(h)
     if guardadas:
         activa = ar.version_activa(h)
-        print("Versiones guardadas: " + ", ".join(f"{v} (activa)" if v == activa else v for v in guardadas))
+        print(est.dim("Versiones guardadas: ") + ", ".join(f"{v} (activa)" if v == activa else v for v in guardadas))
     return 0
 
 
@@ -255,18 +322,51 @@ def cmd_desinstalar(args: list[str]) -> int:
     if "--si" not in args:
         r = input(f"Se borrará {h} y el comando uxyngraphar. Tus proyectos no se tocan. ¿Seguir? [s/N] ").strip().lower()
         if r not in ("s", "si", "sí", "y", "yes"):
-            print("Sin cambios.")
+            print(est.dim("Sin cambios."))
             return 0
     registro = ar.leer_registro(str(h))
     for archivo in registro.get("lanzadores", []):
         if os.path.isfile(archivo) and ar.es_nuestro(archivo):
             os.remove(archivo)
     if ar.quitar_de_perfil(registro.get("perfil", "")):
-        print(f"Quité la línea del PATH de {registro['perfil']}.")
+        est.ok(f"Quité la línea del PATH de {registro['perfil']}.", "")
     if registro.get("path_windows"):
         ar._path_windows(registro["path_windows"], False)
     shutil.rmtree(h, ignore_errors=True)
-    print("uxyngraphar se desinstaló de este equipo. Los proyectos conservan su copia del pack en docs/.")
+    est.ok("uxyngraphar se desinstaló de este equipo. Los proyectos conservan su copia del pack en docs/.", "")
+    return 0
+
+
+# ---------- ayuda ----------
+
+def ayuda_general() -> list[str]:
+    lineas = [est.pintar(f"uxyngraphar {version_herramienta()}", "titulo") + est.dim("  ·  instala y actualiza el pack documental en tus proyectos"),
+              "", est.dim("Uso: ") + est.comando("uxyngraphar <comando> [opciones]")]
+    izquierda = max(len(AYUDA[c][0]) for c in COMANDOS)
+    for nombre, comandos in GRUPOS:
+        lineas += ["", est.pintar(nombre, "seccion")]
+        lineas += est.tabla([(AYUDA[c][0], AYUDA[c][1]) for c in comandos], izquierda=izquierda)
+    lineas += ["", est.dim("Más ayuda: ") + est.comando("uxyngraphar ayuda <comando>")]
+    manual = RAIZ / "documentacion" / "README.md"
+    if manual.is_file():
+        lineas.append(est.dim("Manual: ") + str(manual))
+    return lineas
+
+
+def ayuda_comando(cmd: str) -> list[str]:
+    sintaxis, _, larga, opciones = AYUDA[cmd]
+    lineas = [est.pintar("uxyngraphar " + sintaxis, "titulo"), ""]
+    lineas += textwrap.wrap(larga, est.ancho_terminal() - 2, initial_indent="  ", subsequent_indent="  ")
+    if opciones:
+        lineas += ["", est.pintar("Opciones", "seccion")] + est.tabla(opciones)
+    return lineas
+
+
+def cmd_ayuda(args: list[str]) -> int:
+    if args and args[0] not in AYUDA:
+        est.error(f"No conozco el comando «{args[0]}». Comandos: {', '.join(COMANDOS)}")
+        return 2
+    print("\n".join(ayuda_comando(args[0]) if args else ayuda_general()))
     return 0
 
 
@@ -274,12 +374,12 @@ def main(argv: list[str] | None = None) -> int:
     ar.preparar_consola()
     argv = list(sys.argv[1:] if argv is None else argv)
     if not argv or argv[0] in ("-h", "--help", "ayuda"):
-        print(__doc__)
-        return 0
+        return cmd_ayuda(argv[1:])
     if argv[0] in ("--version", "-V"):
         argv[0] = "version"
     if argv[0] not in COMANDOS:
-        print(f"Comando desconocido: {argv[0]}\n{__doc__}", file=sys.stderr)
+        est.error(f"Comando desconocido: {argv[0]}")
+        print("Escribe  " + est.comando("uxyngraphar ayuda") + "  para ver los comandos.", file=sys.stderr)
         return 2
     return globals()["cmd_" + argv[0]](argv[1:])
 

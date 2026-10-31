@@ -70,7 +70,7 @@ def crear_lanzadores(home):
     lanzador = os.path.join(bin_dir, "uxyngraphar")
     if os.path.exists(lanzador) and not es_nuestro(lanzador):
         lanzador = os.path.join(home, "bin", "uxyngraphar")
-        decir("  Aviso: ya existe otro programa llamado uxyngraphar en {}; no lo toco. El comando queda en {}.".format(bin_dir, lanzador))
+        decir("  Aviso: ya existe otro programa llamado uxyngraphar en {}; no lo toco. El comando queda en {}.".format(bin_dir, lanzador), "aviso")
         os.makedirs(os.path.dirname(lanzador), exist_ok=True)
     escribir_atomico(lanzador, _texto_lanzador(home))
     os.chmod(lanzador, 0o755)
@@ -229,25 +229,28 @@ def abrir_panel(home):
         lanzador = ""
     if not lanzador or not os.path.isfile(lanzador):
         return 0
-    decir("\nAbriendo el panel de uxyngraphar en tu navegador para terminar la configuración...")
+    decir("\nAbriendo el panel de uxyngraphar en tu navegador para terminar la configuración...", "paso")
     try:
         return subprocess.call([sys.executable, lanzador, "panel", "--bienvenida"])
     except KeyboardInterrupt:
         return 0
 
 
+SIN_CAMBIOS = -1   # instalar(): la versión ya estaba activa; main() termina sin abrir el panel
+
+
 def instalar(version, sin_path=False, con_panel=False):
     home = carpeta_home()
-    decir("uxyngraphar {} -> {}".format(version, home))
+    decir("uxyngraphar {} -> {}".format(version, home), "titulo")
     if not shutil.which("git"):
-        decir("  Aviso: no encuentro git. La herramienta se instala igual, pero para sembrar el pack en un proyecto necesitarás git (https://git-scm.com).")
+        decir("  Aviso: no encuentro git. La herramienta se instala igual, pero para sembrar el pack en un proyecto necesitarás git (https://git-scm.com).", "aviso")
     os.makedirs(home, exist_ok=True)
     with Candado(home):
         limpiar_restos(home)
         anterior = version_activa(home)
         nueva = instalar_version(home, version)
         if not nueva:
-            decir("  La versión {} ya estaba descargada y verificada.".format(version))
+            decir("  La versión {} ya estaba descargada y verificada.".format(version), "ok")
         escribir_atomico(os.path.join(home, "actual"), version + "\n")
         registro = leer_registro(home)
         lanzador, archivos = crear_lanzadores(home)
@@ -264,15 +267,16 @@ def instalar(version, sin_path=False, con_panel=False):
     guardar_bienvenida(home, {"version": version, "anterior": anterior, "lanzador": lanzador, "comando": comando,
                               "path_pendiente": path_pendiente, "sin_path": sin_path})
     if anterior == version:
-        decir("\nYa tenías uxyngraphar {}: no hay nada que actualizar.".format(version))
-        return 0
-    decir("\nListo: uxyngraphar {} {}.".format(version, "activo (antes {})".format(anterior) if anterior else "instalado"))
+        decir("\nYa tenías uxyngraphar {}: no hay nada que actualizar.".format(version), "ok")
+        decir("El panel sigue disponible cuando lo necesites:  {} panel".format(comando))
+        return SIN_CAMBIOS
+    decir("\nListo: uxyngraphar {} {}.".format(version, "activo (antes {})".format(anterior) if anterior else "instalado"), "ok")
     if aviso_path:
-        decir(aviso_path)
+        decir(aviso_path, "aviso")
     if anterior:
         decir("Tus proyectos siguen como estaban. Para llevarlos a esta versión:  {} actualizar  (o  {} actualizar --todos)".format(comando, comando))
         return 0
-    decir("\nQué sigue:\n  1. Entra en la carpeta de tu proyecto.\n  2. Ejecuta:  {} instalar\n  3. Más adelante, para actualizar:  {} autoactualizar  y luego  {} actualizar".format(comando, comando, comando))
+    decir("\nQué sigue:\n  1. Entra en la carpeta de tu proyecto.\n  2. Ejecuta:  {} instalar\n  3. Más adelante, para actualizar:  {} autoactualizar  y luego  {} actualizar".format(comando, comando, comando), "seccion")
     return 0
 
 
@@ -297,6 +301,8 @@ def main(argv=None):
     con_panel = not a.consola and not os.environ.get("UXYNGRAPHAR_CONSOLA") and puede_abrir_panel()
     try:
         codigo = instalar(version, a.sin_path or bool(os.environ.get("UXYNGRAPHAR_SIN_PATH")), con_panel)
+        if codigo == SIN_CAMBIOS:   # ya estaba esa versión: no hay nada que configurar en el panel
+            return 0
         return abrir_panel(carpeta_home()) if codigo == 0 and con_panel else codigo
     except ErrorInstalacion as exc:
         fallo(str(exc))
