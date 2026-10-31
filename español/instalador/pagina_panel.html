@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel de uxyngraphar</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1b1f24;--mut:#5b6573;--bd:#d9dee5;--ac:#1f6feb;--acx:#fff;--ok:#1a7f37;--av:#9a6700;--er:#cf222e;--okb:#e6f4ea;--avb:#fff6dc;--erb:#fde8ea}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1318;--card:#171c23;--tx:#e6eaf0;--mut:#9aa6b5;--bd:#2c3440;--ac:#4c8dff;--acx:#06101f;--ok:#56d364;--av:#e3b341;--er:#ff7b72;--okb:#12261a;--avb:#2a2110;--erb:#2d1517}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:880px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:1.5rem;margin:0 0 4px}h2{font-size:1.2rem;margin:0 0 6px}h3{font-size:1.02rem;margin:14px 0 4px}p{margin:.25rem 0 .75rem}.mut{color:var(--mut)}
+nav.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0}nav.tabs button.on{background:var(--ac);color:var(--acx);border-color:var(--ac);font-weight:600}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:18px;margin-bottom:14px}
+.campo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px 16px;padding:10px 0;border-bottom:1px solid var(--bd)}.campo:last-child{border:0}
+.campo label{font-weight:600}.campo small{grid-column:1;color:var(--mut)}.campo .ctl{grid-column:2;grid-row:1/span 2}.campo.mod label::after{content:" • distinto del valor por defecto";color:var(--av);font-weight:400;font-size:.85rem}
+@media(max-width:640px){.campo{grid-template-columns:1fr}.campo .ctl{grid-column:1;grid-row:auto}}
+input[type=text],input[type=number],select,textarea{width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
+textarea{min-height:70px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9rem}
+button{font:inherit;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:8px 14px;cursor:pointer}
+button.pri{background:var(--ac);color:var(--acx);border-color:var(--ac);font-weight:600}button:disabled{opacity:.5;cursor:not-allowed}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+.fila{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.fila input{flex:1;min-width:200px}
+.aviso{border-radius:8px;padding:10px 12px;margin:8px 0}.aviso.ok{background:var(--okb)}.aviso.av{background:var(--avb)}.aviso.er{background:var(--erb)}
+table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:8px 6px;border-bottom:1px solid var(--bd);vertical-align:top}th{font-size:.85rem;color:var(--mut);font-weight:600}
+.et{display:inline-block;border-radius:999px;padding:0 8px;font-size:.82rem;border:1px solid var(--bd)}.et.ok{color:var(--ok)}.et.av{color:var(--av)}.et.er{color:var(--er)}
+pre.diff{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px;overflow:auto;font-size:.85rem;max-height:320px}
+.barra{position:sticky;bottom:0;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+@media(max-width:640px){table,tbody,tr,td{display:block;width:100%}thead{display:none}td{border:0;padding:4px 0}tr{border-bottom:1px solid var(--bd);padding:8px 0}code{word-break:break-all}}
+ul.pl{padding-left:20px;margin:6px 0}code{font-size:.9em}.oculto{display:none}
+</style>
+</head>
+<body>
+<main>
+<h1>Panel de uxyngraphar</h1>
+<p class="mut">Configura tus proyectos y tu equipo desde aquí. Solo funciona en tu ordenador; nada se guarda sin que veas antes qué cambia.</p>
+<nav class="tabs" aria-label="Secciones"><button data-t="bienvenida" id="tabBien" class="oculto">Bienvenida</button><button data-t="proyectos">Mis proyectos</button><button data-t="proyecto">Configuración del proyecto</button><button data-t="plantilla">Plantilla y sistema</button><button onclick="salir()" style="margin-left:auto">Cerrar</button></nav>
+<div id="vista" aria-live="polite"></div>
+</main>
+<script>
+const TOKEN="__TOKEN__"; // uxyngraphar:permitir-secreto (marcador que sustituye el servidor)
+const S={tab:"proyectos",bien:null,res:null,ult:null,sel:null,cfg:null,form:{},prev:null,msg:"",pl:null,plForm:{},plPrev:null,salud:{}};
+const $=s=>document.querySelector(s);
+const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+async function post(u,b={}){const r=await fetch(u,{method:"POST",headers:{"X-Token":TOKEN,"Content-Type":"application/json"},body:JSON.stringify(b)});return r.json()}
+const get=(o,p)=>p.split(".").reduce((a,k)=>a==null?undefined:a[k],o);
+function put(o,p,v){const ks=p.split(".");let a=o;ks.slice(0,-1).forEach(k=>{a[k]=a[k]||{};a=a[k]});a[ks.at(-1)]=v}
+const igual=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+// Qué explica cada control y cada campo (mismo texto que 10-guias/configuracion-uxyngraphar.md).
+const CONTROLES={lineas:"Archivos de código por encima del límite de líneas.",instruccion:"Cambios de código sin una instrucción aprobada.",secretos:"Credenciales o llaves dentro del código.",nucleo:"Cambios en el núcleo del pack.",espejo:"Código sin su ficha en el espejo (50-sistema-integral).",idioma:"Código del producto que no está en inglés (R-22).",commits:"Mensajes de commit y nombres de rama.",memoria:"Cambios en la memoria del sistema (95-memoria).",reglas_proyecto:"Reglas del propio equipo (96-reglas-proyecto)."};
+const NIV={bloqueante:"Bloquea: el commit o el CI no pasan",aviso:"Avisa: solo muestra el problema",apagado:"Apagado: no se revisa"};
+function campos(o,plantilla){const c=[];
+ c.push({g:"Controles",d:"Qué pasa cuando la puerta de control encuentra un problema."});
+ (o.controles||[]).forEach(k=>c.push({p:"niveles."+k,t:"sel",l:k.replace("_"," "),h:CONTROLES[k]||"",op:o.niveles.map(n=>[n,NIV[n]||n])}));
+ c.push({g:"General"});
+ if(!plantilla)c.push({p:"rol",t:"sel",l:"Tipo de proyecto",h:"Servidor (API) o cliente (interfaz). Decide qué espera el espejo.",op:[["servidor","Servidor"],["cliente","Cliente"]]});
+ c.push({p:"limite_lineas",t:"num",min:50,l:"Límite de líneas por archivo",h:"Máximo de líneas de un archivo de código (R-19). Mínimo 50."});
+ if(!plantilla){c.push({g:"Código del producto"});
+  c.push({p:"codigo.raices",t:"lista",l:"Carpetas con código",h:"Una por línea. Vacío = todo el repositorio."});
+  c.push({p:"codigo.extensiones",t:"lista",l:"Extensiones de código",h:"Una por línea (.ts, .py…). Vacío = las comunes."});
+  c.push({p:"codigo.excluir",t:"lista",l:"Nunca es código",h:"Patrones que se ignoran (node_modules/**…)."});
+  c.push({p:"exenciones_lineas",t:"lista",l:"Pueden pasar del límite",h:"Patrones; cada uno con su decisión en 20-decisiones/."});
+  c.push({p:"secretos_permitir",t:"lista",l:"Datos de prueba con forma de credencial",h:"Rutas que el control de secretos no revisa."})}
+ c.push({g:"Idioma y commits"});
+ c.push({p:"idioma.conversacion",t:"txt",l:"Idioma de la conversación",h:"«espejo» = el agente responde en tu idioma; o un código fijo (es, en…)."});
+ c.push({p:"idioma.commits",t:"sel",l:"Formato de commits",h:"Conventional Commits o libre.",op:[["conventional","Conventional Commits"],["libre","Libre"]]});
+ c.push({p:"idioma.ramas",t:"txt",l:"Nombres de rama (regex)",h:"Vacío = tipo/alcance-descripcion."});
+ if(!plantilla){c.push({p:"idioma.legacy",t:"lista",l:"Código legacy en otro idioma",h:"Sus hallazgos solo avisan."});
+  c.push({p:"idioma.locales",t:"lista",l:"Archivos de traducción",h:"No cuentan como código."});
+  c.push({p:"idioma.glosario",t:"txt",l:"Glosario de dominio",h:"Ruta dentro de docs/ con los términos permitidos."})}
+ c.push({g:"Copias de seguridad"});
+ c.push({p:"respaldos.conservar_dias",t:"num",min:0,l:"Días que se guardan",h:"Las copias más antiguas se pueden borrar."});
+ c.push({p:"respaldos.conservar_minimo",t:"num",min:0,l:"Mínimo que siempre se guarda",h:"Las N más recientes nunca se borran."});
+ c.push({p:"respaldos.limpieza_automatica",t:"bool",l:"Limpieza automática",h:"Borra las caducadas al terminar cada actualización."});
+ c.push({g:"Memoria del sistema",d:"Las fichas que cumplieron su ciclo pasan a 95-memoria (R-24)."});
+ c.push({p:"memoria.archivadas_a_memoria_dias",t:"num",min:0,l:"Días en archivadas",h:"Antes de proponer pasarlas a la memoria."});
+ c.push({p:"memoria.listas_a_memoria_dias",t:"num",min:0,l:"Días en listas para eliminar",h:"Antes de proponer pasarlas a la memoria."});
+ c.push({p:"memoria.permitir_purgar",t:"bool",l:"Permitir borrado definitivo",h:"Desmarcado impide «memoria.py purgar»."});
+ if((o.excepciones||[]).length){c.push({g:"Reglas del proyecto",d:"Las reglas que escribe tu equipo en 96-reglas-proyecto. Las del núcleo (R-xx) no se tocan desde aquí."});
+  c.push({p:"reglas_proyecto.excepciones",t:"sel",l:"Excepciones a una regla",h:"Cómo se aprueba saltarse una regla del proyecto.",op:[["en_instruccion","Declaradas en la instrucción (se aprueban con ella)"],["ficha_aparte","Además, una ficha EX aprobada por una persona"],["prohibidas","No se permiten"]].filter(x=>o.excepciones.includes(x[0]))});
+  c.push({p:"reglas_proyecto.cambios_reglas",t:"sel",l:"Quién cambia las reglas",h:"«Solo personas» añade reglas para que el agente no pueda tocarlas.",op:[["instruccion_aprobada","El agente, con una instrucción aprobada"],["solo_humano","Solo personas"]].filter(x=>o.cambios_reglas.includes(x[0]))})}
+ c.push({g:"Privacidad de las sugerencias"});
+ c.push({p:"feedback.ocultar",t:"lista",l:"Nombres que nunca salen",h:"Cliente, producto, empresa… Se quitan antes de enviar una ficha EVO."});
+ return c}
+function control(f,v,id){const val=v??"";
+ if(f.t==="sel")return `<select id="${id}">${f.op.map(([k,t])=>`<option value="${esc(k)}" ${k===val?"selected":""}>${esc(t)}</option>`).join("")}</select>`;
+ if(f.t==="num")return `<input type="number" id="${id}" min="${f.min}" value="${esc(val)}">`;
+ if(f.t==="bool")return `<label><input type="checkbox" id="${id}" ${val?"checked":""}> Sí</label>`;
+ if(f.t==="lista")return `<textarea id="${id}">${esc((val||[]).join("\n"))}</textarea>`;
+ return `<input type="text" id="${id}" value="${esc(val)}">`}
+function leerCampo(f,id){const e=document.getElementById(id);if(!e)return undefined;
+ if(f.t==="num")return e.value===""?null:Number(e.value);if(f.t==="bool")return e.checked;
+ if(f.t==="lista")return e.value.split("\n").map(x=>x.trim()).filter(Boolean);return e.value}
+function formulario(lista,base,actual,pref){return lista.map((f,i)=>f.g?`<h3>${esc(f.g)}</h3>${f.d?`<p class="mut">${esc(f.d)}</p>`:""}`:
+ `<div class="campo ${igual(get(actual,f.p),get(base,f.p))?"":"mod"}"><label for="${pref}${i}">${esc(f.l)}</label><small>${esc(f.h)}</small><div class="ctl">${control(f,get(actual,f.p),pref+i)}</div></div>`).join("")}
+function cambiosDe(lista,base,pref){const c={};lista.forEach((f,i)=>{if(f.g)return;const v=leerCampo(f,pref+i);if(v!==undefined&&!igual(v,get(base,f.p)))put(c,f.p,v)});return c}
+function tabs(){document.querySelectorAll("nav.tabs button[data-t]").forEach(b=>{b.classList.toggle("on",b.dataset.t===S.tab);b.onclick=()=>{S.tab=b.dataset.t;S.msg="";dibujar()}})}
+function dibujar(){tabs();({bienvenida:vBienvenida,proyectos:vProyectos,proyecto:vProyecto,plantilla:vPlantilla})[S.tab]()}
+const aviso=()=>S.res&&S.res.sin_persona?`<div class="aviso er">${esc(S.res.sin_persona)}</div>`:"";
+
+// ---------- Bienvenida (tras el comando de una línea) ----------
+function vBienvenida(){const b=S.bien;
+ $("#vista").innerHTML=`<div class="card"><h2>${b.anterior&&b.anterior!==b.version?`uxyngraphar actualizado a ${esc(b.version)}`:`uxyngraphar ${esc(b.version)} instalado`}</h2>
+ <p class="mut">${b.anterior&&b.anterior!==b.version?`Antes tenías la ${esc(b.anterior)}. Tus proyectos no han cambiado: actualízalos desde «Mis proyectos» cuando quieras.`:"La herramienta ya está en tu equipo. Ahora decide cómo quieres trabajar."}</p>
+ <details><summary>Lo que se hizo en la terminal (${b.pasos.length} líneas)</summary><pre class="diff">${esc(b.pasos.join("\n"))}</pre></details></div>
+ ${b.path_pendiente?`<div class="card" id="pathcard"><h2>1. ¿Añadir el comando <code>uxyngraphar</code> a tu terminal?</h2>
+ <p>Para escribir <code>uxyngraphar</code> desde cualquier carpeta, su carpeta (<code>${esc(b.bin)}</code>) tiene que estar en el PATH.</p>
+ <ul class="pl"><li><b>Sí (recomendado):</b> añado un bloque marcado a tu archivo de inicio de la terminal (o al PATH de usuario en Windows). Se quita solo con <code>uxyngraphar desinstalar</code>. Abre una terminal nueva después.</li>
+ <li><b>No:</b> no toco nada; usarás la ruta completa <code>${esc(b.lanzador)}</code>.</li></ul>
+ <div class="fila"><button class="pri" onclick="decidirPath(true)">Sí, añadirlo</button><button onclick="decidirPath(false)">No</button></div></div>`:""}
+ ${S.msgBien||""}
+ <div class="card"><h2>${b.path_pendiente?"2. ":""}Qué quieres hacer ahora</h2>
+ <div class="campo"><label>Fijar tus preferencias</label><small>Niveles de control, límite de líneas, idioma, copias de seguridad… Se aplicarán a cada proyecto nuevo. Hazlo antes de instalar.</small><div class="ctl"><button onclick="S.tab='plantilla';dibujar()">Abrir la plantilla</button></div></div>
+ <div class="campo"><label>Instalar uxyngraphar en un proyecto</label><small>El asistente de 5 pasos: proyecto, qué instalar, protección, colaborar y el plan exacto antes de escribir nada.</small><div class="ctl"><a href="/instalar?desde=panel"><button class="pri">Instalar en un proyecto</button></a></div></div>
+ <div class="campo"><label>Ya tengo proyectos con uxyngraphar</label><small>Regístralos para verlos, configurarlos y actualizarlos desde aquí.</small><div class="ctl"><button onclick="S.tab='proyectos';dibujar()">Mis proyectos</button></div></div>
+ </div><p class="mut">Puedes volver a este panel cuando quieras con <code>${esc(b.comando||"uxyngraphar")} panel</code>.</p>`}
+async function decidirPath(agregar){const r=await post("/api/panel/path",{agregar});S.bien.path_pendiente=false;S.msgBien=`<div class="aviso ${r.ok?"ok":"er"}">${esc(r.texto||r.error)}</div>`;dibujar()}
+
+// ---------- Mis proyectos ----------
+function vProyectos(){const r=S.res;if(!r){$("#vista").innerHTML=`<div class="card">Cargando…</div>`;return}
+ let filas=r.proyectos.map(p=>!p.existe?`<tr><td><b>${esc(p.nombre)}</b><br><small class="mut">${esc(p.ruta)}</small></td><td colspan="2"><span class="et er">ya no existe</span></td><td><button onclick='quitar(${JSON.stringify(p.ruta)})'>Quitar del registro</button></td></tr>`:
+  p.packs.map(k=>{const s=S.salud[p.ruta+"|"+k.docs];return `<tr><td><b>${esc(p.nombre)}</b> · <code>${esc(k.docs)}</code><br><small class="mut">${esc(p.ruta)}</small></td>
+  <td>${esc(k.pack)} ${esc(k.version)}<br><span class="et ${k.estado==="al día"?"ok":"av"}">${esc(k.estado)}</span></td>
+  <td>${s?(s.ok?(s.errores?`<span class="et er">${s.errores} errores</span> `:"")+(s.avisos?`<span class="et av">${s.avisos} avisos</span>`:"")+(!s.errores&&!s.avisos?`<span class="et ok">sano</span>`:""):`<span class="et er">${esc(s.error)}</span>`):`<button onclick='salud(${JSON.stringify(p.ruta)},${JSON.stringify(k.docs)})'>Revisar salud</button>`}</td>
+  <td class="fila"><button class="pri" onclick='abrirProyecto(${JSON.stringify(p.ruta)},${JSON.stringify(k.docs)})'>Configurar</button>${k.estado==="actualizable"?`<a href="/actualizar?desde=panel&ruta=${encodeURIComponent(p.ruta)}"><button>Actualizar</button></a>`:""}<button onclick='quitar(${JSON.stringify(p.ruta)})'>Quitar</button></td></tr>`}).join("")).join("");
+ $("#vista").innerHTML=aviso()+`<div class="card"><h2>Mis proyectos</h2><p class="mut">Los proyectos con uxyngraphar registrados en este equipo (${esc(r.carpeta)}).</p>
+ ${r.proyectos.length?`<table><thead><tr><th>Proyecto</th><th>Versión</th><th>Salud</th><th></th></tr></thead><tbody>${filas}</tbody></table>`:`<div class="aviso av">Aún no hay proyectos registrados.</div>`}
+ <h3>Añadir un proyecto que ya tiene uxyngraphar</h3><div class="fila"><input type="text" id="nueva" placeholder="/ruta/a/mi-proyecto" aria-label="Carpeta del proyecto"><button onclick="examinar()">Examinar…</button><button onclick="agregar()">Añadir</button></div>
+ <p style="margin-top:12px"><a href="/instalar?desde=panel"><button>Instalar uxyngraphar en un proyecto nuevo</button></a></p>${S.msg}</div>`}
+async function examinar(){const r=await post("/api/carpeta");if(r.ok)$("#nueva").value=r.ruta}
+async function agregar(){const r=await post("/api/panel/agregar",{ruta:$("#nueva").value});S.msg=r.ok?`<div class="aviso ok">Añadido: ${esc(r.ruta)}</div>`:`<div class="aviso er">${esc(r.error)}</div>`;await cargar()}
+async function quitar(ruta){await post("/api/panel/quitar",{ruta});S.msg=`<div class="aviso ok">Quitado del registro (la carpeta no se toca).</div>`;await cargar()}
+async function salud(ruta,docs){S.salud[ruta+"|"+docs]=await post("/api/panel/salud",{ruta,docs});dibujar()}
+
+// ---------- Configuración de un proyecto ----------
+async function abrirProyecto(ruta,docs){S.sel={ruta,docs};S.prev=null;S.msg="";S.tab="proyecto";S.cfg=await post("/api/panel/ver",{ruta,docs});dibujar()}
+function vProyecto(){const c=S.cfg;
+ if(!c){$("#vista").innerHTML=`<div class="card"><h2>Configuración del proyecto</h2><p>Elige un proyecto en «Mis proyectos» y pulsa «Configurar».</p></div>`;return}
+ if(!c.ok){$("#vista").innerHTML=`<div class="aviso er">${esc(c.error)}</div>`;return}
+ const lista=campos(c.opciones,false),col=c.colaborar,info=S.res&&S.res.colaboracion;
+ $("#vista").innerHTML=aviso()+`<div class="card"><h2>${esc(c.ruta.split(/[\\/]/).pop())} · <code>${esc(c.docs)}</code></h2>
+ <p class="mut"><code>${esc(c.archivo)}</code>${c.existe?"":" (aún no existe: se usan los valores por defecto)"} · Guía: <code>${esc(c.guia)}</code></p>
+ ${c.ilegible?`<div class="aviso er">El archivo no es JSON válido. Corrígelo a mano; mientras tanto se usan los valores por defecto.</div>`:""}
+ ${c.problemas.length?`<div class="aviso er"><b>Valores inválidos ahora mismo:</b><ul class="pl">${c.problemas.map(p=>`<li>${esc(p)}</li>`).join("")}</ul></div>`:""}
+ <div id="form">${formulario(lista,c.defecto,c.efectiva,"c")}</div></div>
+ <div class="card"><h2>Colaborar en la mejora de uxyngraphar</h2>
+ ${!col.disponible?`<p class="mut">Este proyecto tiene una versión del pack sin envío de sugerencias. Actualízalo para poder elegir.</p>`:
+ `<p>Ahora: <b>${col.activo?"Sí, envío activo":col.respondido==="no"?"No":"Sin responder (cuenta como No)"}</b>${col.respondido_en?` · desde ${esc(col.respondido_en)}`:""}</p>
+ ${info?`<details><summary>Qué sale y qué no</summary><p><b>Sale:</b></p><ul class="pl">${info.sale.map(x=>`<li>${esc(x)}</li>`).join("")}</ul><p><b>No sale nunca:</b></p><ul class="pl">${info.no_sale.map(x=>`<li>${esc(x)}</li>`).join("")}</ul><p class="mut">${esc(info.cuando)}</p></details>`:""}
+ <div class="fila" style="margin-top:8px">${col.activo?`<button onclick="colaborar(false)">Dejar de colaborar</button><label><input type="checkbox" id="borrar"> y pedir que borren lo ya enviado</label>`:`<button onclick="colaborar(true)">Sí, quiero colaborar</button>`}</div>`}</div>
+ ${S.prev?vistaPrevia(S.prev):""}${S.msg}
+ <div class="barra"><button onclick="abrirProyecto(S.sel.ruta,S.sel.docs)">Descartar cambios</button><button class="pri" onclick="revisar()">Revisar cambios</button></div>`;
+ document.querySelectorAll("#form input,#form select,#form textarea").forEach(e=>e.addEventListener("change",()=>{S.prev=null}))}
+function vistaPrevia(p){if(!p.ok)return `<div class="aviso er">${esc(p.error)}</div>`;
+ if(!p.cambios.length)return `<div class="aviso ok">No hay cambios respecto a lo que está guardado.</div>`;
+ return `<div class="card"><h2>Esto es lo que cambiará</h2><ul class="pl">${p.cambios.map(x=>`<li><code>${esc(x)}</code></li>`).join("")}</ul>
+ ${p.problemas.length?`<div class="aviso er"><b>No se puede guardar:</b><ul class="pl">${p.problemas.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}
+ <details><summary>Ver el archivo línea a línea</summary><pre class="diff">${esc(p.diff.join("\n"))}</pre></details>
+ <p class="mut">Antes de escribir se guarda una copia en <code>.uxyngraphar-respaldo/</code> (se restaura con <code>respaldos.py restaurar</code>). Recuerda hacer commit del archivo.</p>
+ <div class="fila"><button class="pri" ${p.problemas.length?"disabled":""} onclick="guardar()">Guardar</button></div></div>`}
+async function revisar(){const c=S.cfg;S.form=cambiosDe(campos(c.opciones,false),c.efectiva,"c");S.prev=await post("/api/panel/previsualizar",{...S.sel,cambios:S.form});S.msg="";dibujar()}
+async function guardar(){const r=await post("/api/panel/guardar",{...S.sel,cambios:S.form,huella:S.prev.huella});
+ if(r.ok){await abrirProyecto(S.sel.ruta,S.sel.docs);S.msg=`<div class="aviso ok">${r.sin_cambios?"No había nada que cambiar.":`Guardado. Copia de seguridad: <code>${esc(r.respaldo||"no hacía falta")}</code>`}</div>`}
+ else{S.msg=`<div class="aviso er">${esc(r.error)}${(r.problemas||[]).map(x=>"<br>· "+esc(x)).join("")}</div>`}dibujar()}
+async function colaborar(si){const b=$("#borrar");const r=await post("/api/panel/colaborar",{...S.sel,si,borrar_remoto:!!(b&&b.checked)});
+ await abrirProyecto(S.sel.ruta,S.sel.docs);S.msg=`<div class="aviso ${r.ok?"ok":"er"}">${esc(r.error||(r.salida||"Hecho").trim().split("\n").pop())}</div>`;dibujar()}
+
+// ---------- Plantilla y sistema ----------
+function vPlantilla(){const r=S.res,u=S.ult,pl=S.pl;if(!r||!pl){$("#vista").innerHTML=`<div class="card">Cargando…</div>`;return}
+ const base=pl.defecto,actual=JSON.parse(JSON.stringify(base));(function f(d,o){for(const k in o){if(o[k]&&typeof o[k]==="object"&&!Array.isArray(o[k])){d[k]=d[k]||{};f(d[k],o[k])}else d[k]=o[k]}})(actual,pl.plantilla);
+ const lista=campos(pl.opciones,true),proy=r.proyectos.flatMap(p=>p.packs.map(k=>({ruta:p.ruta,docs:k.docs,nombre:p.nombre})));
+ $("#vista").innerHTML=aviso()+`<div class="card"><h2>Sistema</h2><p>Herramienta <b>${esc(r.version)}</b> · carpeta <code>${esc(r.carpeta)}</code></p>
+ <p>${u?(u.ultima?(u.hay_nueva?`<span class="et av">Hay una versión nueva: ${esc(u.ultima)}</span> Para instalarla: <code>uxyngraphar autoactualizar</code> (no cambia tus proyectos; luego actualízalos desde «Mis proyectos»).`:`<span class="et ok">Al día</span> (última publicada: ${esc(u.ultima)})`):`<span class="mut">Sin conexión: no sé cuál es la última versión.</span>`):`<span class="mut">Comprobando la última versión…</span>`}</p></div>
+ <div class="card"><h2>Plantilla para tus proyectos</h2><p class="mut">Tus valores preferidos. Se aplican solos al <b>instalar</b> uxyngraphar en un proyecto nuevo. En los proyectos que ya tienes solo se aplican si tú lo pides abajo, viendo antes qué cambia. Cada proyecto sigue mandando con su propio archivo (va en git: tu equipo y el CI ven lo mismo). Lo propio de cada repositorio (tipo, carpetas de código, exenciones) y la respuesta a «colaborar» no van en la plantilla.</p>
+ <p class="mut"><code>${esc(pl.archivo)}</code>${Object.keys(pl.plantilla).length?"":" · aún vacía: todo con los valores por defecto"}</p>
+ <div id="formpl">${formulario(lista,base,actual,"p")}</div>
+ <div class="fila" style="margin-top:10px"><button class="pri" onclick="guardarPlantilla()">Guardar plantilla</button></div>${S.msgPl||""}</div>
+ <div class="card"><h2>Aplicar la plantilla a proyectos que ya tienes</h2>${proy.length?`<p class="mut">Elige los proyectos y revisa qué cambiaría en cada uno.</p>
+ ${proy.map((p,i)=>`<label style="display:block"><input type="checkbox" class="dst" data-i="${i}"> ${esc(p.nombre)} · <code>${esc(p.docs)}</code></label>`).join("")}
+ <div class="fila" style="margin-top:8px"><button onclick="simularPlantilla()">Revisar cambios</button></div>${S.plPrev?vistaPlantilla(S.plPrev):""}`:`<p class="mut">No hay proyectos registrados.</p>`}</div>`;
+ S._proy=proy}
+async function guardarPlantilla(){const pl=S.pl,c=cambiosDe(campos(pl.opciones,true),pl.defecto,"p");const r=await post("/api/panel/plantilla/guardar",{plantilla:c});
+ S.msgPl=r.ok?`<div class="aviso ok">Plantilla guardada.</div>`:`<div class="aviso er">${esc(r.error||"Valores inválidos")}${(r.problemas||[]).map(x=>"<br>· "+esc(x)).join("")}</div>`;
+ S.pl=await post("/api/panel/plantilla");S.plPrev=null;dibujar()}
+function elegidos(){return[...document.querySelectorAll(".dst:checked")].map(e=>S._proy[+e.dataset.i])}
+async function simularPlantilla(){const d=elegidos();if(!d.length)return;S.plPrev=await post("/api/panel/plantilla/aplicar",{destinos:d,aplicar:false});S.plPrev.sel=d;dibujar();
+ document.querySelectorAll(".dst").forEach(e=>{e.checked=d.some(x=>x===S._proy[+e.dataset.i])})}
+function vistaPlantilla(p){if(p.error)return `<div class="aviso er">${esc(p.error)}</div>`;
+ return p.destinos.map(d=>`<h3>${esc(d.ruta.split(/[\\/]/).pop())} · <code>${esc(d.docs)}</code></h3>`+(d.error?`<div class="aviso er">${esc(d.error)}</div>`:d.aplicado?`<div class="aviso ${d.ok?"ok":"er"}">${d.ok?(d.sin_cambios?"Ya coincidía.":"Aplicada. Copia: "+esc(d.respaldo)):esc(d.error)}</div>`:
+  (d.cambios||[]).length?`<ul class="pl">${d.cambios.map(x=>`<li><code>${esc(x)}</code></li>`).join("")}</ul>${(d.problemas||[]).length?`<div class="aviso er">${d.problemas.map(esc).join("<br>")}</div>`:""}`:`<p class="mut">Ya coincide: no cambiaría nada.</p>`)).join("")
+  +(p.destinos.some(d=>d.aplicado)?"":`<div class="fila" style="margin-top:8px"><button class="pri" onclick="aplicarPlantilla()">Aplicar a estos proyectos</button></div>`)}
+async function aplicarPlantilla(){const d=S.plPrev.destinos.map(x=>({ruta:x.ruta,docs:x.docs,huella:x.huella}));const r=await post("/api/panel/plantilla/aplicar",{destinos:d,aplicar:true});
+ r.destinos=(r.destinos||[]).map(x=>({...x,aplicado:true}));S.plPrev=r;dibujar()}
+
+async function salir(){await post("/api/salir");document.querySelector("main").innerHTML=`<div class="card"><h2>Panel cerrado</h2><p>Ya puedes cerrar esta pestaña. Para volver a abrirlo: <code>uxyngraphar panel</code></p></div>`}
+async function cargar(){S.res=await post("/api/panel/resumen");dibujar()}
+(async()=>{const ini=await post("/api/inicio");if(ini.bienvenida){S.bien=ini.bienvenida;S.tab="bienvenida";$("#tabBien").classList.remove("oculto")}await cargar();S.pl=await post("/api/panel/plantilla");const q=new URLSearchParams(location.search);
+ if(q.get("ruta"))await abrirProyecto(q.get("ruta"),q.get("docs")||"docs");
+ S.ult=await post("/api/panel/ultima");if(S.tab==="plantilla")dibujar()})();
+</script>
+</body>
+</html>

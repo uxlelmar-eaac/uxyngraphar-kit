@@ -1,0 +1,90 @@
+# Pruebas del kit en cada cambio y publicación de la release al subir una etiqueta vX.Y.Z.
+# La release es la que usa el instalador de una línea:
+#   https://github.com/uxlelmar-eaac/uxyngraphar/releases/latest/download/instalar-uxyngraphar.py
+name: publicar
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publicar-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  PYTHONUTF8: "1"
+  PYTHONIOENCODING: utf-8
+  GIT_AUTHOR_NAME: ci
+  GIT_AUTHOR_EMAIL: ci@example.com
+  GIT_COMMITTER_NAME: ci
+  GIT_COMMITTER_EMAIL: ci@example.com
+
+jobs:
+  pruebas:
+    name: pruebas (${{ matrix.os }}, python ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.10", "3.13"]
+    defaults:
+      run:
+        shell: bash
+        working-directory: español
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # probar-actualizaciones.py instala cada etiqueta vX.Y.Z anterior
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Los packs coinciden con _compartido/base
+        run: python _compartido/construir-packs.py --verificar
+      - name: Pruebas del pack servidor
+        run: python backend/scripts/ejecutar-pruebas.py
+      - name: Pruebas del pack cliente
+        run: python frontend/scripts/ejecutar-pruebas.py
+      - name: Paridad entre packs
+        run: python backend/scripts/verificar-paridad.py
+      - name: Pruebas del instalador
+        run: python -m unittest discover -s instalador -t instalador
+      - name: Pruebas de _compartido
+        run: python -m unittest discover -s _compartido -t _compartido
+      - name: Actualizar desde cada versión publicada
+        run: python _compartido/probar-actualizaciones.py
+
+  publicar:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: pruebas
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: español
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Generar los archivos de la release
+        run: python3 _compartido/publicar.py --salida dist --etiqueta "$GITHUB_REF_NAME"
+      - name: Crear la release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          gh release create "$GITHUB_REF_NAME" \
+            "dist/uxyngraphar-${version}.zip" \
+            dist/instalar-uxyngraphar.py \
+            dist/SHA256SUMS \
+            --title "uxyngraphar ${version}" \
+            --notes "Instalar en una línea: https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/instalar-uxyngraphar.py (ver README). Cambios: español/backend/CHANGELOG.md." \
+            --verify-tag

@@ -1,0 +1,10 @@
+# Artefactos locales de herramientas del autor (no forman parte del pack)
+.atl/
+
+# Bytecode y sesiones locales
+__pycache__/
+*.pyc
+.decisiones/
+
+# Archivos de release generados por _compartido/publicar.py
+dist/

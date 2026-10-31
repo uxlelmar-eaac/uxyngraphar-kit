@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Actualizar uxyngraphar</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1b1f24;--mut:#5b6573;--bd:#d9dee5;--ac:#1f6feb;--acx:#fff;--ok:#1a7f37;--av:#9a6700;--er:#cf222e;--okb:#e6f4ea;--avb:#fff6dc;--erb:#fde8ea;--ad:#e6f4ea;--qt:#fde8ea}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1318;--card:#171c23;--tx:#e6eaf0;--mut:#9aa6b5;--bd:#2c3440;--ac:#4c8dff;--acx:#06101f;--ok:#56d364;--av:#e3b341;--er:#ff7b72;--okb:#12261a;--avb:#2a2110;--erb:#2d1517;--ad:#12261a;--qt:#2d1517}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:800px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:1.5rem;margin:0 0 4px}h2{font-size:1.2rem;margin:0 0 4px}h3{font-size:1.05rem;margin:0}p{margin:.25rem 0 .75rem}.mut{color:var(--mut)}code{font-size:.9em}
+.pasos{display:flex;gap:6px;margin:16px 0 20px;padding:0;list-style:none}.pasos li{flex:1;height:6px;border-radius:3px;background:var(--bd)}.pasos li.on{background:var(--ac)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:18px;margin-bottom:14px}
+input[type=text]{width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
+.fila{display:flex;gap:8px}.fila input{flex:1}
+button{font:inherit;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:10px 16px;cursor:pointer}
+button.pri{background:var(--ac);color:var(--acx);border-color:var(--ac);font-weight:600}button:disabled{opacity:.5;cursor:not-allowed}
+button.min{padding:4px 10px;font-size:.9rem}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+.nav{display:flex;justify-content:space-between;gap:8px;margin-top:8px;flex-wrap:wrap}
+.aviso{border-radius:8px;padding:10px 12px;margin:8px 0}.aviso.ok{background:var(--okb)}.aviso.av{background:var(--avb)}.aviso.er{background:var(--erb)}
+.proy{border:1px solid var(--bd);border-radius:10px;padding:12px 14px;margin:10px 0}.proy header{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.packrow{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--bd);margin-top:8px}
+.badge{display:inline-block;border-radius:999px;padding:1px 10px;font-size:.82rem;font-weight:600;white-space:nowrap}
+.badge.al_dia{background:var(--okb);color:var(--ok)}.badge.actualizar{background:var(--avb);color:var(--av)}.badge.mayor,.badge.degradacion,.badge.error{background:var(--erb);color:var(--er)}
+.pack{border:2px solid var(--bd);border-radius:10px;padding:14px;margin:10px 0}.pack.sel{border-color:var(--ac)}
+.pack>label{display:flex;gap:10px;align-items:flex-start;cursor:pointer}.pack>label input{margin-top:6px}
+details{margin:8px 0;border:1px solid var(--bd);border-radius:8px;padding:6px 10px}summary{cursor:pointer;font-weight:600}
+ul.arch{list-style:none;padding:0;margin:6px 0}ul.arch li{padding:3px 0;border-bottom:1px dashed var(--bd);display:flex;justify-content:space-between;gap:8px;align-items:center;word-break:break-all}
+ul.arch li:last-child{border:0}
+pre.dif{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:8px;overflow:auto;font-size:.82rem;line-height:1.35;max-height:320px;margin:6px 0;white-space:pre}
+pre.dif span{display:block}pre.dif .a{background:var(--ad)}pre.dif .q{background:var(--qt)}pre.dif .h{color:var(--mut)}
+.paso{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--bd)}.paso:last-child{border:0}.paso i{font-style:normal;font-weight:700;width:1.2em}
+.paso.ok i{color:var(--ok)}.paso.aviso i{color:var(--av)}.paso.error i{color:var(--er)}.paso small{display:block;color:var(--mut);word-break:break-all}
+ul.pl,ol.pl{padding-left:20px;margin:6px 0}.pl li{margin:4px 0}
+.spin{display:inline-block;width:16px;height:16px;border:3px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:g 1s linear infinite;vertical-align:-3px;margin-right:8px}@keyframes g{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.spin{animation:none}}
+</style>
+</head>
+<body>
+<main>
+<p id="volver" style="display:none;margin:0 0 8px"><a href="/">← Volver al panel</a></p>
+<h1>Actualizar uxyngraphar</h1>
+<p class="mut">Un asistente en 3 pasos. Primero ves exactamente qué cambiaría; no se escribe nada hasta que confirmes.</p>
+<ol class="pasos" id="barra"><li></li><li></li><li></li></ol>
+<div id="vista" aria-live="polite"></div>
+</main>
+<script>
+const TOKEN="__TOKEN__"; // uxyngraphar:permitir-secreto (marcador que sustituye el servidor)
+const S={paso:1,rutas:[],proyectos:[],sel:{},mig:{},dif:{},abierto:{},res:null,carga:false,colaborar:"",colab:null};
+const $=s=>document.querySelector(s);
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+async function post(u,b={}){const r=await fetch(u,{method:"POST",headers:{"X-Token":TOKEN,"Content-Type":"application/json"},body:JSON.stringify(b)});return r.json()}
+const todos=()=>S.proyectos.flatMap(pr=>(pr.packs||[]).map(p=>({...p,proyecto:pr.nombre})));
+const BADGE={al_dia:"Al día",actualizar:"Actualización disponible",mayor:"Salto de versión mayor",degradacion:"Pack más antiguo que el proyecto",error:"Con problemas"};
+function barra(){document.querySelectorAll("#barra li").forEach((l,i)=>l.classList.toggle("on",i<S.paso))}
+function ir(n){S.paso=n;dibujar()}
+function dibujar(){barra();({1:v1,2:v2,3:v3})[S.paso]()}
+
+async function revisar(){S.carga=true;dibujar();const r=await post("/api/act/revisar",{rutas:S.rutas});S.proyectos=r.proyectos||[];S.carga=false;
+ todos().forEach(p=>{if(!(p.id in S.sel))S.sel[p.id]=p.estado==="actualizar"});dibujar()}
+async function anadir(r){r=(r||"").trim().replace(/^"|"$/g,"");if(!r)return;if(!S.rutas.includes(r))S.rutas.push(r);await revisar()}
+async function examinar(){const r=await post("/api/carpeta");if(r.ok)anadir(r.ruta);else alert("No pude abrir el selector de carpetas en este equipo. Escribe la ruta a mano en el cuadro.")}
+function quitar(i){S.rutas.splice(i,1);S.proyectos.splice(i,1);dibujar()}
+
+function v1(){
+ let h=`<div class="card"><h2>1. ¿Qué proyectos quieres actualizar?</h2><p class="mut">Elige la carpeta de un proyecto que ya tiene uxyngraphar. Detecto solo los packs instalados (también en monorepos). Puedes añadir varios.</p>
+ <div class="fila"><input type="text" id="ruta" placeholder="Por ejemplo C:\\Proyectos\\mi-app  o  /Users/yo/mi-app" aria-label="Carpeta del proyecto"><button onclick="examinar()">Examinar…</button><button class="pri" onclick="anadir($('#ruta').value)">Añadir</button></div>`;
+ if(S.carga)h+=`<p><span class="spin"></span>Revisando…</p>`;
+ S.proyectos.forEach((pr,i)=>{
+  h+=`<div class="proy"><header><div><b>${esc(pr.nombre)}</b><br><small class="mut">${esc(pr.ruta)}</small></div><button class="min" onclick="quitar(${i})" aria-label="Quitar ${esc(pr.nombre)}">Quitar</button></header>`;
+  if(!pr.ok)h+=`<div class="aviso er">${esc(pr.error)}</div>`;
+  else if(!pr.packs.length)h+=`<div class="aviso av">${pr.instalado?"Ya está incluido arriba.":"Esta carpeta no tiene uxyngraphar instalado. Para instalarlo usa «python3 instalar.py»."}</div>`;
+  pr.packs.forEach(p=>{h+=`<div class="packrow"><div style="flex:1"><b>${esc(p.titulo)}</b><br><small class="mut">${esc(p.docs)}/ ${p.actual?`· instalado ${esc(p.actual)} → disponible ${esc(p.nueva)}`:""}</small></div><span class="badge ${p.estado}">${BADGE[p.estado]}</span></div>`});
+  h+=`</div>`});
+ h+=`</div>`;
+ const n=todos().length;
+ h+=`<div class="nav"><button disabled>← Atrás</button><button class="pri" ${n?"":"disabled"} onclick="ir(2)">Revisar cambios →</button></div>`;
+ $("#vista").innerHTML=h;
+ $("#ruta").addEventListener("keydown",e=>{if(e.key==="Enter")anadir(e.target.value)})}
+
+async function dif(pi,gi,fi){const p=todos()[pi],g=p.grupos[gi],rel=g.archivos[fi],k=p.id+"|"+rel;
+ if(S.dif[k]){delete S.dif[k];return dibujar()}
+ S.dif[k]={cargando:true};dibujar();S.dif[k]=await post("/api/act/diferencia",{repo:p.repo,docs:p.docs,rel});dibujar()}
+function pintaDif(d){if(!d)return"";if(d.cargando)return`<span class="spin"></span>`;if(!d.ok)return`<div class="aviso er">${esc(d.error)}</div>`;
+ if(d.igual)return`<div class="aviso ok">Los dos archivos tienen el mismo texto.</div>`;
+ return`<p class="mut"><b style="color:var(--er)">Rojo</b>: lo que dice tu versión · <b style="color:var(--ok)">Verde</b>: lo que dice la nueva de uxyngraphar</p><pre class="dif">${d.lineas.map(l=>`<span class="${l.t}">${esc(l.x)}</span>`).join("")}</pre>${d.truncado?`<p class="mut">Se muestran solo las primeras líneas; abre el archivo en tu editor para ver el resto.</p>`:""}`}
+function resumen(p){
+ if(p.estado==="error")return`<div class="aviso er">${esc(p.error)}</div>`;
+ const c=t=>{const g=p.grupos.find(x=>x.tipo===t);return g?g.archivos.length:0};
+ if(p.estado==="al_dia")return`<p>Ya tiene la versión ${esc(p.nueva)}. Si lo eliges, solo se revisan las protecciones (CI, reglas de agentes, .gitignore…).</p>`;
+ const partes=[];if(c("añadir"))partes.push(`${c("añadir")} archivo(s) nuevo(s)`);if(c("reemplazar")+c("restaurar"))partes.push(`${c("reemplazar")+c("restaurar")} actualizado(s)`);
+ return`<p>Pasa de <b>${esc(p.actual)}</b> a <b>${esc(p.nueva)}</b>${partes.length?": "+partes.join(" · "):""}${c("conflicto")?` · <b>${c("conflicto")} para que decidas tú</b>`:""}.</p>`}
+function marcar(pi,v){S.sel[todos()[pi].id]=v;dibujar()}
+function abre(pi,gi,v){S.abierto[pi+"|"+gi]=v}
+function tarjeta(p,pi){
+ let h=`<div class="pack ${S.sel[p.id]?"sel":""}"><label><input type="checkbox" ${S.sel[p.id]?"checked":""} ${p.estado==="error"||p.estado==="degradacion"?"disabled":""} onchange="marcar(${pi},this.checked)"><div style="flex:1"><h3>${esc(p.titulo)} <span class="badge ${p.estado}">${BADGE[p.estado]}</span></h3><small class="mut">${esc(p.docs)}/</small></div></label>`;
+ h+=resumen(p);
+ if(p.git_sucio)h+=`<div class="aviso av">Tienes ${p.git_sucio} cambio(s) sin commit en ${esc(p.docs)}/. Conviene hacer commit antes de actualizar: así podrás ver y deshacer lo que cambie con git.</div>`;
+ if(p.estado==="degradacion")h+=`<div class="aviso er"><b>Este pack es más antiguo que lo instalado.</b> El proyecto tiene ${esc(p.actual)} y este pack es ${esc(p.nueva)}. No se puede aplicar: descarga una versión igual o más reciente de uxyngraphar.</div>`;
+ if(p.estado==="mayor")h+=`<div class="aviso er"><b>Salto de versión mayor.</b> Puede cambiar la estructura y exige una instrucción aprobada (guía <code>10-guias/actualizar-nucleo.md</code>). Escribe aquí el id de esa instrucción:<input type="text" style="margin-top:6px" placeholder="Por ejemplo INS-20261015-migracion" value="${esc(S.mig[p.id]||"")}" oninput="S.mig[this.dataset.k]=this.value;actualizaBoton()" data-k="${esc(p.id)}" aria-label="Id de la instrucción aprobada"></div>`;
+ p.grupos.forEach((g,gi)=>{
+  h+=`<details ${(S.abierto[pi+"|"+gi]??g.tipo==="conflicto")?"open":""} ontoggle="abre(${pi},${gi},this.open)"><summary>${esc(g.titulo)} (${g.archivos.length})</summary><p class="mut">${esc(g.explica)}</p><ul class="arch">`+
+  g.archivos.map((f,fi)=>`<li><div style="flex:1">${esc(f)}${S.dif[p.id+"|"+f]?pintaDif(S.dif[p.id+"|"+f]):""}</div>${g.diferencias?`<button class="min" onclick="dif(${pi},${gi},${fi})">${S.dif[p.id+"|"+f]?"Ocultar":"Ver diferencias"}</button>`:""}</li>`).join("")+`</ul></details>`});
+ if(p.pendientes&&p.pendientes.length)h+=`<details><summary>Estado de salud: ${p.pendientes.length} pendiente(s) · ${p.verificaciones_ok} ok</summary>`+p.pendientes.map(x=>`<div class="paso ${x.estado}"><i>${x.estado==="error"?"✕":"!"}</i><div>${esc(x.texto)}${x.detalle?`<small>Qué hacer: ${esc(x.detalle)}</small>`:""}</div></div>`).join("")+`</details>`;
+ return h+`</div>`}
+const pideColaborar=()=>todos().some(p=>S.sel[p.id]&&p.colaboracion_pendiente);
+function listo(){const t=todos().filter(p=>S.sel[p.id]);return t.length>0&&t.every(p=>p.estado!=="degradacion")&&t.every(p=>p.estado!=="mayor"||(S.mig[p.id]||"").trim())&&(!pideColaborar()||!!S.colaborar)}
+function colaborarCard(){const c=S.colab;if(!pideColaborar())return"";if(!c){post("/api/act/colaboracion").then(r=>{S.colab=r;dibujar()});return`<div class="card"><span class="spin"></span></div>`}
+ return`<div class="card"><h2>${esc(c.pregunta)}</h2><p>Se pregunta una sola vez. Es libre: elige sin presión.</p>
+ <div style="display:flex;gap:16px;flex-wrap:wrap"><div style="flex:1;min-width:240px"><b>Qué sale</b><ul class="pl">${c.sale.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div><div style="flex:1;min-width:240px"><b>Qué no sale nunca</b><ul class="pl">${c.no_sale.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div></div>
+ <p class="mut">${esc(c.cuando)}</p><p class="mut">Destino: <code>${esc(c.url)}</code></p>
+ <div class="pack ${S.colaborar==="si"?"sel":""}"><label><input type="radio" name="colab" value="si" ${S.colaborar==="si"?"checked":""} onchange="S.colaborar='si';dibujar()"><div><b>Sí, quiero colaborar</b><br><small class="mut">Se activa el envío de fichas EVO con tu consentimiento y la fecha de hoy.</small></div></label></div>
+ <div class="pack ${S.colaborar==="no"?"sel":""}"><label><input type="radio" name="colab" value="no" ${S.colaborar==="no"?"checked":""} onchange="S.colaborar='no';dibujar()"><div><b>No</b><br><small class="mut">No se envía nada y no se te vuelve a preguntar.</small></div></label></div></div>`}
+function actualizaBoton(){const b=$("#go");if(b){b.disabled=!listo();b.textContent=etiqueta()}}
+function etiqueta(){const n=todos().filter(p=>S.sel[p.id]).length;return n?`Actualizar ${n} seleccionado${n>1?"s":""}`:"Elige algo para actualizar"}
+function v2(){
+ const lista=todos();
+ let h=`<div class="card"><h2>2. Revisa lo que cambiaría</h2><div class="aviso ok"><b>Tu contenido nunca se toca</b> (fichas, instrucciones, rutas, espejo, decisiones). Antes de escribir se guarda una copia en <code>.uxyngraphar-respaldo/</code> y, si algo falla, se deshace lo ya hecho.</div><p class="mut">Marca los packs que quieres actualizar. Aún no se ha escrito nada.</p>`;
+ lista.forEach((p,i)=>h+=tarjeta(p,i));
+ h+=`</div>`+colaborarCard()+`<div class="nav"><button onclick="ir(1)">← Cambiar proyectos</button><button class="pri" id="go" ${listo()?"":"disabled"} onclick="aplicar()">${etiqueta()}</button></div>`;
+ $("#vista").innerHTML=h}
+async function aplicar(){const sel=todos().filter(p=>S.sel[p.id]).map(p=>({repo:p.repo,docs:p.docs,migracion:S.mig[p.id]||""}));
+ $("#vista").innerHTML=`<div class="card"><span class="spin"></span><b>Actualizando…</b><p class="mut">Guardando copia de seguridad, copiando archivos y comprobando el resultado.</p></div>`;
+ S.res=await post("/api/act/aplicar",{seleccion:sel,colaborar:S.colaborar});ir(3)}
+
+const ICO={ok:"✓",aviso:"!",error:"✕"};
+function v3(){
+ const r=S.res;let h=`<div class="card"><h2>${r.ok?"Listo ✓":"Terminó con problemas"}</h2>`;
+ (r.destinos||[]).forEach(d=>{h+=`<h3 style="margin-top:12px">${esc(d.titulo)}</h3>`+d.pasos.map(x=>`<div class="paso ${x.estado}"><i>${ICO[x.estado]}</i><div>${esc(x.texto)}${x.detalle?`<small>${esc(x.detalle)}</small>`:""}</div></div>`).join("");
+  if(d.diagnostico&&d.diagnostico.length)h+=`<div class="aviso av"><b>Te ${d.diagnostico.length===1?"queda":"quedan"} ${d.diagnostico.length} ${d.diagnostico.length===1?"cosa":"cosas"} por hacer</b>${d.diagnostico.map(x=>`<div class="paso ${x.estado}"><i>${ICO[x.estado]}</i><div>${esc(x.texto)}${x.detalle?`<small>Qué hacer: ${esc(x.detalle)}</small>`:""}</div></div>`).join("")}</div>`;
+  else if(d.ok)h+=`<div class="aviso ok">Comprobación final: ${d.diagnostico_ok} verificaciones correctas, ninguna pendiente.</div>`});
+ if((r.siguientes||[]).length)h+=`<h3 style="margin-top:12px">Qué sigue</h3><ol class="pl">${r.siguientes.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>`;
+ h+=`</div><div class="nav"><button onclick="abrir()">Abrir la carpeta</button><button onclick="otra()">Revisar de nuevo</button><button class="pri" onclick="salir()">Cerrar asistente</button></div>`;
+ $("#vista").innerHTML=h}
+function abrir(){const d=(S.res.destinos||[]).find(x=>x.repo);post("/api/abrir",{ruta:d?d.repo:(S.proyectos[0]||{}).ruta||""})}
+async function otra(){S.sel={};S.mig={};S.dif={};S.res=null;S.paso=1;await revisar()}
+const DESDE_PANEL=new URLSearchParams(location.search).get("desde")==="panel";if(DESDE_PANEL)document.getElementById("volver").style.display="block";
+async function salir(){if(DESDE_PANEL){location.href="/";return}await post("/api/salir");$("#vista").innerHTML=`<div class="card"><h2>Asistente cerrado</h2><p>Ya puedes cerrar esta pestaña.</p></div>`}
+(async()=>{const i=await post("/api/inicio"),q=new URLSearchParams(location.search).getAll("ruta");S.rutas=q.length?q:(i.rutas||[]);if(S.rutas.length)await revisar();else dibujar()})();
+</script>
+</body>
+</html>

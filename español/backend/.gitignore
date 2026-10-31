@@ -1,0 +1,5 @@
+# Sesión e historial locales del panel decisiones-pendientes (no versionar)
+.decisiones/
+
+# Bytecode de la herramienta de decisiones (runtime, no versionar)
+__pycache__/

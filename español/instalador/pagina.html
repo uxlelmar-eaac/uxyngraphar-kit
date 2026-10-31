@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Instalar uxyngraphar</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1b1f24;--mut:#5b6573;--bd:#d9dee5;--ac:#1f6feb;--acx:#fff;--ok:#1a7f37;--av:#9a6700;--er:#cf222e;--okb:#e6f4ea;--avb:#fff6dc;--erb:#fde8ea}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1318;--card:#171c23;--tx:#e6eaf0;--mut:#9aa6b5;--bd:#2c3440;--ac:#4c8dff;--acx:#06101f;--ok:#56d364;--av:#e3b341;--er:#ff7b72;--okb:#12261a;--avb:#2a2110;--erb:#2d1517}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:1.5rem;margin:0 0 4px}h2{font-size:1.2rem;margin:0 0 4px}p{margin:.25rem 0 .75rem}.mut{color:var(--mut)}
+.pasos{display:flex;gap:6px;margin:16px 0 20px;padding:0;list-style:none}.pasos li{flex:1;height:6px;border-radius:3px;background:var(--bd)}.pasos li.on{background:var(--ac)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:18px;margin-bottom:14px}
+label.opt{display:block;border:2px solid var(--bd);border-radius:10px;padding:12px 14px;margin:8px 0;cursor:pointer}label.opt:has(input:checked){border-color:var(--ac);background:color-mix(in srgb,var(--ac) 8%,transparent)}
+label.opt input{margin-right:8px}label.opt b{font-size:1.02rem}label.opt small{display:block;color:var(--mut);margin:2px 0 0 24px}
+input[type=text]{width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
+.fila{display:flex;gap:8px}.fila input{flex:1}
+button{font:inherit;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:10px 16px;cursor:pointer}
+button.pri{background:var(--ac);color:var(--acx);border-color:var(--ac);font-weight:600}button:disabled{opacity:.5;cursor:not-allowed}
+button:focus-visible,input:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+.nav{display:flex;justify-content:space-between;gap:8px;margin-top:8px}
+.aviso{border-radius:8px;padding:10px 12px;margin:8px 0}.aviso.ok{background:var(--okb)}.aviso.av{background:var(--avb)}.aviso.er{background:var(--erb)}
+ul.pl{padding-left:20px;margin:6px 0}ul.pl li{margin:4px 0}
+.paso{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--bd)}.paso:last-child{border:0}.paso i{font-style:normal;font-weight:700;width:1.2em}
+.paso.ok i{color:var(--ok)}.paso.aviso i{color:var(--av)}.paso.error i{color:var(--er)}.paso small{display:block;color:var(--mut)}
+.sub{margin:8px 0 0 24px}.oculto{display:none}
+.spin{display:inline-block;width:16px;height:16px;border:3px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:g 1s linear infinite;vertical-align:-3px;margin-right:8px}@keyframes g{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.spin{animation:none}}
+</style>
+</head>
+<body>
+<main>
+<p id="volver" style="display:none;margin:0 0 8px"><a href="/">← Volver al panel</a></p>
+<h1>Instalar uxyngraphar</h1>
+<p class="mut">Un asistente en 5 pasos. No se escribe nada hasta que revises el plan y confirmes.</p>
+<ol class="pasos" id="barra"><li></li><li></li><li></li><li></li><li></li></ol>
+<div id="vista" aria-live="polite"></div>
+</main>
+<script>
+const TOKEN="__TOKEN__"; // uxyngraphar:permitir-secreto (marcador que sustituye el servidor)
+const S={paso:1,ruta:"",info:null,pack:"",mismo:true,sub:"",subS:"",subC:"",ruta2:"",modoDonde:"raiz",proteger:true,prop:"",estricto:false,colaborar:"",colab:null,plan:null,res:null};
+const $=s=>document.querySelector(s);
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+async function post(u,b={}){const r=await fetch(u,{method:"POST",headers:{"X-Token":TOKEN,"Content-Type":"application/json"},body:JSON.stringify(b)});return r.json()}
+function solicitud(extra={}){return{proyecto:S.ruta,pack:S.pack,mismo_repo:S.mismo,sub:S.modoDonde==="sub"?S.sub:"",sub_servidor:S.subS,sub_cliente:S.subC,proyecto2:S.ruta2,proteger:S.proteger,propietario:S.prop,estricto:S.estricto,colaborar:S.colaborar,...extra}}
+function barra(){document.querySelectorAll("#barra li").forEach((l,i)=>l.classList.toggle("on",i<Math.min(S.paso,5)))}
+function nav(atras,sig,txt,dis){return `<div class="nav"><button ${atras?`onclick="ir(${atras})"`:"disabled"}>← Atrás</button><button class="pri" ${dis?"disabled":""} onclick="${sig}">${txt}</button></div>`}
+function ir(n){S.paso=n;dibujar()}
+function dibujar(){barra();({1:v1,2:v2,3:v3,4:v4,5:v5,6:v6})[S.paso]()}
+
+function v1(){
+ const i=S.info;let estado="";
+ if(i&&!i.ok)estado=`<div class="aviso er">${esc(i.error)}</div>`;
+ else if(i){estado=`<div class="aviso ok"><b>${esc(i.nombre)}</b> · ${i.git?"ya es un repositorio git":"todavía no es un repositorio git (el asistente lo inicializará)"}${i.pila.length?` · pila detectada: ${esc(i.pila.join(", "))}`:""}</div>`;
+  if(i.instalados.length)estado+=`<div class="aviso av">Ya tiene uxyngraphar en: ${i.instalados.map(x=>esc(x.docs)+" (v"+esc(x.version)+")").join(", ")}. Si sigues, te ofreceré actualizar el núcleo; tu contenido no se toca.</div>`;
+  if(!i.git&&!i.git_disponible)estado+=`<div class="aviso er">No encuentro git instalado. Instálalo desde git-scm.com y vuelve a abrir el asistente.</div>`}
+ $("#vista").innerHTML=`<div class="card"><h2>1. ¿En qué proyecto?</h2><p class="mut">Elige la carpeta raíz del proyecto donde quieres instalar uxyngraphar (la que contiene tu código, o su <code>.git</code>).</p>
+ <div class="fila"><input type="text" id="ruta" placeholder="Por ejemplo C:\\Proyectos\\mi-app  o  /Users/yo/mi-app" value="${esc(S.ruta)}" aria-label="Carpeta del proyecto"><button onclick="examinar()">Examinar…</button></div>
+ <div id="est">${estado}</div></div>${nav(0,"siguiente1()","Continuar →",!(S.info&&S.info.ok&&(S.info.git||S.info.git_disponible)))}`;
+ $("#ruta").addEventListener("change",e=>revisar(e.target.value));$("#ruta").addEventListener("keydown",e=>{if(e.key==="Enter")revisar(e.target.value)})}
+async function revisar(r){S.ruta=r.trim();S.info=S.ruta?await post("/api/inspeccionar",{ruta:S.ruta}):null;if(S.info&&S.info.ok){S.ruta=S.info.ruta;if(!S.pack)S.pack=S.info.rol_sugerido;S.subS=S.subS||S.info.sub_servidor||"apps/api";S.subC=S.subC||S.info.sub_cliente||"apps/web"}dibujar()}
+async function examinar(){const r=await post("/api/carpeta");if(r.ok)revisar(r.ruta);else alert("No pude abrir el selector de carpetas en este equipo. Escribe la ruta a mano en el cuadro.")}
+function siguiente1(){ir(2)}
+
+function opt(n,v,t,d,chk){return `<label class="opt"><input type="${n==="mismo"||n==="donde"?"radio":"radio"}" name="${n}" value="${v}" ${chk?"checked":""}><b>${t}</b><small>${d}</small></label>`}
+function v2(){
+ const amb=S.pack==="ambos";
+ let donde="";
+ if(amb){donde=`<h2 style="margin-top:18px">¿Dónde van?</h2>`+
+  opt("mismo","si","En el mismo repositorio (monorepo)","Cada uno en su carpeta, con su propio AGENTES.md y su propia protección. Un solo git, un solo gancho que vigila los dos.",S.mismo)+
+  `<div class="sub ${S.mismo?"":"oculto"}" id="subs"><p class="mut">Carpeta de cada app dentro del proyecto:</p><div class="fila"><input type="text" id="subS" value="${esc(S.subS)}" aria-label="Carpeta servidor"><input type="text" id="subC" value="${esc(S.subC)}" aria-label="Carpeta cliente"></div><p class="mut">Izquierda: servidor · Derecha: cliente</p></div>`+
+  opt("mismo","no","En dos repositorios distintos","Cada repo con su pack en la raíz. El proyecto elegido arriba será el servidor; indica el repo del cliente:",!S.mismo)+
+  `<div class="sub ${S.mismo?"oculto":""}" id="otro"><input type="text" id="ruta2" placeholder="Carpeta del repositorio del cliente" value="${esc(S.ruta2)}" aria-label="Repositorio del cliente"></div>`}
+ else{donde=`<h2 style="margin-top:18px">¿Dónde va?</h2>`+
+  opt("donde","raiz","En la raíz del repositorio (lo normal)","Crea AGENTES.md y docs/ en la raíz.",S.modoDonde==="raiz")+
+  opt("donde","sub","En una subcarpeta de app (monorepo)","Crea apps/mi-app/AGENTES.md y apps/mi-app/docs/. Útil si en el mismo repo tendrás también el otro pack.",S.modoDonde==="sub")+
+  `<div class="sub ${S.modoDonde==="sub"?"":"oculto"}" id="subs"><input type="text" id="sub" placeholder="Por ejemplo apps/api" value="${esc(S.sub)}" aria-label="Subcarpeta"></div>`}
+ $("#vista").innerHTML=`<div class="card"><h2>2. ¿Qué quieres instalar?</h2><p class="mut">El pack decide el vocabulario y las plantillas de la documentación. Las herramientas y reglas son las mismas.</p>
+ ${opt("pack","servidor","Servidor","API, servicios, workers, CLI, librerías, procesos de datos. Documenta contratos, rutas y lógica de negocio.",S.pack==="servidor")}
+ ${opt("pack","cliente","Cliente","Web, móvil o escritorio. Documenta pantallas, estado y cómo consume la API.",S.pack==="cliente")}
+ ${opt("pack","ambos","Los dos","Para un producto con servidor y cliente. Elegirás si van en un solo repositorio o en dos.",S.pack==="ambos")}${donde}</div>
+ <div id="e2"></div>${nav(1,"siguiente2()","Continuar →")}`;
+ document.querySelectorAll('input[name=pack]').forEach(e=>e.onchange=()=>{S.pack=e.value;dibujar()});
+ document.querySelectorAll('input[name=mismo]').forEach(e=>e.onchange=()=>{S.mismo=e.value==="si";dibujar()});
+ document.querySelectorAll('input[name=donde]').forEach(e=>e.onchange=()=>{S.modoDonde=e.value;dibujar()})}
+function leer2(){const g=id=>{const e=document.getElementById(id);return e?e.value.trim():""};S.sub=g("sub")||S.sub;S.subS=g("subS")||S.subS;S.subC=g("subC")||S.subC;S.ruta2=g("ruta2")||S.ruta2}
+function siguiente2(){leer2();ir(3)}
+
+function v3(){
+ $("#vista").innerHTML=`<div class="card"><h2>3. Protección</h2><p class="mut">Define qué tan estricto será el control sobre tu agente y tus commits.</p>
+ <label class="opt"><input type="checkbox" id="prot" ${S.proteger?"checked":""}><b>Proteger el núcleo y las credenciales (recomendado)</b><small>Si lo activas: los agentes no pueden editar las reglas ni las herramientas de uxyngraphar ni leer archivos .env o llaves, y CODEOWNERS pide revisión humana. Si lo desactivas: nada impide que un agente modifique el núcleo (la verificación en commit sigue avisando).</small></label>
+ <div class="sub" id="prop"><p><b>¿Quién debe aprobar los cambios al núcleo?</b> (opcional)</p><p class="mut">En GitHub, un archivo llamado CODEOWNERS dice quién tiene que revisar y aprobar cualquier cambio a los archivos protegidos de uxyngraphar (sus reglas y herramientas). Escribe tu usuario de GitHub con @ delante, por ejemplo <code>@juanperez</code>, o el de un equipo, por ejemplo <code>@mi-empresa/mantenedores</code>. Si no usas GitHub o no lo sabes, déjalo vacío: quedará el marcador <code>@CAMBIAR-PROPIETARIO</code> y lo cambias después en <code>.github/CODEOWNERS</code>. Para que la revisión sea obligatoria, en GitHub activa «Require review from Code Owners» en la protección de rama.</p><input type="text" id="propi" placeholder="@miusuario" value="${esc(S.prop)}" aria-label="Usuario de GitHub que aprueba los cambios al núcleo"></div>
+ <label class="opt"><input type="checkbox" id="estr" ${S.estricto?"checked":""}><b>Modo estricto</b><small>Si lo activas: cualquier aviso (archivo demasiado largo, código sin instrucción…) bloquea el commit. Recomendado en proyectos nuevos. Si lo dejas apagado: solo bloquean las credenciales y las alteraciones del núcleo; lo demás avisa. Puedes cambiarlo luego en uxyngraphar.config.json.</small></label></div>
+ ${nav(2,"siguiente3()","Continuar →")}`;
+ $("#prot").onchange=e=>{S.proteger=e.target.checked;$("#prop").classList.toggle("oculto",!S.proteger)};$("#prop").classList.toggle("oculto",!S.proteger)}
+function leer3(){S.prop=($("#propi")||{value:S.prop}).value.trim();S.proteger=$("#prot").checked;S.estricto=$("#estr").checked}
+async function siguiente3(){leer3();if(S.info&&S.info.colaboracion_pendiente===false){S.colaborar="";return planear()}if(!S.colab)S.colab=await post("/api/colaboracion");ir(4)}
+
+function v4(){
+ const c=S.colab||{sale:[],no_sale:[]};
+ $("#vista").innerHTML=`<div class="card"><h2>4. ${esc(c.pregunta||"¿Te gustaría colaborar en la mejora de uxyngraphar?")}</h2>
+ <p>uxyngraphar es abierto: si quieres, las mejoras que tu equipo detecte en el propio sistema (fichas EVO) llegan a quien lo mantiene. Es libre: elige sin presión.</p>
+ <table style="width:100%;border-collapse:collapse;margin:10px 0"><thead><tr><th style="text-align:left;padding:6px;border-bottom:1px solid var(--bd)">Qué sale</th><th style="text-align:left;padding:6px;border-bottom:1px solid var(--bd)">Qué no sale nunca</th></tr></thead>
+ <tbody><tr><td style="vertical-align:top;padding:6px"><ul class="pl">${c.sale.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></td><td style="vertical-align:top;padding:6px"><ul class="pl">${c.no_sale.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></td></tr></tbody></table>
+ <p class="mut">${esc(c.cuando||"")}</p><p class="mut">Destino: <code>${esc(c.url||"")}</code></p>
+ <fieldset style="border:0;padding:0;margin:0"><legend class="oculto">Respuesta</legend>
+ <label class="opt"><input type="radio" name="colab" value="si" ${S.colaborar==="si"?"checked":""}><b>Sí, quiero colaborar</b><small>Se activa el envío de fichas EVO con tu consentimiento y la fecha de hoy.</small></label>
+ <label class="opt"><input type="radio" name="colab" value="no" ${S.colaborar==="no"?"checked":""}><b>No</b><small>No se envía nada y no se te vuelve a preguntar. Puedes cambiarlo cuando quieras con «feedback.py activar».</small></label></fieldset></div>
+ ${nav(3,"planear()","Ver el plan →",!S.colaborar)}`;
+ document.querySelectorAll('input[name=colab]').forEach(e=>e.onchange=()=>{S.colaborar=e.value;v4()})}
+async function planear(){$("#vista").innerHTML=`<div class="card"><span class="spin"></span>Preparando el plan…</div>`;S.paso=5;barra();S.plan=await post("/api/plan",solicitud());v5()}
+
+function v5(){
+ const p=S.plan;let h=`<div class="card"><h2>5. Revisa el plan</h2><p class="mut">Esto es lo que pasará al confirmar. Todavía no se ha escrito nada.</p>`;
+ (p.errores||[]).forEach(e=>h+=`<div class="aviso er">${esc(e)}</div>`);
+ (p.destinos||[]).forEach(d=>{h+=`<h3>${esc(d.titulo)} <small class="mut">· ${d.modo==="actualizar"?"actualización":d.modo==="adoptar"?"instalación sin pisar nada":d.modo==="error"?"error":"instalación nueva"}</small></h3><ul class="pl">${d.lineas.map(l=>`<li>${esc(l)}</li>`).join("")}</ul>`});
+ const act=(p.destinos||[]).some(d=>d.modo==="actualizar");
+ h+=`</div><div class="nav"><button onclick="ir(3)">← Cambiar</button><button class="pri" id="go" ${p.ok?"":"disabled"} onclick="ejecutar()">${act?"Confirmar y actualizar":"Instalar ahora"}</button></div>`;
+ $("#vista").innerHTML=h}
+async function ejecutar(){$("#go").disabled=true;$("#vista").innerHTML=`<div class="card"><span class="spin"></span><b>Instalando…</b><p class="mut">Copiando archivos, activando protección y comprobando el resultado. Puede tardar unos segundos.</p></div>`;
+ S.res=await post("/api/ejecutar",solicitud({aplicar_actualizacion:true}));S.paso=6;barra();v6()}
+
+const ICO={ok:"✓",aviso:"!",error:"✕"};
+function v6(){
+ const r=S.res;let h=`<div class="card"><h2>${r.ok?"Listo ✓":"Terminó con problemas"}</h2>`;
+ (r.errores||[]).forEach(e=>h+=`<div class="aviso er">${esc(e)}</div>`);
+ (r.destinos||[]).forEach(d=>{h+=`<h3>${esc(d.titulo)}</h3>`+d.pasos.map(x=>`<div class="paso ${x.estado}"><i>${ICO[x.estado]}</i><div>${esc(x.texto)}${x.detalle?`<small>${esc(x.detalle)}</small>`:""}</div></div>`).join("");
+  if(d.diagnostico&&d.diagnostico.length)h+=`<div class="aviso av"><b>Te ${d.diagnostico.length===1?"queda":"quedan"} ${d.diagnostico.length} ${d.diagnostico.length===1?"cosa":"cosas"} por hacer</b><p class="mut">Es normal justo después de instalar: son pasos que solo tú puedes hacer, no errores de la instalación.</p>${d.diagnostico.map(x=>`<div class="paso ${x.estado}"><i>${ICO[x.estado]}</i><div>${esc(x.texto)}${x.detalle?`<small>Qué hacer: ${esc(x.detalle)}</small>`:""}</div></div>`).join("")}</div>`;
+  else if(d.ok)h+=`<div class="aviso ok">Comprobación final: ${d.diagnostico_ok} verificaciones correctas, ninguna pendiente.</div>`});
+ if(r.siguientes)h+=`<h3>Qué sigue</h3><ol class="pl">${r.siguientes.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>`;
+ h+=`</div><div class="nav"><button onclick="abrir()">Abrir la carpeta del proyecto</button><button class="pri" onclick="salir()">Cerrar asistente</button></div>`;
+ $("#vista").innerHTML=h}
+function abrir(){post("/api/abrir",{ruta:S.ruta})}
+const DESDE_PANEL=new URLSearchParams(location.search).get("desde")==="panel";if(DESDE_PANEL)document.getElementById("volver").style.display="block";
+async function salir(){if(DESDE_PANEL){location.href="/";return}await post("/api/salir");$("#vista").innerHTML=`<div class="card"><h2>Asistente cerrado</h2><p>Ya puedes cerrar esta pestaña.</p></div>`}
+dibujar();
+</script>
+</body>
+</html>

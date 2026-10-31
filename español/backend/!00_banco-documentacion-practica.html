@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Banco — Cómo funciona la documentación</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --text: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --human: #d97706;
+      --human-bg: #fffbeb;
+      --ai: #2563eb;
+      --ai-bg: #eff6ff;
+      --docs: #059669;
+      --docs-bg: #ecfdf5;
+      --no: #94a3b8;
+      --mono: "Cascadia Code", Consolas, monospace;
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--text);
+      background: var(--bg);
+      padding: 1.5rem 1rem 3rem;
+    }
+    .page { max-width: 640px; margin: 0 auto; }
+    header { margin-bottom: 2rem; }
+    header h1 { font-size: 1.35rem; font-weight: 700; }
+    header .sub { color: var(--muted); font-size: 0.9rem; margin-top: 0.35rem; }
+    .block { margin-bottom: 2.25rem; }
+    .block h2 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+    .block .hint {
+      font-size: 0.88rem;
+      color: var(--muted);
+      margin-top: 0.65rem;
+      font-style: italic;
+    }
+    /* Mapa 30 seg */
+    .map {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0;
+      align-items: stretch;
+    }
+    .map .step {
+      flex: 1 1 80px;
+      min-width: 72px;
+      background: #fff;
+      border: 1px solid var(--line);
+      padding: 0.55rem 0.4rem;
+      text-align: center;
+      font-size: 0.78rem;
+      font-weight: 600;
+      position: relative;
+    }
+    .map .step:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      right: -0.45rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      z-index: 1;
+      background: var(--bg);
+      padding: 0 2px;
+    }
+    /* Fork */
+    .fork { display: grid; gap: 0.75rem; }
+    .path {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 0.85rem 1rem;
+    }
+    .path strong { display: block; font-size: 0.95rem; margin-bottom: 0.35rem; }
+    .path p { font-size: 0.88rem; color: var(--muted); }
+    .path-a { border-left: 4px solid var(--docs); }
+    .path-b { border-left: 4px solid var(--ai); }
+    /* Swimlane */
+    .lane-head {
+      display: grid;
+      grid-template-columns: 28px 1fr 1fr 1fr;
+      gap: 0.35rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.35rem;
+    }
+    .lane-head span:nth-child(2) { color: var(--human); }
+    .lane-head span:nth-child(3) { color: var(--ai); }
+    .lane-head span:nth-child(4) { color: var(--docs); }
+    .lane-row {
+      display: grid;
+      grid-template-columns: 28px 1fr 1fr 1fr;
+      gap: 0.35rem;
+      margin-bottom: 0.35rem;
+      align-items: stretch;
+    }
+    .lane-num {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--muted);
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+    }
+    .cell {
+      font-size: 0.8rem;
+      padding: 0.45rem 0.5rem;
+      border-radius: 4px;
+      min-height: 2.2rem;
+      display: flex;
+      align-items: center;
+    }
+    .cell.empty { color: #cbd5e1; justify-content: center; }
+    .cell.h { background: var(--human-bg); border: 1px solid #fcd34d; }
+    .cell.a { background: var(--ai-bg); border: 1px solid #93c5fd; }
+    .cell.d { background: var(--docs-bg); border: 1px solid #6ee7b7; }
+    .pill {
+      font-family: var(--mono);
+      font-size: 0.72em;
+      background: rgba(0,0,0,0.06);
+      padding: 0.1em 0.35em;
+      border-radius: 3px;
+    }
+    /* Dos columnas */
+    .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    @media (max-width: 480px) { .cols { grid-template-columns: 1fr; } }
+    .col {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 0.75rem 0.85rem;
+    }
+    .col h3 { font-size: 0.85rem; margin-bottom: 0.5rem; }
+    .col.yes h3 { color: var(--docs); }
+    .col.no h3 { color: #dc2626; }
+    .col ul { padding-left: 1.1rem; font-size: 0.84rem; color: var(--muted); }
+    .col li { margin: 0.2rem 0; }
+    /* Salidas */
+    .outcomes { display: flex; flex-direction: column; gap: 0.5rem; }
+    .outcome {
+      display: flex;
+      gap: 0.65rem;
+      align-items: flex-start;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 0.65rem 0.85rem;
+      font-size: 0.88rem;
+    }
+    .outcome .n {
+      flex-shrink: 0;
+      width: 1.4rem;
+      height: 1.4rem;
+      border-radius: 50%;
+      background: var(--ai);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .compare {
+      width: 100%;
+      margin-top: 0.75rem;
+      font-size: 0.82rem;
+      border-collapse: collapse;
+    }
+    .compare th, .compare td {
+      border: 1px solid var(--line);
+      padding: 0.45rem 0.55rem;
+      text-align: left;
+    }
+    .compare th { background: #fff; color: var(--muted); font-weight: 600; }
+    /* Revisión pendientes line */
+    .pipe {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.85rem;
+    }
+    .pipe .box {
+      background: #fff;
+      border: 1px solid var(--line);
+      padding: 0.4rem 0.65rem;
+      border-radius: var(--radius);
+      font-family: var(--mono);
+      font-size: 0.8rem;
+    }
+    .pipe .arrow { color: var(--muted); }
+    footer {
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--line);
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <h1>Banco — Backend / API</h1>
+    <p class="sub">Cómo se comporta la documentación en la práctica. Sigue los números del caso central.</p>
+  </header>
+
+  <!-- A -->
+  <section class="block">
+    <h2>A · Mapa en 30 segundos</h2>
+    <div class="map">
+      <div class="step">Pedido</div>
+      <div class="step">Instrucción</div>
+      <div class="step">Aprobación</div>
+      <div class="step">Código + docs</div>
+      <div class="step">Cierre</div>
+      <div class="step">Revisión pendientes</div>
+    </div>
+    <p class="hint">Sin aprobación no hay código.</p>
+  </section>
+
+  <!-- B -->
+  <section class="block">
+    <h2>B · Primera decisión</h2>
+    <div class="fork">
+      <div class="path path-a">
+        <strong>Camino A — Herramienta o revisión de pendientes</strong>
+        <p>Pedido acotado (revisión de pendientes por consola, script autorizado) → <span class="pill">35/autorizadas/</span> → ejecutar <em>sin</em> instrucción nueva. Revisar bandejas: instrucciones por aprobar, MEJ, EVO, propuestas.</p>
+      </div>
+      <div class="path path-b">
+        <strong>Camino B — Tarea normal</strong>
+        <p>Cualquier cambio de producto → <span class="pill">ciclo-vinculante</span> + instrucción en <span class="pill">05/</span>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- C -->
+  <section class="block">
+    <h2>C · Caso: nuevo endpoint POST</h2>
+    <div class="lane-head">
+      <span>#</span><span>Humano</span><span>IA</span><span>Docs / código</span>
+    </div>
+    <div class="lane-row"><div class="lane-num">1</div><div class="cell h">Pide la feature</div><div class="cell empty">—</div><div class="cell empty">—</div></div>
+    <div class="lane-row"><div class="lane-num">2</div><div class="cell empty">—</div><div class="cell a">Copia <span class="pill">_PLANTILLA</span>, <span class="pill">acto: crear</span></div><div class="cell d"><span class="pill">05-instrucciones/</span></div></div>
+    <div class="lane-row"><div class="lane-num">3</div><div class="cell h">Aprueba <span class="pill">approved</span></div><div class="cell empty">—</div><div class="cell empty">—</div></div>
+    <div class="lane-row"><div class="lane-num">4</div><div class="cell empty">—</div><div class="cell a">Lee <span class="pill">lectura_minima</span></div><div class="cell d"><span class="pill">25-areas/</span> CONTEXTO</div></div>
+    <div class="lane-row"><div class="lane-num">5</div><div class="cell empty">—</div><div class="cell a">Edita solo anclas</div><div class="cell d"><span class="pill">src/...</span></div></div>
+    <div class="lane-row"><div class="lane-num">6</div><div class="cell empty">—</div><div class="cell a">Escribe ficha HTTP</div><div class="cell d"><span class="pill">15-rutas/</span></div></div>
+    <div class="lane-row"><div class="lane-num">7</div><div class="cell empty">—</div><div class="cell a">Sync espejo</div><div class="cell d"><span class="pill">50-sistema-integral/</span></div></div>
+    <div class="lane-row"><div class="lane-num">8</div><div class="cell empty">—</div><div class="cell a">Marca <span class="pill">done</span> + <span class="pill">vinculos_salida</span></div><div class="cell d">instrucción</div></div>
+    <div class="lane-row"><div class="lane-num">9</div><div class="cell empty">—</div><div class="cell a">Opcional: deuda detectada</div><div class="cell d"><span class="pill">45/</span> ≤3</div></div>
+    <div class="lane-row"><div class="lane-num">10</div><div class="cell h">Revisión pendientes (después)</div><div class="cell empty">—</div><div class="cell d"><span class="pill">decisiones-pendientes</span></div></div>
+    <p class="hint">El espejo se escribe; no se lee en tareas normales.</p>
+  </section>
+
+  <!-- D -->
+  <section class="block">
+    <h2>D · Qué lee la IA</h2>
+    <div class="cols">
+      <div class="col yes">
+        <h3>Sí leer</h3>
+        <ul>
+          <li>Instrucción de la tarea</li>
+          <li><span class="pill">lectura_minima</span></li>
+          <li>CONTEXTO del área</li>
+          <li>Fichas <span class="pill">15-rutas/</span> citadas</li>
+          <li>Código por <span class="pill">anclas_codigo</span></li>
+        </ul>
+      </div>
+      <div class="col no">
+        <h3>No leer</h3>
+        <ul>
+          <li>Espejo <span class="pill">50/</span> entero</li>
+          <li>Bandejas <span class="pill">45/</span> <span class="pill">46/</span></li>
+          <li>Historial de instrucciones</li>
+          <li><span class="pill">90-archivo/</span></li>
+          <li>PROTOCOLO completo</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- E -->
+  <section class="block">
+    <h2>E · Al cerrar: 3 salidas</h2>
+    <div class="outcomes">
+      <div class="outcome"><span class="n">1</span><span><strong>Hecho ahora</strong> — código + operativa + espejo (dentro de la instrucción).</span></div>
+      <div class="outcome"><span class="n">2</span><span><strong>Deuda producto</strong> → <span class="pill">45-mejoras-propuestas/</span> — registrar, no implementar.</span></div>
+      <div class="outcome"><span class="n">3</span><span><strong>Gap del pack</strong> → <span class="pill">46-evolucion-documentacion/</span> — registrar, no implementar.</span></div>
+    </div>
+    <table class="compare">
+      <tr><th></th><th>45</th><th>46</th></tr>
+      <tr><td>Qué es</td><td>Deuda del código</td><td>Falta una guía/proceso del pack</td></tr>
+      <tr><td>Máx. por cierre</td><td>3 fichas</td><td>2 fichas</td></tr>
+      <tr><td>Quién decide</td><td>Revisión humana</td><td>Revisión humana</td></tr>
+    </table>
+  </section>
+
+  <!-- F -->
+  <section class="block">
+    <h2>F · Revisión humana de pendientes</h2>
+    <div class="pipe">
+      <span class="box">scan</span>
+      <span class="arrow">→</span>
+      <span class="box">serve</span>
+      <span class="arrow">→</span>
+      <span class="box">apply</span>
+      <span class="arrow">→</span>
+      <span class="box">instrucción derivada</span>
+    </div>
+    <p class="hint">Revisa pendientes en 45, 46, 35 y instrucciones awaiting_approval.</p>
+  </section>
+
+  <footer>Pack servidor · Abrir junto a AGENTES.md y ciclo-vinculante.md en el repo desplegado.</footer>
+</div>
+</body>
+</html>
