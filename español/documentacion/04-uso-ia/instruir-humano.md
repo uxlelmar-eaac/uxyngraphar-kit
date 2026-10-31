@@ -11,4 +11,4 @@ Habla en español claro, sin jerga innecesaria. Estructura fija:
 
 > Pack servidor sembrado en `/ruta`. Doctor OK.  
 > **Tu turno:** (1) revisa `docs/00-nucleo/configuracion-proyecto.md`, (2) `git add AGENTES.md docs && git commit`, (3) cuando pidas cambios a la IA, aprueba la instrucción antes de que toque código.  
-> Guía corta: `documentacion/03-uso-humano/aprobar-instrucciones.md`.
+> Guía corta: `español/documentacion/03-uso-humano/aprobar-instrucciones.md`.

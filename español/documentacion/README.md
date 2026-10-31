@@ -1,8 +1,8 @@
 # Manual oficial de uxyngraphar
 
-**Copyright © 2026 uxleleaac / uxlelmar** · Licencia del kit: [CC BY 4.0](../LICENCIA.md)
+**Copyright © 2026 uxleleaac / uxlelmar** · Licencia del kit: [CC BY 4.0](../../LICENCIA.md)
 
-Esta carpeta es el **manual público** del kit. Vive **fuera** de `español/` (packs, instalador y `_compartido`): no se instala en `docs/` de los proyectos y no participa en PARIDAD ni en `construir-packs.py`.
+Esta carpeta es el **manual público** del kit y reúne **toda su documentación** (por ahora solo existe la versión en español, por eso vive en `español/documentacion/`). Es independiente de los packs (`backend/`, `frontend/`, `_compartido/`): no se instala en `docs/` de los proyectos y no participa en PARIDAD ni en `construir-packs.py`.
 
 ## Para quién
 
@@ -15,7 +15,7 @@ Esta carpeta es el **manual público** del kit. Vive **fuera** de `español/` (p
 ## Mapa rápido
 
 ```text
-documentacion/
+español/documentacion/
 ├── README.md                 ← estás aquí
 ├── AGENTES.md                ← entrada IA: instalar + configurar + instruir humano
 ├── INDICE.md                 ← índice completo
@@ -27,7 +27,7 @@ documentacion/
 ├── 05-comandos/              ← referencia CLI
 ├── 06-packs/                 ← servidor, cliente, monorepo
 ├── 07-colaboracion/          ← sugerencias EVO
-└── 08-referencia/            ← estructura, enlaces a guías del pack, licencias
+└── 08-referencia/            ← estructura, mantener y publicar el kit, enlaces a guías, licencias
 ```
 
 ## Relación con el pack instalado

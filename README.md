@@ -4,13 +4,18 @@ Sistema documental de gobernanza humano–IA (packs backend/frontend en español
 
 ## Empieza aquí
 
+Toda la documentación está en **[`español/documentacion/`](./español/documentacion/README.md)** (por ahora solo existe la versión en español).
+
 | Quién | Entrada |
 |-------|---------|
-| **Manual completo (humano + IA)** | [`documentacion/README.md`](./documentacion/README.md) |
-| **Agentes de IA** | [`documentacion/AGENTES.md`](./documentacion/AGENTES.md) |
-| Packs e instalador | [`español/README.md`](./español/README.md) |
+| **Manual completo (humano + IA)** | [`español/documentacion/README.md`](./español/documentacion/README.md) |
+| **Agentes de IA** | [`español/documentacion/AGENTES.md`](./español/documentacion/AGENTES.md) |
+| Instalar la herramienta | [`español/documentacion/01-instalacion/herramienta.md`](./español/documentacion/01-instalacion/herramienta.md) |
 
-La carpeta `documentacion/` es el manual público: **no** forma parte de los packs, **no** se instala en `docs/` de los proyectos y **no** entra en PARIDAD / `construir-packs.py`.
+```bash
+# Linux / macOS
+curl -fsSL https://github.com/uxlelmar-eaac/uxyngraphar/releases/latest/download/instalar-uxyngraphar.py | python3 -
+```
 
 ## Licencia
 
@@ -21,5 +26,6 @@ Este kit se publica bajo **[CC BY 4.0](https://creativecommons.org/licenses/by/4
 - Texto legal: [`LICENSE`](./LICENSE)
 - Resumen: [`LICENCIA.md`](./LICENCIA.md)
 - Detalle: [`LICENSING.md`](./LICENSING.md)
+- Seguridad: [`SECURITY.md`](./SECURITY.md)
 
 El **código** de la aplicación (API y UI) está en otros repositorios bajo **GPL-3.0** (con licencia comercial opcional). Ver `LICENSING.md`.

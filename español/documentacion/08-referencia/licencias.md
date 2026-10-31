@@ -2,7 +2,7 @@
 
 | Pieza | Licencia |
 |-------|----------|
-| Kit / este manual | CC BY 4.0 — en la **raíz del repo kit**: `LICENSE`, `LICENCIA.md`, `LICENSING.md` |
+| Kit / este manual | CC BY 4.0 — en la **raíz del repo kit**: [`LICENSE`](../../../LICENSE), [`LICENCIA.md`](../../../LICENCIA.md), [`LICENSING.md`](../../../LICENSING.md) |
 | App backend / frontend | GPL-3.0-only + opción comercial (repos de código) |
 
 Copyright © 2026 uxleleaac / uxlelmar.

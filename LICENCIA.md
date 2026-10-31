@@ -11,4 +11,4 @@ Resumen humano: https://creativecommons.org/licenses/by/4.0/deed.es
 
 Puedes compartir y adaptar este material, incluso con fines comerciales, siempre que **atribuyas** la autoría a uxleleaac / uxlelmar y enlaces la licencia.
 
-El **código** de uxyngraphar (frontend/backend) **no** usa esta licencia: ver [`../LICENSING.md`](../LICENSING.md).
+El **código** de uxyngraphar (frontend/backend) **no** usa esta licencia: ver [`LICENSING.md`](./LICENSING.md).

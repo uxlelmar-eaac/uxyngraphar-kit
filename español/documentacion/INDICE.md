@@ -44,6 +44,7 @@
 
 ## 08 · Referencia
 - [Estructura del repo kit](08-referencia/estructura.md)
+- [Mantener y publicar el kit](08-referencia/mantener-kit.md)
 - [Enlaces a guías del pack](08-referencia/enlaces-guias-pack.md)
 - [Licencias](08-referencia/licencias.md)
 

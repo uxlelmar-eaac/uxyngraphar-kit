@@ -22,5 +22,5 @@
 | Pieza | Ubicación |
 |-------|-----------|
 | Código del kit / packs | repo `uxyngraphar` → carpeta `español/` |
-| Este manual | `documentacion/` (no se instala en proyectos) |
+| Este manual | `español/documentacion/` (no se instala en proyectos) |
 | Pack en tu app | `tu-repo/docs/` + `AGENTES.md` al lado |

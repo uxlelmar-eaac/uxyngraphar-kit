@@ -9,6 +9,8 @@ Las fichas en `46-evolucion-documentacion/` describen mejoras del **sistema docu
 - Con **Sí**: se pueden enviar EVO nuevas/cambiadas tras `instalar`/`actualizar` **humanos**
 - Nunca desde CI, ganchos ni el agente
 - No se envía código, rutas crudas, correos ni métricas de uso
+- Antes de preguntar se muestra qué sale y qué no; se cambia cuando quieras con `feedback.py activar` o `revocar`
+- Receptor oficial: el backend de uxyngraphar (repo `uxyngraphar-backend`)
 
 ## Comandos en el proyecto
 

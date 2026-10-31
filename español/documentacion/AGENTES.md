@@ -2,10 +2,10 @@
 
 **Lee solo este archivo al empezar** una tarea sobre el kit uxyngraphar (instalar, configurar, explicar o documentar el uso). Luego abre **únicamente** los enlaces que este playbook indique para el paso en curso.
 
-- Este archivo gobierna el **manual del kit** (`documentacion/`).
+- Este archivo gobierna el **manual del kit** (`español/documentacion/`).
 - Si el trabajo es **dentro de un proyecto ya sembrado**, lee el `AGENTES.md` **de ese proyecto** (junto a su `docs/`), no reescribas el núcleo del pack.
 
-No edites `español/backend|frontend|_compartido` salvo instrucción humana explícita. Sí puedes actualizar `documentacion/` si te lo piden.
+No edites `español/backend|frontend|_compartido` salvo instrucción humana explícita. Sí puedes actualizar `español/documentacion/` si te lo piden.
 
 ## Objetivo
 

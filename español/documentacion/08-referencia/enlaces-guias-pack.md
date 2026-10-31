@@ -31,4 +31,4 @@ Tras instalar, en `docs/10-guias/` (nombres iguales en servidor/cliente salvo HT
 | `monorepo-docs-fusionados.md` | Docs fusionados |
 | `costo-tokens.md` | Presupuesto de contexto |
 
-No copies esas guías a `documentacion/`: viven en el pack instalado.
+No copies esas guías a `español/documentacion/`: viven en el pack instalado.

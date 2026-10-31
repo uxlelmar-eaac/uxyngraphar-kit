@@ -16,6 +16,6 @@
 | Leer 95-memoria | R-24 |
 | Inventar features del kit en la web/docs | Mantén fidelidad al README/manual |
 
-## Este manual (`documentacion/`)
+## Este manual (`español/documentacion/`)
 
 Sí puedes crear/actualizar páginas del manual cuando el humano lo pida: **no** forma parte del núcleo instalable.
