@@ -61,7 +61,7 @@ function dibujar(){barra();({1:v1,2:v2,3:v3})[S.paso]()}
 async function revisar(){S.carga=true;dibujar();const r=await post("/api/act/revisar",{rutas:S.rutas});S.proyectos=r.proyectos||[];S.carga=false;
  todos().forEach(p=>{if(!(p.id in S.sel))S.sel[p.id]=p.estado==="actualizar"});dibujar()}
 async function anadir(r){r=(r||"").trim().replace(/^"|"$/g,"");if(!r)return;if(!S.rutas.includes(r))S.rutas.push(r);await revisar()}
-async function examinar(){const r=await post("/api/carpeta");if(r.ok)anadir(r.ruta);else alert("No pude abrir el selector de carpetas en este equipo. Escribe la ruta a mano en el cuadro.")}
+async function examinar(){const r=await elegirCarpeta($("#ruta").value);if(r)anadir(r)}
 function quitar(i){S.rutas.splice(i,1);S.proyectos.splice(i,1);dibujar()}
 
 function v1(){
@@ -140,5 +140,6 @@ const DESDE_PANEL=new URLSearchParams(location.search).get("desde")==="panel";if
 async function salir(){if(DESDE_PANEL){location.href="/";return}await post("/api/salir");$("#vista").innerHTML=`<div class="card"><h2>Asistente cerrado</h2><p>Ya puedes cerrar esta pestaña.</p></div>`}
 (async()=>{const i=await post("/api/inicio"),q=new URLSearchParams(location.search).getAll("ruta");S.rutas=q.length?q:(i.rutas||[]);if(S.rutas.length)await revisar();else dibujar()})();
 </script>
+<!--EXPLORADOR-->
 </body>
 </html>

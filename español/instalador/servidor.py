@@ -15,20 +15,11 @@ from pathlib import Path
 import api
 import api_actualizar as act
 import api_panel as panel
+import explorar
 
 AQUI = Path(__file__).resolve().parent
+EXPLORADOR = AQUI / "explorador.html"   # explorador de carpetas común: se inserta donde la página tiene <!--EXPLORADOR-->
 PAGINAS = {"instalar": AQUI / "pagina.html", "actualizar": AQUI / "pagina_actualizar.html", "panel": AQUI / "pagina_panel.html"}
-SELECTOR = ("import tkinter as t\nfrom tkinter import filedialog as f\nr=t.Tk();r.withdraw();r.attributes('-topmost',True)\n"
-            "print(f.askdirectory(title='Elige la carpeta raíz de tu proyecto'))")
-
-
-def elegir_carpeta() -> dict:
-    try:
-        r = subprocess.run([sys.executable, "-c", SELECTOR], capture_output=True, text=True, timeout=300)
-    except (OSError, subprocess.TimeoutExpired):
-        return {"ok": False}
-    ruta = r.stdout.strip()
-    return {"ok": bool(ruta), "ruta": ruta, "sin_selector": r.returncode != 0}
 
 
 def abrir_carpeta(ruta: str) -> dict:
@@ -65,7 +56,7 @@ def crear(token: str, apagar, modo: str = "instalar", inicial: list[str] | None 
     rutas = {"/api/inicio": lambda b: {"rutas": inicial or [], "bienvenida": panel.bienvenida() if bienvenida else None}, "/api/act/revisar": lambda b: act.revisar(b.get("rutas", [])),
              "/api/act/diferencia": lambda b: act.diferencia(b.get("repo", ""), b.get("docs", ""), b.get("rel", "")), "/api/act/aplicar": lambda b: act.aplicar(b.get("seleccion", []), str(b.get("colaborar", ""))), "/api/act/colaboracion": lambda b: act.info_colaboracion(),
              "/api/inspeccionar": lambda b: api.inspeccionar(b.get("ruta", "")), "/api/colaboracion": lambda b: api.info_colaboracion(), "/api/plan": api.planificar, "/api/ejecutar": lambda b: panel.registrar_instalados({**api.ejecutar(b), "siguientes": api.siguientes_pasos(b)}) if modo == "panel" else {**api.ejecutar(b), "siguientes": api.siguientes_pasos(b)},
-             "/api/carpeta": lambda b: elegir_carpeta(), "/api/abrir": lambda b: abrir_carpeta(b.get("ruta", "")), "/api/salir": lambda b: (apagar(), {"ok": True})[1],
+             "/api/carpetas": lambda b: explorar.listar(str(b.get("ruta") or ""), b.get("ocultas") is True), "/api/abrir": lambda b: abrir_carpeta(b.get("ruta", "")), "/api/salir": lambda b: (apagar(), {"ok": True})[1],
              **rutas_panel()}
 
     class Manejador(BaseHTTPRequestHandler):
@@ -89,7 +80,7 @@ def crear(token: str, apagar, modo: str = "instalar", inicial: list[str] | None 
             otra = PAGINAS.get(camino.strip("/")) if modo == "panel" else None   # desde el panel se abren también instalar y actualizar
             if not self._local() or (camino != "/" and otra is None):
                 return self._enviar(404, b"No encontrado", "text/plain; charset=utf-8")
-            html = (otra or pagina).read_text(encoding="utf-8").replace("__TOKEN__", token)
+            html = (otra or pagina).read_text(encoding="utf-8").replace("<!--EXPLORADOR-->", EXPLORADOR.read_text(encoding="utf-8")).replace("__TOKEN__", token)
             self._enviar(200, html.encode("utf-8"), "text/html; charset=utf-8")
 
         def do_POST(self):

@@ -60,7 +60,7 @@ function v1(){
  <div id="est">${estado}</div></div>${nav(0,"siguiente1()","Continuar →",!(S.info&&S.info.ok&&(S.info.git||S.info.git_disponible)))}`;
  $("#ruta").addEventListener("change",e=>revisar(e.target.value));$("#ruta").addEventListener("keydown",e=>{if(e.key==="Enter")revisar(e.target.value)})}
 async function revisar(r){S.ruta=r.trim();S.info=S.ruta?await post("/api/inspeccionar",{ruta:S.ruta}):null;if(S.info&&S.info.ok){S.ruta=S.info.ruta;if(!S.pack)S.pack=S.info.rol_sugerido;S.subS=S.subS||S.info.sub_servidor||"apps/api";S.subC=S.subC||S.info.sub_cliente||"apps/web"}dibujar()}
-async function examinar(){const r=await post("/api/carpeta");if(r.ok)revisar(r.ruta);else alert("No pude abrir el selector de carpetas en este equipo. Escribe la ruta a mano en el cuadro.")}
+async function examinar(){const r=await elegirCarpeta($("#ruta").value||S.ruta);if(r)revisar(r)}
 function siguiente1(){ir(2)}
 
 function opt(n,v,t,d,chk){return `<label class="opt"><input type="${n==="mismo"||n==="donde"?"radio":"radio"}" name="${n}" value="${v}" ${chk?"checked":""}><b>${t}</b><small>${d}</small></label>`}
@@ -136,5 +136,6 @@ const DESDE_PANEL=new URLSearchParams(location.search).get("desde")==="panel";if
 async function salir(){if(DESDE_PANEL){location.href="/";return}await post("/api/salir");$("#vista").innerHTML=`<div class="card"><h2>Asistente cerrado</h2><p>Ya puedes cerrar esta pestaña.</p></div>`}
 dibujar();
 </script>
+<!--EXPLORADOR-->
 </body>
 </html>

@@ -129,7 +129,7 @@ function vProyectos(){const r=S.res;if(!r){$("#vista").innerHTML=`<div class="ca
  ${r.proyectos.length?`<table><thead><tr><th>Proyecto</th><th>Versión</th><th>Salud</th><th></th></tr></thead><tbody>${filas}</tbody></table>`:`<div class="aviso av">Aún no hay proyectos registrados.</div>`}
  <h3>Añadir un proyecto que ya tiene uxyngraphar</h3><div class="fila"><input type="text" id="nueva" placeholder="/ruta/a/mi-proyecto" aria-label="Carpeta del proyecto"><button onclick="examinar()">Examinar…</button><button onclick="agregar()">Añadir</button></div>
  <p style="margin-top:12px"><a href="/instalar?desde=panel"><button>Instalar uxyngraphar en un proyecto nuevo</button></a></p>${S.msg}</div>`}
-async function examinar(){const r=await post("/api/carpeta");if(r.ok)$("#nueva").value=r.ruta}
+async function examinar(){const r=await elegirCarpeta($("#nueva").value);if(r)$("#nueva").value=r}
 async function agregar(){const r=await post("/api/panel/agregar",{ruta:$("#nueva").value});S.msg=r.ok?`<div class="aviso ok">Añadido: ${esc(r.ruta)}</div>`:`<div class="aviso er">${esc(r.error)}</div>`;await cargar()}
 async function quitar(ruta){await post("/api/panel/quitar",{ruta});S.msg=`<div class="aviso ok">Quitado del registro (la carpeta no se toca).</div>`;await cargar()}
 async function salud(ruta,docs){S.salud[ruta+"|"+docs]=await post("/api/panel/salud",{ruta,docs});dibujar()}
@@ -270,5 +270,6 @@ async function cargar(){S.res=await post("/api/panel/resumen");dibujarVer();dibu
  if(q.get("ruta"))await abrirProyecto(q.get("ruta"),q.get("docs")||"docs");
  S.ult=await post("/api/panel/ultima");dibujarVer();if(S.tab==="plantilla")dibujar()})();
 </script>
+<!--EXPLORADOR-->
 </body>
 </html>

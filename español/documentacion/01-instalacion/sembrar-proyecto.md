@@ -6,7 +6,7 @@
 uxyngraphar instalar /ruta/al/repo
 ```
 
-Sin ruta abre el asistente en el navegador.
+Sin ruta abre el asistente en el navegador. En el paso 1 escribe la ruta o pulsa **Examinar…**: se abre un explorador de carpetas dentro de la misma página (no depende del selector del sistema, así funciona igual en Linux, macOS y Windows). Desde ahí entras en las carpetas con un clic, subes con «↑ Subir» o con la ruta de arriba, saltas con los atajos (carpeta personal, Escritorio, Documentos, tus proyectos registrados y, en Windows, las unidades) y eliges con «Usar esta carpeta». Las etiquetas «git» y «uxyngraphar» marcan las carpetas que ya son repositorio o ya tienen uxyngraphar. Las carpetas ocultas aparecen si marcas «Mostrar carpetas ocultas»; `Esc` cierra sin elegir.
 
 ### Un solo pack (raíz del repo)
 
