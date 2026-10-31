@@ -68,14 +68,14 @@ function campos(o,plantilla){const c=[];
  if(!plantilla){c.push({p:"idioma.legacy",t:"lista",l:"Código legacy en otro idioma",h:"Sus hallazgos solo avisan."});
   c.push({p:"idioma.locales",t:"lista",l:"Archivos de traducción",h:"No cuentan como código."});
   c.push({p:"idioma.glosario",t:"txt",l:"Glosario de dominio",h:"Ruta dentro de docs/ con los términos permitidos."})}
- c.push({g:"Copias de seguridad"});
- c.push({p:"respaldos.conservar_dias",t:"num",min:0,l:"Días que se guardan",h:"Las copias más antiguas se pueden borrar."});
- c.push({p:"respaldos.conservar_minimo",t:"num",min:0,l:"Mínimo que siempre se guarda",h:"Las N más recientes nunca se borran."});
- c.push({p:"respaldos.limpieza_automatica",t:"bool",l:"Limpieza automática",h:"Borra las caducadas al terminar cada actualización."});
- c.push({g:"Memoria del sistema",d:"Las fichas que cumplieron su ciclo pasan a 95-memoria (R-24)."});
- c.push({p:"memoria.archivadas_a_memoria_dias",t:"num",min:0,l:"Días en archivadas",h:"Antes de proponer pasarlas a la memoria."});
- c.push({p:"memoria.listas_a_memoria_dias",t:"num",min:0,l:"Días en listas para eliminar",h:"Antes de proponer pasarlas a la memoria."});
- c.push({p:"memoria.permitir_purgar",t:"bool",l:"Permitir borrado definitivo",h:"Desmarcado impide «memoria.py purgar»."});
+ c.push({g:"Copias de seguridad",d:"Antes de actualizar uxyngraphar o de limpiar fichas, se guarda una copia de los archivos que se van a tocar (en .uxyngraphar-respaldo/, fuera de git). Sirven para deshacer. Aquí decides cuánto tiempo se conservan."});
+ c.push({p:"respaldos.conservar_dias",t:"num",min:0,l:"Las copias se pueden borrar a los… (días)",h:"Una copia con más días que este número puede borrarse. Ejemplo: 30 = se guardan un mes."});
+ c.push({p:"respaldos.conservar_minimo",t:"num",min:0,l:"Pero conserva siempre las últimas… (copias)",h:"Estas copias, las más recientes, nunca se borran aunque superen los días de arriba. Así siempre puedes deshacer las últimas actualizaciones."});
+ c.push({p:"respaldos.limpieza_automatica",t:"bool",si:"Sí, al terminar cada actualización o limpieza",l:"Borrar solas las copias que ya pasaron ese plazo",h:"Si lo desmarcas no se borra ninguna sola; las borras tú cuando quieras con «respaldos.py limpiar»."});
+ c.push({g:"Memoria del sistema",d:"Las fichas terminadas (instrucciones, decisiones, propuestas) nunca se borran: con el tiempo pasan a la memoria del sistema (carpeta 95-memoria). Es un archivo que solo consultan las personas; el agente no lo lee, así no gasta su atención en trabajo viejo."});
+ c.push({p:"memoria.archivadas_a_memoria_dias",t:"num",min:0,l:"Proponer guardar en la memoria las fichas archivadas a los… (días)",h:"Cuando una ficha lleva estos días archivada, la limpieza propone pasarla a la memoria. No se mueve nada sin que lo confirmes."});
+ c.push({p:"memoria.listas_a_memoria_dias",t:"num",min:0,l:"Y las marcadas «para eliminar» a los… (días)",h:"Lo mismo para las fichas que alguien marcó para eliminar: en vez de borrarlas, se proponen para la memoria."});
+ c.push({p:"memoria.permitir_purgar",t:"bool",si:"Sí, una persona puede hacerlo",l:"Permitir borrar para siempre algo de la memoria",h:"Útil si se guardó un dato sensible por error. Si lo desmarcas, nada de la memoria se puede borrar definitivamente."});
  if((o.excepciones||[]).length){c.push({g:"Reglas del proyecto",d:"Las reglas que escribe tu equipo en 96-reglas-proyecto. Las del núcleo (R-xx) no se tocan desde aquí."});
   c.push({p:"reglas_proyecto.excepciones",t:"sel",l:"Excepciones a una regla",h:"Cómo se aprueba saltarse una regla del proyecto.",op:[["en_instruccion","Declaradas en la instrucción (se aprueban con ella)"],["ficha_aparte","Además, una ficha EX aprobada por una persona"],["prohibidas","No se permiten"]].filter(x=>o.excepciones.includes(x[0]))});
   c.push({p:"reglas_proyecto.cambios_reglas",t:"sel",l:"Quién cambia las reglas",h:"«Solo personas» añade reglas para que el agente no pueda tocarlas.",op:[["instruccion_aprobada","El agente, con una instrucción aprobada"],["solo_humano","Solo personas"]].filter(x=>o.cambios_reglas.includes(x[0]))})}
@@ -85,7 +85,7 @@ function campos(o,plantilla){const c=[];
 function control(f,v,id){const val=v??"";
  if(f.t==="sel")return `<select id="${id}">${f.op.map(([k,t])=>`<option value="${esc(k)}" ${k===val?"selected":""}>${esc(t)}</option>`).join("")}</select>`;
  if(f.t==="num")return `<input type="number" id="${id}" min="${f.min}" value="${esc(val)}">`;
- if(f.t==="bool")return `<label><input type="checkbox" id="${id}" ${val?"checked":""}> Sí</label>`;
+ if(f.t==="bool")return `<label><input type="checkbox" id="${id}" ${val?"checked":""}> ${esc(f.si||"Sí")}</label>`;
  if(f.t==="lista")return `<textarea id="${id}">${esc((val||[]).join("\n"))}</textarea>`;
  return `<input type="text" id="${id}" value="${esc(val)}">`}
 function leerCampo(f,id){const e=document.getElementById(id);if(!e)return undefined;
