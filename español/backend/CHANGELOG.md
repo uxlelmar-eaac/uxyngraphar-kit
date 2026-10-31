@@ -4,6 +4,18 @@ Evolución versionada del pack. Este archivo **viaja dentro de cada pack**: el r
 
 Formato: una entrada por lote de cambios; origen (plan/EVO/decisión humana) siempre citado.
 
+## [1.0.1] — 2026-10-31
+
+Origen: decisión humana (uxlelmar, 2026-10-31: pasar toda la documentación a `español/documentacion/`, mejorar cómo se ve la consola y publicar el resultado como **v1.0.1**). Aplica a **ambos packs**. Parche: sin cambios de reglas, de estructura del pack ni migraciones.
+
+### Herramienta (`uxyngraphar`)
+- **Panel:** configuraciones rápidas en la pestaña de plantilla, pestaña de atajos y comandos, textos más claros en respaldos y memoria del sistema, y la versión actual con un botón para actualizar en un clic cuando hay una nueva publicada.
+- **Consola más clara y con color:** la ayuda agrupa los comandos (Empezar, Tus proyectos, La herramienta) y se ajusta al ancho de la terminal; `uxyngraphar ayuda <comando>` muestra la sintaxis completa y las opciones. Marcas únicas ✓ ! ✕ (con equivalente ASCII), color solo en terminales y respetando `NO_COLOR`.
+- **Corrección:** `uxyngraphar autoactualizar` (y el instalador de una línea) ya no abre el panel cuando la versión ya estaba instalada.
+
+### Documentación
+- Toda la documentación del kit vive en `español/documentacion/` (manual para personas y agentes); `español/README.md`, `INDICE.md` y `AGENTES.md` quedan como punteros cortos. Nueva guía `08-referencia/mantener-kit.md` y enlaces rotos corregidos.
+
 ## [1.0.0] — 2026-10-30
 
 Origen: decisión humana (uxlelmar, 2026-10-30: publicar el estado actual como **uxyngraphar-v1.0.0**, historial git limpio; y «arregla todo eso y todo lo que te encuentres a tu paso en todo el proyecto uxyngraphar, todo alineado a v1.0.0, incluso las nuevas modificaciones»). Aplica a **ambos packs**. Primera versión publicada: línea base pública, sin versiones anteriores.

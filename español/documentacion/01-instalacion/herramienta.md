@@ -43,7 +43,7 @@ Descarga por HTTPS, comprueba la huella SHA256 de la versión antes de escribir 
 
 ## Opciones del instalador de una línea
 
-- `--version X.Y.Z` — versión fija (o cambia `latest/download` por `download/v1.0.0` en la URL)
+- `--version X.Y.Z` — versión fija (o cambia `latest/download` por `download/v1.0.1` en la URL)
 - `--sin-path` — no tocar PATH ni perfiles
 - `--consola` — no abrir el panel al terminar
 - Revisar antes: `curl -fsSL <url> -o instalar-uxyngraphar.py`, léelo y luego `python3 instalar-uxyngraphar.py`
