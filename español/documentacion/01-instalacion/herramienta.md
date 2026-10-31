@@ -5,13 +5,13 @@ Una vez por equipo/máquina.
 ## Linux / macOS
 
 ```bash
-curl -fsSL https://github.com/uxlelmar-eaac/uxyngraphar/releases/latest/download/instalar-uxyngraphar.py | python3 -
+curl -fsSL https://github.com/uxlelmar-eaac/uxyngraphar-kit/releases/latest/download/instalar-uxyngraphar.py | python3 -
 ```
 
 ## Windows (PowerShell)
 
 ```powershell
-irm https://github.com/uxlelmar-eaac/uxyngraphar/releases/latest/download/instalar-uxyngraphar.py | py -
+irm https://github.com/uxlelmar-eaac/uxyngraphar-kit/releases/latest/download/instalar-uxyngraphar.py | py -
 ```
 
 Si no tienes `py`, usa `python`.

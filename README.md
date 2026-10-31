@@ -14,7 +14,7 @@ Toda la documentación está en **[`español/documentacion/`](./español/documen
 
 ```bash
 # Linux / macOS
-curl -fsSL https://github.com/uxlelmar-eaac/uxyngraphar/releases/latest/download/instalar-uxyngraphar.py | python3 -
+curl -fsSL https://github.com/uxlelmar-eaac/uxyngraphar-kit/releases/latest/download/instalar-uxyngraphar.py | python3 -
 ```
 
 ## Licencia

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Instalador de una linea de uxyngraphar (solo biblioteca estandar, cualquier sistema).
-#   Linux/macOS:  curl -fsSL https://github.com/uxlelmar-eaac/uxyngraphar/releases/latest/download/instalar-uxyngraphar.py | python3 -
-#   Windows:      irm https://github.com/uxlelmar-eaac/uxyngraphar/releases/latest/download/instalar-uxyngraphar.py | py -
+#   Linux/macOS:  curl -fsSL https://github.com/uxlelmar-eaac/uxyngraphar-kit/releases/latest/download/instalar-uxyngraphar.py | python3 -
+#   Windows:      irm https://github.com/uxlelmar-eaac/uxyngraphar-kit/releases/latest/download/instalar-uxyngraphar.py | py -
 #   Opciones (detras de "python3 -"):  --version X.Y.Z   --sin-path   --consola   --help
 # El archivo publicado es este (descarga y verificacion) + arranque.py (lanzador, PATH y main), unidos por
 # _compartido/publicar.py. Reglas de ambos (las comprueban las pruebas de instalador/test_arranque.py):
@@ -23,7 +23,7 @@ import urllib.error
 import urllib.request
 import zipfile
 
-REPO = "uxlelmar-eaac/uxyngraphar"
+REPO = "uxlelmar-eaac/uxyngraphar-kit"
 VERSION = "__VERSION__"   # publicar.py la fija al publicar; en el repositorio queda sin fijar
 PYTHON_MINIMO = (3, 10)
 MARCA = "uxyngraphar-lanzador"
