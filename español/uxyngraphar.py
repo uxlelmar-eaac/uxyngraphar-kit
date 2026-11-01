@@ -322,7 +322,13 @@ def cmd_mover_carpeta(args: list[str]) -> int:
             if not sys.stdin.isatty():
                 est.aviso("Para mover, repite con --si.", "")
                 continue
-            if input(f"¿Mover {p['desde']}/ → {p['hacia']}/? [s/N] ").strip().lower() not in ("s", "si", "sí", "y", "yes"):
+            try:
+                r = input(f"¿Mover {p['desde']}/ → {p['hacia']}/? [s/N] ").strip().lower()
+            except (EOFError, KeyboardInterrupt):   # stdin cerrado (p. ej. NUL en Windows) o Ctrl+C: cuenta como No
+                print()
+                est.aviso("Para mover, repite con --si.", "")
+                continue
+            if r not in ("s", "si", "sí", "y", "yes"):
                 print("No se movió nada.")
                 continue
         r = api_mover.aplicar(info["ruta"], inst["docs"], nombre)
@@ -376,7 +382,11 @@ def cmd_version(_args: list[str]) -> int:
 def cmd_desinstalar(args: list[str]) -> int:
     h = home()
     if "--si" not in args:
-        r = input(f"Se borrará {h} y el comando uxyngraphar. Tus proyectos no se tocan. ¿Seguir? [s/N] ").strip().lower()
+        try:
+            r = input(f"Se borrará {h} y el comando uxyngraphar. Tus proyectos no se tocan. ¿Seguir? [s/N] ").strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            r = ""
         if r not in ("s", "si", "sí", "y", "yes"):
             print(est.dim("Sin cambios."))
             return 0

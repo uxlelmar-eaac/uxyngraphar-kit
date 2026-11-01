@@ -27,7 +27,11 @@ import flujo  # noqa: E402
 def _pregunta(texto: str, auto: bool) -> bool:
     if auto:
         return True
-    return input(f"{texto} [s/N] ").strip().lower() in ("s", "si", "sí", "y", "yes")
+    try:
+        return input(f"{texto} [s/N] ").strip().lower() in ("s", "si", "sí", "y", "yes")
+    except (EOFError, KeyboardInterrupt):   # sin respuesta: cuenta como No
+        print()
+        return False
 
 
 RESPUESTA: dict = {}   # una sola pregunta por ejecución, aunque haya varios packs

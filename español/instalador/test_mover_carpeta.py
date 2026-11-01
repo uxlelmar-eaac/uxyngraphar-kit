@@ -101,6 +101,21 @@ class TestCli(Base):
         self.assertTrue((self.repo / "uxyngraphar").is_dir() and not (self.repo / "docs").exists())
         self.assertIn("no hay nada que mover", self.correr().stdout)
 
+    def test_terminal_sin_entrada_cuenta_como_no(self):
+        # En Windows, stdin=NUL dice ser una terminal (isatty() True) pero input() da EOF: no debe fallar ni mover nada.
+        guion = ("import io, runpy, sys\n"
+                 "class T(io.StringIO):\n"
+                 "    def isatty(self): return True\n"
+                 "sys.stdin = T('')\n"
+                 "sys.argv = [sys.argv[1], 'mover-carpeta']\n"
+                 "runpy.run_path(sys.argv[0], run_name='__main__')\n")
+        r = subprocess.run([sys.executable, "-X", "utf8", "-c", guion, str(AQUI.parent / "uxyngraphar.py")], cwd=self.repo,
+                           capture_output=True, text=True, stdin=subprocess.DEVNULL, env={**os.environ, "UXYNGRAPHAR_SIN_PATH": "1"})
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertNotIn("Traceback", r.stderr)
+        self.assertIn("--si", r.stdout + r.stderr)
+        self.assertTrue((self.repo / "docs").is_dir() and not (self.repo / "uxyngraphar").exists())
+
     def test_ayuda(self):
         r = subprocess.run([sys.executable, "-X", "utf8", str(AQUI.parent / "uxyngraphar.py"), "ayuda", "mover-carpeta"], capture_output=True, text=True)
         self.assertIn("git mv", r.stdout)
