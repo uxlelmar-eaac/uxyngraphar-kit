@@ -8,7 +8,7 @@
 ## Qué entrega el kit
 
 1. **Herramienta CLI** `uxyngraphar` (panel local, instalar, actualizar, estado…).
-2. **Dos packs** autosuficientes (servidor / cliente) que se copian a `uxyngraphar/` del proyecto (los instalados antes de la 1.1.0 usan `docs/`).
+2. **Dos packs** autosuficientes (servidor / cliente) que se copian a `uxyngraphar/` del proyecto (los instalados antes de la 1.1.0 usan `docs/`; se puede mover con `uxyngraphar mover-carpeta`).
 3. **Protecciones** opcionales: reglas deny para agentes, CODEOWNERS, ganchos, CI.
 
 ## Qué no es

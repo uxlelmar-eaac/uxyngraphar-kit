@@ -10,6 +10,8 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import stat
+import subprocess
 from pathlib import Path
 
 import respaldos
@@ -51,6 +53,8 @@ class Transaccion:
         destino.parent.mkdir(parents=True, exist_ok=True)
         tmp = destino.with_name(destino.name + ".uxyngraphar-tmp")
         tmp.write_bytes(datos)
+        if destino.is_file():   # conserva los permisos (un gancho de git debe seguir siendo ejecutable)
+            os.chmod(tmp, stat.S_IMODE(destino.stat().st_mode))
         os.replace(tmp, destino)
 
     def copiar(self, rel: str, origen: Path) -> None:
@@ -59,6 +63,11 @@ class Transaccion:
     def borrar(self, rel: str) -> None:
         self.preparar(rel)
         (self.repo / rel).unlink(missing_ok=True)
+
+    def mover(self, desde: str, hacia: str, git: bool = False) -> None:
+        """Renombra una carpeta entera (con `git mv` si git la sigue). Se anota antes: deshacer la devuelve a su sitio."""
+        self._anotar({"op": "mover", "desde": desde, "hacia": hacia, "git": git})
+        _renombrar(self.repo, desde, hacia, git)
 
     def confirmar(self, **extra: str) -> Path:
         respaldos.escribir_manifiesto(self.carpeta, "actualizacion", self.copiados, self.añadidos, estado="completa", **self.info, **extra)
@@ -88,11 +97,23 @@ def deshacer_carpeta(repo: Path, carpeta: Path, motivo: str = "") -> list[str]:
         destino.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(carpeta / rel, tmp)
         os.replace(tmp, destino)
+    for e in reversed([e for e in entradas if e.get("op") == "mover"]):   # carpetas movidas: vuelven a su sitio
+        if (repo / e["hacia"]).exists() and not (repo / e["desde"]).exists():
+            _renombrar(repo, e["hacia"], e["desde"], bool(e.get("git")))
     extra = {k: v for k, v in info.items() if k != "op" and isinstance(v, str)}
     respaldos.escribir_manifiesto(carpeta, "actualizacion", copiados, añadidos, estado="deshecha", motivo=motivo or "actualización interrumpida", **extra)
     with (carpeta / respaldos.DIARIO).open("a", encoding="utf-8", newline="\n") as f:
         f.write(json.dumps({"op": "deshecha", "motivo": motivo}, ensure_ascii=False) + "\n")
     return copiados + añadidos
+
+
+def _renombrar(repo: Path, desde: str, hacia: str, git: bool) -> None:
+    (repo / hacia).parent.mkdir(parents=True, exist_ok=True)
+    if git:
+        r = subprocess.run(["git", "mv", "-k", desde, hacia], cwd=repo, capture_output=True, text=True)
+        if r.returncode == 0 and (repo / hacia).exists() and not (repo / desde).exists():
+            return
+    os.replace(repo / desde, repo / hacia)
 
 
 def interrumpidas(repo: Path) -> list[Path]:

@@ -19,6 +19,8 @@ En Windows, si no tienes `python3`, usa `py -3` (o `python`) en lugar de `python
 | `uxyngraphar proyectos --quitar RUTA` | Quita del registro (no borra `uxyngraphar/`) |
 | `uxyngraphar proyectos --salud` | Salud rápida |
 | `uxyngraphar configuracion [RUTA]` | Muestra/valida `uxyngraphar.config.json` |
+| `uxyngraphar mover-carpeta [RUTA]` | Mueve el pack de `docs/` a `uxyngraphar/` (proyectos anteriores a 1.1.0; muestra el plan y pregunta) |
+| `uxyngraphar mover-carpeta [RUTA] --si` | Mueve sin preguntar · `--a docs` para volver |
 | `uxyngraphar autoactualizar` | Actualiza la herramienta |
 | `uxyngraphar autoactualizar --version X.Y.Z` | Fija versión de la herramienta |
 | `uxyngraphar usar X.Y.Z` | Cambia a una versión ya guardada |

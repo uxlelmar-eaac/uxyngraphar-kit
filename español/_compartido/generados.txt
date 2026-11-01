@@ -204,12 +204,14 @@ scripts/nucleo/flujo.py
 scripts/nucleo/instalar.py
 scripts/nucleo/lock.py
 scripts/nucleo/migraciones.py
+scripts/nucleo/mover.py
 scripts/nucleo/proteccion.py
 scripts/nucleo/respaldos.py
 scripts/nucleo/terminal.py
 scripts/nucleo/test_distribucion.py
 scripts/nucleo/test_doctor.py
 scripts/nucleo/test_doctor_gancho.py
+scripts/nucleo/test_mover.py
 scripts/nucleo/test_multipack.py
 scripts/nucleo/test_nucleo.py
 scripts/nucleo/test_respaldos.py

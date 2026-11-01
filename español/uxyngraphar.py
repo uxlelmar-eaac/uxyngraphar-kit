@@ -9,6 +9,7 @@ La ayuda que ve la persona (uxyngraphar, uxyngraphar ayuda <comando>) se genera 
   uxyngraphar estado [RUTA]                versión del proyecto, de la herramienta y la última publicada
   uxyngraphar proyectos [--agregar RUTA | --quitar RUTA | --salud]   proyectos registrados en este equipo
   uxyngraphar configuracion [RUTA]        el archivo de configuración del proyecto (<carpeta del pack>/uxyngraphar.config.json): efectiva y problemas
+  uxyngraphar mover-carpeta [RUTA] [--si]  mueve el pack de docs/ a uxyngraphar/ (instalaciones anteriores a 1.1.0)
   uxyngraphar autoactualizar [--version X.Y.Z]   descarga e instala la última versión de la herramienta
   uxyngraphar usar X.Y.Z                   vuelve a una versión (la descarga si hace falta)
   uxyngraphar version                      versión activa y versiones guardadas
@@ -34,7 +35,7 @@ import arranque as ar  # noqa: E402
 import estilo as est  # noqa: E402  (colores, marcas y tablas de la consola)
 import sistema  # noqa: E402  (carpeta de la herramienta, registro de proyectos, plantilla)
 
-COMANDOS = ("panel", "instalar", "actualizar", "estado", "proyectos", "configuracion", "autoactualizar", "usar", "version", "desinstalar")
+COMANDOS = ("panel", "instalar", "actualizar", "estado", "proyectos", "configuracion", "mover-carpeta", "autoactualizar", "usar", "version", "desinstalar")
 
 # Ayuda: comando -> (sintaxis corta, qué hace en una línea, explicación larga, opciones [(opción, qué hace)]).
 AYUDA = {
@@ -76,6 +77,14 @@ AYUDA = {
     "configuracion": ("configuracion [RUTA]", "Configuración del proyecto (uxyngraphar.config.json) y sus problemas.",
                       "Muestra cómo queda la configuración del proyecto (uxyngraphar.config.json, en la carpeta del pack) con los valores "
                       "por defecto aplicados y qué valores son inválidos. Para editarla en pantalla: uxyngraphar panel.", []),
+    "mover-carpeta": ("mover-carpeta [RUTA] [--a uxyngraphar|docs] [--si]", "Mueve el pack de docs/ a uxyngraphar/ (opcional).",
+                      "Los proyectos instalados antes de la 1.1.0 tienen el pack en docs/ y siguen funcionando así. Si prefieres "
+                      "uxyngraphar/, esto lo mueve con git mv y pone al día lo que escribió uxyngraphar (lock, ganchos, reglas para "
+                      "agentes, CODEOWNERS, .gitignore, CLAUDE.md y CI si no los cambiaste). Primero muestra qué cambiaría y qué "
+                      "enlaces tuyos revisar; con copia de seguridad y vuelta atrás si algo falla. Exige git sin cambios en la carpeta.",
+                      [("RUTA", "Carpeta del proyecto (por defecto la actual)."),
+                       ("--a NOMBRE", "Carpeta de destino: uxyngraphar (por defecto) o docs para volver."),
+                       ("--si", "Mover sin preguntar (tras ver el plan).")]),
     "autoactualizar": ("autoactualizar [--version X.Y.Z]", "Descarga e instala la última versión de la herramienta.",
                        "Descarga e instala la última versión publicada de la herramienta (o la indicada). "
                        "No cambia ningún proyecto: después, uxyngraphar actualizar.",
@@ -89,7 +98,7 @@ AYUDA = {
                     [("--si", "Sin pedir confirmación.")]),
 }
 GRUPOS = (("Empezar", ("panel", "instalar")),
-          ("Tus proyectos", ("actualizar", "estado", "proyectos", "configuracion")),
+          ("Tus proyectos", ("actualizar", "estado", "proyectos", "configuracion", "mover-carpeta")),
           ("La herramienta", ("autoactualizar", "usar", "version", "desinstalar")))
 
 
@@ -279,6 +288,53 @@ def cmd_configuracion(args: list[str]) -> int:
     return codigo
 
 
+def cmd_mover_carpeta(args: list[str]) -> int:
+    nombre = ""
+    if "--a" in args:
+        i = args.index("--a")
+        nombre, args = (args[i + 1] if i + 1 < len(args) else ""), args[:i] + args[i + 2:]
+        if not nombre:
+            est.error("--a necesita el nombre de la carpeta: uxyngraphar o docs")
+            return 2
+    rutas = [a for a in args if not a.startswith("-")]
+    import api_mover
+    ruta = rutas[0] if rutas else os.getcwd()
+    info = _api().inspeccionar(ruta)
+    if not info.get("ok"):
+        est.error(info.get("error", "No pude leer la carpeta"))
+        return 2
+    if not info["instalados"]:
+        est.aviso(f"«{info['nombre']}» no tiene uxyngraphar.", "")
+        return 1
+    lista = [x for x in info["instalados"] if x["docs"].rpartition("/")[2] != (nombre or _api().carpeta_pack.CARPETA)]
+    if not lista:
+        est.ok(f"El pack ya está en {(nombre or _api().carpeta_pack.CARPETA)}/: no hay nada que mover.", "")
+        return 0
+    codigo = 0
+    for inst in lista:
+        p = api_mover.ver(info["ruta"], inst["docs"], nombre)
+        if not p["ok"]:
+            est.error(p["error"])
+            codigo = 1
+            continue
+        print(p["texto"] + "\n")
+        if "--si" not in args:
+            if not sys.stdin.isatty():
+                est.aviso("Para mover, repite con --si.", "")
+                continue
+            if input(f"¿Mover {p['desde']}/ → {p['hacia']}/? [s/N] ").strip().lower() not in ("s", "si", "sí", "y", "yes"):
+                print("No se movió nada.")
+                continue
+        r = api_mover.aplicar(info["ruta"], inst["docs"], nombre)
+        if r["ok"]:
+            est.ok(f"Movido: {r['desde']}/ → {r['hacia']}/ · copia de seguridad: {r['respaldo']}", "")
+            print(r["siguiente"])
+        else:
+            est.error(r["error"])
+            codigo = 1
+    return codigo
+
+
 def cmd_autoactualizar(args: list[str]) -> int:
     version = args[args.index("--version") + 1].lstrip("v") if "--version" in args and args.index("--version") + 1 < len(args) else ""
     url = ar.url_de(version, "instalar-uxyngraphar.py") if version else ar.url_ultima("instalar-uxyngraphar.py")
@@ -381,7 +437,7 @@ def main(argv: list[str] | None = None) -> int:
         est.error(f"Comando desconocido: {argv[0]}")
         print("Escribe  " + est.comando("uxyngraphar ayuda") + "  para ver los comandos.", file=sys.stderr)
         return 2
-    return globals()["cmd_" + argv[0]](argv[1:])
+    return globals()["cmd_" + argv[0].replace("-", "_")](argv[1:])
 
 
 if __name__ == "__main__":

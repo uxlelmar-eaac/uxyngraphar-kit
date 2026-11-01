@@ -14,6 +14,8 @@ propuesta_cambio:
   - scripts/nucleo/clasificacion.py
   - scripts/nucleo/proteccion.py
   - scripts/nucleo/flujo.py
+  - scripts/nucleo/mover.py
+  - scripts/nucleo/transaccion.py
   - 10-guias/
 proposed_at: 2026-11-01
 instruction_derivada: solicitud-humana-20261101-carpeta-uxyngraphar

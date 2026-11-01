@@ -137,7 +137,7 @@ async function quitar(ruta){await post("/api/panel/quitar",{ruta});S.msg=`<div c
 async function salud(ruta,docs){S.salud[ruta+"|"+docs]=await post("/api/panel/salud",{ruta,docs});dibujar()}
 
 // ---------- Configuración de un proyecto ----------
-async function abrirProyecto(ruta,docs){S.sel={ruta,docs};S.prev=null;S.msg="";S.tab="proyecto";S.cfg=await post("/api/panel/ver",{ruta,docs});dibujar()}
+async function abrirProyecto(ruta,docs){S.sel={ruta,docs};S.prev=null;S.msg="";S.mov=null;S.tab="proyecto";S.cfg=await post("/api/panel/ver",{ruta,docs});dibujar()}
 function vProyecto(){const c=S.cfg;
  if(!c){$("#vista").innerHTML=`<div class="card"><h2>Configuración del proyecto</h2><p>Elige un proyecto en «Mis proyectos» y pulsa «Configurar».</p></div>`;return}
  if(!c.ok){$("#vista").innerHTML=`<div class="aviso er">${esc(c.error)}</div>`;return}
@@ -152,9 +152,25 @@ function vProyecto(){const c=S.cfg;
  `<p>Ahora: <b>${col.activo?"Sí, envío activo":col.respondido==="no"?"No":"Sin responder (cuenta como No)"}</b>${col.respondido_en?` · desde ${esc(col.respondido_en)}`:""}</p>
  ${info?`<details><summary>Qué sale y qué no</summary><p><b>Sale:</b></p><ul class="pl">${info.sale.map(x=>`<li>${esc(x)}</li>`).join("")}</ul><p><b>No sale nunca:</b></p><ul class="pl">${info.no_sale.map(x=>`<li>${esc(x)}</li>`).join("")}</ul><p class="mut">${esc(info.cuando)}</p></details>`:""}
  <div class="fila" style="margin-top:8px">${col.activo?`<button onclick="colaborar(false)">Dejar de colaborar</button><label><input type="checkbox" id="borrar"> y pedir que borren lo ya enviado</label>`:`<button onclick="colaborar(true)">Sí, quiero colaborar</button>`}</div>`}</div>
+ ${tarjetaMover(c)}
  ${S.prev?vistaPrevia(S.prev):""}${S.msg}
  <div class="barra"><button onclick="abrirProyecto(S.sel.ruta,S.sel.docs)">Descartar cambios</button><button class="pri" onclick="revisar()">Revisar cambios</button></div>`;
  document.querySelectorAll("#form input,#form select,#form textarea").forEach(e=>e.addEventListener("change",()=>{S.prev=null}))}
+// Carpeta del sistema: los proyectos instalados antes de la 1.1.0 tienen el pack en docs/; moverlo es opcional.
+function tarjetaMover(c){const m=S.mov;if(!/(^|\/)docs$/.test(c.docs)&&!(m&&m.hecho))return "";
+ const desde=m&&m.hecho?m.desde:c.docs,hacia=m&&m.hecho?m.hacia:c.docs.replace(/docs$/,"uxyngraphar");
+ return `<div class="card" id="mover"><h2>Carpeta del sistema: <code>${esc(desde)}/</code> → <code>${esc(hacia)}/</code></h2>
+ <p class="mut">Este proyecto se instaló antes de la 1.1.0 y tiene el pack en <code>${esc(desde)}/</code>. Funciona igual; si prefieres que la carpeta se llame <code>uxyngraphar/</code> (no choca con tu propia documentación), aquí puedes moverla. Se usa <code>git mv</code>, se guarda una copia de seguridad y, si algo falla, todo vuelve a como estaba.</p>
+ ${m&&!m.ok?`<div class="aviso er">${esc(m.error)}</div>`:""}
+ ${m&&m.ok&&!m.hecho?`<p><b>Esto es lo que cambiará:</b></p><ul class="pl">${m.cambios.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
+  ${m.avisos.length?`<div class="aviso av"><b>Para revisar tú (no lo toco):</b><ul class="pl">${m.avisos.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}
+  ${m.revisar.length?`<details open><summary>Tu proyecto menciona <code>${esc(m.desde)}/</code> en ${m.revisar.length} sitio(s): revisa tus enlaces</summary><pre class="diff">${esc(m.revisar.join("\n"))}</pre></details>`:""}`:""}
+ ${m&&m.hecho?`<div class="aviso ok">Movido a <code>${esc(m.hacia)}/</code>. Copia de seguridad: <code>${esc(m.respaldo)}</code>. ${esc(m.siguiente)}</div>`:""}
+ <div class="fila">${m&&m.hecho?"":`<button onclick="verMover()">Ver qué cambia</button>`}${m&&m.ok&&!m.hecho?`<button class="pri" onclick="moverCarpeta()">Mover</button>`:""}</div></div>`}
+async function verMover(){S.mov=await post("/api/panel/mover/ver",S.sel);dibujar();const e=$("#mover");if(e)e.scrollIntoView({block:"nearest"})}
+async function moverCarpeta(){if(!confirm(`¿Mover ${S.mov.desde}/ a ${S.mov.hacia}/?`))return;const r=await post("/api/panel/mover/aplicar",S.sel);
+ if(!r.ok){S.mov={ok:false,error:r.error};dibujar();return}
+ await abrirProyecto(S.sel.ruta,r.hacia);S.mov={...r,hecho:true};dibujar()}
 function vistaPrevia(p){if(!p.ok)return `<div class="aviso er">${esc(p.error)}</div>`;
  if(!p.cambios.length)return `<div class="aviso ok">No hay cambios respecto a lo que está guardado.</div>`;
  return `<div class="card"><h2>Esto es lo que cambiará</h2><ul class="pl">${p.cambios.map(x=>`<li><code>${esc(x)}</code></li>`).join("")}</ul>

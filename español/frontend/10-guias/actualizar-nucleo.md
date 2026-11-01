@@ -49,6 +49,10 @@ Lo único que no se aplica solo es un salto **MAYOR** (paso 4 del procedimiento)
 
 Sin `.uxyngraphar.lock` (proyectos que adoptaron el pack a mano, antes de que existiera el lock) no hay base: toda diferencia es conflicto y no se pisa nada. Tras resolverlas el lock queda creado.
 
+## Carpeta del pack: `docs/` o `uxyngraphar/`
+
+Desde la 1.1.0 el pack se instala en `uxyngraphar/`. Los proyectos anteriores siguen en `docs/`: actualizar **nunca** mueve la carpeta y todo funciona igual con cualquiera de los dos nombres. Moverla es opcional y lo decide una persona con `uxyngraphar mover-carpeta` (o desde el panel): muestra antes qué cambia, usa `git mv`, pone al día solo lo que escribió uxyngraphar (lock, ganchos, reglas para agentes, CODEOWNERS, `.gitignore`) y vuelve atrás si algo falla.
+
 ## Alineación inicial
 
 Proyecto sin sistema: [instalacion-docs.md](instalacion-docs.md) (`instalar-pack.py`) y la guía de adopción (`05-instrucciones/_PLANTILLA-adopcion-inicial-pack.md`).

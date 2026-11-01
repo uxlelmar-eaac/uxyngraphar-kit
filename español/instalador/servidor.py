@@ -14,6 +14,7 @@ from pathlib import Path
 
 import api
 import api_actualizar as act
+import api_mover
 import api_panel as panel
 import explorar
 
@@ -49,7 +50,9 @@ def rutas_panel() -> dict:
             "/api/panel/colaborar": lambda b: panel.colaborar(*rd(b), b.get("si") is True, b.get("borrar_remoto") is True),
             "/api/panel/plantilla": lambda b: panel.ver_plantilla(), "/api/panel/plantilla/guardar": lambda b: panel.guardar_plantilla(b.get("plantilla") or {}),
             "/api/panel/plantilla/aplicar": lambda b: panel.plantilla_en(list(b.get("destinos") or []), b.get("aplicar") is True),
-            "/api/panel/path": lambda b: panel.decidir_path(b.get("agregar") is True)}
+            "/api/panel/path": lambda b: panel.decidir_path(b.get("agregar") is True),
+            "/api/panel/mover/ver": lambda b: api_mover.ver(*rd(b), str(b.get("a") or "")),
+            "/api/panel/mover/aplicar": lambda b: api_mover.aplicar(*rd(b), str(b.get("a") or ""))}
 
 
 def crear(token: str, apagar, modo: str = "instalar", inicial: list[str] | None = None, bienvenida: bool = False) -> type[BaseHTTPRequestHandler]:
