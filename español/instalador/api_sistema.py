@@ -135,20 +135,46 @@ def reiniciar(espera: float = 25) -> dict:
     cli = h / "versiones" / v / "uxyngraphar.py"
     if not cli.is_file() or sistema.tupla(v) < REINICIO_DESDE:
         return {"ok": False, "error": f"Cierra este panel y vuelve a abrirlo con «uxyngraphar» para usar la {v or 'versión nueva'}."}
-    aviso = h / f".panel-{secrets.token_hex(6)}.url"
+    nombre = f".panel-{secrets.token_hex(6)}"
+    aviso, registro = h / f"{nombre}.url", h / f"{nombre}.log"   # el log guarda los errores del panel nuevo si no arranca
     env = {**os.environ, "UXYNGRAPHAR_HOME": str(h), "UXYNGRAPHAR_PANEL_URL": str(aviso)}
     opciones = ({"creationflags": 0x00000008 | 0x00000200} if ar.ES_WINDOWS   # DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
                 else {"start_new_session": True})   # sigue vivo cuando este proceso y su terminal terminen
     try:
-        _HIJOS.append(subprocess.Popen([sys.executable, str(cli), "panel", "--fondo"], cwd=str(h), env=env, stdin=subprocess.DEVNULL,
-                                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, **opciones))
+        with open(registro, "wb") as err:
+            hijo = subprocess.Popen([sys.executable, str(cli), "panel", "--fondo"], cwd=str(h), env=env, stdin=subprocess.DEVNULL,
+                                    stdout=subprocess.DEVNULL, stderr=err, **opciones)
     except OSError as exc:
+        _borrar(registro)
         return {"ok": False, "error": f"No pude abrir el panel nuevo ({exc}). Ciérralo y vuelve a abrirlo con «uxyngraphar»."}
+    _HIJOS.append(hijo)
     limite = time.time() + espera
-    while time.time() < limite:
+    while True:
+        terminado = hijo.poll() is not None   # antes de mirar el aviso: uno que lo escribe y sale enseguida también vale
         if aviso.is_file() and aviso.read_text(encoding="utf-8").strip():
             url = aviso.read_text(encoding="utf-8").strip()
             aviso.unlink(missing_ok=True)
+            _borrar(registro)   # en Windows sigue abierto por el panel nuevo: se queda (es pequeño)
             return {"ok": True, "url": url, "version": v}
+        if terminado or time.time() >= limite:
+            break
         time.sleep(0.2)
-    return {"ok": False, "error": f"El panel de la {v} no respondió a tiempo. Cierra este y ábrelo con «uxyngraphar»."}
+    if hijo.poll() is None:   # no respondió: que no se quede colgado en segundo plano
+        hijo.kill()
+    try:
+        hijo.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+        pass
+    _HIJOS.remove(hijo)
+    detalle = registro.read_text(encoding="utf-8", errors="replace").strip()[-800:] if registro.is_file() else ""
+    _borrar(aviso)
+    _borrar(registro)
+    error = f"El panel de la {v} no respondió a tiempo. Cierra este y ábrelo con «uxyngraphar»."
+    return {"ok": False, "error": error + (f"\n\n{detalle}" if detalle else "")}
+
+
+def _borrar(ruta: Path) -> None:
+    try:
+        ruta.unlink(missing_ok=True)
+    except OSError:
+        pass

@@ -93,7 +93,16 @@ class TestReinicio(Base):
     def test_tarda_demasiado(self):
         self.version("1.2.0", "import time\ntime.sleep(5)\n")
         (self.home / "actual").write_text("1.2.0\n")
+        antes = len(sis._HIJOS)
         self.assertIn("no respondió", sis.reiniciar(espera=0.5)["error"])
+        self.assertEqual(len(sis._HIJOS), antes, "el panel que no respondió se cierra")
+
+    def test_cuenta_por_que_fallo(self):
+        self.version("1.2.0", "import sys\nsys.exit('se rompió al arrancar')\n")
+        (self.home / "actual").write_text("1.2.0\n")
+        r = sis.reiniciar(espera=20)
+        self.assertIn("se rompió al arrancar", r["error"])
+        self.assertEqual(list(self.home.glob(".panel-*")), [])
 
     @unittest.skipIf(os.name == "nt", "un enlace simbólico en Windows pide permisos")
     def test_panel_real_en_segundo_plano(self):
@@ -122,7 +131,7 @@ class TestPathLimpiezaDesinstalar(Base):
     def test_path_anadir_y_quitar(self):
         with mock.patch.dict(os.environ, {"UXYNGRAPHAR_BIN": str(self.home / "bin"), "PATH": "/usr/bin"}):
             self.assertTrue(sis.path(True)["ok"])
-            perfil = Path(self.tmp.name) / ".bashrc"
+            perfil = Path(json.loads((self.home / "instalacion.json").read_text())["perfil"])   # .bashrc, o .bash_profile en macOS
             self.assertIn(">>> uxyngraphar >>>", perfil.read_text())
             self.assertTrue(sis.info()["path_nuestro"])
             with self.agente():
