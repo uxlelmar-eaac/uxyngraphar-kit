@@ -25,12 +25,12 @@
 
 ## Espejo integral (`50-sistema-integral/`)
 
-La documentación integral **replica esta estructura** bajo `docs/50-sistema-integral/` (solo `.md`).
+La documentación integral **replica esta estructura** bajo `uxyngraphar/50-sistema-integral/` (solo `.md`).
 
 | Campo | Valor |
 |-------|-------|
 | Raíces a reflejar | `<p. ej. src/, prisma/>` |
-| Excluir siempre | `node_modules/`, `dist/`, `build/`, `.git/`, `coverage/`, `docs/` |
+| Excluir siempre | `node_modules/`, `dist/`, `build/`, `.git/`, `coverage/`, `uxyngraphar/` |
 | Excluir opcional | `<p. ej. test/fixtures/, **/*.spec.ts>` |
 | Convención | `README.md` por carpeta; `<nombre-base>.md` paralelo a archivo de código |
 
@@ -54,7 +54,7 @@ Generación: instrucción [`_PLANTILLA-generar-espejo-integral.md`](../05-instru
 
 - Frontmatter: [convenciones-frontmatter.md](convenciones-frontmatter.md)
 - Registro ids compartidos (multi-repo): [registro-ids-compartidos.md](registro-ids-compartidos.md)
-- Lo que las herramientas hacen cumplir (controles, idioma, commits, ramas, respaldos) se fija en `docs/uxyngraphar.config.json`: [configuracion-uxyngraphar.md](../10-guias/configuracion-uxyngraphar.md)
+- Lo que las herramientas hacen cumplir (controles, idioma, commits, ramas, respaldos) se fija en `uxyngraphar/uxyngraphar.config.json`: [configuracion-uxyngraphar.md](../10-guias/configuracion-uxyngraphar.md)
 
 ## Contacto / ownership
 

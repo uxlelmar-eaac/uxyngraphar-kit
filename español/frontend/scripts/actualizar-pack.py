@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Actualiza el núcleo de un proyecto desde un pack más nuevo (tres vías, con simulación por defecto).
 
-Uso:  python3 actualizar-pack.py RUTA_PACK [--repo .] [--docs docs]            # simula
+Uso:  python3 actualizar-pack.py RUTA_PACK [--repo .] [--docs uxyngraphar]            # simula
       python3 actualizar-pack.py RUTA_PACK --apply [--restaurar-nucleo] [--migracion-aprobada ID]
 Nunca toca contenido del proyecto. Conflictos → «<archivo>.uxyngraphar-nuevo». Respaldo en .uxyngraphar-respaldo/.
 Salida: 0 al día/aplicado sin conflictos · 1 hay cambios pendientes o conflictos · 2 error.
@@ -14,6 +14,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import carpeta_pack  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parent / "nucleo"))
 sys.path.insert(0, str(Path(__file__).resolve().parent / "decisiones"))
 
@@ -29,12 +31,13 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("pack", help="carpeta del pack nuevo o .zip de empaquetar-pack.py")
     ap.add_argument("--repo", default=".")
-    ap.add_argument("--docs", default="docs")
+    ap.add_argument("--docs", default=None, help="carpeta del pack relativa al repo (por defecto la de este script: uxyngraphar o docs)")
     ap.add_argument("--apply", action="store_true", help="escribir los cambios (por defecto solo simula)")
     ap.add_argument("--restaurar-nucleo", action="store_true", help="también sobrescribir archivos del núcleo editados en el proyecto")
     ap.add_argument("--migracion-aprobada", default="", help="id de la instrucción aprobada que autoriza un salto MAYOR")
     ap.add_argument("--evo", action="store_true", help="tras aplicar, crear la ficha EVO de adopción")
     a = ap.parse_args(argv)
+    a.docs = carpeta_pack.desde_argumento(a.docs, getattr(a, "repo", "."), __file__)
     repo, a.docs = normalizar(Path(a.repo), a.docs)
     try:
         with abrir_pack(Path(a.pack).resolve()) as pack:

@@ -29,7 +29,7 @@ import uxyngraphar_config as cfgmod  # noqa: E402
 
 
 class Contexto:
-    """Lo que una migración puede hacer en el proyecto. Rutas relativas a docs/ (o «/AGENTES.md» para la raíz de la app)."""
+    """Lo que una migración puede hacer en el proyecto. Rutas relativas a la carpeta del pack (o «/AGENTES.md» para la raíz de la app)."""
 
     def __init__(self, repo: Path, docs: str, tx: Transaccion) -> None:
         self.repo, self.docs, self.tx = repo, docs, tx

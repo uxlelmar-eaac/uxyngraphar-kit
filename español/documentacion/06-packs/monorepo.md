@@ -11,11 +11,11 @@ uxyngraphar instalar "$MONOREPO" \
   --si --colaborar no
 ```
 
-Cada árbol tendrá su `docs/.uxyngraphar.lock`. El doctor se ejecuta **por cada** `docs/`:
+Cada árbol tendrá su `uxyngraphar/.uxyngraphar.lock`. El doctor se ejecuta **por cada** `uxyngraphar/`:
 
 ```bash
-python3 apps/api/docs/scripts/doctor.py
-python3 apps/web/docs/scripts/doctor.py
+python3 apps/api/uxyngraphar/scripts/doctor.py
+python3 apps/web/uxyngraphar/scripts/doctor.py
 ```
 
 ### Peligro del default con `--si`
@@ -34,6 +34,6 @@ Mantén alineado `registro-ids-compartidos` entre ambos.
 
 ## Guías del pack (tras instalar)
 
-- `docs/10-guias/elegir-pack.md`
-- `docs/10-guias/sync-multi-repo.md`
-- `docs/10-guias/monorepo-docs-fusionados.md`
+- `uxyngraphar/10-guias/elegir-pack.md`
+- `uxyngraphar/10-guias/sync-multi-repo.md`
+- `uxyngraphar/10-guias/monorepo-docs-fusionados.md`

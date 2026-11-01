@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Ejecuta todas las pruebas del pack (tooling `decisiones`, validador y demás) con un solo comando.
 
-Uso: python3 docs/scripts/ejecutar-pruebas.py [-v]
+Uso: python3 uxyngraphar/scripts/ejecutar-pruebas.py [-v]
 """
 
 from __future__ import annotations

@@ -41,7 +41,7 @@ ORIGENES = ("instalador", "actualizador", "manual")
 ENTORNOS_SIN_PERSONA = ("CI", "GITHUB_ACTIONS", "GITLAB_CI", "BUILDKITE", "JENKINS_URL", "CLAUDECODE", "UXYNGRAPHAR_AGENTE")
 PREGUNTA = "¿Te gustaría colaborar en la mejora de uxyngraphar?"
 QUE_SALE = (
-    "Las fichas EVO de docs/46-evolucion-documentacion/: id, estado, tipo, impacto, prioridad, archivos del pack que proponen cambiar y su texto",
+    "Las fichas EVO de 46-evolucion-documentacion/: id, estado, tipo, impacto, prioridad, archivos del pack que proponen cambiar y su texto",
     "La versión y el tipo de pack (servidor o cliente)",
     "Un identificador aleatorio de la instalación (sirve para pedir el borrado)",
 )

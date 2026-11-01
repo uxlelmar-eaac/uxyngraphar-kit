@@ -73,8 +73,8 @@ function v2(){
   opt("mismo","no","En dos repositorios distintos","Cada repo con su pack en la raíz. El proyecto elegido arriba será el servidor; indica el repo del cliente:",!S.mismo)+
   `<div class="sub ${S.mismo?"oculto":""}" id="otro"><input type="text" id="ruta2" placeholder="Carpeta del repositorio del cliente" value="${esc(S.ruta2)}" aria-label="Repositorio del cliente"></div>`}
  else{donde=`<h2 style="margin-top:18px">¿Dónde va?</h2>`+
-  opt("donde","raiz","En la raíz del repositorio (lo normal)","Crea AGENTES.md y docs/ en la raíz.",S.modoDonde==="raiz")+
-  opt("donde","sub","En una subcarpeta de app (monorepo)","Crea apps/mi-app/AGENTES.md y apps/mi-app/docs/. Útil si en el mismo repo tendrás también el otro pack.",S.modoDonde==="sub")+
+  opt("donde","raiz","En la raíz del repositorio (lo normal)","Crea AGENTES.md y la carpeta uxyngraphar/ en la raíz.",S.modoDonde==="raiz")+
+  opt("donde","sub","En una subcarpeta de app (monorepo)","Crea apps/mi-app/AGENTES.md y apps/mi-app/uxyngraphar/. Útil si en el mismo repo tendrás también el otro pack.",S.modoDonde==="sub")+
   `<div class="sub ${S.modoDonde==="sub"?"":"oculto"}" id="subs"><input type="text" id="sub" placeholder="Por ejemplo apps/api" value="${esc(S.sub)}" aria-label="Subcarpeta"></div>`}
  $("#vista").innerHTML=`<div class="card"><h2>2. ¿Qué quieres instalar?</h2><p class="mut">El pack decide el vocabulario y las plantillas de la documentación. Las herramientas y reglas son las mismas.</p>
  ${opt("pack","servidor","Servidor","API, servicios, workers, CLI, librerías, procesos de datos. Documenta contratos, rutas y lógica de negocio.",S.pack==="servidor")}

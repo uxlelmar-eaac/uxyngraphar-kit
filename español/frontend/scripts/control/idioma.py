@@ -1,11 +1,11 @@
 """R-22 — idioma de los artefactos del producto (código, archivos, commits, ramas). Lo usa la puerta de control.
 
-Solo mira el **código del producto** (nunca `docs/`) y solo las líneas **añadidas**: el legacy que no se toca no se
+Solo mira el **código del producto** (nunca la carpeta del pack) y solo las líneas **añadidas**: el legacy que no se toca no se
 señala. Dos niveles de confianza:
   fiable      identificadores y nombres de archivo con caracteres no-ASCII → nivel `niveles.idioma`
   heurístico  palabras en español, identificadores mezclados, comentarios y textos en español → siempre aviso
 Commits y ramas → nivel `niveles.commits`. Rutas en `idioma.legacy` → todo baja a aviso. Marca de línea para eximir:
-`uxyngraphar:permitir-idioma`. Guía: docs/00-nucleo/politica-idioma.md
+`uxyngraphar:permitir-idioma`. Guía: 00-nucleo/politica-idioma.md
 """
 
 from __future__ import annotations
@@ -128,7 +128,7 @@ def control_idioma(repo: Path, cambiados: list[str], nuevos: list[str], anadidas
         n = nivel if fiable and not coincide(ruta, legacy) else "aviso"
         salida.append((n, f"{ruta}: {msg} (R-22)"))
 
-    for ruta in nuevos:   # nombres de archivo y carpeta nuevos, fuera de docs/
+    for ruta in nuevos:   # nombres de archivo y carpeta nuevos, fuera de la carpeta del pack
         if ruta.startswith((docs + "/", ".github/", ".claude/")) or coincide(ruta, excluir) or coincide(ruta, locales):
             continue
         if _NO_ASCII.search(ruta):

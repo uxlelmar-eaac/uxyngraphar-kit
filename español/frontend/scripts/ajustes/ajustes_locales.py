@@ -15,6 +15,9 @@ from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 
+sys.path.append(str(Path(__file__).resolve().parent.parent))   # al final: que no tape módulos con el mismo nombre (respaldos, memoria…)
+import carpeta_pack  # noqa: E402
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "decisiones"))
 
 from common_frontmatter import rebuild_content, split_frontmatter_parts, update_frontmatter_raw  # noqa: E402
@@ -75,8 +78,8 @@ def todos(docs: Path) -> list[Ajuste]:
 
 
 def activos_para(docs: Path, rel: str) -> list[Ajuste]:
-    """Ajustes activos que complementan el archivo `rel` (relativo a docs/)."""
-    rel = rel.strip().strip("`").removeprefix("docs/").partition("#")[0]
+    """Ajustes activos que complementan el archivo `rel` (relativo a la carpeta del pack)."""
+    rel = carpeta_pack.relativa(rel, docs).partition("#")[0]
     return [a for a in todos(docs) if a.status == "activo" and rel in a.aplica_a]
 
 
@@ -89,13 +92,13 @@ def _buscar_evo(docs: Path, evo_id: str) -> Path | None:
 def _validar_destinos(docs: Path, destinos: list[str]) -> list[str]:
     limpios = []
     for d in destinos:
-        rel = d.strip().strip("`").removeprefix("docs/").replace("\\", "/")
+        rel = carpeta_pack.relativa(d, docs)
         if not rel or rel.startswith(("/", "..")) or ".." in rel.split("/"):
-            raise ErrorAjuste(f"ruta no válida: «{d}» (relativa a docs/, sin «..»)")
+            raise ErrorAjuste(f"ruta no válida: «{d}» (relativa a la carpeta del pack, sin «..»)")
         if rel.startswith(PROHIBIDOS):
             raise ErrorAjuste(f"«{rel}»: un ajuste solo complementa archivos del pack (reglas, guías, plantillas, protocolos)")
         if not (docs / rel).is_file():
-            raise ErrorAjuste(f"no existe {rel} en docs/")
+            raise ErrorAjuste(f"no existe {rel} en {docs.name}/")
         limpios.append(rel)
     if not limpios:
         raise ErrorAjuste("indica al menos un archivo con --a")
@@ -128,8 +131,8 @@ def crear(docs: Path, evo_id: str, destinos: list[str], regla: str, slug: str = 
               "> Ajuste local (R-25). Complementa el núcleo **solo en este proyecto**; el núcleo no se edita. "
               "Si contradice al archivo que complementa, **manda este ajuste**.", "",
               "## Regla local", "", regla.strip(), "",
-              "## Complementa a", "", *[f"- `docs/{r}`" for r in rels], "",
-              "## Origen", "", f"Ficha `{evo.relative_to(docs).as_posix()}` (aprobada). Retirar: `python3 docs/scripts/ajustes.py retirar {ident}`.", ""]
+              "## Complementa a", "", *[f"- `{docs.name}/{r}`" for r in rels], "",
+              "## Origen", "", f"Ficha `{evo.relative_to(docs).as_posix()}` (aprobada). Retirar: `python3 {docs.name}/scripts/ajustes.py retirar {ident}`.", ""]
     destino.parent.mkdir(parents=True, exist_ok=True)
     destino.write_text("\n".join(lineas), encoding="utf-8", newline="\n")
     _, _f, cuerpo = split_frontmatter_parts(evo.read_text(encoding="utf-8"))

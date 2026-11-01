@@ -2,7 +2,7 @@
 
 Dos orígenes, cada uno en su carpeta (ambas en .gitignore; nunca entran en git ni las leen los agentes):
   actualizacion  <repo>/.uxyngraphar-respaldo/<AAAAMMDD-HHMMSS>/     rutas relativas a la raíz del repo
-  depuracion     <repo>/<docs>/.depuracion/respaldo/<AAAAMMDD-HHMMSS>/ rutas relativas a docs/
+  depuracion     <repo>/<docs>/.depuracion/respaldo/<AAAAMMDD-HHMMSS>/ rutas relativas a la carpeta del pack
 Cada copia lleva `_respaldo.json` (origen, fecha, versiones, archivos copiados y añadidos). Las copias antiguas sin
 manifiesto también se listan y restauran (se infiere todo de la carpeta).
 Política (uxyngraphar.config.json → "respaldos"): conservar_dias (30), conservar_minimo (3: las N más recientes de cada

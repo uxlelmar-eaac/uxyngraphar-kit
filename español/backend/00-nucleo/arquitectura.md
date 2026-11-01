@@ -54,7 +54,7 @@ flowchart TB
 
 ## Contratos API
 
-- Fuente humana: `docs/15-rutas/`.
+- Fuente humana: `uxyngraphar/15-rutas/`.
 - Fuente automática: especificación OpenAPI/Swagger del servidor (ruta según el proyecto).
 - Al cambiar contratos públicos: actualizar fichas y regenerar tipos en el cliente si aplica.
 

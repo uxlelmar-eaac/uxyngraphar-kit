@@ -13,7 +13,7 @@ Sugerencias de herramientas pendientes de decisión humana. **No ejecutar.** Org
 └── 06-listas-para-eliminar/    ← para-eliminar
 ```
 
-El árbol es el índice; vista viva: `python3 docs/scripts/decisiones/decisiones.py scan`.
+El árbol es el índice; vista viva: `python3 uxyngraphar/scripts/decisiones/decisiones.py scan`.
 
 (En Windows: `py -3` en lugar de `python3`.)
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Instala el núcleo de un pack (servidor o cliente) en un proyecto.
 
-Uso:  python3 instalar-pack.py RUTA_PACK --repo RUTA_PROYECTO [--docs docs] [--perfil completo|minimo]
+Uso:  python3 instalar-pack.py RUTA_PACK --repo RUTA_PROYECTO [--docs uxyngraphar] [--perfil completo|minimo]
                                [--adoptar] [--dry-run] [--proteger [--propietario @usuario]]
 Con --adoptar, si ya existe documentación, nunca se pisa nada: lo distinto queda como «<archivo>.uxyngraphar-nuevo».
 """
@@ -13,6 +13,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import carpeta_pack  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parent / "nucleo"))
 sys.path.insert(0, str(Path(__file__).resolve().parent / "control"))
 
@@ -28,9 +30,9 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("pack", help="carpeta raíz del pack (p. ej. español/backend de un clon de uxyngraphar) o un .zip de empaquetar-pack.py")
     ap.add_argument("--repo", default=".", help="raíz del proyecto (default: carpeta actual)")
-    ap.add_argument("--docs", default="docs")
+    ap.add_argument("--docs", default=carpeta_pack.CARPETA, help="carpeta del pack en el proyecto (por defecto uxyngraphar; en monorepo, p. ej. apps/api/uxyngraphar)")
     ap.add_argument("--perfil", choices=("completo", "minimo"), default="completo")
-    ap.add_argument("--adoptar", action="store_true", help="el proyecto ya tiene docs/: instalar sin pisar")
+    ap.add_argument("--adoptar", action="store_true", help="la carpeta del pack ya existe con contenido: instalar sin pisar")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--analizar", action="store_true", help="solo informe: dónde encajaría la documentación que el proyecto ya tiene (no escribe nada)")
     ap.add_argument("--claude-md", action="store_true", help="crear CLAUDE.md en la raíz apuntando a AGENTES.md (si no existe)")

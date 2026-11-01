@@ -29,23 +29,23 @@ Lo único que no se aplica solo es un salto **MAYOR** (paso 4 del procedimiento)
 1. Con un clon actualizado de uxyngraphar, **simula** (no escribe nada):
 
    ```bash
-   python3 docs/scripts/actualizar-pack.py RUTA/AL/PACK
+   python3 uxyngraphar/scripts/actualizar-pack.py RUTA/AL/PACK
    ```
 
 (En Windows: `py -3` en lugar de `python3`.)
 
-   Compara tres versiones de cada archivo: la **base** (`docs/.uxyngraphar.lock`), la **local** y la **nueva**. Resultado por archivo: `añadir`, `reemplazar`, `conflicto`, `modificado-local`, `plantilla-cambiada` o `retirado`.
+   Compara tres versiones de cada archivo: la **base** (`uxyngraphar/.uxyngraphar.lock`), la **local** y la **nueva**. Resultado por archivo: `añadir`, `reemplazar`, `conflicto`, `modificado-local`, `plantilla-cambiada` o `retirado`.
 2. Revisa el informe. Árbol de git limpio, y aplica:
 
    ```bash
-   python3 docs/scripts/actualizar-pack.py RUTA/AL/PACK --apply
+   python3 uxyngraphar/scripts/actualizar-pack.py RUTA/AL/PACK --apply
    ```
 
    Respaldo previo en `.uxyngraphar-respaldo/<fecha>/` (deshacer entera: `respaldos.py restaurar actualizacion/<fecha> --aplicar`; ver [respaldos.md](respaldos.md)); escritura atómica con reversión si algo falla; actualiza el lock y anota en `90-archivo/cambios-pack.md`.
 3. **Conflictos** (cambió en ambos lados): el actual no se toca; la versión nueva queda como `<archivo>.uxyngraphar-nuevo`. Si el núcleo se había editado sin respaldo, `--restaurar-nucleo` lo devuelve a la versión del pack (el respaldo conserva la tuya).
 4. **Salto MAYOR** (p. ej. 2.x → 3.0): exige una instrucción aprobada con el plan de migración y `--migracion-aprobada <id>`. Sin ella no se aplica.
 5. Plantillas P / índices M con novedades: el informe las lista como `plantilla-cambiada`; intégralas a mano.
-6. Cierra: `python3 docs/scripts/verificar-nucleo.py` y `validar-documentacion.py`; `--evo` en el paso 2 crea además la ficha de adopción.
+6. Cierra: `python3 uxyngraphar/scripts/verificar-nucleo.py` y `validar-documentacion.py`; `--evo` en el paso 2 crea además la ficha de adopción.
 
 Sin `.uxyngraphar.lock` (proyectos que adoptaron el pack a mano, antes de que existiera el lock) no hay base: toda diferencia es conflicto y no se pisa nada. Tras resolverlas el lock queda creado.
 

@@ -29,4 +29,4 @@ Dónde suele tocarse al cambiar comportamiento (sin pegar código).
 ## Enlaces
 
 - Código: `` [`<nombre.ext>`](<path-relativo>) ``
-- Ficha HTTP (si aplica): `docs/15-rutas/...` o id `<modulo.recurso.accion>`
+- Ficha HTTP (si aplica): `uxyngraphar/15-rutas/...` o id `<modulo.recurso.accion>`

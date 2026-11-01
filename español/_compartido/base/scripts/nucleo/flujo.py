@@ -25,7 +25,7 @@ import uxyngraphar_config as cfgmod  # noqa: E402
 
 # CLAUDE.md que escribieron versiones anteriores (para reconocer el de la herramienta y poder ponerlo al día sin pisar uno propio).
 CLAUDE_MD_ANTERIORES = ("# CLAUDE.md\n\nEste proyecto usa uxyngraphar. Lee **solo** [AGENTES.md](AGENTES.md) al empezar y sigue su flujo "
-                        "(instrucción aprobada → `python3 docs/scripts/contexto.py <id>`). No edites el núcleo (R-20).\n",)
+                        "(instrucción aprobada → `python3 uxyngraphar/scripts/contexto.py <id>`). No edites el núcleo (R-20).\n",)
 
 
 def texto_claude_md(docs: str) -> str:

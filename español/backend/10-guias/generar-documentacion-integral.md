@@ -6,8 +6,8 @@ Guía para crear la documentación integral **copiando la estructura del proyect
 
 | Proyecto real | Documentación integral |
 |---------------|------------------------|
-| `src/modules/auth/auth.service.ts` | `docs/50-sistema-integral/src/modules/auth/auth.service.md` |
-| Misma carpeta `auth/` | `docs/50-sistema-integral/src/modules/auth/README.md` |
+| `src/modules/auth/auth.service.ts` | `uxyngraphar/50-sistema-integral/src/modules/auth/auth.service.md` |
+| Misma carpeta `auth/` | `uxyngraphar/50-sistema-integral/src/modules/auth/README.md` |
 
 No hay otra taxonomía: el espejo **es** el scaffolding, documentado.
 
@@ -15,7 +15,7 @@ No hay otra taxonomía: el espejo **es** el scaffolding, documentado.
 
 ### Proyecto pequeño o espejo vacío
 
-1. Pegar el pack en `docs/` y rellenar [`00-nucleo/configuracion-proyecto.md`](../00-nucleo/configuracion-proyecto.md) → sección **Espejo integral**.
+1. Pegar el pack en `uxyngraphar/` y rellenar [`00-nucleo/configuracion-proyecto.md`](../00-nucleo/configuracion-proyecto.md) → sección **Espejo integral**.
 2. Copiar [`05-instrucciones/_PLANTILLA-generar-espejo-integral.md`](../05-instrucciones/_PLANTILLA-generar-espejo-integral.md) → `YYYYMMDD-NNN-generar-espejo.md`.
 3. Completar raíces en `anclas_codigo` (p. ej. `src/`).
 4. Aprobar la instrucción (`status: approved`).

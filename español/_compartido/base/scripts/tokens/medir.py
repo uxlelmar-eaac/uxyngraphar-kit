@@ -10,8 +10,8 @@ sys.path.insert(0, str(AQUI))
 
 from estimar import tokens  # noqa: E402
 
-# Lo que un agente lee al empezar cualquier tarea (AGENTES.md vive en la raíz del repo; ESTADO.md en docs/).
-ARRANQUE = ("AGENTES.md", "docs/ESTADO.md")
+# Lo que un agente lee al empezar cualquier tarea (AGENTES.md vive en la raíz del repo; ESTADO.md en la carpeta del pack).
+ARRANQUE = ("AGENTES.md", "{docs}/ESTADO.md")
 ARRANQUE_MAX = 1500
 
 
@@ -19,10 +19,14 @@ def archivo(ruta: Path) -> int:
     return tokens(ruta.read_text(encoding="utf-8", errors="replace")) if ruta.is_file() else 0
 
 
-def arranque(repo: Path, docs: str = "docs") -> list[tuple[str, int]]:
+def arranque(repo: Path, docs: str | None = None) -> list[tuple[str, int]]:
+    if docs is None:
+        sys.path.append(str(AQUI.parent))
+        import carpeta_pack
+        docs = carpeta_pack.resolver(repo)
     filas = []
     for rel in ARRANQUE:
-        rel = rel.replace("docs/", docs.strip("/") + "/", 1) if rel.startswith("docs/") else rel
+        rel = rel.replace("{docs}", docs.strip("/"))
         f = repo / rel
         if not f.is_file() and rel == "AGENTES.md":
             f = repo / docs / "AGENTES.md"   # dentro del propio pack

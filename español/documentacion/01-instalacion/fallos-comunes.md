@@ -21,7 +21,7 @@ Con `--si`, el default puede ser `apps/api` + `apps/web`. Vuelve a instalar con 
 ## Quiero quitar uxyngraphar del proyecto
 
 1. `uxyngraphar proyectos --quitar RUTA` (opcional)
-2. Elimina del git lo que ya no quieras (`docs/`, `AGENTES.md`, protecciones) con revisión humana
+2. Elimina del git lo que ya no quieras (`uxyngraphar/`, `AGENTES.md`, protecciones) con revisión humana
 3. `uxyngraphar desinstalar` solo quita la **herramienta** del equipo, no el pack
 
 ## Windows: `python3` no existe

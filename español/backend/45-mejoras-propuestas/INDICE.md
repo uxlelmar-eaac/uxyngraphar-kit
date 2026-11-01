@@ -13,7 +13,7 @@ Deuda técnica, refactors y **bugs** detectados por IA **pendientes de decisión
 └── 06-listas-para-eliminar/    ← para-eliminar
 ```
 
-El árbol es el índice; vista viva de pendientes: `python3 docs/scripts/decisiones/decisiones.py scan`.
+El árbol es el índice; vista viva de pendientes: `python3 uxyngraphar/scripts/decisiones/decisiones.py scan`.
 
 (En Windows: `py -3` en lugar de `python3`.)
 

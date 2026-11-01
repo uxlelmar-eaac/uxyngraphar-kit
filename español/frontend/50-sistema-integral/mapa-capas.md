@@ -2,8 +2,8 @@
 
 | Capa | Repositorio | Espejo |
 |------|-------------|--------|
-| Frontend (este) | `<org>/<repo-frontend>` | `docs/50-sistema-integral/<rutas-ui>/` |
-| Backend | `<org>/<repo-backend>` | `docs/50-sistema-integral/<rutas-api>/` |
+| Frontend (este) | `<org>/<repo-frontend>` | `uxyngraphar/50-sistema-integral/<rutas-ui>/` |
+| Backend | `<org>/<repo-backend>` | `uxyngraphar/50-sistema-integral/<rutas-api>/` |
 
 ## Correspondencia por feature
 

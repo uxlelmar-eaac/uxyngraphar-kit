@@ -4,7 +4,7 @@
 
 ## Qué es
 
-Las colas por estado (R-17) crecen sin parar: instrucciones hechas, decisiones reemplazadas, auditorías cerradas. En uxyngraphar **nada se borra**: lo que sale de `06-listas-para-eliminar` (o lleva mucho tiempo archivado) pasa a `docs/95-memoria/`, tal cual, con el motivo y la fecha. El contexto del agente queda limpio y la historia del proyecto sigue a mano para quien la necesite.
+Las colas por estado (R-17) crecen sin parar: instrucciones hechas, decisiones reemplazadas, auditorías cerradas. En uxyngraphar **nada se borra**: lo que sale de `06-listas-para-eliminar` (o lleva mucho tiempo archivado) pasa a `uxyngraphar/95-memoria/`, tal cual, con el motivo y la fecha. El contexto del agente queda limpio y la historia del proyecto sigue a mano para quien la necesite.
 
 | Pregunta | Respuesta |
 |----------|-----------|
@@ -27,10 +27,10 @@ La antigüedad se mide por la carpeta de fecha (R-17). Además, una persona pued
 **Enlaces:** una ficha que todavía enlaza un documento vivo no se guarda (se explica cuál). Quita el enlace o cámbialo por el texto `memoria:ID`, que no es un enlace y el agente no sigue.
 
 ```bash
-python3 docs/scripts/decisiones/decisiones.py depurar --plan plan.json         # informe + plan editable
+python3 uxyngraphar/scripts/decisiones/decisiones.py depurar --plan plan.json         # informe + plan editable
 # en plan.json: "aprobado": true y "motivo" en cada ítem con "accion": "memoria"
-python3 docs/scripts/decisiones/decisiones.py depurar --aplicar plan.json      # simula
-python3 docs/scripts/decisiones/decisiones.py depurar --aplicar plan.json --apply
+python3 uxyngraphar/scripts/decisiones/decisiones.py depurar --aplicar plan.json      # simula
+python3 uxyngraphar/scripts/decisiones/decisiones.py depurar --aplicar plan.json --apply
 ```
 
 (En Windows: `py -3` en lugar de `python3`.)
@@ -38,7 +38,7 @@ python3 docs/scripts/decisiones/decisiones.py depurar --aplicar plan.json --appl
 ## Cómo está guardada
 
 ```text
-docs/95-memoria/
+uxyngraphar/95-memoria/
 ├── INDICE.md                  explicación para personas
 ├── catalogo.jsonl             un apunte por hecho: guardada · recuperada · purgada (solo se añade)
 ├── registro-accesos.jsonl     quién buscó, vio, recuperó o purgó qué y cuándo
@@ -52,12 +52,12 @@ docs/95-memoria/
 ## Consultar (solo personas)
 
 ```bash
-python3 docs/scripts/memoria.py buscar pagos                      # busca en el catálogo: id, título, motivo, ruta original
-python3 docs/scripts/memoria.py buscar --seccion decisiones       # todo lo de una sección
-python3 docs/scripts/memoria.py ver INS-20260110-cobros           # muestra la ficha en la terminal
-python3 docs/scripts/memoria.py guardar 05-instrucciones/03-completadas/2026-01-10/tarea.md --motivo "ya no aplica"
-python3 docs/scripts/memoria.py recuperar INS-20260110-cobros     # vuelve a 05-instrucciones/04-archivadas/2026-01-10/
-python3 docs/scripts/memoria.py verificar                         # integridad (cualquiera puede ejecutarlo)
+python3 uxyngraphar/scripts/memoria.py buscar pagos                      # busca en el catálogo: id, título, motivo, ruta original
+python3 uxyngraphar/scripts/memoria.py buscar --seccion decisiones       # todo lo de una sección
+python3 uxyngraphar/scripts/memoria.py ver INS-20260110-cobros           # muestra la ficha en la terminal
+python3 uxyngraphar/scripts/memoria.py guardar 05-instrucciones/03-completadas/2026-01-10/tarea.md --motivo "ya no aplica"
+python3 uxyngraphar/scripts/memoria.py recuperar INS-20260110-cobros     # vuelve a 05-instrucciones/04-archivadas/2026-01-10/
+python3 uxyngraphar/scripts/memoria.py verificar                         # integridad (cualquiera puede ejecutarlo)
 ```
 
 En un monorepo añade `--docs apps/api/docs` antes del subcomando. Todo salvo `verificar` exige una persona en la terminal (o `UXYNGRAPHAR_HUMANO=1`) y queda en `registro-accesos.jsonl`. Tras `guardar`, `recuperar` o `purgar`, haz commit como con cualquier otro cambio.
@@ -78,7 +78,7 @@ El agente no la busca ni la pide por ruta. Si una instrucción la necesita:
 | Barrera | Qué hace |
 |---------|----------|
 | `AGENTES.md` y R-24 | El agente sabe que no debe leerla, buscarla ni ejecutar nada en ella. |
-| Reglas `deny` en `.claude/settings.json` | Claude Code no puede leer, editar ni escribir `docs/95-memoria/**`. |
+| Reglas `deny` en `.claude/settings.json` | Claude Code no puede leer, editar ni escribir `uxyngraphar/95-memoria/**`. |
 | `.cursorignore`, `.geminiignore`, `.aiexclude` | Cursor, Gemini y otras herramientas la dejan fuera de su índice. |
 | Herramientas del pack | Validador, `contexto.py`, `paquete.py`, métricas, espejo y decisiones la ignoran; `paquete.py` rechaza una ruta de la memoria. |
 | `controlar.py` (control `memoria`, bloqueante) y CI | Cualquier cambio en la carpeta que no venga de `memoria.py` (una ficha tocada, borrada o añadida a mano) bloquea el commit y el PR. |
@@ -93,7 +93,7 @@ El agente no la busca ni la pide por ruta. Si una instrucción la necesita:
 Solo para un dato que no debe existir (una clave, datos personales):
 
 ```bash
-python3 docs/scripts/memoria.py purgar INS-20260110-cobros --confirmar INS-20260110-cobros --motivo "contenía un token"
+python3 uxyngraphar/scripts/memoria.py purgar INS-20260110-cobros --confirmar INS-20260110-cobros --motivo "contenía un token"
 ```
 
 - El catálogo guarda que se purgó, cuándo, quién y por qué; **nunca** el contenido.

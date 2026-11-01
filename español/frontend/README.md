@@ -17,8 +17,8 @@ Pack **autosuficiente** de documentación gobernada para colaboración humano–
 ## Instalación en un repo
 
 - **Asistente (recomendado):** desde un clon de uxyngraphar, `python3 español/instalar.py` en cualquier sistema. Muestra el plan exacto antes de escribir.
-- **Terminal:** `python3 scripts/instalar-pack.py . --repo RUTA/AL/REPO --proteger` (desde esta carpeta). Copia el núcleo a `docs/`, `AGENTES.md` a la raíz, escribe `docs/.uxyngraphar.lock` y valida.
-- **Actualizar** un proyecto que ya lo tiene: `python3 español/actualizar.py RUTA_PROYECTO` o `python3 docs/scripts/actualizar-pack.py RUTA/AL/PACK` (simula; añade `--apply` para aplicar). Tu contenido no se toca.
+- **Terminal:** `python3 scripts/instalar-pack.py . --repo RUTA/AL/REPO --proteger` (desde esta carpeta). Copia el núcleo a `uxyngraphar/`, `AGENTES.md` a la raíz, escribe `uxyngraphar/.uxyngraphar.lock` y valida.
+- **Actualizar** un proyecto que ya lo tiene: `python3 español/actualizar.py RUTA_PROYECTO` o `python3 uxyngraphar/scripts/actualizar-pack.py RUTA/AL/PACK` (simula; añade `--apply` para aplicar). Tu contenido no se toca.
 
 (En Windows: `py -3` en lugar de `python3`.)
 

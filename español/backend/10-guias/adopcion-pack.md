@@ -4,7 +4,7 @@ Roadmap humano tras [instalacion-docs.md](instalacion-docs.md). Para la **primer
 
 ## Semana 1 — Pegar pack
 
-- [ ] Copiar pack a `docs/` + `AGENTES.md` en raíz
+- [ ] Copiar pack a `uxyngraphar/` + `AGENTES.md` en raíz
 - [ ] Rellenar [configuracion-proyecto.md](../00-nucleo/configuracion-proyecto.md)
 - [ ] Ejecutar smoke en [instalacion-docs.md](instalacion-docs.md)
 - [ ] (Opcional) Lanzar instrucción adopción inicial y obtener aprobación

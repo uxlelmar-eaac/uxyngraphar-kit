@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Copias de seguridad de uxyngraphar: listar, ver, restaurar y limpiar. Guía: docs/10-guias/respaldos.md
+"""Copias de seguridad de uxyngraphar: listar, ver, restaurar y limpiar. Guía: 10-guias/respaldos.md
 
-Uso:  python3 docs/scripts/respaldos.py listar   [--docs docs]
-      python3 docs/scripts/respaldos.py ver       ID [--docs docs]
-      python3 docs/scripts/respaldos.py restaurar ID [--archivo RUTA …] [--docs docs] [--aplicar]
-      python3 docs/scripts/respaldos.py limpiar   [--dias N] [--minimo N] [--docs docs] [--aplicar]
+Uso:  python3 uxyngraphar/scripts/respaldos.py listar   [--docs uxyngraphar]
+      python3 uxyngraphar/scripts/respaldos.py ver       ID [--docs uxyngraphar]
+      python3 uxyngraphar/scripts/respaldos.py restaurar ID [--archivo RUTA …] [--docs uxyngraphar] [--aplicar]
+      python3 uxyngraphar/scripts/respaldos.py limpiar   [--dias N] [--minimo N] [--docs uxyngraphar] [--aplicar]
 ID es el que muestra `listar` (p. ej. actualizacion/20261026-090000) o solo la fecha de la carpeta.
 Sin --aplicar solo muestra lo que haría. Restaurar y limpiar con --aplicar exigen una persona en la terminal
 (o UXYNGRAPHAR_HUMANO=1): los agentes no restauran ni borran copias. Salida: 0 · 1 nada que hacer · 2 error.
@@ -17,6 +17,8 @@ import os
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import carpeta_pack  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parent / "nucleo"))
 
 import respaldos as rs  # noqa: E402
@@ -40,12 +42,13 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("accion", choices=("listar", "ver", "restaurar", "limpiar"))
     ap.add_argument("id", nargs="?")
     ap.add_argument("--repo", default=".")
-    ap.add_argument("--docs", default="docs")
+    ap.add_argument("--docs", default=None, help="carpeta del pack relativa al repo (por defecto la de este script: uxyngraphar o docs)")
     ap.add_argument("--archivo", action="append", default=[], help="restaurar solo esta ruta (repetible; tal como la muestra `ver`)")
     ap.add_argument("--dias", type=int)
     ap.add_argument("--minimo", type=int)
     ap.add_argument("--aplicar", action="store_true")
     a = ap.parse_args(argv)
+    a.docs = carpeta_pack.desde_argumento(a.docs, getattr(a, "repo", "."), __file__)
     repo, docs = Path(a.repo).resolve(), a.docs.strip("/")
 
     if a.accion == "listar":

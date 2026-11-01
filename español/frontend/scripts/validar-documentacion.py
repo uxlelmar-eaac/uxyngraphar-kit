@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Validación ligera de documentación del pack (solo stdlib; Windows, Linux y macOS).
 
-Uso (desde la raíz del repo):  python3 docs/scripts/validar-documentacion.py [ruta-docs]
+Uso (desde la raíz del repo):  python3 uxyngraphar/scripts/validar-documentacion.py [ruta-de-la-carpeta-del-pack]
 Salida: 0 = OK (puede haber WARN) · 1 = errores.
 Variables: DOCS_DIR, DECISIONES_MAX_DAYS y los interruptores STRICT_* (ver 10-guias/ci-validacion-documentacion.md).
 """

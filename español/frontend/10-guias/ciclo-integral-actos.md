@@ -49,7 +49,7 @@ mejoras_propuestas:
 evolucion_documentacion:
   - EVO-20260808-guia-y
 vinculos_salida:
-  - docs/25-areas/auth/CONTEXTO.md
+  - uxyngraphar/25-areas/auth/CONTEXTO.md
   - 45-mejoras-propuestas:MEJ-20260808-refactor-x
   - 46-evolucion-documentacion:EVO-20260808-guia-y
 ```

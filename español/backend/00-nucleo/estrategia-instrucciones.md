@@ -51,8 +51,8 @@ Toda instrucción con `anclas_codigo` debe declarar `espejo_actualizar`:
 
 ```
 src/modules/auth/auth.service.ts
-  → docs/50-sistema-integral/src/modules/auth/auth.service.md
-  → docs/50-sistema-integral/src/modules/auth/README.md (si afecta la carpeta)
+  → uxyngraphar/50-sistema-integral/src/modules/auth/auth.service.md
+  → uxyngraphar/50-sistema-integral/src/modules/auth/README.md (si afecta la carpeta)
 ```
 
 | Evento | Acción espejo |

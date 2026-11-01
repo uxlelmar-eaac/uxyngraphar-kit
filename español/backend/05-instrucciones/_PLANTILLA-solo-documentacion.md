@@ -46,7 +46,7 @@ Ver [ciclo-vinculante.md](../00-nucleo/ciclo-vinculante.md).
 
 ## Lectura mínima (IA)
 
-- [ ] `docs/25-areas/<area>/CONTEXTO.md`
+- [ ] `uxyngraphar/25-areas/<area>/CONTEXTO.md`
 
 Guía humana: [redaccion-lectura-minima.md](../10-guias/redaccion-lectura-minima.md).
 
@@ -85,7 +85,7 @@ Guía humana: [redaccion-lectura-minima.md](../10-guias/redaccion-lectura-minima
 
 ## Costo en tokens
 
-> Automático: `decisiones.py new` abre «Creación de la instrucción», `contexto.py` abre «Implementación» y `decisiones.py cerrar` escribe aquí la tabla por fases (análisis, instrucción, implementación, verificación, cierre) con el total. El agente marca `verificacion` y `cierre` al empezarlas: `python3 docs/scripts/costo-tokens.py fase <id> <fase>`. Guía: [costo-tokens.md](../10-guias/costo-tokens.md).
+> Automático: `decisiones.py new` abre «Creación de la instrucción», `contexto.py` abre «Implementación» y `decisiones.py cerrar` escribe aquí la tabla por fases (análisis, instrucción, implementación, verificación, cierre) con el total. El agente marca `verificacion` y `cierre` al empezarlas: `python3 uxyngraphar/scripts/costo-tokens.py fase <id> <fase>`. Guía: [costo-tokens.md](../10-guias/costo-tokens.md).
 
 <!-- tokens:inicio -->
 Pendiente: se mide al cerrar la instrucción.
@@ -106,7 +106,7 @@ Pendiente: se mide al cerrar la instrucción.
 
 ### Evolución documental / cobertura pack (opcional)
 
-- [ ] Ficha en `docs/46-evolucion-documentacion/01-pendientes/YYYY-MM-DD/` + `evolucion_documentacion` (máx. 2; solo sistema documental completo — R-18)
+- [ ] Ficha en `uxyngraphar/46-evolucion-documentacion/01-pendientes/YYYY-MM-DD/` + `evolucion_documentacion` (máx. 2; solo sistema documental completo — R-18)
 - [ ] Actualizar [matriz-cobertura-proyectos.md](../46-evolucion-documentacion/matriz-cobertura-proyectos.md)
 
 Ver [_PROTOCOLO 46](../46-evolucion-documentacion/_PROTOCOLO.md).

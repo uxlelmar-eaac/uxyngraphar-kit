@@ -1,6 +1,6 @@
 # Frontmatter — reglas generales
 
-1. Paths relativos al pack (`docs/` en el repo destino).
+1. Paths relativos al pack (`uxyngraphar/` en el repo destino).
 2. No incluir secretos, tokens ni credenciales en frontmatter ni cuerpo.
 3. Plantillas usan `status: plantilla`; no ejecutar sin copiar y renombrar.
 4. Al promover auditoría → actualizar destinos citados y moverla a

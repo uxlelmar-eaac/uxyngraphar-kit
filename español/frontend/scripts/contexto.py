@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Imprime el paquete de contexto de una instrucción aprobada: ficha compacta, lectura mínima, espejo y rangos de código.
 
-Uso:  python3 docs/scripts/contexto.py <id|slug|ruta> [--docs docs] [--max-tokens 12000] [--lista]
-      python3 docs/scripts/contexto.py --activacion     # las frases que activan el protocolo (protocolo.alias)
+Uso:  python3 uxyngraphar/scripts/contexto.py <id|slug|ruta> [--docs uxyngraphar] [--max-tokens 12000] [--lista]
+      python3 uxyngraphar/scripts/contexto.py --activacion     # las frases que activan el protocolo (protocolo.alias)
   --lista   solo el plan (qué incluiría y cuánto pesa), sin imprimir el contenido
   --max-tokens por defecto: UXYNGRAPHAR_MAX_TOKENS (alias de respaldo: uxyngraphar_MAX_TOKENS) o 12000
 Lee `lectura_minima` (admite `ruta#seccion` para traer solo una sección), `espejo_leer` y `anclas_codigo` (con rango).
@@ -18,6 +18,8 @@ import os
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import carpeta_pack  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parent / "tokens"))
 
 from paquete import construir, localizar_instruccion  # noqa: E402
@@ -29,11 +31,12 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("instruccion", nargs="?")
     ap.add_argument("--repo", default=".")
-    ap.add_argument("--docs", default="docs")
+    ap.add_argument("--docs", default=None, help="carpeta del pack relativa al repo (por defecto la de este script: uxyngraphar o docs)")
     ap.add_argument("--max-tokens", type=int, default=int(os.environ.get("UXYNGRAPHAR_MAX_TOKENS") or os.environ.get("uxyngraphar_MAX_TOKENS") or "12000"))
     ap.add_argument("--lista", action="store_true")
     ap.add_argument("--activacion", action="store_true", help="imprime las frases que activan el protocolo y termina")
     a = ap.parse_args(argv)
+    a.docs = carpeta_pack.desde_argumento(a.docs, getattr(a, "repo", "."), __file__)
     repo = Path(a.repo).resolve()
     docs = repo / a.docs
     if a.activacion:

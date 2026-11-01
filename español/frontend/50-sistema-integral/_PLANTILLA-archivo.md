@@ -24,4 +24,4 @@ Líneas físicas (`wc -l`): `___` / 350 — `OK` | `EXCEDE (ver MEJ-*)`. Si exce
 ## Enlaces
 
 - Código: `` [`<nombre.ext>`](<path-relativo>) ``
-- BFF propio (si aplica): `docs/15-rutas/...`
+- BFF propio (si aplica): `uxyngraphar/15-rutas/...`

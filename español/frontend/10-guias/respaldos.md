@@ -7,16 +7,16 @@
 | Origen | Cuándo se crea | Carpeta | Rutas de dentro |
 |--------|----------------|---------|-----------------|
 | `actualizacion` | Al aplicar una actualización del pack (asistente o `actualizar-pack.py --apply`) | `.uxyngraphar-respaldo/<AAAAMMDD-HHMMSS>/` (raíz del repo git, también en monorepos) | relativas a la raíz del repo |
-| `depuracion` | Reservado. La depuración no borra ni reemplaza fichas (van a la memoria, [memoria.md](memoria.md)), así que normalmente está vacía; `restaurar` y `limpiar` la tratan igual que la otra | `docs/.depuracion/respaldo/<AAAAMMDD-HHMMSS>/` | relativas a `docs/` |
+| `depuracion` | Reservado. La depuración no borra ni reemplaza fichas (van a la memoria, [memoria.md](memoria.md)), así que normalmente está vacía; `restaurar` y `limpiar` la tratan igual que la otra | `uxyngraphar/.depuracion/respaldo/<AAAAMMDD-HHMMSS>/` | relativas a `uxyngraphar/` |
 
 - Ambas carpetas están en `.gitignore` (las añade el instalador; `doctor.py --fix` las repone): **nunca entran en git ni ensucian el código**.
 - Cada copia lleva `_respaldo.json`: origen, fecha, versiones (antes → después) y qué archivos guardó o creó.
-- Una actualización guarda también `docs/.uxyngraphar.lock` y `90-archivo/cambios-pack.md` tal como estaban, y anota los archivos que creó (nuevos y `*.uxyngraphar-nuevo`): así se puede **deshacer entera**.
+- Una actualización guarda también `uxyngraphar/.uxyngraphar.lock` y `90-archivo/cambios-pack.md` tal como estaban, y anota los archivos que creó (nuevos y `*.uxyngraphar-nuevo`): así se puede **deshacer entera**.
 - Agentes: no leen estas carpetas ni restauran o borran copias (R-20); es tarea humana.
 
 ## Cuánto se conservan
 
-Política en `docs/uxyngraphar.config.json`:
+Política en `uxyngraphar/uxyngraphar.config.json`:
 
 ```json
 "respaldos": {"conservar_dias": 30, "conservar_minimo": 3, "limpieza_automatica": true}
@@ -29,13 +29,13 @@ Política en `docs/uxyngraphar.config.json`:
 ## Comandos
 
 ```bash
-python3 docs/scripts/respaldos.py listar                        # todas, con política, antigüedad y versiones
-python3 docs/scripts/respaldos.py ver actualizacion/20261026-090000
-python3 docs/scripts/respaldos.py restaurar actualizacion/20261026-090000             # simula
-python3 docs/scripts/respaldos.py restaurar actualizacion/20261026-090000 --aplicar   # restaura
-python3 docs/scripts/respaldos.py restaurar depuracion/20261026-090000 --archivo 45-mejoras-propuestas/06-listas-para-eliminar/2026-02-01/MEJ-x.md --aplicar
-python3 docs/scripts/respaldos.py limpiar                       # qué caducó (simula)
-python3 docs/scripts/respaldos.py limpiar --aplicar             # borra lo caducado ya
+python3 uxyngraphar/scripts/respaldos.py listar                        # todas, con política, antigüedad y versiones
+python3 uxyngraphar/scripts/respaldos.py ver actualizacion/20261026-090000
+python3 uxyngraphar/scripts/respaldos.py restaurar actualizacion/20261026-090000             # simula
+python3 uxyngraphar/scripts/respaldos.py restaurar actualizacion/20261026-090000 --aplicar   # restaura
+python3 uxyngraphar/scripts/respaldos.py restaurar depuracion/20261026-090000 --archivo 45-mejoras-propuestas/06-listas-para-eliminar/2026-02-01/MEJ-x.md --aplicar
+python3 uxyngraphar/scripts/respaldos.py limpiar                       # qué caducó (simula)
+python3 uxyngraphar/scripts/respaldos.py limpiar --aplicar             # borra lo caducado ya
 ```
 
 En un monorepo añade `--docs apps/api/docs`. `--aplicar` exige una persona en la terminal (o `UXYNGRAPHAR_HUMANO=1`).

@@ -97,11 +97,17 @@ def reglas_agente(repo: Path, docs: str) -> Path:
     return f
 
 
+def marcas_codeowners(docs: str) -> tuple[str, str]:
+    """El pack en la raíz del repo usa las marcas simples; el de una app del monorepo las lleva con su ruta."""
+    d = docs.strip("/")
+    return (MARCA_INI, MARCA_FIN) if "/" not in d else (f"{MARCA_INI} [{d}]", f"{MARCA_FIN} [{d}]")
+
+
 def propietario_actual(repo: Path, docs: str) -> str:
     """Propietario ya escrito en el bloque de este pack en CODEOWNERS ("" si no hay bloque)."""
     f = repo / ".github" / "CODEOWNERS"
     texto = f.read_text(encoding="utf-8") if f.is_file() else ""
-    ini = MARCA_INI if docs.strip("/") == "docs" else f"{MARCA_INI} [{docs.strip('/')}]"
+    ini = marcas_codeowners(docs)[0]
     if ini not in texto:
         return ""
     for linea in texto.split(ini, 1)[1].splitlines()[1:]:
@@ -114,7 +120,7 @@ def propietario_actual(repo: Path, docs: str) -> str:
 def codeowners(repo: Path, docs: str, propietario: str) -> Path:
     f = repo / ".github" / "CODEOWNERS"
     actual = f.read_text(encoding="utf-8") if f.is_file() else ""
-    ini, fin = (MARCA_INI, MARCA_FIN) if docs.strip("/") == "docs" else (f"{MARCA_INI} [{docs.strip('/')}]", f"{MARCA_FIN} [{docs.strip('/')}]")
+    ini, fin = marcas_codeowners(docs)
     if ini in actual and fin in actual:   # sustituye solo el bloque de este pack (puede haber varios packs en el repo)
         antes, resto = actual.split(ini, 1)
         despues = resto.split(fin, 1)[1].lstrip("\n")

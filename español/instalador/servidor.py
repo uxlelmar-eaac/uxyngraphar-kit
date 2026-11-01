@@ -37,9 +37,10 @@ def abrir_carpeta(ruta: str) -> dict:
 
 
 def rutas_panel() -> dict:
-    """Las del panel de configuración (uxyngraphar panel). Ruta del proyecto y carpeta docs llegan en cada petición."""
+    """Las del panel de configuración (uxyngraphar panel). Ruta del proyecto y carpeta del pack llegan en cada petición."""
     def rd(b: dict) -> tuple[str, str]:
-        return str(b.get("ruta", "")), str(b.get("docs", "docs"))
+        ruta = str(b.get("ruta", ""))
+        return ruta, str(b.get("docs") or api.carpeta_pack.resolver(Path(ruta).expanduser() if ruta else "."))
     return {"/api/panel/resumen": lambda b: panel.resumen(), "/api/panel/ultima": lambda b: panel.ultima(), "/api/panel/autoactualizar": lambda b: panel.autoactualizar(),
             "/api/panel/agregar": lambda b: panel.agregar(str(b.get("ruta", ""))), "/api/panel/quitar": lambda b: panel.quitar(str(b.get("ruta", ""))),
             "/api/panel/salud": lambda b: panel.salud(*rd(b)), "/api/panel/ver": lambda b: panel.ver(*rd(b)),

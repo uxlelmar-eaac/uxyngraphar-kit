@@ -1,6 +1,6 @@
 # uxyngraphar.config.json
 
-Archivo en `docs/uxyngraphar.config.json`. Define comportamiento local del pack (niveles de idioma, feedback, etc.).
+Archivo en `uxyngraphar/uxyngraphar.config.json`. Define comportamiento local del pack (niveles de idioma, feedback, etc.).
 
 ## Frases que activan el protocolo
 
@@ -10,7 +10,7 @@ Al final de un pedido escribes **«sigue el protocolo uxyngraphar»** (o `uxyn`,
 { "protocolo": { "alias": ["uxyngraphar", "uxyn", "uxynar", "del sistema"] } }
 ```
 
-Con eso vale «sigue el protocolo del sistema». Desde el panel: **Configuración del proyecto → Cómo se pide el protocolo** (también en la **Plantilla**, para los proyectos nuevos). El agente las lee en la línea «Activación» de `ESTADO.md`. Si editas el archivo a mano, ponla al día con `python3 docs/scripts/doctor.py --fix`.
+Con eso vale «sigue el protocolo del sistema». Desde el panel: **Configuración del proyecto → Cómo se pide el protocolo** (también en la **Plantilla**, para los proyectos nuevos). El agente las lee en la línea «Activación» de `ESTADO.md`. Si editas el archivo a mano, ponla al día con `python3 uxyngraphar/scripts/doctor.py --fix`.
 
 ## Cómo editarlo
 
@@ -26,4 +26,4 @@ Con eso vale «sigue el protocolo del sistema». Desde el panel: **Configuració
 
 ## Guía canónica
 
-`docs/10-guias/configuracion-uxyngraphar.md` (en el proyecto instalado).
+`uxyngraphar/10-guias/configuracion-uxyngraphar.md` (en el proyecto instalado).

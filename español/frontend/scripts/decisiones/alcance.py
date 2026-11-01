@@ -13,7 +13,7 @@ Uso desde el tooling:
   bloqueos(fm)   qué impide **ejecutar o cerrar** (problemas + falta de aprobación de la ampliación)
   resumen(fm)    línea para el revisor humano si la ficha pide ampliación ("" si no la pide)
   leer(fm)       datos normalizados (archivos, factor, tope…)
-Detalle: docs/00-nucleo/ampliacion-alcance.md
+Detalle: 00-nucleo/ampliacion-alcance.md
 """
 
 from __future__ import annotations

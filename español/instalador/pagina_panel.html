@@ -71,7 +71,7 @@ function campos(o,plantilla){const c=[];
  c.push({p:"idioma.ramas",t:"txt",l:"Nombres de rama (regex)",h:"Vacío = tipo/alcance-descripcion."});
  if(!plantilla){c.push({p:"idioma.legacy",t:"lista",l:"Código legacy en otro idioma",h:"Sus hallazgos solo avisan."});
   c.push({p:"idioma.locales",t:"lista",l:"Archivos de traducción",h:"No cuentan como código."});
-  c.push({p:"idioma.glosario",t:"txt",l:"Glosario de dominio",h:"Ruta dentro de docs/ con los términos permitidos."})}
+  c.push({p:"idioma.glosario",t:"txt",l:"Glosario de dominio",h:"Ruta dentro de la carpeta del pack con los términos permitidos."})}
  c.push({g:"Copias de seguridad",d:"Antes de actualizar uxyngraphar o de limpiar fichas, se guarda una copia de los archivos que se van a tocar (en .uxyngraphar-respaldo/, fuera de git). Sirven para deshacer. Aquí decides cuánto tiempo se conservan."});
  c.push({p:"respaldos.conservar_dias",t:"num",min:0,l:"Las copias se pueden borrar a los… (días)",h:"Una copia con más días que este número puede borrarse. Ejemplo: 30 = se guardan un mes."});
  c.push({p:"respaldos.conservar_minimo",t:"num",min:0,l:"Pero conserva siempre las últimas… (copias)",h:"Estas copias, las más recientes, nunca se borran aunque superen los días de arriba. Así siempre puedes deshacer las últimas actualizaciones."});
@@ -217,7 +217,7 @@ async function aplicarPlantilla(){const d=S.plPrev.destinos.map(x=>({ruta:x.ruta
  r.destinos=(r.destinos||[]).map(x=>({...x,aplicado:true}));S.plPrev=r;dibujar()}
 
 // ---------- Atajos y comandos ----------
-// Agrupados por lo que quieres hacer. Regla para recordarlos: «uxyngraphar» + un verbo; dentro de un proyecto, «docs/scripts/» + un nombre.
+// Agrupados por lo que quieres hacer. Regla para recordarlos: «uxyngraphar» + un verbo; dentro de un proyecto, «uxyngraphar/scripts/» + un nombre (en instalaciones anteriores a 1.1.0, «docs/scripts/»).
 const ATAJOS=[
  {g:"Empezar",d:"Una vez por equipo y una vez por proyecto.",c:[
   ["curl -fsSL https://github.com/uxlelmar-eaac/uxyngraphar-kit/releases/latest/download/instalar-uxyngraphar.py | python3 -","Instala la herramienta en este equipo y abre este panel (Windows: irm … | py -)."],
@@ -235,16 +235,16 @@ const ATAJOS=[
   ["uxyngraphar proyectos --agregar RUTA","Añade a la lista un proyecto que ya tiene uxyngraphar."],
   ["uxyngraphar configuracion","Muestra en texto la configuración del proyecto de esta carpeta."]]},
  {g:"Dentro de un proyecto",d:"Desde la raíz del proyecto. En Windows escribe py -3 en lugar de python3.",c:[
-  ["python3 docs/scripts/doctor.py","Chequeo completo: ¿está todo bien? Con --fix arregla lo seguro."],
-  ["python3 docs/scripts/controlar.py --staged","Pasa los controles a lo que vas a commitear, como hará el CI."],
-  ["python3 docs/scripts/decisiones/decisiones.py scan","Lo que está esperando tu decisión."],
-  ["python3 docs/scripts/reglas.py listar","Las reglas de tu equipo que están activas."],
-  ["python3 docs/scripts/respaldos.py listar","Las copias de seguridad; restaurar para deshacer."],
-  ["python3 docs/scripts/memoria.py buscar TEXTO","Busca en la memoria del sistema (fichas antiguas)."],
-  ["python3 docs/scripts/feedback.py previsualizar","Qué saldría exactamente si colaboras. No envía nada."]]},
+  ["python3 uxyngraphar/scripts/doctor.py","Chequeo completo: ¿está todo bien? Con --fix arregla lo seguro."],
+  ["python3 uxyngraphar/scripts/controlar.py --staged","Pasa los controles a lo que vas a commitear, como hará el CI."],
+  ["python3 uxyngraphar/scripts/decisiones/decisiones.py scan","Lo que está esperando tu decisión."],
+  ["python3 uxyngraphar/scripts/reglas.py listar","Las reglas de tu equipo que están activas."],
+  ["python3 uxyngraphar/scripts/respaldos.py listar","Las copias de seguridad; restaurar para deshacer."],
+  ["python3 uxyngraphar/scripts/memoria.py buscar TEXTO","Busca en la memoria del sistema (fichas antiguas)."],
+  ["python3 uxyngraphar/scripts/feedback.py previsualizar","Qué saldría exactamente si colaboras. No envía nada."]]},
  {g:"Quitar",d:"",c:[["uxyngraphar desinstalar","Quita la herramienta de este equipo. Tus proyectos no se tocan."]]}];
 function vAtajos(){let i=0;
- $("#vista").innerHTML=`<div class="card"><h2>Atajos y comandos</h2><p class="mut">Para recordarlos: <b>uxyngraphar + un verbo</b> (panel, instalar, actualizar, estado…) para la herramienta, y <b>python3 docs/scripts/ + un nombre</b> dentro de un proyecto. ¿Dudas? <code>uxyngraphar ayuda</code> los lista todos.</p></div>`+
+ $("#vista").innerHTML=`<div class="card"><h2>Atajos y comandos</h2><p class="mut">Para recordarlos: <b>uxyngraphar + un verbo</b> (panel, instalar, actualizar, estado…) para la herramienta, y <b>python3 uxyngraphar/scripts/ + un nombre</b> (o <code>docs/scripts/</code> si tu proyecto se instaló antes de la 1.1.0) dentro de un proyecto. ¿Dudas? <code>uxyngraphar ayuda</code> los lista todos.</p></div>`+
  ATAJOS.map(x=>`<div class="card"><h2>${esc(x.g)}</h2>${x.d?`<p class="mut">${esc(x.d)}</p>`:""}<table><tbody>${x.c.map(([cmd,txt])=>`<tr><td style="width:55%"><code>${esc(cmd)}</code></td><td>${esc(txt)}</td><td style="width:1%"><button id="cp${i}" onclick='copiar(${JSON.stringify(cmd)},"cp${i++}")'>Copiar</button></td></tr>`).join("")}</tbody></table></div>`).join("")}
 async function copiar(t,id){try{await navigator.clipboard.writeText(t)}catch(e){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();document.execCommand("copy");a.remove()}
  const b=document.getElementById(id);if(b){b.textContent="Copiado";setTimeout(()=>{b.textContent="Copiar"},1500)}}
@@ -269,7 +269,7 @@ async function actualizarHerr(){const u=S.ult;if(!u||!u.hay_nueva||S.actualizand
 async function salir(){await post("/api/salir");document.querySelector("main").innerHTML=`<div class="card"><h2>Panel cerrado</h2><p>Ya puedes cerrar esta pestaña. Para volver a abrirlo: <code>uxyngraphar panel</code></p></div>`}
 async function cargar(){S.res=await post("/api/panel/resumen");dibujarVer();dibujar()}
 (async()=>{const ini=await post("/api/inicio");if(ini.bienvenida){S.bien=ini.bienvenida;S.tab="bienvenida";$("#tabBien").classList.remove("oculto")}await cargar();S.pl=await post("/api/panel/plantilla");const q=new URLSearchParams(location.search);
- if(q.get("ruta"))await abrirProyecto(q.get("ruta"),q.get("docs")||"docs");
+ if(q.get("ruta"))await abrirProyecto(q.get("ruta"),q.get("docs")||"");
  S.ult=await post("/api/panel/ultima");dibujarVer();if(S.tab==="plantilla")dibujar()})();
 </script>
 <!--EXPLORADOR-->

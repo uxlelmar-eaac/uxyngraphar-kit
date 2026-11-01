@@ -15,7 +15,7 @@ MARCA = "# uxyngraphar-gancho"
 
 PLANTILLA = """#!/usr/bin/env {interprete}
 {marca} ({nombre}) — instalado por instalar-ganchos.py; quitar con: instalar-ganchos.py --quitar
-# Ejecuta las verificaciones del pack. WARN no bloquea; un ERROR del validador sí. controlar.py bloquea según docs/uxyngraphar.config.json.
+# Ejecuta las verificaciones del pack. WARN no bloquea; un ERROR del validador sí. controlar.py bloquea según <carpeta del pack>/uxyngraphar.config.json.
 import subprocess
 import sys
 from pathlib import Path

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Costo en tokens de cada instrucción, por fases. Guía: docs/10-guias/costo-tokens.md
+"""Costo en tokens de cada instrucción, por fases. Guía: 10-guias/costo-tokens.md
 
-Uso:  python3 docs/scripts/costo-tokens.py fase <id> <analisis|instruccion|implementacion|verificacion|cierre>
-      python3 docs/scripts/costo-tokens.py registrar <id> <fase> --entrada N --salida N [--cache-lectura N] [--cache-escritura N]
-      python3 docs/scripts/costo-tokens.py medir <id> [--transcripciones DIR]   # escribe la tabla en la sección «Costo en tokens»
-      python3 docs/scripts/costo-tokens.py ver <id>                             # muestra sin escribir
-      python3 docs/scripts/costo-tokens.py resumen [--json]                     # todas las instrucciones medidas, con medias por fase
+Uso:  python3 uxyngraphar/scripts/costo-tokens.py fase <id> <analisis|instruccion|implementacion|verificacion|cierre>
+      python3 uxyngraphar/scripts/costo-tokens.py registrar <id> <fase> --entrada N --salida N [--cache-lectura N] [--cache-escritura N]
+      python3 uxyngraphar/scripts/costo-tokens.py medir <id> [--transcripciones DIR]   # escribe la tabla en la sección «Costo en tokens»
+      python3 uxyngraphar/scripts/costo-tokens.py ver <id>                             # muestra sin escribir
+      python3 uxyngraphar/scripts/costo-tokens.py resumen [--json]                     # todas las instrucciones medidas, con medias por fase
 `instruccion` se marca solo al crear la ficha (decisiones.py new) e `implementacion` al pedir el contexto (contexto.py);
 `decisiones.py cerrar` cierra la medición y escribe la tabla. <id> admite id, slug o ruta. Opciones comunes: --repo . --docs docs
 """
@@ -18,6 +18,8 @@ import sys
 from pathlib import Path
 
 AQUI = Path(__file__).resolve().parent
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import carpeta_pack  # noqa: E402
 sys.path.insert(0, str(AQUI / "tokens"))
 sys.path.insert(0, str(AQUI / "decisiones"))
 
@@ -68,12 +70,13 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("id", nargs="?")
     ap.add_argument("fase", nargs="?", choices=costo.FASES)
     ap.add_argument("--repo", default=".")
-    ap.add_argument("--docs", default="docs")
+    ap.add_argument("--docs", default=None, help="carpeta del pack relativa al repo (por defecto la de este script: uxyngraphar o docs)")
     ap.add_argument("--transcripciones")
     ap.add_argument("--json", action="store_true")
     for c in ("entrada", "salida", "cache-lectura", "cache-escritura"):
         ap.add_argument(f"--{c}", type=int, default=0)
     a = ap.parse_args(argv)
+    a.docs = carpeta_pack.desde_argumento(a.docs, getattr(a, "repo", "."), __file__)
     repo = Path(a.repo).resolve()
     docs = repo / a.docs.strip("/")
 

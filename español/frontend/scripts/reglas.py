@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Reglas del proyecto (96-reglas-proyecto/): listar, validar y regenerar INDICE.md.
 
-Uso:  python3 docs/scripts/reglas.py listar              # reglas activas (id, nivel, aplica_a, resumen)
-      python3 docs/scripts/reglas.py validar             # frontmatter de todas las reglas e índice al día
-      python3 docs/scripts/reglas.py indice              # regenera la tabla de INDICE.md desde las reglas activas
+Uso:  python3 uxyngraphar/scripts/reglas.py listar              # reglas activas (id, nivel, aplica_a, resumen)
+      python3 uxyngraphar/scripts/reglas.py validar             # frontmatter de todas las reglas e índice al día
+      python3 uxyngraphar/scripts/reglas.py indice              # regenera la tabla de INDICE.md desde las reglas activas
 Crear, editar o retirar una regla exige aprobación humana explícita (instrucción aprobada que la ancle). Guía: 96-reglas-proyecto/_PROTOCOLO.md.
 Salida: 0 · 1 si validar encuentra problemas.
 """
@@ -14,6 +14,8 @@ import argparse
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import carpeta_pack  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parent / "reglas"))
 
 import reglas_proyecto as rp  # noqa: E402
@@ -25,8 +27,9 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("orden", choices=("listar", "validar", "indice"))
     ap.add_argument("--repo", default=".")
-    ap.add_argument("--docs", default="docs")
+    ap.add_argument("--docs", default=None, help="carpeta del pack relativa al repo (por defecto la de este script: uxyngraphar o docs)")
     a = ap.parse_args(argv)
+    a.docs = carpeta_pack.desde_argumento(a.docs, getattr(a, "repo", "."), __file__)
     docs = Path(a.repo).resolve() / a.docs
     if a.orden == "listar":
         activas = rp.activas(docs)
@@ -37,7 +40,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     problemas = [f"{r.ruta.name}: {p}" for r in rp.todas(docs) for p in r.problemas]
     if not rp.indice_al_dia(docs):
-        problemas.append("INDICE.md no cuadra con las reglas activas: python3 docs/scripts/reglas.py indice")
+        problemas.append("INDICE.md no cuadra con las reglas activas: python3 uxyngraphar/scripts/reglas.py indice")
     print("\n".join(f"ERROR: {p}" for p in problemas) if problemas else "OK: reglas del proyecto válidas.")
     return 1 if problemas else 0
 

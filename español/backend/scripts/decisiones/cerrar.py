@@ -7,6 +7,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.append(str(Path(__file__).resolve().parent.parent))   # al final: que no tape módulos con el mismo nombre (respaldos, memoria…)
+import carpeta_pack  # noqa: E402
+
 import alcance
 from common import estado_dest_rel, rebuild_content, resolve_docs_roots, split_frontmatter_parts, update_frontmatter_raw, utc_now_iso
 from depurar_aplicar import reescribir_enlaces
@@ -47,7 +50,7 @@ def cerrar(docs: Path, ref: str, dry_run: bool = False) -> list[str]:
     if bloqueos:   # R-21: no se da por buena una entrega que excedió el alcance sin fraccionar ni aprobación
         raise ErrorCierre("R-21 — " + "; ".join(bloqueos) + ". Corrige la ficha (o registra la aprobación humana) antes de cerrar.")
     salida: list[str] = []
-    faltan = [e for e in _lista(fm, "espejo_actualizar") if not (docs / e.strip().strip("`").removeprefix("docs/")).exists()]
+    faltan = [e for e in _lista(fm, "espejo_actualizar") if not (docs / carpeta_pack.relativa(e, docs)).exists()]
     if faltan:
         salida.append(f"AVISO: espejo_actualizar sin escribir ({len(faltan)}): {', '.join(faltan[:4])}")
     if _lista(fm, "anclas_codigo") and not _lista(fm, "espejo_actualizar"):

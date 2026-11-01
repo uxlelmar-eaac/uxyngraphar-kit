@@ -8,8 +8,8 @@ Fuente de verdad de las fichas HTTP: `15-rutas/` del **repo servidor**. El clien
 
 | id | ficha servidor | ficha local (BFF) | área cliente | ref externa | estado | notas |
 |----|----------------|-------------------|--------------|-------------|--------|-------|
-| `<endpoint-id>` | `docs/15-rutas/...` (repo servidor) | — | `<area-ui>` | `<URL a la ficha>` | activa | Versión API, deprecación |
-| `<bff-id>` | — | `docs/15-rutas/...` (solo pack cliente) | `<area>` | — | activa | Handler propio |
+| `<endpoint-id>` | `uxyngraphar/15-rutas/...` (repo servidor) | — | `<area-ui>` | `<URL a la ficha>` | activa | Versión API, deprecación |
+| `<bff-id>` | — | `uxyngraphar/15-rutas/...` (solo pack cliente) | `<area>` | — | activa | Handler propio |
 | — | — | — | — | — | — | (vacío al adoptar) |
 
 ## Reglas
@@ -18,7 +18,7 @@ Fuente de verdad de las fichas HTTP: `15-rutas/` del **repo servidor**. El clien
 2. **Cliente:** citar `id` en CONTEXTO y espejo; **no** duplicar ficha HTTP; BFF propio → ficha local + fila.
 3. **PR cruzados:** merge backend primero; alinear esta tabla en ambos repos — [sync-multi-repo.md](../10-guias/sync-multi-repo.md).
 4. **Deprecar:** `estado: deprecated` aquí y `status: deprecated` en la ficha; renombrar id solo con instrucción explícita.
-5. **Monorepo:** una sola tabla en `docs/` unificado — [monorepo-docs-fusionados.md](../10-guias/monorepo-docs-fusionados.md).
+5. **Monorepo:** una sola tabla en `uxyngraphar/` unificado — [monorepo-docs-fusionados.md](../10-guias/monorepo-docs-fusionados.md).
 
 ## Referencias
 

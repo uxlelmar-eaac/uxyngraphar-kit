@@ -7,6 +7,9 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
+sys.path.append(str(Path(__file__).resolve().parent.parent))   # al final: que no tape módulos con el mismo nombre (respaldos, memoria…)
+import carpeta_pack  # noqa: E402
+
 AQUI = Path(__file__).resolve().parent
 sys.path.insert(0, str(AQUI))
 sys.path.insert(0, str(AQUI.parent / "decisiones"))
@@ -51,7 +54,7 @@ class Paquete:
         sal = [f"BLOQUEADO (R-21): {b}" for b in self.bloqueos]
         if self.bloqueos:
             sal.append("No edites código: corrige la instrucción (fracciona o pide la ampliación) y espera aprobación. "
-                       "Guía: docs/00-nucleo/ampliacion-alcance.md\n")
+                       "Guía: 00-nucleo/ampliacion-alcance.md\n")
         sal += [f"=== {p.titulo}{' — ' + p.nota if p.nota else ''} ===\n{p.texto.rstrip()}\n" for p in self.partes]
         if self.omitidas:
             sal.append("=== OMITIDO por presupuesto (pídelo explícitamente si lo necesitas) ===\n" + "\n".join(f"- {p.titulo} (~{p.tokens} tokens)" for p in self.omitidas))
@@ -95,7 +98,7 @@ def _lista(fm: dict, clave: str) -> list[str]:
 
 def _documento(docs: Path, entrada: str, avisos: list[str]) -> Parte:
     ruta, _, ancla = entrada.partition("#")
-    rel = ruta.strip().strip("`").removeprefix("docs/")
+    rel = carpeta_pack.relativa(ruta, docs)
     if rel.startswith("95-memoria/") or rel.startswith("memoria:"):   # R-24: la memoria no llega al agente
         avisos.append(f"{entrada}: está en la memoria del sistema; el agente no la lee. Si hace falta, pídesela al humano (R-24)")
         return Parte(entrada, "(memoria del sistema: no disponible para el agente)")

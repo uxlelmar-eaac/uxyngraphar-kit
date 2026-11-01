@@ -66,4 +66,4 @@ src/modules/<nombre>/
 
 ## Sincronización documental
 
-Dominio nuevo → `docs/25-areas/<nombre>/CONTEXTO.md` + fila en índice de áreas.
+Dominio nuevo → `uxyngraphar/25-areas/<nombre>/CONTEXTO.md` + fila en índice de áreas.

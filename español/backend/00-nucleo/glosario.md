@@ -6,7 +6,7 @@
 | Instrucción | Orden humana en `05-instrucciones/`; contrato de lectura IA |
 | Lectura mínima | Lista cerrada de docs en frontmatter de instrucción |
 | Ancla | Path de código autorizado para abrir (con rango opcional) |
-| Presupuesto | Máx. docs/archivos por tarea (default 8/5) |
+| Presupuesto | Máx. uxyngraphar/archivos por tarea (default 8/5) |
 | Área | Dominio de negocio con `25-areas/<id>/CONTEXTO.md` |
 | Ficha de endpoint | Documento de una ruta HTTP en `15-rutas/` |
 | ADR | Decisión arquitectónica en `20-decisiones/` |

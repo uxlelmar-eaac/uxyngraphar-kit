@@ -8,14 +8,14 @@ Aplica al **código del producto** y a lo que lo acompaña en el repositorio, lo
 
 | Dentro de R-22 (inglés) | Fuera de R-22 |
 |---|---|
-| Código fuente, identificadores, nombres de archivos y carpetas del producto | Todo `docs/` (el pack documental se escribe en el idioma del pack) |
+| Código fuente, identificadores, nombres de archivos y carpetas del producto | Todo `uxyngraphar/` (el pack documental se escribe en el idioma del pack) |
 | Tests y sus descripciones | El espejo `50-sistema-integral/` (en el idioma del pack, pero cita los identificadores **tal cual**, entre comillas invertidas) |
 | Commits, ramas, títulos y descripciones de PR, títulos de issues | La conversación con el humano |
 | Logs, errores para desarrolladores, códigos de error, métricas | Texto para el usuario final (va por i18n, en cada idioma; §6) |
 | Tablas, columnas, índices y migraciones **nuevas** | Código generado, vendorizado y migraciones ya aplicadas (`idioma.excluir`) |
 | Rutas de API, query params, campos JSON, eventos | Contratos externos que se reflejan tal cual (§4) |
 | Claves de configuración, variables de entorno | |
-| Comentarios de código y README/ADR que vivan **junto al código**, fuera de `docs/` | |
+| Comentarios de código y README/ADR que vivan **junto al código**, fuera de `uxyngraphar/` | |
 
 **Precedencia:** R-22 es parte del núcleo como cualquier otra regla. Se ajusta solo con la sección `idioma` de la configuración (que edita el propietario, no un agente). Pedir informalmente en el chat «escríbelo en español» no cambia el idioma de los artefactos.
 
@@ -116,7 +116,7 @@ Si algo falla, se corrige antes de entregar. No se entrega el código para despu
 |---|---|
 | `artefactos` | Idioma de los artefactos. Único valor soportado: `en`. Cambiarlo es un cambio del núcleo (ficha EVO). |
 | `conversacion` | `espejo` (idioma del humano) o un código fijo. |
-| `glosario` | Términos de dominio permitidos (ruta relativa a `docs/`). |
+| `glosario` | Términos de dominio permitidos (ruta relativa a `uxyngraphar/`). |
 | `excluir` | Rutas que el control de idioma no revisa: código generado, vendorizado, contratos externos. |
 | `legacy` | Rutas con código legacy: sus hallazgos solo avisan. |
 | `locales` | Archivos de traducción: no son código. |

@@ -8,14 +8,14 @@
 ## Qué entrega el kit
 
 1. **Herramienta CLI** `uxyngraphar` (panel local, instalar, actualizar, estado…).
-2. **Dos packs** autosuficientes (servidor / cliente) que se copian a `docs/` del proyecto.
+2. **Dos packs** autosuficientes (servidor / cliente) que se copian a `uxyngraphar/` del proyecto (los instalados antes de la 1.1.0 usan `docs/`).
 3. **Protecciones** opcionales: reglas deny para agentes, CODEOWNERS, ganchos, CI.
 
 ## Qué no es
 
 - No es un IDE.
 - No sustituye git ni CI.
-- No publica solo tu código: el pack vive **dentro** de tu repo en `docs/`.
+- No publica solo tu código: el pack vive **dentro** de tu repo en `uxyngraphar/`.
 
 ## Dónde vive cada cosa
 
@@ -23,4 +23,4 @@
 |-------|-----------|
 | Código del kit / packs | repo `uxyngraphar` → carpeta `español/` |
 | Este manual | `español/documentacion/` (no se instala en proyectos) |
-| Pack en tu app | `tu-repo/docs/` + `AGENTES.md` al lado |
+| Pack en tu app | `tu-repo/uxyngraphar/` + `AGENTES.md` al lado |

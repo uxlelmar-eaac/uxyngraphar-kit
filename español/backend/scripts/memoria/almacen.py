@@ -1,8 +1,8 @@
 """La memoria del sistema (R-24): donde termina cada ficha en lugar de borrarse.
 
-docs/95-memoria/<sección>/<AAAA>/<AAAA-MM>/<archivo>.md   la ficha tal cual, con un bloque memoria_* en su frontmatter
-docs/95-memoria/catalogo.jsonl                            un apunte por hecho: guardada · recuperada · purgada (solo se añade)
-docs/95-memoria/registro-accesos.jsonl                    quién vio, buscó, recuperó o purgó qué y cuándo
+<pack>/95-memoria/<sección>/<AAAA>/<AAAA-MM>/<archivo>.md   la ficha tal cual, con un bloque memoria_* en su frontmatter
+<pack>/95-memoria/catalogo.jsonl                            un apunte por hecho: guardada · recuperada · purgada (solo se añade)
+<pack>/95-memoria/registro-accesos.jsonl                    quién vio, buscó, recuperó o purgó qué y cuándo
 
 Solo se añade: una memoria no se edita. El agente no la lee (reglas deny, archivos de exclusión, herramientas que la
 ignoran, puerta y CI); el humano la consulta con `memoria.py`. Este módulo no comprueba quién llama: eso lo hace la CLI.
@@ -44,8 +44,8 @@ class ErrorMemoria(ValueError):
 class Memoria:
     id: str
     titulo: str
-    ruta: str          # relativa a docs/
-    desde: str         # ruta original, relativa a docs/
+    ruta: str          # relativa a la carpeta del pack
+    desde: str         # ruta original, relativa a la carpeta del pack
     estado_previo: str
     creada: str        # fecha de la carpeta de origen (creación, R-17)
     guardada: str

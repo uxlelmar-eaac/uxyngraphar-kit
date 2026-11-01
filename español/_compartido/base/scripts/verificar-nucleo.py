@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Verifica que el núcleo instalado no fue editado, borrado ni ampliado (R-14 / R-20).
 
-Uso:  python3 verificar-nucleo.py [--repo .] [--docs docs] [--contra RUTA_PACK] [--warn]
+Uso:  python3 verificar-nucleo.py [--repo .] [--docs uxyngraphar] [--contra RUTA_PACK] [--warn]
   --contra  compara además cada archivo del núcleo con el pack fuente (independiente del lock; úsalo en CI).
 Salida: 0 íntegro · 1 hay hallazgos (con --warn siempre 0).
 No existe forma de «aceptar» una edición local: el núcleo solo cambia en uxyngraphar y llega con actualizar-pack.py.
@@ -13,6 +13,8 @@ import argparse
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import carpeta_pack  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parent / "nucleo"))
 
 from verificar import AYUDA, contra_pack, verificar  # noqa: E402
@@ -24,10 +26,11 @@ from uxyngraphar_config import normalizar  # noqa: E402
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--repo", default=".")
-    ap.add_argument("--docs", default="docs")
+    ap.add_argument("--docs", default=None, help="carpeta del pack relativa al repo (por defecto la de este script: uxyngraphar o docs)")
     ap.add_argument("--contra", default="", help="carpeta del pack fuente contra la que contrastar")
     ap.add_argument("--warn", action="store_true", help="informar sin fallar")
     a = ap.parse_args(argv)
+    a.docs = carpeta_pack.desde_argumento(a.docs, getattr(a, "repo", "."), __file__)
     repo, a.docs = normalizar(Path(a.repo), a.docs)
     hallazgos = verificar(repo, a.docs)
     if a.contra:

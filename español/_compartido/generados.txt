@@ -100,6 +100,7 @@
 46-evolucion-documentacion/03-completadas/2026-10-30/EVO-20261030-colaboracion-al-instalar.md
 46-evolucion-documentacion/03-completadas/2026-10-30/EVO-20261030-panel-configuracion.md
 46-evolucion-documentacion/03-completadas/2026-10-30/EVO-20261030-reglas-del-proyecto.md
+46-evolucion-documentacion/03-completadas/2026-11-01/EVO-20261101-carpeta-uxyngraphar.md
 46-evolucion-documentacion/03-completadas/2026-11-01/EVO-20261101-frases-activacion.md
 46-evolucion-documentacion/04-archivadas/2026-08-23/README.md
 46-evolucion-documentacion/05-canceladas/2026-08-23/README.md
@@ -128,6 +129,7 @@ scripts/actualizar-pack.py
 scripts/ajustes.py
 scripts/ajustes/ajustes_locales.py
 scripts/ajustes/test_ajustes.py
+scripts/carpeta_pack.py
 scripts/contexto.py
 scripts/control/escaneo.py
 scripts/control/idioma.py

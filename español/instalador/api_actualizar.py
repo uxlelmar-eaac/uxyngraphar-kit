@@ -26,7 +26,7 @@ LIMITE_BYTES, LIMITE_LINEAS = 300_000, 400
 
 
 def _git_cambios(repo: Path, docs: str) -> int:
-    """Archivos de docs/ con cambios sin commit (para avisar: con git limpio es fácil deshacer)."""
+    """Archivos de la carpeta del pack con cambios sin commit (para avisar: con git limpio es fácil deshacer)."""
     try:
         r = subprocess.run(["git", "status", "--porcelain", "--", docs], cwd=repo, capture_output=True, text=True)
     except OSError:
@@ -127,7 +127,7 @@ def aplicar(seleccion: list[dict], colaborar: str = "") -> dict:
             destinos.append({"titulo": str(repo), "ok": False, "pasos": [{"texto": "La carpeta ya no existe", "estado": "error", "detalle": str(repo)}], "diagnostico": []})
             todo_ok = False
             continue
-        repo, docs = cfgmod.normalizar(repo, str(item.get("docs", "docs")))
+        repo, docs = cfgmod.normalizar(repo, str(item.get("docs") or api.carpeta_pack.resolver(repo)))
         pack = _pack_de(repo, docs)
         rol = (lock.leer(repo, docs) or {}).get("pack", "")
         titulo = _titulo(rol, repo, docs)
@@ -153,6 +153,6 @@ def siguientes_pasos(destinos: list[dict]) -> list[str]:
     if any(d.get("conflictos") for d in destinos):
         pasos.append("Busca los archivos «.uxyngraphar-nuevo» (están junto a los tuyos), compara, quédate con lo que quieras y borra la copia «.uxyngraphar-nuevo».")
     if any(d.get("ok") for d in destinos):
-        pasos.append("Haz commit de lo actualizado (docs/, AGENTES.md, .claude/, .github/) para dejar el proyecto en un punto limpio.")
+        pasos.append("Haz commit de lo actualizado (la carpeta del pack, AGENTES.md, .claude/, .github/) para dejar el proyecto en un punto limpio.")
         pasos.append("Si algo no te convence, la copia de seguridad está en «.uxyngraphar-respaldo/» dentro del repositorio.")
     return pasos

@@ -68,16 +68,17 @@ def estado_lock(repo: Path, docs: str) -> list[Chequeo]:
     return out
 
 
-def raiz_agentes(repo: Path, docs: str = "docs") -> list[Chequeo]:
+def raiz_agentes(repo: Path, docs: str | None = None) -> list[Chequeo]:
+    docs = cl.carpeta_pack.resolver(repo) if docs is None else docs
     faltan = [cl.destino(n, docs) for n in cl.EN_RAIZ if not (repo / cl.destino(n, docs)).is_file()]
     if faltan:
-        return [_c("agentes-raiz", "ERROR", f"Falta junto a docs/: {', '.join(faltan)}", "actualizar-pack.py --apply")]
+        return [_c("agentes-raiz", "ERROR", f"Falta junto a {docs}/: {', '.join(faltan)}", "actualizar-pack.py --apply")]
     import medir
     filas = medir.arranque(repo, docs)
     total = sum(t for _, t in filas)
-    return [_c("agentes-raiz", "OK", "AGENTES.md y AGENTS.md junto a docs/"),
+    return [_c("agentes-raiz", "OK", f"AGENTES.md y AGENTS.md junto a {docs}/"),
             _c("arranque", "OK" if total <= medir.ARRANQUE_MAX else "WARN", f"Costo de arranque del agente: ~{total} tokens (límite {medir.ARRANQUE_MAX})",
-               "" if total <= medir.ARRANQUE_MAX else "Acorta docs/ESTADO.md (decisiones.py estado --escribir) o mueve detalle a 00-nucleo/agentes-detalle.md")]
+               "" if total <= medir.ARRANQUE_MAX else f"Acorta {docs}/ESTADO.md (decisiones.py estado --escribir) o mueve detalle a 00-nucleo/agentes-detalle.md")]
 
 
 def integridad(repo: Path, docs: str, pack: Path | None) -> list[Chequeo]:
@@ -218,7 +219,7 @@ def residuos(repo: Path, docs: str, hoy: date) -> list[Chequeo]:
         import respaldos
         todos, viejos, pol = respaldos.listar(repo, docs), respaldos.caducados(repo, docs), respaldos.politica(repo, docs)
     except Exception as exc:  # noqa: BLE001 - un respaldo ilegible no debe tumbar el diagnóstico
-        out.append(_c("respaldos", "WARN", f"No pude revisar las copias de seguridad: {exc}", "Revisa .uxyngraphar-respaldo/ y docs/.depuracion/respaldo/"))
+        out.append(_c("respaldos", "WARN", f"No pude revisar las copias de seguridad: {exc}", f"Revisa .uxyngraphar-respaldo/ y {docs}/.depuracion/respaldo/"))
         return out
     if viejos:
         auto = "se borrarán solas en la próxima actualización o depuración" if pol.get("limpieza_automatica", True) else "la limpieza automática está desactivada"
@@ -254,7 +255,7 @@ def memoria(repo: Path, docs: str) -> list[Chequeo]:
     problemas = almacen.verificar(repo / docs)
     if problemas:
         return [_c("memoria", "ERROR", f"Memoria alterada fuera de memoria.py: {problemas[0]}" + (f" (y {len(problemas) - 1} más)" if len(problemas) > 1 else ""),
-                   "Restaura desde git (git checkout -- docs/95-memoria) y usa memoria.py para cualquier cambio")]
+                   f"Restaura desde git (git checkout -- {docs}/95-memoria) y usa memoria.py para cualquier cambio")]
     return [_c("memoria", "OK", f"Memoria del sistema íntegra · {len(almacen.vigentes(repo / docs))} memoria(s)")]
 
 
@@ -290,7 +291,8 @@ def reglas_proyecto(repo: Path, docs: str) -> list[Chequeo]:
     return [_c("reglas_proyecto", "OK", f"Reglas del proyecto: {sum(1 for r in todas if r.activa)} activa(s), índice al día")]
 
 
-def diagnosticar(repo: Path, docs: str = "docs", pack: Path | None = None, hoy: date | None = None) -> list[Chequeo]:
+def diagnosticar(repo: Path, docs: str | None = None, pack: Path | None = None, hoy: date | None = None) -> list[Chequeo]:
+    docs = cl.carpeta_pack.resolver(repo) if docs is None else docs
     docs, hoy = docs.strip("/"), hoy or date.today()
     resultado = entorno(repo)
     if not (repo / docs).is_dir():

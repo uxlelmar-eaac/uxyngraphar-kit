@@ -27,7 +27,7 @@
 2. Rellenar **`lectura_minima`**, **`anclas_codigo`**, **`espejo_actualizar`**, **`espejo_leer`**, **`acto`**, **`vinculos_entrada`** en frontmatter (listas cerradas).
 3. Al aprobar: `status: approved` + `approved_at` + mover a `02-en-progreso/` (misma carpeta de fecha).
 4. Al cerrar (`done`): rellenar **`vinculos_salida`** con ids y paths de docs tocados + mover a `03-completadas/`.
-5. **`espejo_actualizar`:** obligatorio si `anclas_codigo` no está vacío (mapeo 1:1 a `docs/50-sistema-integral/...`). Typos sin cambio de rol → puede quedar `[]` (excepción documentada en alcance).
+5. **`espejo_actualizar`:** obligatorio si `anclas_codigo` no está vacío (mapeo 1:1 a `uxyngraphar/50-sistema-integral/...`). Typos sin cambio de rol → puede quedar `[]` (excepción documentada en alcance).
 6. **`espejo_leer`:** default `[]`. Poblar solo si el humano pide consultar mapa existente (≤3 paths).
 7. Plan en **Plan de ejecución**; estado `awaiting_approval` hasta OK humano.
 8. Al cerrar: Resultado con docs operativas **y** espejo.
@@ -42,8 +42,8 @@ Enrutador de actos: [ciclo-vinculante.md](../00-nucleo/ciclo-vinculante.md).
 
 ```
 src/modules/auth/auth.service.ts
-  → docs/50-sistema-integral/src/modules/auth/auth.service.md
-  → docs/50-sistema-integral/src/modules/auth/README.md (si la carpeta cambia)
+  → uxyngraphar/50-sistema-integral/src/modules/auth/auth.service.md
+  → uxyngraphar/50-sistema-integral/src/modules/auth/README.md (si la carpeta cambia)
 ```
 
 Ver [estrategia-instrucciones.md](../00-nucleo/estrategia-instrucciones.md).

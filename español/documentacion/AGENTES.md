@@ -3,7 +3,7 @@
 **Lee solo este archivo al empezar** una tarea sobre el kit uxyngraphar (instalar, configurar, explicar o documentar el uso). Luego abre **únicamente** los enlaces que este playbook indique para el paso en curso.
 
 - Este archivo gobierna el **manual del kit** (`español/documentacion/`).
-- Si el trabajo es **dentro de un proyecto ya sembrado**, lee el `AGENTES.md` **de ese proyecto** (junto a su `docs/`), no reescribas el núcleo del pack.
+- Si el trabajo es **dentro de un proyecto ya sembrado**, lee el `AGENTES.md` **de ese proyecto** (junto a su `uxyngraphar/`), no reescribas el núcleo del pack.
 
 No edites `español/backend|frontend|_compartido` salvo instrucción humana explícita. Sí puedes actualizar `español/documentacion/` si te lo piden.
 
@@ -31,7 +31,7 @@ Dejar un proyecto **con el pack sembrado, configurado y usable**, e **instruir a
 5. **Configurar** → [04-uso-ia/instalar-y-configurar.md](04-uso-ia/instalar-y-configurar.md) y [02-configuracion/](02-configuracion/configuracion-proyecto.md)  
    No edites `uxyngraphar.config.json` sin confirmación humana. **No** ejecutes `feedback.py activar|enviar`.
 6. **Verificar** → [02-configuracion/doctor.md](02-configuracion/doctor.md)  
-   `python3 docs/scripts/doctor.py` (ruta según subcarpeta). Remedia con `--fix` solo si el propio doctor lo indica como seguro.
+   `python3 uxyngraphar/scripts/doctor.py` (ruta según subcarpeta). Remedia con `--fix` solo si el propio doctor lo indica como seguro.
 7. **Cerrar** → checklist [01-instalacion/checklist.md](01-instalacion/checklist.md) + [04-uso-ia/instruir-humano.md](04-uso-ia/instruir-humano.md)
 
 ## Reglas duras

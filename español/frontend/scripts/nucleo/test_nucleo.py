@@ -76,6 +76,7 @@ class Base(unittest.TestCase):
         subprocess.run(["git", "init", "-q"], cwd=self.repo, check=True)
 
     def instalar(self, **kw):  # type: ignore[no-untyped-def]
+        kw.setdefault("docs", "docs")   # estas pruebas cubren la disposición anterior a 1.1.0; la nueva, en TestCarpetaNueva
         return ins.instalar(self.pack, self.repo, **kw)
 
 
@@ -100,14 +101,14 @@ class TestInstalar(Base):
         subprocess.run(["git", "init", "-q"], cwd=otro, check=True)
         (otro / "docs" / "mio.md").write_text("mío", encoding="utf-8")
         with self.assertRaises(ins.ErrorInstalacion):
-            ins.instalar(self.pack, otro)
+            ins.instalar(self.pack, otro, "docs")
 
     def test_adoptar_no_pisa(self) -> None:
         otro = self.tmp / "otro"
         (otro / "docs").mkdir(parents=True)
         subprocess.run(["git", "init", "-q"], cwd=otro, check=True)
         (otro / "docs" / "REGLAS.md").write_text("reglas propias", encoding="utf-8")
-        r = ins.instalar(self.pack, otro, adoptar=True)
+        r = ins.instalar(self.pack, otro, "docs", adoptar=True)
         self.assertEqual((otro / "docs" / "REGLAS.md").read_text(encoding="utf-8"), "reglas propias")
         self.assertIn("REGLAS.md", r.conflictos)
         self.assertTrue((otro / "docs" / "REGLAS.md.uxyngraphar-nuevo").is_file())
@@ -126,6 +127,41 @@ class TestInstalar(Base):
         self.instalar(perfil="minimo")
         self.assertFalse((self.repo / "docs/55-automatizaciones").exists())
         self.assertTrue((self.repo / "docs/05-instrucciones/_PLANTILLA.md").is_file())
+
+
+
+class TestCarpetaNueva(Base):
+    """Desde 1.1.0 el pack se instala en «uxyngraphar/»; «docs/» sigue valiendo para las instalaciones anteriores."""
+
+    def test_por_defecto_va_a_uxyngraphar(self) -> None:
+        ins.instalar(self.pack, self.repo)
+        self.assertTrue((self.repo / "uxyngraphar/REGLAS.md").is_file())
+        self.assertFalse((self.repo / "docs").exists())
+        self.assertEqual(lock.leer(self.repo, "uxyngraphar")["docs"], "uxyngraphar")
+        self.assertIn("uxyngraphar/.depuracion/respaldo/", (self.repo / ".gitignore").read_text(encoding="utf-8"))
+        self.assertEqual(ver.verificar(self.repo), [])   # sin --docs, la deduce
+
+    def test_nombres_validos(self) -> None:
+        for mal in ("otra", "apps/api/documentacion", "../docs"):
+            with self.assertRaises(ins.ErrorInstalacion):
+                ins.instalar(self.pack, self.repo, mal)
+        self.assertTrue(ins.instalar(self.pack, self.repo, "apps/api/uxyngraphar").nuevos)
+
+    def test_resolver_la_carpeta(self) -> None:
+        import carpeta_pack as cp
+        self.assertEqual(cp.resolver(self.repo), "uxyngraphar")                     # nada instalado: la nueva
+        (self.repo / "docs").mkdir()
+        self.assertEqual(cp.resolver(self.repo), "docs")                            # carpeta conocida que existe
+        ins.instalar(self.pack, self.repo, "uxyngraphar")
+        self.assertEqual(cp.resolver(self.repo), "uxyngraphar")                     # la que tiene lock gana
+        script = self.repo / "uxyngraphar" / "scripts" / "control" / "x.py"
+        self.assertEqual(cp.resolver(self.tmp, script), "proy/uxyngraphar")          # la del propio script, relativa al repo
+        self.assertEqual(cp.relativa("docs/10-guias/a.md"), cp.relativa("uxyngraphar/10-guias/a.md"))
+
+    def test_codeowners_en_la_raiz_usa_las_marcas_simples(self) -> None:
+        import proteccion
+        self.assertEqual(proteccion.marcas_codeowners("uxyngraphar"), proteccion.marcas_codeowners("docs"))
+        self.assertIn("[apps/api/uxyngraphar]", proteccion.marcas_codeowners("apps/api/uxyngraphar")[0])
 
 
 class TestVerificar(Base):

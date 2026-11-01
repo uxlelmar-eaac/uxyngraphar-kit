@@ -128,7 +128,7 @@ Estrategia: [estrategia-instrucciones.md](estrategia-instrucciones.md).
 
 ## Prohibido (alto costo de tokens)
 
-- Leer todo `docs/` o todos los índices.
+- Leer todo `uxyngraphar/` o todos los índices.
 - Leer `90-archivo/`, `04-archivadas/` o auditorías cerradas sin cita. La memoria (`95-memoria/`) nunca, ni con cita (R-24).
 - Cargar guías (`10-guias/`) o manuales (`30-manuales/`) fuera de onboarding/ops.
 - Duplicar en chat contenido ya leído de docs.
@@ -146,10 +146,10 @@ Detalle operativo: [AGENTES.md](../../AGENTES.md) (raíz). Plantilla de instrucc
 
 | Necesidad | Herramienta |
 |-----------|-------------|
-| Leer lo necesario de una instrucción en un solo bloque, con presupuesto | `python3 docs/scripts/contexto.py <id> [--lista] [--max-tokens N]` (admite `lectura_minima: ruta#sección`) |
-| Medir cuánto cuesta (estimado ~4 car./token) | `python3 docs/scripts/presupuesto.py arranque \| instruccion <id> \| pack` (arranque ≤ 1 500) |
-| Saber cuánto costó de verdad una instrucción, por fases | `python3 docs/scripts/costo-tokens.py ver <id>` · `resumen` ([costo-tokens.md](../10-guias/costo-tokens.md)) |
-| Orientarse sin recorrer colas | `docs/ESTADO.md` (bloque autogenerado por `decisiones.py estado --escribir`) |
+| Leer lo necesario de una instrucción en un solo bloque, con presupuesto | `python3 uxyngraphar/scripts/contexto.py <id> [--lista] [--max-tokens N]` (admite `lectura_minima: ruta#sección`) |
+| Medir cuánto cuesta (estimado ~4 car./token) | `python3 uxyngraphar/scripts/presupuesto.py arranque \| instruccion <id> \| pack` (arranque ≤ 1 500) |
+| Saber cuánto costó de verdad una instrucción, por fases | `python3 uxyngraphar/scripts/costo-tokens.py ver <id>` · `resumen` ([costo-tokens.md](../10-guias/costo-tokens.md)) |
+| Orientarse sin recorrer colas | `uxyngraphar/ESTADO.md` (bloque autogenerado por `decisiones.py estado --escribir`) |
 | Instrucción corta | `decisiones.py new instruccion --slug <slug> --plantilla compacta` |
 | Cerrar sin olvidar pasos | `decisiones.py cerrar <id>` |
 | Ubicar código en el espejo sin listarlo | `espejo-mapa.py mapa --escribir` → `50-sistema-integral/mapa.md` (usa `resumen:` en el frontmatter del espejo) |

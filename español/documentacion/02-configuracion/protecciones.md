@@ -25,5 +25,5 @@ Evitan que una IA (u un humano) edite el núcleo del pack a mano y rompa futuras
 
 1. Lee la salida de `controlar.py`
 2. No borres el workflow a ciegas
-3. Guías: `docs/10-guias/control-de-construccion.md`, `docs/10-guias/ci-validacion-documentacion.md`
-4. En local: `python3 docs/scripts/doctor.py` (± `--fix`)
+3. Guías: `uxyngraphar/10-guias/control-de-construccion.md`, `uxyngraphar/10-guias/ci-validacion-documentacion.md`
+4. En local: `python3 uxyngraphar/scripts/doctor.py` (± `--fix`)

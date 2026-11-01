@@ -6,8 +6,8 @@
 ## Idea central
 
 ```
-<repo>/src/modules/auth/auth.service.ts     ← código (fuera de docs/)
-docs/50-sistema-integral/src/modules/auth/    ← misma ruta relativa
+<repo>/src/modules/auth/auth.service.ts     ← código (fuera de uxyngraphar/)
+uxyngraphar/50-sistema-integral/src/modules/auth/    ← misma ruta relativa
   README.md                                   ← qué es esta carpeta
   auth.service.md                             ← qué hace este archivo (sin copiar código)
 ```
@@ -47,7 +47,7 @@ La documentación integral **no inventa otra taxonomía**: copia el árbol del p
 15-rutas/              ← fichas HTTP
 ```
 
-Repo cliente: misma idea en su propio `docs/50-sistema-integral/` (espejo del frontend).
+Repo cliente: misma idea en su propio `uxyngraphar/50-sistema-integral/` (espejo del frontend).
 
 ## IA — bajo tokens
 

@@ -61,15 +61,15 @@ python3 español/instalar.py \
 
 ## Qué escribe (resumen)
 
-- Pack → `docs/` (o `SUB/docs/`)
-- `AGENTES.md` junto a ese `docs/`
-- `docs/.uxyngraphar.lock` y `docs/uxyngraphar.config.json`
+- Pack → `uxyngraphar/` (o `SUB/uxyngraphar/`)
+- `AGENTES.md` junto a ese `uxyngraphar/`
+- `uxyngraphar/.uxyngraphar.lock` y `uxyngraphar/uxyngraphar.config.json`
 - Opcional: protecciones (`--propietario`, `--estricto`, o `--sin-proteger` para omitirlas)
 - **No** borra tu contenido de proyecto (clase C)
 
 ## Tras sembrar
 
-1. Commit de `AGENTES.md` + `docs/` (sin secretos)
+1. Commit de `AGENTES.md` + `uxyngraphar/` (sin secretos)
 2. Configuración → [../02-configuracion/configuracion-proyecto.md](../02-configuracion/configuracion-proyecto.md)
 3. Doctor → [../02-configuracion/doctor.md](../02-configuracion/doctor.md)
 4. Si usas la herramienta: `uxyngraphar proyectos --agregar /ruta` si no quedó registrado

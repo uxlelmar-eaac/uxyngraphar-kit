@@ -3,13 +3,13 @@
 
 Apagado por defecto. Solo lo activa una persona, nunca el agente (respondiendo Sí al instalar o actualizar, o con «activar»). Con el envío
 activo, se envía al terminar un «instalar» o «actualizar» hecho por una persona, o con «enviar»; nunca desde CI, ganchos ni el agente.
-Antes de activar, mira exactamente qué saldría con `previsualizar`. Guía: docs/10-guias/envio-sugerencias.md.
+Antes de activar, mira exactamente qué saldría con `previsualizar`. Guía: 10-guias/envio-sugerencias.md.
 
-Uso:  python3 docs/scripts/feedback.py estado
-      python3 docs/scripts/feedback.py previsualizar [--salida copia.json]   # qué se enviaría; no envía nada
-      python3 docs/scripts/feedback.py activar --url https://… [--acepto]   # pide tu consentimiento
-      python3 docs/scripts/feedback.py enviar [--todas]                     # envía lo nuevo o cambiado
-      python3 docs/scripts/feedback.py revocar [--borrar-remoto]            # apaga el envío (y pide borrar lo enviado)
+Uso:  python3 uxyngraphar/scripts/feedback.py estado
+      python3 uxyngraphar/scripts/feedback.py previsualizar [--salida copia.json]   # qué se enviaría; no envía nada
+      python3 uxyngraphar/scripts/feedback.py activar --url https://… [--acepto]   # pide tu consentimiento
+      python3 uxyngraphar/scripts/feedback.py enviar [--todas]                     # envía lo nuevo o cambiado
+      python3 uxyngraphar/scripts/feedback.py revocar [--borrar-remoto]            # apaga el envío (y pide borrar lo enviado)
   Token opcional del servidor: variable UXYNGRAPHAR_FEEDBACK_TOKEN.
 Salida: 0 · 1 si no hay nada que enviar · 2 si falta consentimiento o el envío falló.
 """
@@ -23,6 +23,8 @@ from datetime import date
 from pathlib import Path
 
 AQUI = Path(__file__).resolve().parent
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import carpeta_pack  # noqa: E402
 sys.path.insert(0, str(AQUI / "feedback"))
 sys.path.insert(0, str(AQUI / "nucleo"))
 
@@ -34,7 +36,7 @@ import uxyngraphar_config as cfgmod  # noqa: E402
 AVISO = """Vas a activar el envío de sugerencias a quien mantiene uxyngraphar ({url}).
 
 Qué se envía (al terminar un «instalar» o «actualizar» que hagas tú, o con «feedback.py enviar»):
-  - Las fichas EVO de docs/46-evolucion-documentacion/ ({n} ahora): estado, tipo, impacto, prioridad,
+  - Las fichas EVO de 46-evolucion-documentacion/ ({n} ahora): estado, tipo, impacto, prioridad,
     archivos del pack que proponen cambiar y su texto.
   - La versión y el tipo de pack, y un identificador aleatorio de esta instalación (sirve para pedir el borrado).
 Qué se quita antes de enviar: el nombre del proyecto, los nombres de «feedback.ocultar» ({ocultar}), rutas de tu
@@ -58,13 +60,14 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("orden", choices=("estado", "previsualizar", "activar", "enviar", "revocar"))
     ap.add_argument("--repo", default=".")
-    ap.add_argument("--docs", default="docs")
+    ap.add_argument("--docs", default=None, help="carpeta del pack relativa al repo (por defecto la de este script: uxyngraphar o docs)")
     ap.add_argument("--url", help=f"dirección del receptor (activar); por defecto la oficial: {cliente.URL_FEEDBACK_OFICIAL}")
     ap.add_argument("--acepto", action="store_true", help="activar sin preguntar (ya leíste qué se envía)")
     ap.add_argument("--todas", action="store_true", help="incluye también lo ya enviado y sin cambios")
     ap.add_argument("--salida", help="previsualizar: guarda la copia exacta en este archivo")
     ap.add_argument("--borrar-remoto", action="store_true", help="revocar: pide además al servidor que borre lo recibido")
     a = ap.parse_args(argv)
+    a.docs = carpeta_pack.desde_argumento(a.docs, getattr(a, "repo", "."), __file__)
     repo = Path(a.repo).resolve()
     docs = repo / a.docs
     try:

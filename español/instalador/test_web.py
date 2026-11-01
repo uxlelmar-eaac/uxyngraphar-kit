@@ -73,6 +73,18 @@ class TestWeb(unittest.TestCase):
         self.assertTrue(res["siguientes"])
         self.assertEqual(self.post("/api/plan", s)["destinos"][0]["modo"], "actualizar")
 
+    def test_instalacion_anterior_en_docs_se_reconoce_y_no_se_duplica(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+            (repo / "go.mod").write_text("module x\n")
+            self.assertTrue(api.flujo.instalar_completo(api.PACKS["servidor"], repo, "docs", proteger=False, ganchos=False).ok)
+            info = self.post("/api/inspeccionar", {"ruta": str(repo)})
+            self.assertEqual([x["docs"] for x in info["instalados"]], ["docs"])
+            plan = self.post("/api/plan", {"proyecto": str(repo), "pack": "servidor", "sub": ""})
+            self.assertEqual((plan["destinos"][0]["docs"], plan["destinos"][0]["modo"]), ("docs", "actualizar"))
+            self.assertFalse((repo / "uxyngraphar").exists())
+
     def test_validaciones_de_la_solicitud(self):
         base = {"proyecto": str(self.repo), "pack": "ambos", "mismo_repo": True}
         self.assertFalse(self.post("/api/plan", {**base, "sub_servidor": "app", "sub_cliente": "app"})["ok"])
@@ -89,7 +101,7 @@ class TestWeb(unittest.TestCase):
 
     @staticmethod
     def _feedback(repo: Path) -> dict:
-        return json.loads((repo / "docs" / "uxyngraphar.config.json").read_text(encoding="utf-8"))["feedback"]
+        return json.loads((repo / "uxyngraphar" / "uxyngraphar.config.json").read_text(encoding="utf-8"))["feedback"]
 
     def test_pregunta_de_colaboracion_sin_opcion_marcada(self):
         html = urllib.request.urlopen(self.base + "/").read().decode()
@@ -155,13 +167,13 @@ class TestWeb(unittest.TestCase):
         with mock.patch.dict(os.environ, persona), mock.patch("urllib.request.urlopen", side_effect=abrir):
             res = self.post("/api/ejecutar", {"proyecto": str(repo), "pack": "servidor", "sub": "", "colaborar": "si"})
             self.assertTrue(res["ok"], res)
-            self.assertTrue((repo / "docs/.uxyngraphar.lock").is_file())
+            self.assertTrue((repo / "uxyngraphar/.uxyngraphar.lock").is_file())
             self.assertTrue(self._feedback(repo)["activo"])
             # Una ficha EVO nueva del proyecto: el siguiente instalar/actualizar intenta enviarla y el receptor no responde.
-            d = repo / "docs/46-evolucion-documentacion/01-pendientes/2026-10-30"
+            d = repo / "uxyngraphar/46-evolucion-documentacion/01-pendientes/2026-10-30"
             d.mkdir(parents=True, exist_ok=True)
             (d / "EVO-20261030-prueba-red.md").write_text("---\nid: EVO-20261030-prueba-red\nstatus: pending\n---\n# Prueba\n", encoding="utf-8")
-            pasos = api.aplicar_colaboracion(repo, "docs", {}, "actualizador")
+            pasos = api.aplicar_colaboracion(repo, "uxyngraphar", {}, "actualizador")
         self.assertTrue(salientes and salientes[0].startswith(api.feedback.URL_FEEDBACK_OFICIAL), salientes)
         self.assertEqual([e for t, e in pasos if "no se pudieron enviar" in t], ["aviso"], pasos)
 

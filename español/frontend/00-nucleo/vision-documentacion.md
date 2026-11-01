@@ -8,14 +8,14 @@ Mantener **documentación general de todo el sistema** (capa cliente) que:
 
 1. Describe arquitectura UI, restricciones, glosario y convenciones transversales (`00-nucleo/`).
 2. Se complementa con guías (`10-guias/`) y manuales operativos (`30-manuales/`).
-3. Permite capacitación **por dominio** sin volcar todo `docs/` (`25-areas/`).
+3. Permite capacitación **por dominio** sin volcar todo `uxyngraphar/` (`25-areas/`).
 4. Permanece **alineada con el código** mediante anclas, sync en cada PR y reglas duras del [PROTOCOLO.md](../PROTOCOLO.md).
 
 ## Principios
 
 | Principio | Significado |
 |-----------|-------------|
-| Consecutividad | Siempre seguir la secuencia de lectura definida en PROTOCOLO y AGENTES; nunca “leer todo docs/” por defecto |
+| Consecutividad | Siempre seguir la secuencia de lectura definida en PROTOCOLO y AGENTES; nunca “leer todo uxyngraphar/” por defecto |
 | Alineación | Cambio de código → actualización documental en el **mismo cambio/PR** |
 | Eficiencia IA | Lectura acotada por instrucción; ver [eficiencia-ia.md](eficiencia-ia.md) |
 | Trazabilidad | Toda orden de ejecución humana → instrucción en `05-instrucciones/<estado>/YYYY-MM-DD/`; toda investigación no trivial → audit en `40-auditorias/02-en-progreso/` |
@@ -48,7 +48,7 @@ Las secciones `05-instrucciones/`, `20-decisiones/`, `40-auditorias/`, `45-mejor
 
 ## Relación con el repositorio servidor
 
-- Fichas HTTP del API backend viven en el **repo servidor** (`docs/15-rutas/`).
+- Fichas HTTP del API backend viven en el **repo servidor** (`uxyngraphar/15-rutas/`).
 - En este repo solo se documentan manejadores de ruta / BFF (`app/api/**`).
 - Referenciar endpoints del servidor por `id` estable (p. ej. `modulo.recurso.accion`).
 - **Sistema integral:** [`50-sistema-integral/`](../50-sistema-integral/INDICE.md) — espejo 1:1 del scaffolding UI. Estrategia: [estrategia-instrucciones.md](estrategia-instrucciones.md).

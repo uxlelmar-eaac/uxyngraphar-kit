@@ -32,7 +32,7 @@ Dividir no es picar el archivo en `parte1/parte2`. Es extraer por **relación** 
 - **Sufijos por capa (servidor):** `.controller`, `.service`, `.usecase`, `.repository`, `.schema`, `.mapper`, `.dto`, `.policy`, `.integration` (frontera entre módulos).
 - **Ejemplo:** `facturacion.service.ts` (420 líneas) → `facturacion.service.ts` (orquestación fina) + `facturacion.usecase.ts` + `facturacion.repository.ts` + `facturacion.schema.ts`. Cada pieza ≤350; imports solo por la frontera declarada en [arquitectura.md](arquitectura.md).
 - **Prohibido:** `facturacion-parte2.ts`, `facturacion-nuevo.ts`, `facturacion-fix.ts`, `utils2.ts` — nombres sin relación declarada.
-- Cada división respeta `integrations/` como única frontera entre módulos y actualiza `docs/25-areas/<id>/CONTEXTO.md`.
+- Cada división respeta `integrations/` como única frontera entre módulos y actualiza `uxyngraphar/25-areas/<id>/CONTEXTO.md`.
 
 ## Verificación rápida
 

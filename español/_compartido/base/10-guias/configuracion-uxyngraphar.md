@@ -1,10 +1,10 @@
-# Configuración del proyecto: `docs/uxyngraphar.config.json`
+# Configuración del proyecto: `uxyngraphar/uxyngraphar.config.json`
 
 Cada proyecto tiene **un archivo propio** donde fija su forma de trabajo con uxyngraphar: qué es código del producto, qué controles bloquean o solo avisan, idioma, commits, ramas, copias de seguridad… Las herramientas (`controlar.py`, `doctor.py`, `respaldos.py`, el instalador) leen **solo** este archivo.
 
 | | |
 |---|---|
-| Ruta | `docs/uxyngraphar.config.json` (en un monorepo, dentro de la carpeta `docs` de cada pack) |
+| Ruta | `uxyngraphar/uxyngraphar.config.json` (en un monorepo, dentro de la carpeta `docs` de cada pack) |
 | Lo crea | El instalador, una vez, detectando la pila del repo. Si ya existe, no lo toca. |
 | Lo edita | El propietario del proyecto (clase **P**). Las actualizaciones del pack **nunca** lo pisan. |
 | No lo edita | Un agente: está en las reglas `deny` y en `CODEOWNERS`, y la puerta avisa si un cambio lo toca. |
@@ -32,7 +32,7 @@ Ver la configuración efectiva y sus problemas en texto:
 
 ```bash
 uxyngraphar configuracion            # con la herramienta instalada (desde la carpeta del proyecto)
-python3 docs/scripts/doctor.py       # chequeo «control» (En Windows: py -3 en lugar de python3.)
+python3 uxyngraphar/scripts/doctor.py       # chequeo «control» (En Windows: py -3 en lugar de python3.)
 ```
 
 ## Secciones

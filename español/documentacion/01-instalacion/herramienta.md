@@ -23,7 +23,7 @@ Si no tienes `py`, usa `python`.
 3. Expone el comando `uxyngraphar` (suele quedar en `~/.local/bin/` o el `bin` de la herramienta en Windows).
 4. Al terminar abre el **panel** en tu navegador (solo en tu equipo) con todo lo que pasó en la terminal y lo que queda por decidir: añadir el comando al PATH, tu plantilla de configuración e instalar en tu primer proyecto. Sin escritorio, en CI o con `--consola`, todo sigue en la terminal.
 
-Cada proyecto lleva su copia del pack en `docs/` (va en git) y su versión en `docs/.uxyngraphar.lock`, así que pueden convivir proyectos en versiones distintas y quien clona el proyecto no necesita la herramienta.
+Cada proyecto lleva su copia del pack en `uxyngraphar/` (va en git) y su versión en `uxyngraphar/.uxyngraphar.lock`, así que pueden convivir proyectos en versiones distintas y quien clona el proyecto no necesita la herramienta.
 
 ## Dónde queda
 
@@ -54,4 +54,4 @@ Descarga por HTTPS, comprueba la huella SHA256 de la versión antes de escribir 
 uxyngraphar desinstalar
 ```
 
-No borra `docs/` de tus proyectos. Ver [../05-comandos/referencia-cli.md](../05-comandos/referencia-cli.md).
+No borra `uxyngraphar/` de tus proyectos. Ver [../05-comandos/referencia-cli.md](../05-comandos/referencia-cli.md).

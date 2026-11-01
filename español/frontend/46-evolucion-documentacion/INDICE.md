@@ -26,7 +26,7 @@ Bandeja de **meta-mejoras del sistema documental completo**: estructura, taxonom
 
 ## Revisión de pendientes
 
-Revisión de pendientes [`decisiones-pendientes`](../35-herramientas/autorizadas/decisiones-pendientes.md): `python3 docs/scripts/decisiones/decisiones.py scan`
+Revisión de pendientes [`decisiones-pendientes`](../35-herramientas/autorizadas/decisiones-pendientes.md): `python3 uxyngraphar/scripts/decisiones/decisiones.py scan`
 
 (En Windows: `py -3` en lugar de `python3`.)
 <!-- uxyngraphar:fin -->

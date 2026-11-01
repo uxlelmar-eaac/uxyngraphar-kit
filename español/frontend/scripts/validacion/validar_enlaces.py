@@ -32,7 +32,7 @@ def enlaces_rotos(pack: Pack) -> list[tuple[Path, str]]:
             if pack.docs not in resuelto.parents and resuelto != pack.docs:
                 continue  # apunta fuera del pack (p. ej. código del repo): no verificable aquí
             if resuelto.parent == pack.docs and resuelto.name in ("AGENTES.md", "AGENTS.md") and (pack.docs.parent / resuelto.name).exists():
-                continue  # instalado: el punto de entrada de agentes vive en la raíz del repo, no en docs/
+                continue  # instalado: el punto de entrada de agentes vive en la raíz del repo, no en la carpeta del pack
             if not resuelto.exists():
                 rotos.append((md, destino))
     return rotos

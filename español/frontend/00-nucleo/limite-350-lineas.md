@@ -32,7 +32,7 @@ Dividir no es picar el archivo en `parte1/parte2`. Es extraer por **relación** 
 - **Sufijos por capa (cliente):** `.api` (transporte), `.mapper` / `.schema` (`reception/`), `.query` / `.mutation` (`hooks/`), `.dto` / `.view` (`types/`), `.integration` (frontera entre dominios), `.query-keys` (`model/`).
 - **Ejemplo:** `RecursoList.tsx` (480 líneas) → `RecursoList.tsx` (UI fina) + `recurso.mapper.ts` + `use-recurso.query.ts` + `recurso.query-keys.ts` + `recurso.view.ts`. Cada pieza ≤350; la UI no importa red salvo por `hooks/` + `integrations/` según [arquitectura.md](arquitectura.md).
 - **Prohibido:** `RecursoList-parte2.tsx`, `RecursoList-nuevo.tsx`, `utils2.ts` — nombres sin relación declarada.
-- Cada división respeta `integrations/` como única frontera entre dominios y actualiza `docs/25-areas/<id>/CONTEXTO.md`.
+- Cada división respeta `integrations/` como única frontera entre dominios y actualiza `uxyngraphar/25-areas/<id>/CONTEXTO.md`.
 
 ## Verificación rápida
 

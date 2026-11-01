@@ -44,7 +44,7 @@ def _coincide(ruta: str, patrones: list[str]) -> bool:
 
 
 def es_codigo(ruta: str, cfg: dict, docs: str) -> bool:
-    """Código del producto = bajo `docs/` no, no excluido, con extensión de la pila (o cualquiera si no se detectó pila)."""
+    """Código del producto = bajo la carpeta del pack no, no excluido, con extensión de la pila (o cualquiera si no se detectó pila)."""
     if ruta.startswith(docs + "/") or ruta.startswith(".github/") or ruta.startswith(".claude/"):
         return False
     c = cfg["codigo"]

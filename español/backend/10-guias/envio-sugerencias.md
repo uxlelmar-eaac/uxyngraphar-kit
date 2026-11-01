@@ -9,7 +9,7 @@ Al instalar uxyngraphar (pantalla del navegador o consola), y la primera vez que
 > ¿Te gustaría colaborar en la mejora de uxyngraphar? · **Sí** · **No**
 
 - Ninguna opción viene marcada. Antes de responder ves en lenguaje llano qué sale y qué no (la tabla de abajo).
-- **Sí:** se activa el envío en `docs/uxyngraphar.config.json` (sección `feedback`) con el consentimiento, la fecha, la versión de los términos (`v1`), un identificador aleatorio de la instalación y el origen (`instalador` o `actualizador`).
+- **Sí:** se activa el envío en `uxyngraphar/uxyngraphar.config.json` (sección `feedback`) con el consentimiento, la fecha, la versión de los términos (`v1`), un identificador aleatorio de la instalación y el origen (`instalador` o `actualizador`).
 - **No:** el envío queda apagado y se registra `respondido: "no"` con la fecha, para no volver a preguntar.
 - En modo automático (`--si`) sin respuesta explícita cuenta como **No**; si lo ejecuta el CI o un agente (mismas variables que abajo), la pregunta **queda pendiente** para la persona: ni el CI ni el agente la contestan (R-25). Para responder sin pantalla: `--colaborar si` o `--colaborar no` (en `instalar.py`, `actualizar.py` y `uxyngraphar instalar|actualizar`).
 - Puedes cambiar de opinión cuando quieras: `feedback.py activar` (Sí) o `feedback.py revocar` (No).
@@ -45,21 +45,21 @@ Es *feedback* (sugerencias que escriben personas y agentes), no métricas de uso
 
 Una ficha ya enviada no se vuelve a enviar salvo que cambie (`feedback_huella`).
 
-Si tus fichas nombran a un cliente, un producto o tu empresa, añádelos: `"feedback": {"ocultar": ["Acme", "Tienda Acme"]}` en `docs/uxyngraphar.config.json`. Lo demás de la sección `feedback` no se toca a mano.
+Si tus fichas nombran a un cliente, un producto o tu empresa, añádelos: `"feedback": {"ocultar": ["Acme", "Tienda Acme"]}` en `uxyngraphar/uxyngraphar.config.json`. Lo demás de la sección `feedback` no se toca a mano.
 
 ## Uso a mano
 
 ```bash
-python3 docs/scripts/feedback.py previsualizar --salida copia.json   # mira exactamente qué saldría
-python3 docs/scripts/feedback.py activar                             # usa el receptor oficial; --url para otro
-python3 docs/scripts/feedback.py enviar
-python3 docs/scripts/feedback.py estado
-python3 docs/scripts/feedback.py revocar --borrar-remoto
+python3 uxyngraphar/scripts/feedback.py previsualizar --salida copia.json   # mira exactamente qué saldría
+python3 uxyngraphar/scripts/feedback.py activar                             # usa el receptor oficial; --url para otro
+python3 uxyngraphar/scripts/feedback.py enviar
+python3 uxyngraphar/scripts/feedback.py estado
+python3 uxyngraphar/scripts/feedback.py revocar --borrar-remoto
 ```
 
 Si el receptor pide token: variable de entorno `UXYNGRAPHAR_FEEDBACK_TOKEN` (nunca en el repo). Solo se aceptan direcciones `https://`; `http://` solo hacia `127.0.0.1`/`localhost` para pruebas.
 
-Sin receptor: `python3 docs/scripts/exportar-evo.py --salida propuestas-evo.md --marcar` genera un informe para mandarlo a mano.
+Sin receptor: `python3 uxyngraphar/scripts/exportar-evo.py --salida propuestas-evo.md --marcar` genera un informe para mandarlo a mano.
 
 ## Para quien mantiene uxyngraphar
 

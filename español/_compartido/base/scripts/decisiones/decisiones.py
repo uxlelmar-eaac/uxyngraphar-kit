@@ -199,7 +199,7 @@ def main() -> int:
 
     p_est = sub.add_parser("estado", help="Resumen vivo (en curso, esperan aprobación, colas, cerradas)")
     p_est.add_argument("--docs", default="")
-    p_est.add_argument("--escribir", action="store_true", help="actualizar el bloque autogenerado de docs/ESTADO.md")
+    p_est.add_argument("--escribir", action="store_true", help="actualizar el bloque autogenerado de ESTADO.md")
     p_est.set_defaults(func=cmd_estado)
 
     args = parser.parse_args()

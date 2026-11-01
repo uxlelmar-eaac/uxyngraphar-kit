@@ -1,7 +1,7 @@
 # Documentación — servidor
 <!-- uxyngraphar:inicio -->
 
-Índice maestro del pack (vista 1 página). Al pegar en el repo: `docs/INDICE.md`; `AGENTES.md` en la raíz.
+Índice maestro del pack (vista 1 página). Al pegar en el repo: `uxyngraphar/INDICE.md`; `AGENTES.md` en la raíz.
 
 ## Empieza aquí (humano)
 
@@ -32,7 +32,7 @@
 
 ## Organización por estados y fechas
 
-Las secciones que acumulan documentos (`05`, `20`, `40`, `45`, `46`, `35/propuestas`) se organizan en `01-pendientes` … `06-listas-para-eliminar` y dentro, carpetas `YYYY-MM-DD` (R-17). El árbol es el índice; vista viva de pendientes: `python3 docs/scripts/decisiones/decisiones.py scan`. Detalle: [organizacion-estados-fechas.md](10-guias/organizacion-estados-fechas.md).
+Las secciones que acumulan documentos (`05`, `20`, `40`, `45`, `46`, `35/propuestas`) se organizan en `01-pendientes` … `06-listas-para-eliminar` y dentro, carpetas `YYYY-MM-DD` (R-17). El árbol es el índice; vista viva de pendientes: `python3 uxyngraphar/scripts/decisiones/decisiones.py scan`. Detalle: [organizacion-estados-fechas.md](10-guias/organizacion-estados-fechas.md).
 
 (En Windows: `py -3` en lugar de `python3`.)
 

@@ -23,7 +23,7 @@ def _es_dir(p: Path) -> bool:
 
 
 def _tiene_uxyngraphar(p: Path) -> bool:
-    """docs/.uxyngraphar.lock o cualquier */.uxyngraphar.lock un nivel abajo (sin bajar más: debe ser barato)."""
+    """uxyngraphar/.uxyngraphar.lock, docs/.uxyngraphar.lock o cualquier */.uxyngraphar.lock un nivel abajo (sin bajar más: debe ser barato)."""
     try:
         return any((h / ".uxyngraphar.lock").is_file() for h in p.iterdir() if not h.is_symlink() and _es_dir(h))
     except OSError:

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Tablero de proyectos: ejecuta el doctor en varios repos y muestra una tabla comparativa.
 
-Uso:  python3 scripts/flota.py RUTA_REPO [RUTA_REPO …] [--docs docs] [--pack RUTA_PACK] [--json]
+Uso:  python3 scripts/flota.py RUTA_REPO [RUTA_REPO …] [--docs uxyngraphar] [--pack RUTA_PACK] [--json]
       python3 scripts/flota.py --lista repos.txt         # un repo por línea
-Solo lectura. Usa el doctor de cada proyecto (docs/scripts/doctor.py). Salida: 1 si algún proyecto tiene errores.
+Solo lectura. Usa el doctor de cada proyecto (<carpeta del pack>/scripts/doctor.py). Salida: 1 si algún proyecto tiene errores.
 """
 
 from __future__ import annotations
@@ -13,6 +13,9 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import carpeta_pack  # noqa: E402
 
 
 def revisar(repo: Path, docs: str, pack: str) -> dict:
@@ -35,7 +38,7 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("repos", nargs="*")
     ap.add_argument("--lista", default="")
-    ap.add_argument("--docs", default="docs")
+    ap.add_argument("--docs", default=None, help="carpeta del pack en cada proyecto (por defecto se deduce en cada uno: uxyngraphar o docs)")
     ap.add_argument("--pack", default="")
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args(argv)
@@ -44,7 +47,7 @@ def main(argv: list[str] | None = None) -> int:
         rutas += [l.strip() for l in Path(a.lista).read_text(encoding="utf-8").splitlines() if l.strip() and not l.startswith("#")]
     if not rutas:
         ap.error("indica al menos un repositorio")
-    filas = [revisar(Path(r).resolve(), a.docs, str(Path(a.pack).resolve()) if a.pack else "") for r in rutas]
+    filas = [revisar(Path(r).resolve(), a.docs or carpeta_pack.resolver(Path(r)), str(Path(a.pack).resolve()) if a.pack else "") for r in rutas]
     if a.json:
         print(json.dumps(filas, ensure_ascii=False, indent=2))
     else:

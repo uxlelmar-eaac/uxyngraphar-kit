@@ -1,6 +1,6 @@
 # Ajustes locales (R-25)
 
-Aplicar en **este proyecto** una mejora del sistema documental sin esperar a que llegue al pack y **sin editar el núcleo**. El ajuste es contenido del proyecto (`docs/97-ajustes-locales/`), así que ninguna actualización lo pisa ni choca con él.
+Aplicar en **este proyecto** una mejora del sistema documental sin esperar a que llegue al pack y **sin editar el núcleo**. El ajuste es contenido del proyecto (`uxyngraphar/97-ajustes-locales/`), así que ninguna actualización lo pisa ni choca con él.
 
 ## Cuándo
 
@@ -11,8 +11,8 @@ Una ficha `EVO-*` de `46-evolucion-documentacion/` está **aprobada** (`approved
 ```bash
 # 1. Escribe la regla local en un archivo (lo que el agente debe hacer distinto o además)
 # 2. Crea el ajuste: qué EVO aplica y qué archivo del núcleo complementa (uno o varios --a)
-python3 docs/scripts/ajustes.py crear --evo EVO-20261030-paso-revision --a 10-guias/sync-documentacion-pr.md --texto regla.md
-python3 docs/scripts/ajustes.py listar
+python3 uxyngraphar/scripts/ajustes.py crear --evo EVO-20261030-paso-revision --a 10-guias/sync-documentacion-pr.md --texto regla.md
+python3 uxyngraphar/scripts/ajustes.py listar
 ```
 
 Qué hace `crear`: escribe `97-ajustes-locales/AJ-AAAAMMDD-slug.md` con la regla, el archivo que complementa y su **huella**; apunta `ajuste_local: AJ-…` en la EVO y pone el ajuste en la tabla de `97-ajustes-locales/INDICE.md`. El núcleo no cambia.
@@ -26,7 +26,7 @@ Qué hace `crear`: escribe `97-ajustes-locales/AJ-AAAAMMDD-slug.md` con la regla
 ## Al actualizar el pack
 
 ```bash
-python3 docs/scripts/ajustes.py verificar
+python3 uxyngraphar/scripts/ajustes.py verificar
 ```
 
 | Aviso | Qué significa | Qué hacer |

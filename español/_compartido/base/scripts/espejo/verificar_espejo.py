@@ -12,6 +12,9 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
+sys.path.append(str(Path(__file__).resolve().parent.parent))   # al final: que no tape módulos con el mismo nombre (respaldos, memoria…)
+import carpeta_pack  # noqa: E402
+
 _DECISIONES = Path(__file__).resolve().parent.parent / "decisiones"
 if str(_DECISIONES) not in sys.path:
     sys.path.insert(0, str(_DECISIONES))
@@ -53,7 +56,7 @@ def _ruta_ancla(ancla: str) -> str:
 
 def _bajo_docs(ruta: str, docs: str) -> str:
     ruta = ruta.strip().replace("\\", "/")
-    return ruta if ruta.startswith(docs + "/") else f"{docs}/{ruta.removeprefix('docs/')}"
+    return ruta if ruta.startswith(docs + "/") else f"{docs}/{carpeta_pack.relativa(ruta, docs)}"
 
 
 def es_codigo(ruta: str, docs: str, ignorar: tuple[str, ...] = IGNORAR_POR_DEFECTO) -> bool:

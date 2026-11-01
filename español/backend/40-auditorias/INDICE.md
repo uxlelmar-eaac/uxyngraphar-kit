@@ -14,7 +14,7 @@ Las auditorías e investigaciones formales se organizan por **estado** y, dentro
 ```
 
 - En curso: `02-en-progreso/`
-- Vista viva de promociones pendientes: `python3 docs/scripts/decisiones/decisiones.py scan`
+- Vista viva de promociones pendientes: `python3 uxyngraphar/scripts/decisiones/decisiones.py scan`
 - Ver [_PROTOCOLO.md](_PROTOCOLO.md) · [_PLANTILLA.md](_PLANTILLA.md)
 
 (En Windows: `py -3` en lugar de `python3`.)

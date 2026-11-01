@@ -1,12 +1,12 @@
 # Enlaces a guías del pack
 
-Tras instalar, en `docs/10-guias/` (nombres iguales en servidor/cliente salvo HTML visual). Índice completo: `docs/10-guias/INDICE.md`.
+Tras instalar, en `uxyngraphar/10-guias/` (nombres iguales en servidor/cliente salvo HTML visual). Índice completo: `uxyngraphar/10-guias/INDICE.md`.
 
 ## Esenciales
 
 | Guía | Tema |
 |------|------|
-| `instalacion-docs.md` | Qué queda en docs/ |
+| `instalacion-docs.md` | Qué queda en uxyngraphar/ |
 | `elegir-pack.md` | Servidor vs cliente |
 | `configuracion-uxyngraphar.md` | Config JSON |
 | `control-de-construccion.md` | controlar.py |

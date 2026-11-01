@@ -21,7 +21,7 @@ Qué responsabilidad tiene esta carpeta en el sistema (2–4 frases).
 ## Enlaces
 
 - Código: `` [`<archivo principal>`](<path-relativo-al-codigo>) ``
-- Área IA: `docs/25-areas/<id>/CONTEXTO.md` (si existe)
+- Área IA: `uxyngraphar/25-areas/<id>/CONTEXTO.md` (si existe)
 - Espejo relacionado (otro repo): `<path en mapa-capas.md>`
 
 ## Notas

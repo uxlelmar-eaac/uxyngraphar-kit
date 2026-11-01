@@ -1,6 +1,6 @@
 # Pack servidor
 
-- Entrada agentes: `español/backend/AGENTES.md` (en proyecto: `AGENTES.md` + `docs/`)
+- Entrada agentes: `español/backend/AGENTES.md` (en proyecto: `AGENTES.md` + `uxyngraphar/`)
 - Fuente de verdad HTTP: `15-rutas/`
 - Espejo: `50-sistema-integral/`
 

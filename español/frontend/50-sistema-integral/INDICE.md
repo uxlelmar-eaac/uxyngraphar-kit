@@ -7,7 +7,7 @@
 
 ```
 <repo>/src/app/dashboard/page.tsx          ← código
-docs/50-sistema-integral/src/app/dashboard/  ← misma ruta
+uxyngraphar/50-sistema-integral/src/app/dashboard/  ← misma ruta
   README.md
   page.md
 ```

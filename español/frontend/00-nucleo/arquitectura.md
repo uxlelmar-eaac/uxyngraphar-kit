@@ -24,4 +24,4 @@ Simetría conceptual con el servidor. Detalle de capas: [plantilla-modulo.md](pl
 
 ## Relación con el servidor
 
-La superficie HTTP canónica vive en **`docs/15-rutas/` del repositorio servidor**. Aquí solo se documentan manejadores propios del cliente (si existen) y se citan ids/rutas del API desde `25-areas/*/CONTEXTO.md`.
+La superficie HTTP canónica vive en **`uxyngraphar/15-rutas/` del repositorio servidor**. Aquí solo se documentan manejadores propios del cliente (si existen) y se citan ids/rutas del API desde `25-areas/*/CONTEXTO.md`.

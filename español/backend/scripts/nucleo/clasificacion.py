@@ -11,6 +11,13 @@ Clases:
 from __future__ import annotations
 
 import re
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parent.parent))   # al final: que no tape módulos con el mismo nombre (respaldos, memoria…)
+import carpeta_pack  # noqa: E402
+
+CARPETA = carpeta_pack.CARPETA   # carpeta del pack en instalaciones nuevas («docs» en las anteriores a 1.1.0)
 
 CLASES = ("N", "P", "M", "C", "X")
 ESTADO = r"0[1-6]-[a-z-]+"
@@ -34,7 +41,7 @@ REGLAS: list[tuple[str, str]] = [
     (r"(?:15-rutas|25-areas|35-herramientas/(?:autorizadas|propuestas)|40-auditorias|45-mejoras-propuestas|46-evolucion-documentacion|50-sistema-integral|90-archivo|95-memoria|96-reglas-proyecto|97-ajustes-locales|20-decisiones|05-instrucciones)/.+", "C"),
 ]
 _COMPILADAS = [(re.compile(p), c) for p, c in REGLAS]
-# Archivos que se instalan fuera de docs/ (raíz del repo del proyecto).
+# Archivos que se instalan fuera de la carpeta del pack (raíz del repo del proyecto).
 EN_RAIZ = ("AGENTES.md", "AGENTS.md")
 
 
@@ -50,20 +57,20 @@ def clasificar(rel: str) -> str | None:
 
 
 def padre(docs: str) -> str:
-    """Carpeta que contiene a `docs/` (la «raíz de la app»): "" en un repo normal, «apps/api» si docs=«apps/api/docs»."""
+    """Carpeta que contiene a la del pack (la «raíz de la app»): "" en un repo normal, «apps/api» si docs=«apps/api/uxyngraphar»."""
     d = docs.strip("/")
     return d.rpartition("/")[0]
 
 
-def destino(rel: str, docs: str = "docs") -> str:
-    """Ruta destino en el repo del proyecto. AGENTES.md/AGENTS.md van junto a `docs/` (en la raíz del repo, o en la carpeta de la app)."""
+def destino(rel: str, docs: str = CARPETA) -> str:
+    """Ruta destino en el repo del proyecto. AGENTES.md/AGENTS.md van junto a la carpeta del pack (en la raíz del repo, o en la de la app)."""
     if rel in EN_RAIZ:
         p = padre(docs)
         return f"{p}/{rel}" if p else rel
     return f"{docs.strip('/')}/{rel}"
 
 
-def origen(ruta_repo: str, docs: str = "docs") -> str | None:
+def origen(ruta_repo: str, docs: str = CARPETA) -> str | None:
     """Inversa de `destino`: ruta del repo → ruta relativa al pack (None si no pertenece al pack)."""
     p = padre(docs)
     docs = docs.strip("/") + "/"

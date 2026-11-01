@@ -6,7 +6,7 @@
 4. La IA implementa solo dentro de las anclas y límites.
 5. Al cerrar, documentación espejo y colas 45/46 quedan alineadas.
 
-Tarjeta rápida (en el pack): `docs/10-guias/tarjeta-referencia-humana.md`.
+Tarjeta rápida (en el pack): `uxyngraphar/10-guias/tarjeta-referencia-humana.md`.
 
 ## Comandos que más usarás
 

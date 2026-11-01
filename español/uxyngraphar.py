@@ -8,7 +8,7 @@ La ayuda que ve la persona (uxyngraphar, uxyngraphar ayuda <comando>) se genera 
   uxyngraphar actualizar [RUTA…] [--todos] lleva proyectos a la versión de la herramienta (con respaldo; --consola, --si)
   uxyngraphar estado [RUTA]                versión del proyecto, de la herramienta y la última publicada
   uxyngraphar proyectos [--agregar RUTA | --quitar RUTA | --salud]   proyectos registrados en este equipo
-  uxyngraphar configuracion [RUTA]        el archivo de configuración del proyecto (docs/uxyngraphar.config.json): efectiva y problemas
+  uxyngraphar configuracion [RUTA]        el archivo de configuración del proyecto (<carpeta del pack>/uxyngraphar.config.json): efectiva y problemas
   uxyngraphar autoactualizar [--version X.Y.Z]   descarga e instala la última versión de la herramienta
   uxyngraphar usar X.Y.Z                   vuelve a una versión (la descarga si hace falta)
   uxyngraphar version                      versión activa y versiones guardadas
@@ -73,8 +73,8 @@ AYUDA = {
                   [("--agregar RUTA", "Registra un proyecto que ya tiene uxyngraphar."),
                    ("--quitar RUTA", "Lo quita del registro (la carpeta no se toca)."),
                    ("--salud", "Añade un diagnóstico rápido de cada proyecto.")]),
-    "configuracion": ("configuracion [RUTA]", "Configuración del proyecto (docs/uxyngraphar.config.json) y sus problemas.",
-                      "Muestra cómo queda la configuración del proyecto (docs/uxyngraphar.config.json) con los valores "
+    "configuracion": ("configuracion [RUTA]", "Configuración del proyecto (uxyngraphar.config.json) y sus problemas.",
+                      "Muestra cómo queda la configuración del proyecto (uxyngraphar.config.json, en la carpeta del pack) con los valores "
                       "por defecto aplicados y qué valores son inválidos. Para editarla en pantalla: uxyngraphar panel.", []),
     "autoactualizar": ("autoactualizar [--version X.Y.Z]", "Descarga e instala la última versión de la herramienta.",
                        "Descarga e instala la última versión publicada de la herramienta (o la indicada). "
@@ -85,7 +85,7 @@ AYUDA = {
     "version": ("version", "Versión activa y versiones guardadas.",
                 "Muestra la versión activa de la herramienta, su carpeta y las versiones guardadas.", []),
     "desinstalar": ("desinstalar [--si]", "Quita la herramienta de este equipo (tus proyectos no se tocan).",
-                    "Borra la carpeta de la herramienta y el comando uxyngraphar. Los proyectos conservan su copia del pack en docs/.",
+                    "Borra la carpeta de la herramienta y el comando uxyngraphar. Los proyectos conservan su copia del pack (en uxyngraphar/, o docs/ si se instalaron antes de la 1.1.0).",
                     [("--si", "Sin pedir confirmación.")]),
 }
 GRUPOS = (("Empezar", ("panel", "instalar")),
@@ -333,7 +333,7 @@ def cmd_desinstalar(args: list[str]) -> int:
     if registro.get("path_windows"):
         ar._path_windows(registro["path_windows"], False)
     shutil.rmtree(h, ignore_errors=True)
-    est.ok("uxyngraphar se desinstaló de este equipo. Los proyectos conservan su copia del pack en docs/.", "")
+    est.ok("uxyngraphar se desinstaló de este equipo. Los proyectos conservan su copia del pack (en uxyngraphar/, o docs/ si se instalaron antes de la 1.1.0).", "")
     return 0
 
 

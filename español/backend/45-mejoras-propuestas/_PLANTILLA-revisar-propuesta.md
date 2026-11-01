@@ -8,7 +8,7 @@ La IA registró deuda/mejora fuera de alcance y el equipo decide abordarla.
 
 ## Checklist
 
-0. [ ] (Opcional) Revisar pendientes [`decisiones-pendientes`](../35-herramientas/autorizadas/decisiones-pendientes.md): `python3 docs/scripts/decisiones/decisiones.py scan`
+0. [ ] (Opcional) Revisar pendientes [`decisiones-pendientes`](../35-herramientas/autorizadas/decisiones-pendientes.md): `python3 uxyngraphar/scripts/decisiones/decisiones.py scan`
 1. [ ] Leer ficha en `45-mejoras-propuestas/01-pendientes/YYYY-MM-DD/<slug>.md` y validar evidencia.
 2. [ ] Enriquecer sección **Notas del humano** (prioridad, restricciones, contexto negocio).
 3. [ ] Decidir:

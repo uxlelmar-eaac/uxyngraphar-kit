@@ -21,7 +21,7 @@ Qué responsabilidad tiene esta carpeta en la UI o en el flujo (2–4 frases).
 ## Enlaces
 
 - Código: `` [`<archivo>`](<path-relativo-al-codigo>) ``
-- Área IA: `docs/25-areas/<id>/CONTEXTO.md`
+- Área IA: `uxyngraphar/25-areas/<id>/CONTEXTO.md`
 - Espejo backend: ver [mapa-capas.md](mapa-capas.md)
 
 ## Notas

@@ -12,16 +12,16 @@ Usar en **cada pull request** que toque código o documentación. Objetivo: mant
 
 ## Módulo o área nueva
 
-- [ ] `docs/25-areas/<id>/CONTEXTO.md` creado
-- [ ] Fila en `docs/25-areas/INDICE.md`
-- [ ] Carpeta `docs/15-rutas/<id>/` (aunque esté vacía al inicio)
+- [ ] `uxyngraphar/25-areas/<id>/CONTEXTO.md` creado
+- [ ] Fila en `uxyngraphar/25-areas/INDICE.md`
+- [ ] Carpeta `uxyngraphar/15-rutas/<id>/` (aunque esté vacía al inicio)
 - [ ] `00-nucleo/plantilla-modulo.md` seguido en el código
 
 ## Endpoint HTTP nuevo o modificado
 
-- [ ] Ficha en `docs/15-rutas/<módulo>/<método>-<path-slug>.md`
+- [ ] Ficha en `uxyngraphar/15-rutas/<módulo>/<método>-<path-slug>.md`
 - [ ] Frontmatter con `id` estable
-- [ ] Fila en `docs/15-rutas/INDICE.md`
+- [ ] Fila en `uxyngraphar/15-rutas/INDICE.md`
 - [ ] Tabla de rutas actualizada en `25-areas/<módulo>/CONTEXTO.md`
 - [ ] OpenAPI / tipos regenerados si el proyecto los usa
 - [ ] ID citado en `CONTEXTO.md` del cliente si hay repo separado
@@ -50,7 +50,7 @@ Usar en **cada pull request** que toque código o documentación. Objetivo: mant
 - [ ] Deuda/refactor/bug fuera de alcance → ficha en `01-pendientes/YYYY-MM-DD/` + `mejoras_propuestas` en instrucción
 - [ ] **No implementada** en el mismo PR
 - [ ] Humano revisa pendientes: aprobar → instrucción derivada + `02-en-progreso/`; rechazar → `05-canceladas/`
-- [ ] (Opcional) Revisión de pendientes con [`decisiones-pendientes`](../35-herramientas/autorizadas/decisiones-pendientes.md): `python3 docs/scripts/decisiones/decisiones.py scan`
+- [ ] (Opcional) Revisión de pendientes con [`decisiones-pendientes`](../35-herramientas/autorizadas/decisiones-pendientes.md): `python3 uxyngraphar/scripts/decisiones/decisiones.py scan`
 - [ ] Máx. 3 propuestas por cierre
 
 (En Windows: `py -3` en lugar de `python3`.)

@@ -10,5 +10,5 @@ Habla en español claro, sin jerga innecesaria. Estructura fija:
 ## Ejemplo de cierre
 
 > Pack servidor sembrado en `/ruta`. Doctor OK.  
-> **Tu turno:** (1) revisa `docs/00-nucleo/configuracion-proyecto.md`, (2) `git add AGENTES.md docs && git commit`, (3) cuando pidas cambios a la IA, aprueba la instrucción antes de que toque código.  
+> **Tu turno:** (1) revisa `uxyngraphar/00-nucleo/configuracion-proyecto.md`, (2) `git add AGENTES.md uxyngraphar && git commit`, (3) cuando pidas cambios a la IA, aprueba la instrucción antes de que toque código.  
 > Guía corta: `español/documentacion/03-uso-humano/aprobar-instrucciones.md`.

@@ -6,7 +6,7 @@
 
 ## Reglas duras
 
-1. **Misma jerarquía** que el código: si existe `src/modules/auth/`, existe `docs/50-sistema-integral/src/modules/auth/`.
+1. **Misma jerarquía** que el código: si existe `src/modules/auth/`, existe `uxyngraphar/50-sistema-integral/src/modules/auth/`.
 2. **Cero código** en el espejo: prohibido `.ts`, `.py`, `.go`, etc. Solo Markdown explicativo.
 3. **Por cada carpeta** del espejo → al menos un `README.md` (usar [_PLANTILLA-README-carpeta.md](_PLANTILLA-README-carpeta.md)).
 4. **Por cada archivo de código relevante** → opcional `<nombre-base>.md` junto al README (usar [_PLANTILLA-archivo.md](_PLANTILLA-archivo.md)). Ej.: `auth.service.ts` → `auth.service.md`.
@@ -20,7 +20,7 @@ Definidas en `00-nucleo/configuracion-proyecto.md` → sección **Espejo integra
 | Concepto | Ejemplo |
 |----------|---------|
 | Raíces a reflejar | `src/`, `prisma/`, `migrations/` |
-| Excluir siempre | `node_modules/`, `dist/`, `build/`, `.git/`, `coverage/`, `docs/` |
+| Excluir siempre | `node_modules/`, `dist/`, `build/`, `.git/`, `coverage/`, `uxyngraphar/` |
 | Excluir opcional | `test/fixtures/`, `**/*.spec.ts` (documentar carpeta `test/` con README, no cada spec) |
 
 Al **resync**, crear carpetas nuevas del proyecto; no borrar `.md` existentes sin instrucción explícita.

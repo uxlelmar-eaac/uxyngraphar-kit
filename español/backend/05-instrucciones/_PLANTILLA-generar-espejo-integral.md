@@ -11,10 +11,10 @@ acto: crear
 vinculos_entrada: []
 vinculos_salida: []
 lectura_minima:
-  - docs/00-nucleo/configuracion-proyecto.md
-  - docs/50-sistema-integral/_PROTOCOLO.md
-  - docs/50-sistema-integral/_PLANTILLA-README-carpeta.md
-  - docs/50-sistema-integral/_PLANTILLA-archivo.md
+  - uxyngraphar/00-nucleo/configuracion-proyecto.md
+  - uxyngraphar/50-sistema-integral/_PROTOCOLO.md
+  - uxyngraphar/50-sistema-integral/_PLANTILLA-README-carpeta.md
+  - uxyngraphar/50-sistema-integral/_PLANTILLA-archivo.md
 anclas_codigo: []           # rellenar: raíces del scaffolding a inspeccionar
 espejo_actualizar: []       # rellenar al cerrar: paths creados bajo 50-sistema-integral/
 espejo_leer: []
@@ -35,13 +35,13 @@ tipo: generar-espejo-integral
 ## Pedido
 
 - Escanear el scaffolding del repo según raíces en `configuracion-proyecto.md`.
-- Replicar **cada carpeta** bajo `docs/50-sistema-integral/` con la **misma ruta relativa** que en el proyecto.
+- Replicar **cada carpeta** bajo `uxyngraphar/50-sistema-integral/` con la **misma ruta relativa** que en el proyecto.
 - Crear **solo archivos `.md`**: `README.md` por carpeta; `<nombre-base>.md` por archivos de código relevantes.
 - **No copiar código** ni crear archivos que no sean Markdown.
 
 ## Objetivo
 
-Al terminar, cualquier persona puede recorrer `docs/50-sistema-integral/` como un mapa explicativo idéntico al árbol del repo.
+Al terminar, cualquier persona puede recorrer `uxyngraphar/50-sistema-integral/` como un mapa explicativo idéntico al árbol del repo.
 
 ## Vínculos del acto
 
@@ -53,8 +53,8 @@ Ver [ciclo-vinculante.md](../00-nucleo/ciclo-vinculante.md).
 
 ## Lectura mínima (IA)
 
-- [ ] `docs/00-nucleo/configuracion-proyecto.md` (sección Espejo integral)
-- [ ] `docs/50-sistema-integral/_PROTOCOLO.md`
+- [ ] `uxyngraphar/00-nucleo/configuracion-proyecto.md` (sección Espejo integral)
+- [ ] `uxyngraphar/50-sistema-integral/_PROTOCOLO.md`
 - [ ] Plantillas `_PLANTILLA-README-carpeta.md` y `_PLANTILLA-archivo.md`
 
 ## Anclas de código (solo lectura para inspeccionar estructura)
@@ -68,7 +68,7 @@ Listar raíces a recorrer; no abrir archivos enteros salvo los necesarios para r
 ## Alcance
 
 - **Incluye:** carpetas bajo raíces declaradas; `README.md` en cada carpeta del espejo; `.md` de archivos clave (controllers, services, pages, handlers).
-- **Excluye:** `node_modules/`, builds, `docs/`, tests unitarios archivo a archivo (solo README en carpeta `test/` si aplica).
+- **Excluye:** `node_modules/`, builds, `uxyngraphar/`, tests unitarios archivo a archivo (solo README en carpeta `test/` si aplica).
 - **Modo:** `generar` (vacío) | `resync` (solo nuevos) | `actualizar` (paths listados) | **`actualizar-parcial`** (lista cerrada abajo; no resync masivo)
 
 ## Modo actualizar-parcial
@@ -97,7 +97,7 @@ Distinto de `resync`: `actualizar-parcial` es lista explícita humana; `resync` 
 1. Leer raíces y exclusiones en `configuracion-proyecto.md`.
 2. Listar árbol de directorios del repo (comando o exploración acotada a raíces).
 3. Por cada carpeta del árbol (excepto exclusiones):
-   - Crear `docs/50-sistema-integral/<ruta-espejo>/` si no existe.
+   - Crear `uxyngraphar/50-sistema-integral/<ruta-espejo>/` si no existe.
    - Escribir o actualizar `README.md` desde plantilla (propósito, tabla de hijos, enlaces al código real).
 4. Por cada archivo de código **relevante** (criterio: expone API, lógica de negocio, entrypoint, page/route):
    - Crear `<nombre-base>.md` en la misma carpeta del espejo.
@@ -143,7 +143,7 @@ Distinto de `resync`: `actualizar-parcial` es lista explícita humana; `resync` 
 
 ## Costo en tokens
 
-> Automático: `decisiones.py new` abre «Creación de la instrucción», `contexto.py` abre «Implementación» y `decisiones.py cerrar` escribe aquí la tabla por fases (análisis, instrucción, implementación, verificación, cierre) con el total. El agente marca `verificacion` y `cierre` al empezarlas: `python3 docs/scripts/costo-tokens.py fase <id> <fase>`. Guía: [costo-tokens.md](../10-guias/costo-tokens.md).
+> Automático: `decisiones.py new` abre «Creación de la instrucción», `contexto.py` abre «Implementación» y `decisiones.py cerrar` escribe aquí la tabla por fases (análisis, instrucción, implementación, verificación, cierre) con el total. El agente marca `verificacion` y `cierre` al empezarlas: `python3 uxyngraphar/scripts/costo-tokens.py fase <id> <fase>`. Guía: [costo-tokens.md](../10-guias/costo-tokens.md).
 
 <!-- tokens:inicio -->
 Pendiente: se mide al cerrar la instrucción.
@@ -161,8 +161,8 @@ Pendiente: se mide al cerrar la instrucción.
 
 ### Mejora / deuda fuera de alcance (opcional)
 
-- [ ] Ficha en `docs/45-mejoras-propuestas/01-pendientes/YYYY-MM-DD/` + `mejoras_propuestas` (máx. 3; bugs con `tipo: bug`)
+- [ ] Ficha en `uxyngraphar/45-mejoras-propuestas/01-pendientes/YYYY-MM-DD/` + `mejoras_propuestas` (máx. 3; bugs con `tipo: bug`)
 
 ### Evolución documental (opcional)
 
-- [ ] Ficha en `docs/46-evolucion-documentacion/01-pendientes/YYYY-MM-DD/` + `evolucion_documentacion` (máx. 2; solo sistema documental completo — R-18)
+- [ ] Ficha en `uxyngraphar/46-evolucion-documentacion/01-pendientes/YYYY-MM-DD/` + `evolucion_documentacion` (máx. 2; solo sistema documental completo — R-18)

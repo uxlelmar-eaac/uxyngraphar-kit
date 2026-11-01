@@ -11,10 +11,10 @@ acto: mejorar-docs
 vinculos_entrada: []
 vinculos_salida: []
 lectura_minima:
-  - docs/50-sistema-integral/registro-cobertura-espejo.md
-  - docs/50-sistema-integral/_PROTOCOLO.md
-  - docs/50-sistema-integral/_PLANTILLA-README-carpeta.md
-  - docs/00-nucleo/configuracion-proyecto.md
+  - uxyngraphar/50-sistema-integral/registro-cobertura-espejo.md
+  - uxyngraphar/50-sistema-integral/_PROTOCOLO.md
+  - uxyngraphar/50-sistema-integral/_PLANTILLA-README-carpeta.md
+  - uxyngraphar/00-nucleo/configuracion-proyecto.md
 anclas_codigo: []           # rellenar: solo raíces o paths con huecos (lista cerrada)
 espejo_actualizar: []       # rellenar al cerrar: solo paths nuevos o actualizados
 espejo_leer: []             # opcional: ≤3 README existentes para coherencia de tono
@@ -130,7 +130,7 @@ paths_huecos:
 
 ## Costo en tokens
 
-> Automático: `decisiones.py new` abre «Creación de la instrucción», `contexto.py` abre «Implementación» y `decisiones.py cerrar` escribe aquí la tabla por fases (análisis, instrucción, implementación, verificación, cierre) con el total. El agente marca `verificacion` y `cierre` al empezarlas: `python3 docs/scripts/costo-tokens.py fase <id> <fase>`. Guía: [costo-tokens.md](../10-guias/costo-tokens.md).
+> Automático: `decisiones.py new` abre «Creación de la instrucción», `contexto.py` abre «Implementación» y `decisiones.py cerrar` escribe aquí la tabla por fases (análisis, instrucción, implementación, verificación, cierre) con el total. El agente marca `verificacion` y `cierre` al empezarlas: `python3 uxyngraphar/scripts/costo-tokens.py fase <id> <fase>`. Guía: [costo-tokens.md](../10-guias/costo-tokens.md).
 
 <!-- tokens:inicio -->
 Pendiente: se mide al cerrar la instrucción.
@@ -148,8 +148,8 @@ Pendiente: se mide al cerrar la instrucción.
 
 ### Mejora / deuda fuera de alcance (opcional)
 
-- [ ] Ficha en `docs/45-mejoras-propuestas/01-pendientes/YYYY-MM-DD/` + `mejoras_propuestas` (máx. 3; bugs con `tipo: bug`)
+- [ ] Ficha en `uxyngraphar/45-mejoras-propuestas/01-pendientes/YYYY-MM-DD/` + `mejoras_propuestas` (máx. 3; bugs con `tipo: bug`)
 
 ### Evolución documental (opcional)
 
-- [ ] Ficha en `docs/46-evolucion-documentacion/01-pendientes/YYYY-MM-DD/` + `evolucion_documentacion` (máx. 2; solo sistema documental completo — R-18)
+- [ ] Ficha en `uxyngraphar/46-evolucion-documentacion/01-pendientes/YYYY-MM-DD/` + `evolucion_documentacion` (máx. 2; solo sistema documental completo — R-18)

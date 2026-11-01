@@ -19,7 +19,8 @@ class Hallazgo:
 AYUDA = "El núcleo no se edita en el proyecto. Mejora → ficha EVO en 46; el humano la implementa en uxyngraphar; llega con actualizar-pack.py. Restaurar → actualizar-pack.py --restaurar-nucleo (humano)."
 
 
-def verificar(repo: Path, docs: str = "docs") -> list[Hallazgo]:
+def verificar(repo: Path, docs: str | None = None) -> list[Hallazgo]:
+    docs = cl.carpeta_pack.resolver(repo) if docs is None else docs
     docs = docs.strip("/")
     datos = lock.leer(repo, docs)
     if datos is None:

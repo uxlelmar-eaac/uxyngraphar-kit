@@ -29,7 +29,7 @@ class TestHerramienta(Entorno):
 
     def _version_proyecto(self, p: Path) -> str:
         import json
-        return json.loads((p / "docs" / ".uxyngraphar.lock").read_text(encoding="utf-8"))["version"]
+        return json.loads((p / "uxyngraphar" / ".uxyngraphar.lock").read_text(encoding="utf-8"))["version"]
 
     def test_ciclo_completo(self):
         self._instalar_herramienta()
@@ -70,19 +70,19 @@ class TestHerramienta(Entorno):
         self.assertFalse(self.lanzador().exists())
         if not WINDOWS:
             self.assertNotIn(arranque.BLOQUE_INI, perfil.read_text())
-        self.assertTrue((p / "docs" / ".uxyngraphar.lock").is_file(), "desinstalar no debe tocar los proyectos")
+        self.assertTrue((p / "uxyngraphar" / ".uxyngraphar.lock").is_file(), "desinstalar no debe tocar los proyectos")
 
     def test_configuracion_del_proyecto(self):
         self._instalar_herramienta()
         p = self._proyecto()
         self.assertEqual(self.uxyngraphar("instalar", str(p), "--si").returncode, 0)
-        archivo = p / "docs" / "uxyngraphar.config.json"
+        archivo = p / "uxyngraphar" / "uxyngraphar.config.json"
         self.assertTrue(archivo.is_file(), "el instalador debe crear el archivo de configuración del proyecto")
         r = self.uxyngraphar("configuracion", str(p))
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         self.assertIn('"go"', r.stdout)                      # pila detectada
         self.assertIn("configuracion-uxyngraphar.md", r.stdout)
-        self.assertTrue((p / "docs" / "10-guias" / "configuracion-uxyngraphar.md").is_file())
+        self.assertTrue((p / "uxyngraphar" / "10-guias" / "configuracion-uxyngraphar.md").is_file())
         archivo.write_text('{"limite_lineas": 10}\n', encoding="utf-8")   # valor inválido: se informa, no se rompe
         r = self.uxyngraphar("configuracion", str(p))
         self.assertEqual(r.returncode, 1)

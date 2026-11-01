@@ -19,16 +19,16 @@ Cómo declarar la **lista cerrada** de docs que la IA puede abrir en una tarea U
 
 ## Qué incluir
 
-- `docs/25-areas/<area>/CONTEXTO.md` del dominio afectado
+- `uxyngraphar/25-areas/<area>/CONTEXTO.md` del dominio afectado
 - Fichas BFF propias citadas en el plan
 - ADR o auditoría **solo** si la tarea depende de ellas
 
 ## Qué no incluir
 
-- `docs/INDICE.md`, `docs/PROTOCOLO.md`
-- `docs/10-guias/` (salvo acto `adoptar` con instrucción explícita)
+- `uxyngraphar/INDICE.md`, `uxyngraphar/PROTOCOLO.md`
+- `uxyngraphar/10-guias/` (salvo acto `adoptar` con instrucción explícita)
 - Índices de carpetas (`*/INDICE.md`)
-- `docs/90-archivo/`
+- `uxyngraphar/90-archivo/`
 - Colas `45-mejoras-propuestas/` o `46-evolucion-documentacion/` (salvo revisión de pendientes)
 - Espejo `50-sistema-integral/` (salvo consulta previa declarada en `espejo_leer`)
 - Fichas HTTP del repo servidor — usar **id** en CONTEXTO
@@ -37,8 +37,8 @@ Cómo declarar la **lista cerrada** de docs que la IA puede abrir en una tarea U
 
 ```yaml
 lectura_minima:
-  - docs/25-areas/dashboard/CONTEXTO.md
-  - docs/15-rutas/dashboard/get-widgets.md
+  - uxyngraphar/25-areas/dashboard/CONTEXTO.md
+  - uxyngraphar/15-rutas/dashboard/get-widgets.md
 espejo_leer: []
 presupuesto_max_docs: 8
 ```

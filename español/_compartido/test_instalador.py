@@ -19,9 +19,9 @@ class TestInstalador(unittest.TestCase):
             (repo / "go.mod").write_text("module x\n")
             r = subprocess.run([sys.executable, "-X", "utf8", "-I", str(RAIZ / "instalar.py"), "--proyecto", str(repo), "--si"], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-            for f in ("AGENTES.md", "docs/.uxyngraphar.lock", "docs/uxyngraphar.config.json", ".claude/settings.json", "CLAUDE.md"):
+            for f in ("AGENTES.md", "uxyngraphar/.uxyngraphar.lock", "uxyngraphar/uxyngraphar.config.json", ".claude/settings.json", "CLAUDE.md"):
                 self.assertTrue((repo / f).is_file(), f)
-            self.assertIn('"go"', (repo / "docs/uxyngraphar.config.json").read_text())
+            self.assertIn('"go"', (repo / "uxyngraphar/uxyngraphar.config.json").read_text())
             r2 = subprocess.run([sys.executable, "-X", "utf8", "-I", str(RAIZ / "instalar.py"), "--proyecto", str(repo), "--si"], capture_output=True, text=True)
             self.assertEqual(r2.returncode, 0, r2.stdout + r2.stderr)
             self.assertIn("al día", r2.stdout)
@@ -39,10 +39,10 @@ class TestInstalador(unittest.TestCase):
             r = subprocess.run([sys.executable, "-X", "utf8", "-I", str(RAIZ / "instalar.py"), "--proyecto", str(repo), "--pack", "ambos", "--mismo-repo",
                                 "--sub-servidor", "apps/api", "--sub-cliente", "apps/web", "--si"], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-            for f in ("apps/api/AGENTES.md", "apps/api/docs/.uxyngraphar.lock", "apps/web/AGENTES.md", "apps/web/docs/.uxyngraphar.lock"):
+            for f in ("apps/api/AGENTES.md", "apps/api/uxyngraphar/.uxyngraphar.lock", "apps/web/AGENTES.md", "apps/web/uxyngraphar/.uxyngraphar.lock"):
                 self.assertTrue((repo / f).is_file(), f)
             self.assertFalse((repo / "AGENTES.md").exists())
-            self.assertIn("apps/api/docs apps/web/docs", (repo / ".git/hooks/pre-commit").read_text())
+            self.assertIn("apps/api/uxyngraphar apps/web/uxyngraphar", (repo / ".git/hooks/pre-commit").read_text())
 
     def test_ambos_en_repos_distintos(self):
         with tempfile.TemporaryDirectory() as t:

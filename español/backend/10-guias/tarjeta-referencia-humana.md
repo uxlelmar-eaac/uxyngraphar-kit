@@ -19,7 +19,7 @@ Una página: **qué hacer tú** y **qué hace la IA**. Guía visual: [!00_banco-
 | Feature, fix, endpoint nuevo | Instrucción normal ([`_PLANTILLA.md`](../05-instrucciones/_PLANTILLA.md)) |
 | Solo actualizar docs / espejo | [`_PLANTILLA-solo-documentacion.md`](../05-instrucciones/_PLANTILLA-solo-documentacion.md) |
 | Acción repetible ya autorizada | Pedir en chat → IA ejecuta ficha autorizada **sin** instrucción nueva |
-| Revisar bandejas MEJ / EVO / propuestas | `python3 docs/scripts/decisiones/decisiones.py scan` |
+| Revisar bandejas MEJ / EVO / propuestas | `python3 uxyngraphar/scripts/decisiones/decisiones.py scan` |
 | Cambio al pack (taxonomía, plantillas) | Aprobar `EVO-*` → instrucción derivada; **no** pedir a la IA que reorganice carpetas |
 
 (En Windows: `py -3` en lugar de `python3`.)

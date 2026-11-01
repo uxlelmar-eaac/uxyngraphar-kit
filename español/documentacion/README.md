@@ -2,7 +2,7 @@
 
 **Copyright © 2026 uxleleaac / uxlelmar** · Licencia del kit: [CC BY 4.0](../../LICENCIA.md)
 
-Esta carpeta es el **manual público** del kit y reúne **toda su documentación** (por ahora solo existe la versión en español, por eso vive en `español/documentacion/`). Es independiente de los packs (`backend/`, `frontend/`, `_compartido/`): no se instala en `docs/` de los proyectos y no participa en PARIDAD ni en `construir-packs.py`.
+Esta carpeta es el **manual público** del kit y reúne **toda su documentación** (por ahora solo existe la versión en español, por eso vive en `español/documentacion/`). Es independiente de los packs (`backend/`, `frontend/`, `_compartido/`): no se instala en `uxyngraphar/` de los proyectos y no participa en PARIDAD ni en `construir-packs.py`.
 
 ## Para quién
 
@@ -32,7 +32,7 @@ español/documentacion/
 
 ## Relación con el pack instalado
 
-Tras sembrar el pack, cada proyecto tiene su propia copia en `docs/` con guías operativas (`docs/10-guias/…`). Este manual **explica el kit**; las guías del pack **gobiernan el día a día** dentro del repo. Cuando haya solape, este manual enlaza a la guía canónica del pack (no la duplica al detalle).
+Tras sembrar el pack, cada proyecto tiene su propia copia en `uxyngraphar/` con guías operativas (`uxyngraphar/10-guias/…`). Este manual **explica el kit**; las guías del pack **gobiernan el día a día** dentro del repo. Cuando haya solape, este manual enlaza a la guía canónica del pack (no la duplica al detalle).
 
 ## Sitio web
 

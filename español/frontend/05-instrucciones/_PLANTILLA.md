@@ -12,12 +12,12 @@ vinculos_entrada: []
 vinculos_salida: []
 lectura_minima: []          # lista cerrada de paths docs; la IA no abre otros
 anclas_codigo: []           # rutas de código; preferir path:inicio-fin
-espejo_actualizar: []       # paths docs/50-sistema-integral/... a crear o actualizar al cerrar
+espejo_actualizar: []       # paths uxyngraphar/50-sistema-integral/... a crear o actualizar al cerrar
 excepciones_reglas: []      # opcional: ["RP-NNN: motivo"]; vale solo si una persona aprueba la instrucción (96-reglas-proyecto)
 espejo_leer: []             # default vacío; solo si hace falta consultar el espejo antes de actuar
-herramientas_propuestas: [] # ids docs/35-herramientas/propuestas/... creados al cerrar (opcional)
-mejoras_propuestas: []       # ids docs/45-mejoras-propuestas/... — deuda fuera de alcance (opcional, máx. 3)
-evolucion_documentacion: []  # ids docs/46-evolucion-documentacion/... — sistema documental completo (opcional, máx. 2; R-18)
+herramientas_propuestas: [] # ids uxyngraphar/35-herramientas/propuestas/... creados al cerrar (opcional)
+mejoras_propuestas: []       # ids uxyngraphar/45-mejoras-propuestas/... — deuda fuera de alcance (opcional, máx. 3)
+evolucion_documentacion: []  # ids uxyngraphar/46-evolucion-documentacion/... — sistema documental completo (opcional, máx. 2; R-18)
 presupuesto_max_docs: 8
 presupuesto_max_archivos_codigo: 5   # estándar; >5 solo con ampliación R-21 (floor(5 × ampliacion_factor))
 ampliacion_factor: null            # R-21: 1.5–2 solo si la ampliación es sumamente necesaria; si no, fraccionar
@@ -55,7 +55,7 @@ Ver [ciclo-vinculante.md](../00-nucleo/ciclo-vinculante.md).
 
 Lista cerrada — marcar al leer; **no abrir otros docs**:
 
-- [ ] `docs/25-areas/<area>/CONTEXTO.md`
+- [ ] `uxyngraphar/25-areas/<area>/CONTEXTO.md`
 - [ ] (fichas BFF propias si aplica; ids servidor en CONTEXTO, no ficha duplicada)
 
 No incluir espejo salvo `espejo_leer`. Guía humana: [redaccion-lectura-minima.md](../10-guias/redaccion-lectura-minima.md).
@@ -69,20 +69,20 @@ Debe coincidir con `anclas_codigo` del frontmatter.
 
 ## Derivar espejo_actualizar
 
-Regla: por cada ancla de código, añadir el path espejo 1:1 bajo `docs/50-sistema-integral/`:
+Regla: por cada ancla de código, añadir el path espejo 1:1 bajo `uxyngraphar/50-sistema-integral/`:
 
 | Regla | Espejo |
 |-------|--------|
-| `src/.../carpeta/` (nueva) | `docs/50-sistema-integral/src/.../carpeta/README.md` |
-| `src/.../archivo.tsx` | `docs/50-sistema-integral/src/.../archivo.md` |
+| `src/.../carpeta/` (nueva) | `uxyngraphar/50-sistema-integral/src/.../carpeta/README.md` |
+| `src/.../archivo.tsx` | `uxyngraphar/50-sistema-integral/src/.../archivo.md` |
 | Cambio solo en README de carpeta | Actualizar `README.md` del espejo |
 
 Copiar paths resultantes al frontmatter `espejo_actualizar`:
 
 | Código (ancla) | Espejo (.md) |
 |----------------|--------------|
-| `src/app/.../page.tsx` | `docs/50-sistema-integral/src/app/.../page.md` |
-| carpeta UI nueva | `docs/50-sistema-integral/.../README.md` |
+| `src/app/.../page.tsx` | `uxyngraphar/50-sistema-integral/src/app/.../page.md` |
+| carpeta UI nueva | `uxyngraphar/50-sistema-integral/.../README.md` |
 
 ## Alcance
 
@@ -145,7 +145,7 @@ Copiar paths resultantes al frontmatter `espejo_actualizar`:
 
 ## Costo en tokens
 
-> Automático: `decisiones.py new` abre «Creación de la instrucción», `contexto.py` abre «Implementación» y `decisiones.py cerrar` escribe aquí la tabla por fases (análisis, instrucción, implementación, verificación, cierre) con el total. El agente marca `verificacion` y `cierre` al empezarlas: `python3 docs/scripts/costo-tokens.py fase <id> <fase>`. Guía: [costo-tokens.md](../10-guias/costo-tokens.md).
+> Automático: `decisiones.py new` abre «Creación de la instrucción», `contexto.py` abre «Implementación» y `decisiones.py cerrar` escribe aquí la tabla por fases (análisis, instrucción, implementación, verificación, cierre) con el total. El agente marca `verificacion` y `cierre` al empezarlas: `python3 uxyngraphar/scripts/costo-tokens.py fase <id> <fase>`. Guía: [costo-tokens.md](../10-guias/costo-tokens.md).
 
 <!-- tokens:inicio -->
 Pendiente: se mide al cerrar la instrucción.
@@ -168,11 +168,11 @@ Pendiente: se mide al cerrar la instrucción.
 
 | Código | Espejo (.md) |
 |--------|--------------|
-| `src/app/<ruta>/` | `docs/50-sistema-integral/src/app/<ruta>/README.md` |
-| `src/app/<ruta>/page.tsx` | `docs/50-sistema-integral/src/app/<ruta>/page.md` |
+| `src/app/<ruta>/` | `uxyngraphar/50-sistema-integral/src/app/<ruta>/README.md` |
+| `src/app/<ruta>/page.tsx` | `uxyngraphar/50-sistema-integral/src/app/<ruta>/page.md` |
 
-- [ ] `docs/50-sistema-integral/.../README.md` — crear o actualizar
-- [ ] `docs/50-sistema-integral/.../<archivo>.md` — si aplica
+- [ ] `uxyngraphar/50-sistema-integral/.../README.md` — crear o actualizar
+- [ ] `uxyngraphar/50-sistema-integral/.../<archivo>.md` — si aplica
 - API servidor: citar **id** en `.md`; no duplicar ficha del backend
 
 ### Registro de cobertura (si política incremental activa)
@@ -185,18 +185,18 @@ Si [`registro-cobertura-espejo.md`](../50-sistema-integral/registro-cobertura-es
 
 ### Propuesta de herramienta (opcional)
 
-- [ ] Ficha en `docs/35-herramientas/propuestas/01-pendientes/YYYY-MM-DD/` + `herramientas_propuestas` — no implementar hasta promoción
+- [ ] Ficha en `uxyngraphar/35-herramientas/propuestas/01-pendientes/YYYY-MM-DD/` + `herramientas_propuestas` — no implementar hasta promoción
 
 ### Mejora / deuda fuera de alcance (opcional)
 
-- [ ] Ficha en `docs/45-mejoras-propuestas/01-pendientes/YYYY-MM-DD/` + `mejoras_propuestas` (máx. 3; bugs con `tipo: bug`)
+- [ ] Ficha en `uxyngraphar/45-mejoras-propuestas/01-pendientes/YYYY-MM-DD/` + `mejoras_propuestas` (máx. 3; bugs con `tipo: bug`)
 - [ ] No refactor de paso en componentes no pedidos
 
 Ver [mejoras-propuestas-ia.md](../10-guias/mejoras-propuestas-ia.md).
 
 ### Evolución documental / cobertura pack (opcional)
 
-- [ ] Ficha en `docs/46-evolucion-documentacion/01-pendientes/YYYY-MM-DD/` + `evolucion_documentacion` (máx. 2; solo sistema documental completo — R-18)
+- [ ] Ficha en `uxyngraphar/46-evolucion-documentacion/01-pendientes/YYYY-MM-DD/` + `evolucion_documentacion` (máx. 2; solo sistema documental completo — R-18)
 - [ ] Actualizar [matriz-cobertura-proyectos.md](../46-evolucion-documentacion/matriz-cobertura-proyectos.md)
 
 Ver [_PROTOCOLO 46](../46-evolucion-documentacion/_PROTOCOLO.md).

@@ -11,7 +11,7 @@ Sin instrucción **aprobada**, el agente no debe editar código ni documentació
 
 ## Dónde viven
 
-`docs/05-instrucciones/` con carpetas por estado/fecha (ver `organizacion-estados-fechas.md` en guías).
+`uxyngraphar/05-instrucciones/` con carpetas por estado/fecha (ver `organizacion-estados-fechas.md` en guías).
 
 ## Consejo
 

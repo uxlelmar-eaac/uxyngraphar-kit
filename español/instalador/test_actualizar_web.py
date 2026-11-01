@@ -50,11 +50,11 @@ class TestActualizarWeb(unittest.TestCase):
 
     def lock(self, **cambios):
         l = api.flujo.lock
-        datos = l.leer(self.repo, "docs")
+        datos = l.leer(self.repo, "uxyngraphar")
         datos.update({k: v for k, v in cambios.items() if k != "base"})
         for rel, h in cambios.get("base", {}).items():
             datos["archivos"][rel]["sha256"] = h
-        l.escribir(self.repo, "docs", datos)
+        l.escribir(self.repo, "uxyngraphar", datos)
 
     def test_pagina_correcta_e_inicio(self):
         html = urllib.request.urlopen(self.base + "/").read().decode()
@@ -69,7 +69,7 @@ class TestActualizarWeb(unittest.TestCase):
         self.assertEqual(r[2]["packs"], [])                       # el repetido no se duplica
         self.assertEqual(r[0]["packs"][0]["estado"], "al_dia")
 
-        regla = self.repo / "docs" / "REGLAS.md"
+        regla = self.repo / "uxyngraphar" / "REGLAS.md"
         regla.write_text(regla.read_text(encoding="utf-8") + "\nmi nota\n", encoding="utf-8")
         self.lock(version=VERSION, base={"REGLAS.md": "0" * 64})
         ficha = self.post("/api/act/revisar", {"rutas": [str(self.repo)]})["proyectos"][0]["packs"][0]
@@ -96,7 +96,7 @@ class TestActualizarWeb(unittest.TestCase):
         self.assertEqual(ficha["estado"], "mayor")
         res = self.post("/api/act/aplicar", {"seleccion": [{"repo": ficha["repo"], "docs": ficha["docs"]}]})
         self.assertFalse(res["ok"])
-        self.assertEqual(api.flujo.lock.leer(self.repo, "docs")["version"], ANTERIOR_MAYOR)   # nada cambió
+        self.assertEqual(api.flujo.lock.leer(self.repo, "uxyngraphar")["version"], ANTERIOR_MAYOR)   # nada cambió
 
     def test_pack_mas_antiguo_no_se_aplica(self):
         self.lock(version=POSTERIOR)
@@ -104,7 +104,7 @@ class TestActualizarWeb(unittest.TestCase):
         self.assertEqual(ficha["estado"], "degradacion")
         res = self.post("/api/act/aplicar", {"seleccion": [{"repo": ficha["repo"], "docs": ficha["docs"], "migracion": "INS-x"}]})
         self.assertFalse(res["ok"])
-        self.assertEqual(api.flujo.lock.leer(self.repo, "docs")["version"], POSTERIOR)   # nada cambió
+        self.assertEqual(api.flujo.lock.leer(self.repo, "uxyngraphar")["version"], POSTERIOR)   # nada cambió
 
     def test_no_confia_en_el_cliente(self):
         res = self.post("/api/act/aplicar", {"seleccion": [{"repo": "/no/existe", "docs": "docs"}, {"repo": tempfile.gettempdir(), "docs": "docs"}]})
@@ -116,7 +116,7 @@ class TestActualizarWeb(unittest.TestCase):
         repo = Path(tempfile.mkdtemp(dir=self.tmp.name))
         subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
         self.assertTrue(api.ejecutar({"proyecto": str(repo), "pack": "servidor", "sub": ""})["ok"])
-        cfg_path = repo / "docs" / "uxyngraphar.config.json"
+        cfg_path = repo / "uxyngraphar" / "uxyngraphar.config.json"
         cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
         cfg["feedback"] = {"activo": False, "url": "", "consentimiento": "", "id_instalacion": "", "ocultar": []}   # colaboración aún sin responder
         cfg_path.write_text(json.dumps(cfg), encoding="utf-8")

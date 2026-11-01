@@ -1,6 +1,6 @@
 # Control de construcción — hacer cumplir cómo se construye sobre la aplicación
 
-uxyngraphar no solo documenta: `scripts/controlar.py` es una **puerta** que revisa cada cambio (commit o PR) contra las reglas del protocolo. Sirve en cualquier aplicación y pila; lo que cambia por proyecto es `docs/uxyngraphar.config.json`.
+uxyngraphar no solo documenta: `scripts/controlar.py` es una **puerta** que revisa cada cambio (commit o PR) contra las reglas del protocolo. Sirve en cualquier aplicación y pila; lo que cambia por proyecto es `uxyngraphar/uxyngraphar.config.json`.
 
 ## Qué controla
 
@@ -8,17 +8,17 @@ uxyngraphar no solo documenta: `scripts/controlar.py` es una **puerta** que revi
 |---------|-------|-------------|-------------------|
 | `lineas` | R-19 | Código tocado con más de `limite_lineas` (350) | aviso |
 | `instruccion` | R-03 | Código tocado sin instrucción cuyo `anclas_codigo` lo cubra | aviso |
-| `secretos` | R-12 | Archivos de llaves/`.env` o credenciales en líneas añadidas (también en `docs/` y `.md`) | **bloqueante** |
+| `secretos` | R-12 | Archivos de llaves/`.env` o credenciales en líneas añadidas (también en `uxyngraphar/` y `.md`) | **bloqueante** |
 | `nucleo` | R-20 | Núcleo del pack alterado (delega en `verificar-nucleo.py`) | **bloqueante** |
 | `espejo` | R-08 | `espejo_actualizar` declarado que no cambió en el diff | aviso |
-| `idioma` | R-22 | Identificadores y archivos nuevos del producto con caracteres no-ASCII (fiable); palabras, comentarios y textos en español (heurístico: siempre aviso). Nunca revisa `docs/` | aviso |
+| `idioma` | R-22 | Identificadores y archivos nuevos del producto con caracteres no-ASCII (fiable); palabras, comentarios y textos en español (heurístico: siempre aviso). Nunca revisa `uxyngraphar/` | aviso |
 | `commits` | R-22 | Asunto de commit fuera de Conventional Commits o en español; nombre de rama fuera de `tipo/alcance-descripcion` | aviso |
 | `memoria` | R-24 | Cambios en `95-memoria/` hechos fuera de `memoria.py`: una memoria editada, borrada o añadida a mano (catálogo y huellas no cuadran) | **bloqueante** |
 | `reglas_proyecto` | — (reglas del proyecto, no del núcleo) | Archivos de código del cambio que incumplen la `comprobacion_*` de una regla activa de `96-reglas-proyecto/` (las de nivel aviso solo avisan) sin excepción aprobada; excepciones en instrucciones sin aprobar (o prohibidas por la configuración); reglas `RP-*`/`EX-*` cambiadas sin una instrucción aprobada que las ancle. Protocolo: `96-reglas-proyecto/_PROTOCOLO.md` | **bloqueante** |
 
 Niveles: `bloqueante` (exit 1), `aviso` (se muestra), `apagado`. Con `--estricto` todo aviso bloquea. Proyecto nuevo: instala con `instalar-pack.py --estricto`. Proyecto existente: deja `aviso` y sube de nivel por control cuando el inventario esté al día.
 
-## Configuración (`docs/uxyngraphar.config.json`)
+## Configuración (`uxyngraphar/uxyngraphar.config.json`)
 
 Se genera sola al instalar (detecta pila por `package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, `pom.xml`, `pubspec.yaml`, `*.csproj`…). Es clase **P**: el proyecto la edita y las actualizaciones no la pisan.
 
@@ -43,8 +43,8 @@ Se genera sola al instalar (detecta pila por `package.json`, `pyproject.toml`, `
 ## Dónde corre
 
 - **Local:** el gancho `pre-commit` (`instalar-ganchos.py`) ejecuta `controlar.py --staged`; `commit-msg` ejecuta `controlar.py --mensaje` (R-22); `pre-push` ejecuta `--base`.
-- **CI (la barrera real):** `python3 docs/scripts/controlar.py --base origin/main` en el pipeline del PR (también revisa los asuntos de los commits del PR y el nombre de la rama). Los ganchos locales se pueden saltar; el CI no. `instalar-pack.py --proteger` (y el asistente) generan `.github/workflows/uxyngraphar.yml` en la **raíz del repo** (GitHub no lee workflows de subcarpetas); falta marcarlo como check requerido en la protección de rama. Ver [ci-validacion-documentacion.md](ci-validacion-documentacion.md).
-- **La configuración no la cambia un agente:** `docs/uxyngraphar.config.json` fija los niveles, las exenciones y `secretos_permitir`; está en las reglas `deny` y en `CODEOWNERS`, y la puerta avisa en cualquier cambio que la toque. Relajarla es decisión del propietario.
+- **CI (la barrera real):** `python3 uxyngraphar/scripts/controlar.py --base origin/main` en el pipeline del PR (también revisa los asuntos de los commits del PR y el nombre de la rama). Los ganchos locales se pueden saltar; el CI no. `instalar-pack.py --proteger` (y el asistente) generan `.github/workflows/uxyngraphar.yml` en la **raíz del repo** (GitHub no lee workflows de subcarpetas); falta marcarlo como check requerido en la protección de rama. Ver [ci-validacion-documentacion.md](ci-validacion-documentacion.md).
+- **La configuración no la cambia un agente:** `uxyngraphar/uxyngraphar.config.json` fija los niveles, las exenciones y `secretos_permitir`; está en las reglas `deny` y en `CODEOWNERS`, y la puerta avisa en cualquier cambio que la toque. Relajarla es decisión del propietario.
 - **Revisión:** `doctor.py` incluye el chequeo `control` (config legible, pila detectada, controles apagados).
 
 ## Límites honestos

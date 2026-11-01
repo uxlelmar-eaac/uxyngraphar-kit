@@ -7,7 +7,7 @@ Guía para integrar [`validar-documentacion.py`](../scripts/validar-documentacio
 Atajo — activa todos los flags estrictos del pack servidor:
 
 ```bash
-STRICT_ALL=1 DECISIONES_MAX_DAYS=30 python3 docs/scripts/validar-documentacion.py
+STRICT_ALL=1 DECISIONES_MAX_DAYS=30 python3 uxyngraphar/scripts/validar-documentacion.py
 ```
 
 Equivalente explícito:
@@ -17,7 +17,7 @@ STRICT_DECISIONES=1 \
 STRICT_VINCULOS=1 \
 STRICT_PRESUPUESTO=1 \
 DECISIONES_MAX_DAYS=30 \
-python3 docs/scripts/validar-documentacion.py
+python3 uxyngraphar/scripts/validar-documentacion.py
 ```
 
 ## Qué valida cada flag
@@ -35,7 +35,7 @@ Además (siempre WARN): plantillas `_PLANTILLA*.md` en `05-instrucciones/` sin b
 ## Modo permisivo (desarrollo local)
 
 ```bash
-python3 docs/scripts/validar-documentacion.py
+python3 uxyngraphar/scripts/validar-documentacion.py
 ```
 
 Emite WARN sin bloquear — útil durante adopción inicial.
@@ -43,18 +43,18 @@ Emite WARN sin bloquear — útil durante adopción inicial.
 ## Cuándo activar estricto
 
 - Tras primera instrucción `done` en producción
-- En PR que toque `docs/05-instrucciones/` o colas 45/46
+- En PR que toque `uxyngraphar/05-instrucciones/` o colas 45/46
 - Trimestralmente en revisión de cobertura ([matriz-cobertura-proyectos.md](../46-evolucion-documentacion/matriz-cobertura-proyectos.md))
 
 ## Validador en Python y deriva del espejo
 
-`validar-documentacion.py` (estructura, enlaces, fichas, vínculos y secretos). Flags `STRICT_*` (`STRICT_ALL=1` los activa todos; `STRICT_ESTADOS`, `STRICT_IDS`, `STRICT_ESPEJO` incluidos). Pruebas del tooling: `python3 -I docs/scripts/ejecutar-pruebas.py`.
+`validar-documentacion.py` (estructura, enlaces, fichas, vínculos y secretos). Flags `STRICT_*` (`STRICT_ALL=1` los activa todos; `STRICT_ESTADOS`, `STRICT_IDS`, `STRICT_ESPEJO` incluidos). Pruebas del tooling: `python3 -I uxyngraphar/scripts/ejecutar-pruebas.py`.
 
 Deriva del espejo en PRs (código tocado sin instrucción, anclas o espejo sin actualizar):
 
 ```bash
-python3 docs/scripts/verificar-espejo.py --base origin/main            # WARN
-STRICT_ESPEJO=1 python3 docs/scripts/verificar-espejo.py --base origin/main  # falla en CI
+python3 uxyngraphar/scripts/verificar-espejo.py --base origin/main            # WARN
+STRICT_ESPEJO=1 python3 uxyngraphar/scripts/verificar-espejo.py --base origin/main  # falla en CI
 ```
 
 En CI necesita historial (`fetch-depth: 0`) para resolver la rama base.
@@ -62,10 +62,10 @@ En CI necesita historial (`fetch-depth: 0`) para resolver la rama base.
 ## Integridad del núcleo
 
 ```bash
-python3 docs/scripts/verificar-nucleo.py          # falla (1) si el núcleo fue editado, borrado o ampliado
-python3 docs/scripts/verificar-nucleo.py --warn   # solo informa
-python3 docs/scripts/verificar-nucleo.py --contra ../uxyngraphar/español/backend   # contrasta con el pack fuente (no confía en el lock)
-python3 docs/scripts/doctor.py --pack RUTA_PACK --strict   # diagnóstico integral del protocolo
+python3 uxyngraphar/scripts/verificar-nucleo.py          # falla (1) si el núcleo fue editado, borrado o ampliado
+python3 uxyngraphar/scripts/verificar-nucleo.py --warn   # solo informa
+python3 uxyngraphar/scripts/verificar-nucleo.py --contra ../uxyngraphar/español/backend   # contrasta con el pack fuente (no confía en el lock)
+python3 uxyngraphar/scripts/doctor.py --pack RUTA_PACK --strict   # diagnóstico integral del protocolo
 ```
 
 En CI, haz checkout de uxyngraphar en la etiqueta de la versión adoptada y usa `--contra`: así un lock manipulado no engaña a la verificación.
@@ -77,8 +77,8 @@ Márcalo como check requerido junto con el validador. Complementa `CODEOWNERS` y
 > (En Windows: `py -3` en lugar de `python3`.)
 
 ```bash
-python3 docs/scripts/decisiones/decisiones.py scan
-python3 docs/scripts/decisiones/decisiones.py scan
+python3 uxyngraphar/scripts/decisiones/decisiones.py scan
+python3 uxyngraphar/scripts/decisiones/decisiones.py scan
 ```
 
 Ver [`decisiones-pendientes`](../35-herramientas/autorizadas/decisiones-pendientes.md).

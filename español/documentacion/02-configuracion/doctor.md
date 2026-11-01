@@ -1,10 +1,10 @@
 # Doctor y validación
 
-Desde el proyecto con pack instalado (ajusta la ruta si el `docs/` no está en la raíz):
+Desde el proyecto con pack instalado (ajusta la ruta si el `uxyngraphar/` no está en la raíz):
 
 ```bash
-python3 docs/scripts/doctor.py
-# Windows: py -3 docs/scripts/doctor.py
+python3 uxyngraphar/scripts/doctor.py
+# Windows: py -3 uxyngraphar/scripts/doctor.py
 ```
 
 ## Flags
@@ -26,14 +26,14 @@ python3 docs/scripts/doctor.py
 
 1. Lee el mensaje: suele indicar el remedio (`doctor.py --fix`, restaurar, etc.).
 2. Actualización a medias / diario abierto → a menudo `doctor.py --fix` o reintentar actualización.
-3. Núcleo tocado a mano → restaurar vía actualizador / respaldos (`docs/10-guias/respaldos.md`), no “apañar” el núcleo.
+3. Núcleo tocado a mano → restaurar vía actualizador / respaldos (`uxyngraphar/10-guias/respaldos.md`), no “apañar” el núcleo.
 4. Secretos detectados → sácalos del árbol y rota credenciales.
 
 ## Otros chequeos
 
 ```bash
-python3 docs/scripts/validar-documentacion.py
-python3 docs/scripts/decisiones/decisiones.py scan
+python3 uxyngraphar/scripts/validar-documentacion.py
+python3 uxyngraphar/scripts/decisiones/decisiones.py scan
 ```
 
-**Nota:** la ruta correcta es `docs/scripts/decisiones/decisiones.py` (no `docs/scripts/decisiones.py`).
+**Nota:** la ruta correcta es `uxyngraphar/scripts/decisiones/decisiones.py` (no `uxyngraphar/scripts/decisiones.py`).

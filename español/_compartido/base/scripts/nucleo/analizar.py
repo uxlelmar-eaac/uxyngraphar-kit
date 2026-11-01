@@ -5,6 +5,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import clasificacion as cl
+
 # (patrón sobre la ruta/nombre en minúsculas, destino sugerido). Heurística: orientativa, siempre la confirma un humano.
 REGLAS = [
     (r"adr|decision|decisión", "20-decisiones/ (ADR)"),
@@ -19,8 +21,9 @@ REGLAS = [
 IGNORAR = ("node_modules", ".git", "dist", "build", "vendor")
 
 
-def analizar(repo: Path, docs: str = "docs") -> dict[str, list[str]]:
+def analizar(repo: Path, docs: str | None = None) -> dict[str, list[str]]:
     """Agrupa los .md existentes (fuera de node_modules, etc.) por destino sugerido; 'sin-sugerencia' si nada encaja."""
+    docs = cl.carpeta_pack.resolver(repo) if docs is None else docs
     res: dict[str, list[str]] = {}
     for md in sorted(repo.rglob("*.md")):
         rel = md.relative_to(repo)

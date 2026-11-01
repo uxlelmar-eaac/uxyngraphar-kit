@@ -11,10 +11,10 @@ uxyngraphar-kit/
     ├── uxyngraphar.py           ← la herramienta «uxyngraphar»
     ├── instalar.py · actualizar.py   ← instalar y actualizar desde un clon
     ├── instalador/              ← asistente y panel (web local + consola) e instalador de una línea (arranque*.py)
-    ├── backend/ · frontend/     ← los packs que se copian a docs/ de cada proyecto
+    ├── backend/ · frontend/     ← los packs que se copian a uxyngraphar/ de cada proyecto
     └── _compartido/             ← fuente de lo idéntico en ambos packs + construir-packs.py + publicar.py
 ```
 
-**No ensuciar:** no metas este manual dentro de `backend/`, `frontend/` ni `_compartido/base/`; cada pack lleva su propia documentación operativa (`docs/10-guias/…`) porque viaja al proyecto.
+**No ensuciar:** no metas este manual dentro de `backend/`, `frontend/` ni `_compartido/base/`; cada pack lleva su propia documentación operativa (`uxyngraphar/10-guias/…`) porque viaja al proyecto.
 
 Mantener los packs y publicar versiones: [mantener-kit.md](mantener-kit.md).

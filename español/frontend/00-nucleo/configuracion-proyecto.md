@@ -25,12 +25,12 @@
 
 ## Espejo integral (`50-sistema-integral/`)
 
-Replica la estructura UI bajo `docs/50-sistema-integral/` (solo `.md`).
+Replica la estructura UI bajo `uxyngraphar/50-sistema-integral/` (solo `.md`).
 
 | Campo | Valor |
 |-------|-------|
 | Raíces a reflejar | `<p. ej. src/app/, src/components/, src/lib/>` |
-| Excluir siempre | `node_modules/`, `.next/`, `dist/`, `docs/`, `.git/` |
+| Excluir siempre | `node_modules/`, `.next/`, `dist/`, `uxyngraphar/`, `.git/` |
 | Convención | `README.md` por carpeta; `<nombre-base>.md` por page/component/handler |
 
 Generación: [`_PLANTILLA-generar-espejo-integral.md`](../05-instrucciones/_PLANTILLA-generar-espejo-integral.md).
@@ -39,7 +39,7 @@ Generación: [`_PLANTILLA-generar-espejo-integral.md`](../05-instrucciones/_PLAN
 
 | Rol | Repositorio | Notas |
 |-----|-------------|-------|
-| Servidor (API) | `<org>/<repo-backend>` | Fichas HTTP en su `docs/15-rutas/` |
+| Servidor (API) | `<org>/<repo-backend>` | Fichas HTTP en su `uxyngraphar/15-rutas/` |
 | Cliente (este repo) | `<org>/<repo-frontend>` | Solo BFF propios en `15-rutas/` |
 
 ## Convenciones del equipo
@@ -53,7 +53,7 @@ Generación: [`_PLANTILLA-generar-espejo-integral.md`](../05-instrucciones/_PLAN
 
 - Frontmatter: [convenciones-frontmatter.md](convenciones-frontmatter.md)
 - Registro ids compartidos: [registro-ids-compartidos.md](registro-ids-compartidos.md)
-- Lo que las herramientas hacen cumplir (controles, idioma, commits, ramas, respaldos) se fija en `docs/uxyngraphar.config.json`: [configuracion-uxyngraphar.md](../10-guias/configuracion-uxyngraphar.md)
+- Lo que las herramientas hacen cumplir (controles, idioma, commits, ramas, respaldos) se fija en `uxyngraphar/uxyngraphar.config.json`: [configuracion-uxyngraphar.md](../10-guias/configuracion-uxyngraphar.md)
 
 ## Contacto / ownership
 

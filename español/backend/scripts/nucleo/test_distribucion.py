@@ -59,7 +59,9 @@ class TestZip(Base):
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertIn("AGENTES.md", (self.repo / "CLAUDE.md").read_text(encoding="utf-8"))
         self.assertIn("sigue el protocolo", (self.repo / "CLAUDE.md").read_text(encoding="utf-8"))
-        self.assertTrue((self.repo / "docs/.uxyngraphar.lock").is_file())
+        self.assertTrue((self.repo / "uxyngraphar/.uxyngraphar.lock").is_file())   # instalación nueva: carpeta «uxyngraphar»
+        self.assertIn("uxyngraphar/scripts/contexto.py", (self.repo / "CLAUDE.md").read_text(encoding="utf-8"))
+        self.assertFalse((self.repo / "docs").exists())
 
 
 class TestAnalizar(Base):

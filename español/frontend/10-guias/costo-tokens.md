@@ -27,13 +27,13 @@ Se puede volver a una fase (p. ej. de verificación a implementación marcando `
 ## Comandos
 
 ```bash
-python3 docs/scripts/costo-tokens.py fase <id> verificacion     # el agente, al empezar a verificar
-python3 docs/scripts/costo-tokens.py fase <id> cierre           # el agente, al empezar el cierre
-python3 docs/scripts/costo-tokens.py ver <id>                   # cómo va (no escribe)
-python3 docs/scripts/costo-tokens.py medir <id>                 # reescribe la tabla (p. ej. tras registrar a mano)
-python3 docs/scripts/costo-tokens.py resumen [--json]           # todas las medidas y la media por fase
+python3 uxyngraphar/scripts/costo-tokens.py fase <id> verificacion     # el agente, al empezar a verificar
+python3 uxyngraphar/scripts/costo-tokens.py fase <id> cierre           # el agente, al empezar el cierre
+python3 uxyngraphar/scripts/costo-tokens.py ver <id>                   # cómo va (no escribe)
+python3 uxyngraphar/scripts/costo-tokens.py medir <id>                 # reescribe la tabla (p. ej. tras registrar a mano)
+python3 uxyngraphar/scripts/costo-tokens.py resumen [--json]           # todas las medidas y la media por fase
 ```
 
-Las marcas viven en `docs/.decisiones/tokens/` (fuera de git). La tabla queda en la ficha, entre `<!-- tokens:inicio -->` y `<!-- tokens:fin -->`, con los datos en un comentario para `resumen`. No editar la tabla a mano.
+Las marcas viven en `uxyngraphar/.decisiones/tokens/` (fuera de git). La tabla queda en la ficha, entre `<!-- tokens:inicio -->` y `<!-- tokens:fin -->`, con los datos en un comentario para `resumen`. No editar la tabla a mano.
 
 Relacionado: [eficiencia-ia.md](../00-nucleo/eficiencia-ia.md) (cómo gastar menos) · `presupuesto.py` (cuánto pesa leer algo antes de hacerlo).

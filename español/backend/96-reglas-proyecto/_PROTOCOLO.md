@@ -19,7 +19,7 @@ Reglas que **el equipo** pone a su propio código (convenciones, prohibiciones, 
 ## Ciclo de vida
 
 - `status: activa` → se aplica. `status: retirada` → deja de aplicarse (el archivo se conserva como historia).
-- Crear, editar, mejorar o retirar una regla: el agente **solo** con una instrucción aprobada por una persona que tenga el archivo de la regla en `anclas_codigo` (o `docs/96-reglas-proyecto/` entero). Con `cambios_reglas: "solo_humano"` el agente no puede tocarlas (reglas deny); las cambia una persona.
+- Crear, editar, mejorar o retirar una regla: el agente **solo** con una instrucción aprobada por una persona que tenga el archivo de la regla en `anclas_codigo` (o `uxyngraphar/96-reglas-proyecto/` entero). Con `cambios_reglas: "solo_humano"` el agente no puede tocarlas (reglas deny); las cambia una persona.
 - Al cerrar esa instrucción, `decisiones.py cerrar` regenera `INDICE.md`.
 
 ## Niveles y control (`controlar.py`)

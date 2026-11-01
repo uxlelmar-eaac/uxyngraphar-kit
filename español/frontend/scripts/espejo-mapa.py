@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Mapa compacto del espejo y código sin espejo.
 
-Uso:  python3 docs/scripts/espejo-mapa.py mapa [--escribir]            # tabla «código → qué hace»
-      python3 docs/scripts/espejo-mapa.py faltantes --raices src,lib   # código sin ficha de espejo
-`mapa --escribir` guarda docs/50-sistema-integral/mapa.md. Los resúmenes salen de `resumen:` en el frontmatter del espejo
+Uso:  python3 uxyngraphar/scripts/espejo-mapa.py mapa [--escribir]            # tabla «código → qué hace»
+      python3 uxyngraphar/scripts/espejo-mapa.py faltantes --raices src,lib   # código sin ficha de espejo
+`mapa --escribir` guarda 50-sistema-integral/mapa.md. Los resúmenes salen de `resumen:` en el frontmatter del espejo
 (o de su primera línea de prosa). Salida de `faltantes`: 0 si no falta nada · 1 si hay faltantes.
 """
 
@@ -13,6 +13,8 @@ import argparse
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import carpeta_pack  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parent / "espejo"))
 
 from mapa import faltantes, mapa  # noqa: E402
@@ -24,11 +26,12 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("modo", choices=("mapa", "faltantes"))
     ap.add_argument("--repo", default=".")
-    ap.add_argument("--docs", default="docs")
+    ap.add_argument("--docs", default=None, help="carpeta del pack relativa al repo (por defecto la de este script: uxyngraphar o docs)")
     ap.add_argument("--escribir", action="store_true")
     ap.add_argument("--raices", default="src", help="carpetas de código separadas por comas (faltantes)")
     ap.add_argument("--excluir", default="", help="nombres de carpeta adicionales a excluir, separados por comas")
     a = ap.parse_args(argv)
+    a.docs = carpeta_pack.desde_argumento(a.docs, getattr(a, "repo", "."), __file__)
     repo = Path(a.repo).resolve()
     docs = repo / a.docs
     if a.modo == "mapa":

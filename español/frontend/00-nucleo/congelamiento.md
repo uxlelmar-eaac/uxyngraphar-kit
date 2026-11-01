@@ -13,7 +13,7 @@ El **núcleo** (clase **N**) son las reglas del juego: `AGENTES.md`, `REGLAS.md`
 
 ## Cómo se hace cumplir
 
-1. **Huellas:** `docs/.uxyngraphar.lock` guarda el hash de cada archivo tal como lo entregó el pack. `python3 docs/scripts/verificar-nucleo.py` falla si un archivo N cambió (`NUCLEO-MODIFICADO`), se borró (`NUCLEO-ELIMINADO`), si aparece uno nuevo en zona reservada (`NUCLEO-EXTENDIDO`) o hay archivos fuera de la taxonomía (`FUERA-DE-TAXONOMIA`).
+1. **Huellas:** `uxyngraphar/.uxyngraphar.lock` guarda el hash de cada archivo tal como lo entregó el pack. `python3 uxyngraphar/scripts/verificar-nucleo.py` falla si un archivo N cambió (`NUCLEO-MODIFICADO`), se borró (`NUCLEO-ELIMINADO`), si aparece uno nuevo en zona reservada (`NUCLEO-EXTENDIDO`) o hay archivos fuera de la taxonomía (`FUERA-DE-TAXONOMIA`).
 2. **Permisos:** `instalar-pack.py --proteger` genera reglas `deny` de edición para agentes (`.claude/settings.json`) y un bloque `CODEOWNERS` para exigir revisión humana.
 3. **Gancho y CI:** `instalar-ganchos.py` ejecuta la verificación en `pre-commit`; el CI la repite (ver [ci-validacion-documentacion.md](../10-guias/ci-validacion-documentacion.md)).
 
@@ -34,7 +34,7 @@ El **contenido** del proyecto (clase C) se actualiza con cada instrucción aprob
 2. Nadie del proyecto edita, borra, renombra ni amplía zonas N, ni toca `.uxyngraphar.lock`, `.claude/settings.json`, `CODEOWNERS`, CI o ganchos.
 3. Mejoras → solo ficha EVO en 46.
 4. No se evita la verificación (`--no-verify`, `--warn`).
-5. Núcleo alterado → parar, avisar, restaurar (humano). Diagnóstico completo: `python3 docs/scripts/doctor.py --pack RUTA_PACK`.
+5. Núcleo alterado → parar, avisar, restaurar (humano). Diagnóstico completo: `python3 uxyngraphar/scripts/doctor.py --pack RUTA_PACK`.
 
 ## Límites honestos
 

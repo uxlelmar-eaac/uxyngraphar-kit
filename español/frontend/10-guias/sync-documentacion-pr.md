@@ -13,15 +13,15 @@ Usar en **cada pull request** que toque código o documentación del cliente. Ob
 
 ## Funcionalidad UI nueva
 
-- [ ] `docs/25-areas/<id>/CONTEXTO.md` creado o actualizado
-- [ ] Fila en `docs/25-areas/INDICE.md`
+- [ ] `uxyngraphar/25-areas/<id>/CONTEXTO.md` creado o actualizado
+- [ ] Fila en `uxyngraphar/25-areas/INDICE.md`
 - [ ] Endpoints del servidor citados por **`id`** (no ficha duplicada)
 
 ## Manejador BFF / route handler propio
 
-- [ ] Ficha en `docs/15-rutas/<módulo>/<método>-<path-slug>.md`
+- [ ] Ficha en `uxyngraphar/15-rutas/<módulo>/<método>-<path-slug>.md`
 - [ ] Frontmatter con `id` estable (prefijo distinto al servidor si comparten nombre semántico)
-- [ ] Fila en `docs/15-rutas/INDICE.md`
+- [ ] Fila en `uxyngraphar/15-rutas/INDICE.md`
 - [ ] Tabla actualizada en `25-areas/<módulo>/CONTEXTO.md`
 
 ## Consumo de API del servidor
@@ -55,7 +55,7 @@ Usar en **cada pull request** que toque código o documentación del cliente. Ob
 - [ ] Deuda/refactor/bug fuera de alcance → ficha en `01-pendientes/YYYY-MM-DD/` + `mejoras_propuestas` en instrucción
 - [ ] **No implementada** en el mismo PR
 - [ ] Humano revisa pendientes: aprobar → instrucción derivada + `02-en-progreso/`; rechazar → `05-canceladas/`
-- [ ] (Opcional) Revisión de pendientes con [`decisiones-pendientes`](../35-herramientas/autorizadas/decisiones-pendientes.md): `python3 docs/scripts/decisiones/decisiones.py scan`
+- [ ] (Opcional) Revisión de pendientes con [`decisiones-pendientes`](../35-herramientas/autorizadas/decisiones-pendientes.md): `python3 uxyngraphar/scripts/decisiones/decisiones.py scan`
 - [ ] Máx. 3 propuestas por cierre
 
 (En Windows: `py -3` en lugar de `python3`.)

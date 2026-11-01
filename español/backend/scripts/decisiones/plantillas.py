@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Andamiaje de instrucciones y fichas desde las plantillas del pack (EVO cli-andamiaje).
 
-Uso:  python3 docs/scripts/decisiones/plantillas.py new instruccion --slug login-2fa --acto crear --areas auth
-      python3 docs/scripts/decisiones/plantillas.py new mejora|evo|auditoria|propuesta|adr --slug <kebab> [opciones]
+Uso:  python3 uxyngraphar/scripts/decisiones/plantillas.py new instruccion --slug login-2fa --acto crear --areas auth
+      python3 uxyngraphar/scripts/decisiones/plantillas.py new mejora|evo|auditoria|propuesta|adr --slug <kebab> [opciones]
 
 Copia la plantilla a `<sección>/<estado>/YYYY-MM-DD/`, rellena id (auto-incrementado donde aplica) y
 campos del frontmatter, y pre-valida los enums contra `00-nucleo/frontmatter/`. Nunca sobrescribe.

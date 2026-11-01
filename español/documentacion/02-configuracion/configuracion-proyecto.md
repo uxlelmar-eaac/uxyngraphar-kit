@@ -4,7 +4,7 @@ Tras instalar, hay archivos **para que el equipo los complete una vez**. El actu
 
 ## Prioridad
 
-1. `docs/00-nucleo/configuracion-proyecto.md` — dueños, stack, contacto
+1. `uxyngraphar/00-nucleo/configuracion-proyecto.md` — dueños, stack, contacto
 2. Arquitectura y restricciones del núcleo 00
 3. `registro-ids-compartidos.md` (contrato API ↔ UI) si usas ambos packs
 4. Adopción: plantilla de primera instrucción / guía `adopcion-pack.md` en `10-guias/`
@@ -17,4 +17,4 @@ Tras instalar, hay archivos **para que el equipo los complete una vez**. El actu
 
 ## Guía canónica en el pack
 
-Tras instalar: `docs/10-guias/adopcion-pack.md`, `docs/10-guias/incorporacion.md`.
+Tras instalar: `uxyngraphar/10-guias/adopcion-pack.md`, `uxyngraphar/10-guias/incorporacion.md`.

@@ -16,7 +16,7 @@ En Windows, si no tienes `python3`, usa `py -3` (o `python`) en lugar de `python
 | `uxyngraphar estado [RUTA]` | Versiones (proyecto / herramienta / última) |
 | `uxyngraphar proyectos` | Lista registro local |
 | `uxyngraphar proyectos --agregar RUTA` | Registra un proyecto |
-| `uxyngraphar proyectos --quitar RUTA` | Quita del registro (no borra `docs/`) |
+| `uxyngraphar proyectos --quitar RUTA` | Quita del registro (no borra `uxyngraphar/`) |
 | `uxyngraphar proyectos --salud` | Salud rápida |
 | `uxyngraphar configuracion [RUTA]` | Muestra/valida `uxyngraphar.config.json` |
 | `uxyngraphar autoactualizar` | Actualiza la herramienta |
@@ -28,7 +28,7 @@ En Windows, si no tienes `python3`, usa `py -3` (o `python`) en lugar de `python
 
 **Colores:** la herramienta y los instaladores usan color y las marcas ✓ (hecho), ! (aviso) y ✕ (error) solo cuando escriben en una terminal. Para desactivar el color define `NO_COLOR=1`; si la terminal no puede mostrar ✓/✕, se usan `+`/`x`. `uxyngraphar autoactualizar` ya no abre el panel cuando no hay versión nueva que instalar.
 
-**Importante:** `desinstalar` **no** elimina el pack de tus repos. Solo borra `~/.uxyngraphar/` (o `%LOCALAPPDATA%\uxyngraphar\`). Para dejar de usar el pack en un proyecto, quita `docs/` / `AGENTES.md` a mano y, si hace falta, `proyectos --quitar`.
+**Importante:** `desinstalar` **no** elimina el pack de tus repos. Solo borra `~/.uxyngraphar/` (o `%LOCALAPPDATA%\uxyngraphar\`). Para dejar de usar el pack en un proyecto, quita `uxyngraphar/` / `AGENTES.md` a mano y, si hace falta, `proyectos --quitar`.
 
 ### Flags comunes de `instalar` / `actualizar`
 
@@ -74,10 +74,10 @@ Variables útiles: `UXYNGRAPHAR_HOME`, `UXYNGRAPHAR_SIN_PATH`.
 ## Scripts frecuentes **dentro del proyecto** (tras sembrar)
 
 ```bash
-python3 docs/scripts/doctor.py [--fix] [--strict] [--json] [--pack RUTA]
-python3 docs/scripts/decisiones/decisiones.py scan
-python3 docs/scripts/feedback.py estado|previsualizar|activar|enviar|revocar
-python3 docs/scripts/actualizar-pack.py RUTA_PACK --apply [--migracion-aprobada ID]
+python3 uxyngraphar/scripts/doctor.py [--fix] [--strict] [--json] [--pack RUTA]
+python3 uxyngraphar/scripts/decisiones/decisiones.py scan
+python3 uxyngraphar/scripts/feedback.py estado|previsualizar|activar|enviar|revocar
+python3 uxyngraphar/scripts/actualizar-pack.py RUTA_PACK --apply [--migracion-aprobada ID]
 ```
 
-En monorepo con subcarpetas, el `docs/` puede estar en `apps/api/docs/` o `apps/web/docs/`: ajusta la ruta.
+En monorepo con subcarpetas, el `uxyngraphar/` puede estar en `apps/api/uxyngraphar/` o `apps/web/uxyngraphar/`: ajusta la ruta.

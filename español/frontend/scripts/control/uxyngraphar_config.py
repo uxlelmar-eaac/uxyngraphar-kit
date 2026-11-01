@@ -1,4 +1,4 @@
-"""Configuración legible por máquina del proyecto: docs/uxyngraphar.config.json (clase P: la edita el proyecto).
+"""Configuración legible por máquina del proyecto: <carpeta del pack>/uxyngraphar.config.json (clase P: la edita el proyecto).
 
 Una sola fuente para las herramientas (puerta de control, espejo, doctor). Se rellena sola al instalar
 (`detectar`) y el proyecto la ajusta. Sin dependencias; ausente o corrupta ⇒ valores por defecto seguros.
@@ -37,7 +37,7 @@ PILAS = [
 IDIOMA_DEFECTO = {
     "artefactos": "en",            # idioma del código del producto, archivos, commits y ramas (único valor soportado: en)
     "conversacion": "espejo",      # el agente responde en el idioma del humano ("espejo") o en uno fijo ("es", "en"…)
-    "glosario": "00-nucleo/glosario-dominio.md",   # términos de dominio permitidos (relativo a docs/)
+    "glosario": "00-nucleo/glosario-dominio.md",   # términos de dominio permitidos (relativo a la carpeta del pack)
     "excluir": ["**/generated/**", "**/__generated__/**", "*.generated.*", "*.pb.*", "*.g.dart", "*.freezed.dart", "migrations/**"],
     "legacy": [],                  # rutas con código legacy en otro idioma: sus hallazgos solo avisan
     "locales": ["**/locales/**", "**/locale/**", "**/i18n/**", "**/lang/**", "*.po", "*.pot", "*.arb"],   # traducciones: no son código (R-21)
@@ -225,9 +225,17 @@ def _validar_feedback(fb: object) -> list[str]:
     return errores
 
 
-def cargar(repo: Path, docs: str = "docs") -> tuple[dict, list[str]]:
+def carpeta_del_pack(repo: Path) -> str:
+    """La carpeta del pack en `repo` (uxyngraphar o docs; ver scripts/carpeta_pack.py)."""
+    import sys
+    sys.path.append(str(Path(__file__).resolve().parent.parent))
+    import carpeta_pack
+    return carpeta_pack.resolver(repo)
+
+
+def cargar(repo: Path, docs: str | None = None) -> tuple[dict, list[str]]:
     """(config efectiva, problemas). Nunca lanza: ante error devuelve los valores por defecto + el problema."""
-    archivo = repo / docs / NOMBRE
+    archivo = repo / (carpeta_del_pack(repo) if docs is None else docs) / NOMBRE
     cfg = por_defecto()
     if not archivo.is_file():
         return cfg, []

@@ -25,7 +25,7 @@ Perspectiva **frontend** cuando el backend vive en otro repositorio.
 
 ## Repo aislado
 
-Todo lo necesario está en **este** `docs/`; no abrir pack servidor salvo instrucción multi-repo explícita.
+Todo lo necesario está en **este** `uxyngraphar/`; no abrir pack servidor salvo instrucción multi-repo explícita.
 
 ## Monorepo
 

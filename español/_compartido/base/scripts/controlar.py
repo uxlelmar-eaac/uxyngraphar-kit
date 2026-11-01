@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Puerta de control de construcción: ¿este cambio respeta cómo se construye sobre la aplicación?
 
-Uso:  python3 docs/scripts/controlar.py [--staged | --base origin/main | --mensaje ARCHIVO] [--docs docs] [--estricto] [--config]
+Uso:  python3 uxyngraphar/scripts/controlar.py [--staged | --base origin/main | --mensaje ARCHIVO] [--docs uxyngraphar] [--estricto] [--config]
   --staged    lo preparado para commit (gancho pre-commit)      --base  rama base de un PR (CI; también revisa sus commits)
   --mensaje   solo el mensaje de commit y la rama (gancho commit-msg, R-22)
   --estricto  trata todos los avisos como bloqueantes          --config  muestra la configuración efectiva
-Salida: 0 sin bloqueos · 1 con hallazgos bloqueantes. Niveles en docs/uxyngraphar.config.json (10-guias/control-de-construccion.md).
+Salida: 0 sin bloqueos · 1 con hallazgos bloqueantes. Niveles en <carpeta del pack>/uxyngraphar.config.json (10-guias/control-de-construccion.md).
 """
 
 from __future__ import annotations
@@ -16,6 +16,8 @@ import os
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import carpeta_pack  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parent / "control"))
 
 from uxyngraphar_config import cargar  # noqa: E402
@@ -33,11 +35,12 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--base", default=os.environ.get("ESPEJO_BASE", "origin/main"))
     ap.add_argument("--staged", action="store_true")
-    ap.add_argument("--docs", default=os.environ.get("DOCS_DIR", "docs"))
+    ap.add_argument("--docs", default=None, help="carpeta del pack relativa al repo (por defecto la de este script: uxyngraphar o docs)")
     ap.add_argument("--estricto", action="store_true")
     ap.add_argument("--config", action="store_true")
     ap.add_argument("--mensaje", metavar="ARCHIVO", help="archivo con el mensaje de commit (gancho commit-msg)")
     a = ap.parse_args(argv)
+    a.docs = carpeta_pack.desde_argumento(a.docs, getattr(a, "repo", "."), __file__, entorno="DOCS_DIR")
     repo = raiz_repo(Path.cwd())
     if repo is not None:
         repo, a.docs = normalizar(Path.cwd(), a.docs)

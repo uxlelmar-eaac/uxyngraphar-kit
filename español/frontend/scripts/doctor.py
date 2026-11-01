@@ -4,7 +4,7 @@
 Revisa entorno, lock, integridad del núcleo, protección contra agentes (deny, CODEOWNERS, gancho), .gitignore,
 validación documental, configuración, conflictos de actualización, pendientes antiguos y depuración sugerida.
 
-Uso:  python3 docs/scripts/doctor.py [--repo .] [--docs docs] [--pack RUTA_PACK] [--json] [--strict] [--fix]
+Uso:  python3 uxyngraphar/scripts/doctor.py [--repo .] [--docs uxyngraphar] [--pack RUTA_PACK] [--json] [--strict] [--fix]
   --pack    contrasta el núcleo con el pack fuente y avisa si hay versión nueva
   --fix     correcciones seguras: .gitignore, .gitattributes, reglas deny, CODEOWNERS, CI, lock y gancho pre-commit (nunca toca núcleo ni contenido)
   --strict  los avisos también hacen fallar
@@ -17,6 +17,8 @@ import argparse
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import carpeta_pack  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parent / "nucleo"))
 
 from doctor import a_json, arreglar, diagnosticar, formatear  # noqa: E402
@@ -28,12 +30,13 @@ from uxyngraphar_config import normalizar  # noqa: E402
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--repo", default=".")
-    ap.add_argument("--docs", default="docs")
+    ap.add_argument("--docs", default=None, help="carpeta del pack relativa al repo (por defecto la de este script: uxyngraphar o docs)")
     ap.add_argument("--pack", default="")
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--strict", action="store_true")
     ap.add_argument("--fix", action="store_true")
     a = ap.parse_args(argv)
+    a.docs = carpeta_pack.desde_argumento(a.docs, getattr(a, "repo", "."), __file__)
     repo, a.docs = normalizar(Path(a.repo), a.docs)
     if a.fix:
         for linea in arreglar(repo, a.docs):

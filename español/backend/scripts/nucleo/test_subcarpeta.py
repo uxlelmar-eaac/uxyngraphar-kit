@@ -43,36 +43,36 @@ class TestSubcarpeta(unittest.TestCase):
     def test_se_instala_como_app_del_monorepo_con_aviso(self):
         self.assertEqual(self.r.returncode, 0, self.r.stdout + self.r.stderr)
         self.assertIn("dentro del repositorio git", self.r.stdout)
-        for f in ("backend/AGENTES.md", "backend/docs/.uxyngraphar.lock", "backend/docs/uxyngraphar.config.json", ".github/CODEOWNERS", ".claude/settings.json"):
+        for f in ("backend/AGENTES.md", "backend/uxyngraphar/.uxyngraphar.lock", "backend/uxyngraphar/uxyngraphar.config.json", ".github/CODEOWNERS", ".claude/settings.json"):
             self.assertTrue((self.raiz / f).is_file(), f)
         self.assertFalse((self.app / ".github").exists())          # CODEOWNERS en la raíz del repo, no en la subcarpeta
-        self.assertFalse((self.raiz / "docs").exists())
+        self.assertFalse((self.raiz / "uxyngraphar").exists() or (self.raiz / "docs").exists())
 
     def test_gancho_con_ruta_desde_la_raiz_y_commit_funciona(self):
-        r = subprocess.run([sys.executable, "-X", "utf8", "-I", str(self.app / "docs/scripts/instalar-ganchos.py")], cwd=self.app, capture_output=True, text=True)   # sin --docs, desde la subcarpeta
+        r = subprocess.run([sys.executable, "-X", "utf8", "-I", str(self.app / "uxyngraphar/scripts/instalar-ganchos.py")], cwd=self.app, capture_output=True, text=True)   # sin --docs, desde la subcarpeta
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-        self.assertIn('DOCS_LIST="backend/docs"', (self.raiz / ".git/hooks/pre-commit").read_text())
+        self.assertIn('DOCS_LIST="backend/uxyngraphar"', (self.raiz / ".git/hooks/pre-commit").read_text())
         git(self.raiz, "add", "-A")
         c = git(self.raiz, "commit", "-qm", "x")
         self.assertEqual(c.returncode, 0, c.stdout + c.stderr)
 
     def test_gancho_con_ruta_vieja_se_repara_y_el_mensaje_es_claro(self):
         hook = self.raiz / ".git/hooks/pre-commit"
-        hook.write_text(hook.read_text().replace('DOCS_LIST="backend/docs"', 'DOCS_LIST="docs backend/docs"'))
+        hook.write_text(hook.read_text().replace('DOCS_LIST="backend/uxyngraphar"', 'DOCS_LIST="docs backend/uxyngraphar"'))
         (self.raiz / "otra.txt").write_text("x")
         git(self.raiz, "add", "-A")
         c = git(self.raiz, "commit", "-qm", "y")
         self.assertNotEqual(c.returncode, 0)
         self.assertIn("no encuentro docs/scripts", c.stderr)
-        instalar_ganchos.instalar(self.raiz, "backend/docs")          # reinstalar descarta «docs», que ya no existe
-        self.assertIn('DOCS_LIST="backend/docs"', hook.read_text())
+        instalar_ganchos.instalar(self.raiz, "backend/uxyngraphar")          # reinstalar descarta «docs», que ya no existe
+        self.assertIn('DOCS_LIST="backend/uxyngraphar"', hook.read_text())
         self.assertEqual(git(self.raiz, "commit", "-qm", "y").returncode, 0)
 
     def test_scripts_resuelven_docs_desde_la_subcarpeta(self):
-        r = subprocess.run([sys.executable, "-X", "utf8", "-I", str(self.app / "docs/scripts/verificar-nucleo.py")], cwd=self.app, capture_output=True, text=True)
+        r = subprocess.run([sys.executable, "-X", "utf8", "-I", str(self.app / "uxyngraphar/scripts/verificar-nucleo.py")], cwd=self.app, capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-        raiz, docs = cfg.normalizar(self.app, "docs")
-        self.assertEqual((raiz, docs), (self.raiz.resolve(), "backend/docs"))
+        raiz, docs = cfg.normalizar(self.app, "uxyngraphar")
+        self.assertEqual((raiz, docs), (self.raiz.resolve(), "backend/uxyngraphar"))
 
 
 if __name__ == "__main__":

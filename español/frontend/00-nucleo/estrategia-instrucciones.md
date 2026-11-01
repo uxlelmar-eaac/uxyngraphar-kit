@@ -6,7 +6,7 @@ Canon estratégico del **pack cliente**: **toda documentación nace, se aprueba 
 
 | Regla | Detalle |
 |-------|---------|
-| Alcance docs | Solo `docs/` de **este** repositorio frontend |
+| Alcance docs | Solo `uxyngraphar/` de **este** repositorio frontend |
 | API backend | Contratos por **`id`** vía [registro-ids-compartidos.md](registro-ids-compartidos.md); no duplicar fichas HTTP del servidor |
 | Ref al otro repo | URL/path externo en registro o `configuracion-proyecto.md`; no paths locales cruzados |
 | Monorepo | Opcional; ver [monorepo-docs-fusionados.md](../10-guias/monorepo-docs-fusionados.md) |
@@ -60,8 +60,8 @@ Toda instrucción con `anclas_codigo` debe declarar `espejo_actualizar`:
 
 ```
 src/app/dashboard/page.tsx
-  → docs/50-sistema-integral/src/app/dashboard/page.md
-  → docs/50-sistema-integral/src/app/dashboard/README.md (si afecta la carpeta)
+  → uxyngraphar/50-sistema-integral/src/app/dashboard/page.md
+  → uxyngraphar/50-sistema-integral/src/app/dashboard/README.md (si afecta la carpeta)
 ```
 
 | Evento | Acción espejo |

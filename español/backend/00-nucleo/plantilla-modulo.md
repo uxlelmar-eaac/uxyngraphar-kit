@@ -35,6 +35,6 @@ Cada archivo del módulo ≤350 líneas físicas (`wc -l`). Si un archivo lo sup
 
 Módulo nuevo → también crear:
 
-- `docs/25-areas/<nombre>/CONTEXTO.md`
-- `docs/15-rutas/<nombre>/` (+ INDICE local si aplica)
-- Fila en `docs/25-areas/INDICE.md`
+- `uxyngraphar/25-areas/<nombre>/CONTEXTO.md`
+- `uxyngraphar/15-rutas/<nombre>/` (+ INDICE local si aplica)
+- Fila en `uxyngraphar/25-areas/INDICE.md`

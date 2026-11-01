@@ -15,16 +15,16 @@ Las fichas en `46-evolucion-documentacion/` describen mejoras del **sistema docu
 ## Comandos en el proyecto
 
 ```bash
-python3 docs/scripts/feedback.py previsualizar
-python3 docs/scripts/feedback.py estado
-python3 docs/scripts/feedback.py activar --acepto          # tras leer qué se envía
-python3 docs/scripts/feedback.py activar --acepto --url URL  # receptor alternativo
-python3 docs/scripts/feedback.py enviar                    # pendientes
-python3 docs/scripts/feedback.py enviar --todas
-python3 docs/scripts/feedback.py revocar
-python3 docs/scripts/feedback.py revocar --borrar-remoto
+python3 uxyngraphar/scripts/feedback.py previsualizar
+python3 uxyngraphar/scripts/feedback.py estado
+python3 uxyngraphar/scripts/feedback.py activar --acepto          # tras leer qué se envía
+python3 uxyngraphar/scripts/feedback.py activar --acepto --url URL  # receptor alternativo
+python3 uxyngraphar/scripts/feedback.py enviar                    # pendientes
+python3 uxyngraphar/scripts/feedback.py enviar --todas
+python3 uxyngraphar/scripts/feedback.py revocar
+python3 uxyngraphar/scripts/feedback.py revocar --borrar-remoto
 ```
 
 La IA **no** debe ejecutar `activar` / `enviar` por su cuenta.
 
-Guía canónica: `docs/10-guias/envio-sugerencias.md`.
+Guía canónica: `uxyngraphar/10-guias/envio-sugerencias.md`.

@@ -1,6 +1,6 @@
 """Lógica del panel de configuración (sin interfaz): proyectos de este equipo, configuración de cada uno y plantilla.
 
-Lee y escribe docs/uxyngraphar.config.json con el lector de la versión del pack que tiene cada proyecto. Antes de
+Lee y escribe <carpeta del pack>/uxyngraphar.config.json con el lector de la versión del pack que tiene cada proyecto. Antes de
 escribir enseña qué cambia, comprueba que nadie tocó el archivo mientras tanto y deja una copia en .uxyngraphar-respaldo/
 (se restaura con «respaldos.py restaurar»). La respuesta a «colaborar» pasa por el feedback.py del propio proyecto.
 """
@@ -309,10 +309,10 @@ def plantilla_en(destinos: list[dict], aplicar: bool) -> dict:
         return {"ok": False, "error": "Aún no guardaste ninguna plantilla."}
     for d in destinos:
         if aplicar:
-            r = guardar(d.get("ruta", ""), d.get("docs", "docs"), plantilla, d.get("huella", ""))
+            r = guardar(d.get("ruta", ""), (d.get("docs") or api.carpeta_pack.resolver(Path(d.get("ruta") or ".").expanduser())), plantilla, d.get("huella", ""))
         else:
-            r = previsualizar(d.get("ruta", ""), d.get("docs", "docs"), plantilla)
-        salida.append({"ruta": d.get("ruta", ""), "docs": d.get("docs", "docs"), **r})
+            r = previsualizar(d.get("ruta", ""), (d.get("docs") or api.carpeta_pack.resolver(Path(d.get("ruta") or ".").expanduser())), plantilla)
+        salida.append({"ruta": d.get("ruta", ""), "docs": (d.get("docs") or api.carpeta_pack.resolver(Path(d.get("ruta") or ".").expanduser())), **r})
     return {"ok": all(x.get("ok") for x in salida), "destinos": salida}
 
 

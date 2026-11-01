@@ -6,8 +6,8 @@ Guía para crear la documentación integral **copiando la estructura del fronten
 
 | Proyecto real | Documentación integral |
 |---------------|------------------------|
-| `src/app/dashboard/page.tsx` | `docs/50-sistema-integral/src/app/dashboard/page.md` |
-| Misma carpeta `dashboard/` | `docs/50-sistema-integral/src/app/dashboard/README.md` |
+| `src/app/dashboard/page.tsx` | `uxyngraphar/50-sistema-integral/src/app/dashboard/page.md` |
+| Misma carpeta `dashboard/` | `uxyngraphar/50-sistema-integral/src/app/dashboard/README.md` |
 
 No hay otra taxonomía: el espejo **es** el scaffolding UI, documentado.
 
@@ -15,7 +15,7 @@ No hay otra taxonomía: el espejo **es** el scaffolding UI, documentado.
 
 ### Proyecto pequeño o espejo vacío
 
-1. Pegar el pack en `docs/` y rellenar [`00-nucleo/configuracion-proyecto.md`](../00-nucleo/configuracion-proyecto.md) → sección **Espejo integral** (raíces `src/app/`, etc.).
+1. Pegar el pack en `uxyngraphar/` y rellenar [`00-nucleo/configuracion-proyecto.md`](../00-nucleo/configuracion-proyecto.md) → sección **Espejo integral** (raíces `src/app/`, etc.).
 2. Copiar [`05-instrucciones/_PLANTILLA-generar-espejo-integral.md`](../05-instrucciones/_PLANTILLA-generar-espejo-integral.md) → `YYYYMMDD-NNN-generar-espejo.md`.
 3. Completar raíces en `anclas_codigo` (p. ej. `src/app/`).
 4. Aprobar la instrucción (`status: approved`).

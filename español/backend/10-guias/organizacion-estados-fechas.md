@@ -32,7 +32,7 @@ Regla dura: [R-17](../PROTOCOLO.md).
 3. **Nombre de archivo** = `slug.md` (kebab, 2–6 palabras), único dentro de su carpeta de fecha. El identificador global es el `id` del frontmatter (`YYYYMMDD-NNN-slug`, `MEJ-YYYYMMDD-slug`, `EVO-YYYYMMDD-slug`, `AUD-YYYYMMDD-slug`, `ADR-NNN`).
 4. **Cambio de estado = mover el archivo** a la carpeta de estado correspondiente (conservando la carpeta de fecha) **y** actualizar `status` en frontmatter en el mismo acto. Herramienta: [`decisiones-pendientes`](../35-herramientas/autorizadas/decisiones-pendientes.md) mueve y marca automáticamente.
 5. **Citación:** dentro de docs, citar fichas de colas por `id` (no por ruta): la ruta cambia con el estado. Las rutas se citan solo para docs estables (registros, `03-completadas`+).
-6. **El árbol es el índice:** los `INDICE.md` de sección no mantienen tablas de fichas; describen la estructura y apuntan a las plantillas. Vista viva de pendientes: `python3 docs/scripts/decisiones/decisiones.py scan`.
+6. **El árbol es el índice:** los `INDICE.md` de sección no mantienen tablas de fichas; describen la estructura y apuntan a las plantillas. Vista viva de pendientes: `python3 uxyngraphar/scripts/decisiones/decisiones.py scan`.
 
 (En Windows: `py -3` en lugar de `python3`.)
 

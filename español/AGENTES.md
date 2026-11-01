@@ -5,5 +5,5 @@
   - Servidor: [backend/AGENTES.md](backend/AGENTES.md)
   - Cliente: [frontend/AGENTES.md](frontend/AGENTES.md)
 
-(Al adoptar el pack, la carpeta del stack se copia como `docs/` del
-proyecto y su `AGENTES.md` interno es el punto de entrada.)
+(Al adoptar el pack, la carpeta del stack se copia como `uxyngraphar/` del
+proyecto —`docs/` en instalaciones anteriores a la 1.1.0— y su `AGENTES.md` interno es el punto de entrada.)

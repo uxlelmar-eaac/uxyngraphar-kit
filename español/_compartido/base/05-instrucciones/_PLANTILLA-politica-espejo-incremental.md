@@ -11,9 +11,9 @@ acto: adoptar
 vinculos_entrada: []
 vinculos_salida: []
 lectura_minima:
-  - docs/00-nucleo/estrategia-instrucciones.md
-  - docs/10-guias/espejo-incremental-proyectos-grandes.md
-  - docs/50-sistema-integral/registro-cobertura-espejo.md
+  - uxyngraphar/00-nucleo/estrategia-instrucciones.md
+  - uxyngraphar/10-guias/espejo-incremental-proyectos-grandes.md
+  - uxyngraphar/50-sistema-integral/registro-cobertura-espejo.md
 anclas_codigo: []           # opcional: raíces a inspeccionar solo para estimar tamaño
 espejo_actualizar: []       # normalmente vacío; esta instrucción no genera espejo masivo
 espejo_leer: []
@@ -98,7 +98,7 @@ Ver [ciclo-vinculante.md](../00-nucleo/ciclo-vinculante.md).
 - Registro actualizado:
 - Notas al humano:
 - `vinculos_salida`:
-  - docs/50-sistema-integral/registro-cobertura-espejo.md
+  - uxyngraphar/50-sistema-integral/registro-cobertura-espejo.md
 
 ---
 
@@ -108,7 +108,7 @@ Ver [ciclo-vinculante.md](../00-nucleo/ciclo-vinculante.md).
 
 ## Costo en tokens
 
-> Automático: `decisiones.py new` abre «Creación de la instrucción», `contexto.py` abre «Implementación» y `decisiones.py cerrar` escribe aquí la tabla por fases (análisis, instrucción, implementación, verificación, cierre) con el total. El agente marca `verificacion` y `cierre` al empezarlas: `python3 docs/scripts/costo-tokens.py fase <id> <fase>`. Guía: [costo-tokens.md](../10-guias/costo-tokens.md).
+> Automático: `decisiones.py new` abre «Creación de la instrucción», `contexto.py` abre «Implementación» y `decisiones.py cerrar` escribe aquí la tabla por fases (análisis, instrucción, implementación, verificación, cierre) con el total. El agente marca `verificacion` y `cierre` al empezarlas: `python3 uxyngraphar/scripts/costo-tokens.py fase <id> <fase>`. Guía: [costo-tokens.md](../10-guias/costo-tokens.md).
 
 <!-- tokens:inicio -->
 Pendiente: se mide al cerrar la instrucción.
@@ -126,8 +126,8 @@ Pendiente: se mide al cerrar la instrucción.
 
 ### Mejora / deuda fuera de alcance (opcional)
 
-- [ ] Ficha en `docs/45-mejoras-propuestas/01-pendientes/YYYY-MM-DD/` + `mejoras_propuestas` (máx. 3; bugs con `tipo: bug`)
+- [ ] Ficha en `uxyngraphar/45-mejoras-propuestas/01-pendientes/YYYY-MM-DD/` + `mejoras_propuestas` (máx. 3; bugs con `tipo: bug`)
 
 ### Evolución documental (opcional)
 
-- [ ] Ficha en `docs/46-evolucion-documentacion/01-pendientes/YYYY-MM-DD/` + `evolucion_documentacion` (máx. 2; solo sistema documental completo — R-18)
+- [ ] Ficha en `uxyngraphar/46-evolucion-documentacion/01-pendientes/YYYY-MM-DD/` + `evolucion_documentacion` (máx. 2; solo sistema documental completo — R-18)

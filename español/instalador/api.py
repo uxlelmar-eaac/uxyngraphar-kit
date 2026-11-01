@@ -8,10 +8,11 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent   # carpeta «español/»: aquí viven instalar.py, actualizar.py y los packs
 PACKS = {"servidor": RAIZ / "backend", "cliente": RAIZ / "frontend"}
-for _s in (PACKS["servidor"] / "scripts" / "nucleo", PACKS["servidor"] / "scripts" / "control", PACKS["servidor"] / "scripts" / "feedback"):
+for _s in (PACKS["servidor"] / "scripts", PACKS["servidor"] / "scripts" / "nucleo", PACKS["servidor"] / "scripts" / "control", PACKS["servidor"] / "scripts" / "feedback"):
     if str(_s) not in sys.path:
         sys.path.insert(0, str(_s))
 
+import carpeta_pack  # noqa: E402  (uxyngraphar/ en instalaciones nuevas; docs/ en las anteriores a 1.1.0)
 import cliente as feedback  # noqa: E402  (pregunta de colaboración y envío de fichas EVO)
 import flujo  # noqa: E402
 import uxyngraphar_config as cfgmod  # noqa: E402
@@ -45,7 +46,7 @@ def inspeccionar(ruta: str) -> dict:
     carpeta = carpeta.resolve()
     cfg = cfgmod.detectar(carpeta)
     existentes = []
-    for docs in ("docs", *[f"{s}/docs" for r in SUGERENCIAS for s in SUGERENCIAS[r]]):
+    for docs in candidatas(""):
         f = flujo.ficha_destino(carpeta, docs)
         if f["instalado"]:
             existentes.append({"docs": docs, "version": f["version"], "pack": f["pack"]})
@@ -54,6 +55,20 @@ def inspeccionar(ruta: str) -> dict:
             "pila": cfg["pila"], "rol_sugerido": cfg["rol"], "instalados": existentes, "colaboracion_pendiente": pendiente,
             "sub_servidor": next((s for s in SUGERENCIAS["servidor"] if (carpeta / s).is_dir()), ""),
             "sub_cliente": next((s for s in SUGERENCIAS["cliente"] if (carpeta / s).is_dir()), "")}
+
+
+def candidatas(sub: str = "") -> list[str]:
+    """Dónde puede estar ya un pack: la carpeta nueva y la antigua, en la raíz y en las subcarpetas típicas de un monorepo."""
+    bases = [sub] if sub else ["", *[s for r in SUGERENCIAS for s in SUGERENCIAS[r]]]
+    return [f"{b}/{c}" if b else c for b in bases for c in carpeta_pack.CARPETAS]
+
+
+def carpeta_destino(repo: Path, sub: str = "") -> str:
+    """La carpeta donde va (o ya está) el pack: si ya hay una instalación, la suya; si no, «uxyngraphar»."""
+    for docs in candidatas(sub):
+        if (repo / docs / carpeta_pack.LOCK).is_file():
+            return docs
+    return f"{sub}/{carpeta_pack.CARPETA}" if sub else carpeta_pack.CARPETA
 
 
 def colaboracion_pendiente(repo: Path, docs: str) -> bool:
@@ -141,7 +156,7 @@ def destinos(s: dict) -> tuple[list[dict], list[str]]:
             lista = [(base, pack, sub)]
     salida = []
     for r, rol, sub in lista:
-        raiz, docs = cfgmod.normalizar(r, f"{sub}/docs" if sub else "docs")   # si eligió una subcarpeta de un repo git, se instala como app del monorepo
+        raiz, docs = cfgmod.normalizar(r, carpeta_destino(r, sub))   # si eligió una subcarpeta de un repo git, se instala como app del monorepo
         salida.append({"repo": raiz, "rol": rol, "sub": docs.rpartition("/")[0], "docs": docs, "pack": PACKS[rol],
                        "titulo": f"{rol.capitalize()} en {raiz.name}" + (f"/{docs.rpartition('/')[0]}" if "/" in docs else "")})
     return salida, errores
@@ -175,7 +190,7 @@ def planificar(s: dict) -> dict:
                 if f["docs_existe"]:
                     lineas.append(f"Ya existe «{docs}/» con contenido: se añadirá lo que falta sin pisar nada tuyo.")
                 lineas.append(f"Se copiarán {p['nuevos']} archivos del pack {p['version']} a «{docs}/» (reglas, plantillas y herramientas).")
-                lineas.append(f"«{'/'.join(x for x in (d['sub'], 'AGENTES.md') if x)}» se creará junto a «docs/»: es lo único que tu agente lee al empezar.")
+                lineas.append(f"«{'/'.join(x for x in (d['sub'], 'AGENTES.md') if x)}» se creará junto a «{docs}/»: es lo único que tu agente lee al empezar.")
                 if p["conflictos"]:
                     lineas.append(f"{len(p['conflictos'])} archivos ya existen y son distintos: se conservan los tuyos y el de uxyngraphar queda como «.uxyngraphar-nuevo».")
                 if s.get("proteger", True):
@@ -240,7 +255,7 @@ def ejecutar(s: dict) -> dict:
 
 def siguientes_pasos(s: dict) -> list[str]:
     lista, _ = destinos(s)
-    rutas = [d["docs"] for d in lista] or ["docs"]
+    rutas = [d["docs"] for d in lista] or [carpeta_pack.CARPETA]
     config = " y ".join(f"{r}/00-nucleo/configuracion-proyecto.md" for r in rutas)
     agentes = " y ".join(f"{r.rpartition('/')[0]}/AGENTES.md" if "/" in r else "AGENTES.md" for r in rutas)
     carpetas = ", ".join(f"{r}/" for r in rutas)

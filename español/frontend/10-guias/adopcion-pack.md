@@ -4,7 +4,7 @@ Roadmap para repo frontend **aislado**. Primera adopción: [_PLANTILLA-adopcion-
 
 ## Semana 1 — Pegar pack
 
-- [ ] `docs/` + `AGENTES.md` en raíz
+- [ ] `uxyngraphar/` + `AGENTES.md` en raíz
 - [ ] [configuracion-proyecto.md](../00-nucleo/configuracion-proyecto.md) + URL repo backend
 - [ ] [registro-ids-compartidos.md](../00-nucleo/registro-ids-compartidos.md) vacío listo
 - [ ] Smoke: [instalacion-docs.md](instalacion-docs.md)

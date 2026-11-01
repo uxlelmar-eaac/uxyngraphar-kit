@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Mide el costo en tokens (estimado: ~4 caracteres por token) de lo que lee un agente.
 
-Uso:  python3 docs/scripts/presupuesto.py arranque [--repo .]     # AGENTES.md + ESTADO.md (límite 1500)
-      python3 docs/scripts/presupuesto.py instruccion <id>        # paquete de contexto de una instrucción
-      python3 docs/scripts/presupuesto.py pack [--top 15]         # los documentos más pesados
+Uso:  python3 uxyngraphar/scripts/presupuesto.py arranque [--repo .]     # AGENTES.md + ESTADO.md (límite 1500)
+      python3 uxyngraphar/scripts/presupuesto.py instruccion <id>        # paquete de contexto de una instrucción
+      python3 uxyngraphar/scripts/presupuesto.py pack [--top 15]         # los documentos más pesados
 Salida: 1 si se supera el límite (arranque: 1500; instrucción: --max-tokens / UXYNGRAPHAR_MAX_TOKENS, 12000)
 o si la instrucción incumple R-21 (alcance de código).
 Variable de entorno: UXYNGRAPHAR_MAX_TOKENS (se acepta uxyngraphar_MAX_TOKENS como alias de respaldo).
@@ -16,6 +16,8 @@ import os
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import carpeta_pack  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parent / "tokens"))
 
 import medir  # noqa: E402
@@ -27,10 +29,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("modo", choices=("arranque", "instruccion", "pack"))
     ap.add_argument("ref", nargs="?", default="")
     ap.add_argument("--repo", default=".")
-    ap.add_argument("--docs", default="docs")
+    ap.add_argument("--docs", default=None, help="carpeta del pack relativa al repo (por defecto la de este script: uxyngraphar o docs)")
     ap.add_argument("--max-tokens", type=int, default=int(os.environ.get("UXYNGRAPHAR_MAX_TOKENS") or os.environ.get("uxyngraphar_MAX_TOKENS") or "12000"))
     ap.add_argument("--top", type=int, default=15)
     a = ap.parse_args(argv)
+    a.docs = carpeta_pack.desde_argumento(a.docs, getattr(a, "repo", "."), __file__)
     repo = Path(a.repo).resolve()
     if a.modo == "arranque":
         filas = medir.arranque(repo, a.docs)

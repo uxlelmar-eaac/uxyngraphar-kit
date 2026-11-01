@@ -1,4 +1,4 @@
-"""Instalación del núcleo en un proyecto (nuevo o con `docs/` previo)."""
+"""Instalación del núcleo en un proyecto (nuevo o con la carpeta del pack ya creada)."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ import clasificacion as cl  # noqa: E402
 import lock  # noqa: E402
 import uxyngraphar_config as cfgmod  # noqa: E402
 
-GITIGNORE = (".decisiones/", ".uxyngraphar-respaldo/", "docs/.depuracion/respaldo/", "__pycache__/", "*.pyc",
+GITIGNORE = (".decisiones/", ".uxyngraphar-respaldo/", "{docs}/.depuracion/respaldo/", "__pycache__/", "*.pyc",
              ".env", ".env.*", "!.env.example", "*.pem", "*.key", "*.p12", "*.pfx", "id_rsa", "id_ed25519", "credentials.json", "*.tfstate")
 
 
@@ -39,7 +39,8 @@ def es_repo(repo: Path) -> bool:
 def asegurar_gitignore(repo: Path, docs: str, dry_run: bool) -> list[str]:
     destino = repo / ".gitignore"
     actual = destino.read_text(encoding="utf-8").splitlines() if destino.is_file() else []
-    faltan = [l.replace("docs/", docs.strip("/") + "/") for l in GITIGNORE if l.replace("docs/", docs.strip("/") + "/") not in actual]
+    lineas = [l.replace("{docs}", docs.strip("/")) for l in GITIGNORE]
+    faltan = [l for l in lineas if l not in actual]
     if faltan and not dry_run:
         texto = "\n".join(actual + ([""] if actual and actual[-1] else []) + ["# uxyngraphar (artefactos locales)"] + faltan) + "\n"
         destino.write_text(texto, encoding="utf-8", newline="\n")
@@ -63,11 +64,12 @@ def asegurar_gitattributes(repo: Path, docs: str, dry_run: bool) -> list[str]:
     return faltan
 
 
-def instalar(pack: Path, repo: Path, docs: str = "docs", perfil: str = "completo", adoptar: bool = False,
+def instalar(pack: Path, repo: Path, docs: str = cl.CARPETA, perfil: str = "completo", adoptar: bool = False,
              dry_run: bool = False, exigir_git: bool = True, fuente: str = "", estricto: bool = False) -> Resultado:
     docs = docs.strip("/")
-    if docs.rpartition("/")[2] != "docs":
-        raise ErrorInstalacion(f"la carpeta del pack debe llamarse «docs» (p. ej. docs o apps/api/docs); recibido: {docs}")
+    if not cl.carpeta_pack.nombre_valido(docs) or ".." in docs.split("/"):
+        raise ErrorInstalacion(f"la carpeta del pack debe llamarse «{cl.CARPETA}» (o «docs», como en las instalaciones anteriores; "
+                               f"en un monorepo, p. ej. apps/api/{cl.CARPETA}); recibido: {docs}")
     if exigir_git and not es_repo(repo):
         raise ErrorInstalacion(f"{repo} no es un repositorio git (usa --sin-git para omitir la comprobación)")
     if lock.leer(repo, docs):

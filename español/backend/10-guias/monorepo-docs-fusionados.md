@@ -1,11 +1,11 @@
 # Monorepo — documentación fusionada (opcional)
 
-> **Default:** repos aislados ([sync-multi-repo.md](sync-multi-repo.md)). Esta guía aplica cuando backend y frontend comparten **un solo árbol** y un solo `docs/`.
+> **Default:** repos aislados ([sync-multi-repo.md](sync-multi-repo.md)). Esta guía aplica cuando backend y frontend comparten **un solo árbol** y un solo `uxyngraphar/`.
 
-## Árbol `docs/` único
+## Árbol `uxyngraphar/` único
 
 ```
-docs/
+uxyngraphar/
 ├── AGENTES.md              # unificado (secciones servidor + cliente)
 ├── PROTOCOLO.md            # taxonomía común
 ├── 00-nucleo/
@@ -40,7 +40,7 @@ Un solo [registro-ids-compartidos.md](../00-nucleo/registro-ids-compartidos.md) 
 
 ## Adopción desde packs separados
 
-1. Fusionar contenido de packs `servidor/` + `cliente/` en un `docs/`.
+1. Fusionar contenido de packs `servidor/` + `cliente/` en un `uxyngraphar/`.
 2. Resolver duplicados en `00-nucleo/` (una config, dos secciones stack).
 3. Instrucción [_PLANTILLA-adopcion-inicial-pack.md](../05-instrucciones/_PLANTILLA-adopcion-inicial-pack.md) adaptada a monorepo.
 

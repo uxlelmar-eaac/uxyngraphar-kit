@@ -35,8 +35,8 @@ Qué tipo de proyectos quedan mal servidos sin esto.
 
 Paths concretos del pack a crear o modificar (sin implementar aquí):
 
-- `docs/10-guias/...`
-- `docs/00-nucleo/...`
+- `uxyngraphar/10-guias/...`
+- `uxyngraphar/00-nucleo/...`
 
 ## Relación con matriz
 

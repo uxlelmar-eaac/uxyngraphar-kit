@@ -13,7 +13,7 @@ anclas_codigo:
   - scripts/decisiones/session_acciones.py
 presupuesto_max_docs: 2
 lectura_minima:
-  - docs/00-nucleo/convenciones-frontmatter.md
+  - uxyngraphar/00-nucleo/convenciones-frontmatter.md
 ---
 
 # Revisión de pendientes (decisiones-pendientes)
@@ -40,44 +40,44 @@ Consolida en un único listado las **decisiones a tomar** dispersas en instrucci
 
 ## Cómo ejecutar
 
-Desde la **raíz del repositorio** (donde `docs/` contiene el pack):
+Desde la **raíz del repositorio** (donde `uxyngraphar/` contiene el pack):
 
 > (En Windows: `py -3` en lugar de `python3`.)
 
 ```bash
-python3 docs/scripts/decisiones/decisiones.py scan
-python3 docs/scripts/decisiones/decisiones.py scan --max-days 30
-python3 docs/scripts/decisiones/decisiones.py register --id MEJ-YYYYMMDD-slug --action aprobar
-python3 docs/scripts/decisiones/decisiones.py apply --dry-run
-python3 docs/scripts/decisiones/decisiones.py apply
-python3 docs/scripts/decisiones/decisiones.py close-session
+python3 uxyngraphar/scripts/decisiones/decisiones.py scan
+python3 uxyngraphar/scripts/decisiones/decisiones.py scan --max-days 30
+python3 uxyngraphar/scripts/decisiones/decisiones.py register --id MEJ-YYYYMMDD-slug --action aprobar
+python3 uxyngraphar/scripts/decisiones/decisiones.py apply --dry-run
+python3 uxyngraphar/scripts/decisiones/decisiones.py apply
+python3 uxyngraphar/scripts/decisiones/decisiones.py close-session
 ```
 
 Herramientas adicionales (v2.2.0; todas de solo consola, stdlib):
 
 ```bash
 # Métricas de colas, antigüedad y presupuesto (--json para CI)
-python3 docs/scripts/decisiones/decisiones.py metricas [--json] [--max-days 30]
+python3 uxyngraphar/scripts/decisiones/decisiones.py metricas [--json] [--max-days 30]
 # Archivar completadas antiguas (03→04) y limpiar canceladas (05→06). Dry-run por defecto; nunca borra
-python3 docs/scripts/decisiones/decisiones.py archivar --dias 90 [--apply]
-python3 docs/scripts/decisiones/decisiones.py limpiar --dias 180 [--apply]
+python3 uxyngraphar/scripts/decisiones/decisiones.py archivar --dias 90 [--apply]
+python3 uxyngraphar/scripts/decisiones/decisiones.py limpiar --dias 180 [--apply]
 # Andamiaje de fichas desde plantilla (id correlativo, carpeta de estado/fecha y enlaces correctos)
-python3 docs/scripts/decisiones/decisiones.py new {instruccion|mejora|evo|auditoria|propuesta|adr} --slug mi-slug
+python3 uxyngraphar/scripts/decisiones/decisiones.py new {instruccion|mejora|evo|auditoria|propuesta|adr} --slug mi-slug
 # Deriva del espejo en un PR (WARN; --strict o STRICT_ESPEJO=1 para fallar)
-python3 docs/scripts/verificar-espejo.py --base origin/main
+python3 uxyngraphar/scripts/verificar-espejo.py --base origin/main
 # Ganchos git opt-in (pre-commit; --pre-push opcional; --quitar los elimina)
-python3 docs/scripts/instalar-ganchos.py
+python3 uxyngraphar/scripts/instalar-ganchos.py
 # Cierre y estado
-python3 docs/scripts/decisiones/decisiones.py cerrar <id> [--dry-run]    # done + mover a 03-completadas + enlaces
-python3 docs/scripts/decisiones/decisiones.py estado --escribir          # actualiza el bloque autogenerado de docs/ESTADO.md
+python3 uxyngraphar/scripts/decisiones/decisiones.py cerrar <id> [--dry-run]    # done + mover a 03-completadas + enlaces
+python3 uxyngraphar/scripts/decisiones/decisiones.py estado --escribir          # actualiza el bloque autogenerado de uxyngraphar/ESTADO.md
 # Núcleo: instalar, actualizar (simula por defecto) y verificar integridad
-python3 docs/scripts/instalar-pack.py RUTA/AL/PACK --repo .
-python3 docs/scripts/actualizar-pack.py RUTA/AL/PACK [--apply]
-python3 docs/scripts/verificar-nucleo.py
+python3 uxyngraphar/scripts/instalar-pack.py RUTA/AL/PACK --repo .
+python3 uxyngraphar/scripts/actualizar-pack.py RUTA/AL/PACK [--apply]
+python3 uxyngraphar/scripts/verificar-nucleo.py
 # Depuración del contenido (nunca toca el núcleo)
-python3 docs/scripts/decisiones/decisiones.py depurar --plan plan.json            # informe + plan editable
-python3 docs/scripts/decisiones/decisiones.py depurar --aplicar plan.json         # simula los ítems con "aprobado": true
-python3 docs/scripts/decisiones/decisiones.py depurar --aplicar plan.json --apply
+python3 uxyngraphar/scripts/decisiones/decisiones.py depurar --plan plan.json            # informe + plan editable
+python3 uxyngraphar/scripts/decisiones/decisiones.py depurar --aplicar plan.json         # simula los ítems con "aprobado": true
+python3 uxyngraphar/scripts/decisiones/decisiones.py depurar --aplicar plan.json --apply
 ```
 
 `depurar` diagnostica archivar/limpiar, fichas que ya tocan pasar a la memoria (en `06-listas-para-eliminar` o mucho tiempo en `04-archivadas`), anclas de código inexistentes y espejo huérfano, y reescribe los enlaces entrantes al mover. **Nada se borra (R-24):** la acción `memoria` guarda la ficha en `95-memoria/` y exige `motivo` en el plan, una persona en la terminal y que nada vivo la enlace. Los plazos salen de `uxyngraphar.config.json` → `memoria`. Consultar o recuperar: `scripts/memoria.py` ([10-guias/memoria.md](../../10-guias/memoria.md)). En un plan, la acción `eliminar` es sinónimo de `memoria`: tampoco borra.
@@ -87,14 +87,14 @@ La antigüedad para `archivar`/`limpiar` se mide por la carpeta de fecha (R-17).
 Validación documental (WARN por defecto; fallo con `STRICT_DECISIONES=1`):
 
 ```bash
-STRICT_DECISIONES=1 DECISIONES_MAX_DAYS=30 python3 docs/scripts/validar-documentacion.py
+STRICT_DECISIONES=1 DECISIONES_MAX_DAYS=30 python3 uxyngraphar/scripts/validar-documentacion.py
 ```
 
 ### Multi-pack (servidor + cliente)
 
 ```bash
 export DOCS_DIRS="/ruta/docs-backend,/ruta/docs-frontend"
-python3 docs/scripts/decisiones/decisiones.py scan
+python3 uxyngraphar/scripts/decisiones/decisiones.py scan
 ```
 
 ### Variables de entorno

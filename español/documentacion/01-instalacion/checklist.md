@@ -11,21 +11,21 @@ Marca en orden. La IA debe devolver este checklist al humano al terminar.
 
 ## Proyecto
 
-- [ ] Pack sembrado (`docs/.uxyngraphar.lock` existe en la ruta correcta)
+- [ ] Pack sembrado (`uxyngraphar/.uxyngraphar.lock` existe en la ruta correcta)
 - [ ] Layout monorepo/multi-repo confirmado (subs / `--proyecto2`) si aplica
-- [ ] `AGENTES.md` junto al `docs/` sembrado
-- [ ] Commit inicial de `docs/` + `AGENTES.md` (sin secretos)
+- [ ] `AGENTES.md` junto al `uxyngraphar/` sembrado
+- [ ] Commit inicial de `uxyngraphar/` + `AGENTES.md` (sin secretos)
 
 ## Configuración
 
-- [ ] `docs/00-nucleo/configuracion-proyecto.md` rellenado
+- [ ] `uxyngraphar/00-nucleo/configuracion-proyecto.md` rellenado
 - [ ] Arquitectura / restricciones / registro-ids revisados
-- [ ] `docs/uxyngraphar.config.json` coherente (persona vía panel)
+- [ ] `uxyngraphar/uxyngraphar.config.json` coherente (persona vía panel)
 - [ ] Colaborar EVO decidido — con `--si` sin flag = No (en CI o con un agente queda pendiente); la IA no activa feedback
 
 ## Verificación
 
-- [ ] `python3 docs/scripts/doctor.py` (o ruta en subcarpeta) sin errores bloqueantes
+- [ ] `python3 uxyngraphar/scripts/doctor.py` (o ruta en subcarpeta) sin errores bloqueantes
 - [ ] (Opcional) `validar-documentacion.py` y `decisiones/decisiones.py scan`
 - [ ] CI con `controlar.py` si el repo es compartido
 

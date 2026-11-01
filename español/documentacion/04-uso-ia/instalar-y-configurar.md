@@ -29,8 +29,8 @@ uxyngraphar instalar "$REPO" --pack servidor --si --colaborar no
 ## D. Verificar
 
 ```bash
-python3 docs/scripts/doctor.py
-# monorepo: python3 apps/api/docs/scripts/doctor.py  (etc.)
+python3 uxyngraphar/scripts/doctor.py
+# monorepo: python3 apps/api/uxyngraphar/scripts/doctor.py  (etc.)
 ```
 
 ## E. Cerrar

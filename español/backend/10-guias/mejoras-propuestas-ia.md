@@ -50,7 +50,7 @@ Sin este apartado, la IA tiende a:
 
 ## Flujo humano (revisión periódica de pendientes)
 
-1. Revisar pendientes con `python3 docs/scripts/decisiones/decisiones.py scan` semanal o por sprint.
+1. Revisar pendientes con `python3 uxyngraphar/scripts/decisiones/decisiones.py scan` semanal o por sprint.
 2. Enriquecer ficha con notas de negocio.
 3. Aprobar → [_PLANTILLA-revisar-propuesta.md](../45-mejoras-propuestas/_PLANTILLA-revisar-propuesta.md) → nueva instrucción + `02-en-progreso/`.
 4. Rechazar → `05-canceladas/`.

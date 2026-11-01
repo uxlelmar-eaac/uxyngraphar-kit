@@ -2,7 +2,7 @@
 
 Lo usan el comando «uxyngraphar» y el panel del navegador. La plantilla (plantilla-config.json en la carpeta de la herramienta)
 guarda los valores que la persona prefiere para sus proyectos: se aplican al instalar uno nuevo y, si ella lo pide, a los
-existentes. Nunca manda sobre el archivo de un proyecto: cada proyecto sigue decidiendo con su docs/uxyngraphar.config.json.
+existentes. Nunca manda sobre el archivo de un proyecto: cada proyecto sigue decidiendo con su uxyngraphar.config.json.
 """
 
 from __future__ import annotations
@@ -65,7 +65,7 @@ def guardar_proyectos(lista: list[str]) -> None:
 
 # ---------- lector de configuración del propio proyecto ----------
 
-def modulo_config(repo: Path | None = None, docs: str = "docs"):
+def modulo_config(repo: Path | None = None, docs: str = "uxyngraphar"):
     """El lector de configuración de la versión del pack que tiene el proyecto; si falta, el de la herramienta."""
     propio = repo / docs / "scripts" / "control" / "uxyngraphar_config.py" if repo else None
     ruta = propio if propio and propio.is_file() else ES / "backend" / "scripts" / "control" / "uxyngraphar_config.py"

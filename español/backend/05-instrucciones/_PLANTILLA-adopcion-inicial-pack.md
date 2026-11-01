@@ -11,9 +11,9 @@ acto: adoptar
 vinculos_entrada: []
 vinculos_salida: []
 lectura_minima:
-  - docs/00-nucleo/configuracion-proyecto.md
-  - docs/10-guias/instalacion-docs.md
-  - docs/PROTOCOLO.md
+  - uxyngraphar/00-nucleo/configuracion-proyecto.md
+  - uxyngraphar/10-guias/instalacion-docs.md
+  - uxyngraphar/PROTOCOLO.md
   - AGENTES.md
 anclas_codigo: []
 espejo_actualizar: []
@@ -41,7 +41,7 @@ fases:
 
 ## Pedido (síntesis)
 
-- Pegar y configurar el pack `docs/` en el repositorio backend.
+- Pegar y configurar el pack `uxyngraphar/` en el repositorio backend.
 - Rellenar identidad del proyecto y convenciones.
 - Migrar documentación existente **o** arrancar greenfield.
 - Crear 1–2 áreas iniciales, espejo base y verificar smoke.
@@ -70,7 +70,7 @@ Ver [ciclo-vinculante.md](../00-nucleo/ciclo-vinculante.md).
 
 - `<src/>` o raíz de módulos
 - `<package.json|pyproject.toml|go.mod>` — stack
-- Documentación existente: `<README.md>`, `<docs/>`, `<wiki/>`
+- Documentación existente: `<README.md>`, `<uxyngraphar/>`, `<wiki/>`
 
 **Entregables:**
 
@@ -83,7 +83,7 @@ Ver [ciclo-vinculante.md](../00-nucleo/ciclo-vinculante.md).
 
 ## Fase 2 — Configuración del pack
 
-- [ ] Copiar contenido de `servidor/` a `docs/` del repo (o ruta acordada)
+- [ ] Copiar contenido de `servidor/` a `uxyngraphar/` del repo (o ruta acordada)
 - [ ] Copiar `AGENTES.md` a **raíz del repositorio**
 - [ ] Rellenar [configuracion-proyecto.md](../00-nucleo/configuracion-proyecto.md): identidad, rutas código, espejo, repos relacionados
 - [ ] Rellenar [registro-ids-compartidos.md](../00-nucleo/registro-ids-compartidos.md) si hay cliente separado
@@ -133,9 +133,9 @@ Por cada área (mínimo 1, recomendado 2):
 
 ## Fase 6 — Smoke y cierre
 
-- [ ] `AGENTES.md` en raíz apunta a `docs/`
+- [ ] `AGENTES.md` en raíz apunta a `uxyngraphar/`
 - [ ] [INDICE.md](../INDICE.md) raíz del pack revisado
-- [ ] Script opcional: `python3 docs/scripts/validar-documentacion.py`
+- [ ] Script opcional: `python3 uxyngraphar/scripts/validar-documentacion.py`
 - [ ] Primera instrucción real de feature (no plantilla) lista para usar `_PLANTILLA.md`
 - [ ] Marcar esta instrucción `done` con Resultado completo
 
@@ -184,7 +184,7 @@ Por cada área (mínimo 1, recomendado 2):
 
 ## Costo en tokens
 
-> Automático: `decisiones.py new` abre «Creación de la instrucción», `contexto.py` abre «Implementación» y `decisiones.py cerrar` escribe aquí la tabla por fases (análisis, instrucción, implementación, verificación, cierre) con el total. El agente marca `verificacion` y `cierre` al empezarlas: `python3 docs/scripts/costo-tokens.py fase <id> <fase>`. Guía: [costo-tokens.md](../10-guias/costo-tokens.md).
+> Automático: `decisiones.py new` abre «Creación de la instrucción», `contexto.py` abre «Implementación» y `decisiones.py cerrar` escribe aquí la tabla por fases (análisis, instrucción, implementación, verificación, cierre) con el total. El agente marca `verificacion` y `cierre` al empezarlas: `python3 uxyngraphar/scripts/costo-tokens.py fase <id> <fase>`. Guía: [costo-tokens.md](../10-guias/costo-tokens.md).
 
 <!-- tokens:inicio -->
 Pendiente: se mide al cerrar la instrucción.
@@ -207,9 +207,9 @@ Pendiente: se mide al cerrar la instrucción.
 
 ### Mejora / deuda fuera de alcance (opcional)
 
-- [ ] Ficha en `docs/45-mejoras-propuestas/01-pendientes/YYYY-MM-DD/` + `mejoras_propuestas` (máx. 3; bugs con `tipo: bug`)
+- [ ] Ficha en `uxyngraphar/45-mejoras-propuestas/01-pendientes/YYYY-MM-DD/` + `mejoras_propuestas` (máx. 3; bugs con `tipo: bug`)
 
 ### Evolución documental (opcional)
 
-- [ ] Ficha en `docs/46-evolucion-documentacion/01-pendientes/YYYY-MM-DD/` + `evolucion_documentacion` (máx. 2; solo sistema documental completo — R-18)
+- [ ] Ficha en `uxyngraphar/46-evolucion-documentacion/01-pendientes/YYYY-MM-DD/` + `evolucion_documentacion` (máx. 2; solo sistema documental completo — R-18)
 
