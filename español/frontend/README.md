@@ -5,7 +5,7 @@
 
 Pack **autosuficiente** de documentación gobernada para colaboración humano–IA en un repositorio frontend: instrucciones como contrato, presupuesto de tokens, ciclo vinculante de actos, espejo 1:1 del código, colas 45/46 y revisión de pendientes por CLI. Todo lo que el pack necesita para trabajar está **dentro de esta carpeta**; se copia a proyectos distintos y vive de forma independiente.
 
-**Versión:** `1.1.0` — fuente única: [VERSION.md](VERSION.md) · historial: [CHANGELOG.md](CHANGELOG.md).
+**Versión:** `1.2.0` — fuente única: [VERSION.md](VERSION.md) · historial: [CHANGELOG.md](CHANGELOG.md).
 
 ## Empieza aquí
 

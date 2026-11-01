@@ -4,9 +4,19 @@ Evolución versionada del pack. Este archivo **viaja dentro de cada pack**: el r
 
 Formato: una entrada por lote de cambios; origen (plan/EVO/decisión humana) siempre citado.
 
-## [Sin publicar]
+## [1.2.0] — 2026-11-01
 
-Origen: decisión humana (Uxleleaac, 2026-10-31: al levantar instancias, cerrarlas al terminar para no ralentizar el trabajo). Aplica a **ambos packs**.
+Origen: decisión humana (uxlelmar, 2026-11-01: «dejar de usar la consola de comandos y que todo se pueda gestionar, configurar, actualizar de forma sencilla, directa y rápida desde el panel visual. Que como tal el único comando que se utilice con la consola de comandos es para abrir el panel.»), ficha EVO-20261101-todo-desde-el-panel; y (Uxleleaac, 2026-10-31) cerrar las instancias que levanta el agente. Aplica a **ambos packs**. Menor: sin cambios en el texto de las reglas R-xx ni migraciones.
+
+### Un solo comando: `uxyngraphar`
+- `uxyngraphar` sin nada más abre el panel (con CI, un agente o sin escritorio sigue imprimiendo la ayuda). `uxyngraphar ayuda` lista los comandos, que siguen funcionando igual y se presentan como avanzados.
+- **Proyecto → Salud:** el doctor completo y «Arreglar» (`doctor.py --fix`) con copia de los archivos que puede tocar y aviso de lo que cambió.
+- **Proyecto → Pendientes:** instrucciones por aprobar, MEJ, EVO, propuestas, ADR y auditorías; se lee la ficha, se ve el cambio exacto y se confirma (como `decisiones.py register` + `apply`), con copia.
+- **Proyecto → Copias de seguridad** (ver diferencias, restaurar, borrar caducadas), **Memoria** (buscar, ver, recuperar, purgar), **Protecciones** (ganchos de git y propietario de CODEOWNERS) y **Reglas y fichas** (reglas del equipo, archivar fichas antiguas). Colaborar muestra exactamente qué saldría y permite enviar.
+- **Sistema:** versiones guardadas (usar otra o descargarla), añadir o quitar el comando del PATH, limpiar proyectos que ya no existen y una instalación cortada, y desinstalar.
+- Tras «Actualizar a X» el panel se reabre solo en la versión nueva (`uxyngraphar panel --fondo`).
+- Pestaña «Atajos y comandos»: el único comando, dónde está cada cosa en el panel y, plegados, los comandos para usuarios avanzados, CI y agentes. Las guías y `AGENTES.md` indican a la persona dónde hacerlo en el panel.
+- Todo con los mismos resguardos: solo en tu equipo con token, nada cambia sin una persona delante ni sin vista previa, y cada acción usa los scripts de la versión del pack de cada proyecto.
 
 ### Protocolo del agente
 - `AGENTES.md` y `00-nucleo/agentes-detalle.md`: quien arranque un servidor, un watcher u otra instancia la cierra antes de terminar el turno. Si el puerto ya está en uso, no levanta otra copia.

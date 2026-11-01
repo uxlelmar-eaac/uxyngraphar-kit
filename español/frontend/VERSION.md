@@ -1,12 +1,13 @@
 # Versión del núcleo
 
 ```yaml
-version: 1.1.0
+version: 1.2.0
 fecha: 2026-11-01
 ```
 
 ## Historial
 
+- `1.2.0` — Menor: el único comando que necesita una persona es `uxyngraphar`, que abre el panel; desde él se hace todo (salud y arreglos, aprobar pendientes, copias de seguridad, memoria, protecciones, versiones, PATH, desinstalar) y se reabre solo tras actualizar. Los comandos siguen para CI, agentes y scripts. Los agentes cierran las instancias que levantan. Sin cambios en el texto de las reglas ni migraciones. Aplica a ambos packs.
 - `1.1.0` — Menor: la carpeta del pack pasa a llamarse `uxyngraphar/` en las instalaciones nuevas (las anteriores siguen en `docs/`; moverlas es opcional con `uxyngraphar mover-carpeta`) y las frases que activan el protocolo («sigue el protocolo uxyngraphar | uxyn | uxynar») se configuran en `protocolo.alias`. Sin cambios en el texto de las reglas. Una migración automática (línea de activación en `ESTADO.md`). Aplica a ambos packs.
 - `1.0.2` — Parche: el repositorio pasa a llamarse `uxlelmar-eaac/uxyngraphar-kit` (enlaces y descargas apuntan ahí; el nombre anterior sigue redirigiendo) y «Examinar…» abre un explorador de carpetas dentro de la página en lugar del selector del sistema. Sin cambios de reglas ni de estructura del pack. Aplica a ambos packs.
 - `1.0.1` — Parche: panel más claro (configuraciones rápidas, pestaña de atajos y comandos, versión actual y actualizar con un clic), toda la documentación del kit reunida en `español/documentacion/` y consola más clara y con color (ayuda por grupos y `uxyngraphar ayuda <comando>`). Sin cambios de reglas ni de estructura del pack. Aplica a ambos packs.
