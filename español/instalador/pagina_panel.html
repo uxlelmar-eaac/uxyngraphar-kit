@@ -30,13 +30,15 @@ pre.diff{background:var(--bg);border:1px solid var(--bd);border-radius:8px;paddi
 .perfiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin:8px 0 12px}.perfil{text-align:left;display:block}.perfil small{display:block;color:var(--mut);margin-top:4px;font-size:.85rem}.perfil.on{border:2px solid var(--ac)}
 .cab{display:flex;justify-content:space-between;align-items:center;gap:8px 16px;flex-wrap:wrap}.cab h1{margin:0}#ver{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.9rem}#ver button{padding:4px 10px}
 ul.pl{padding-left:20px;margin:6px 0}code{font-size:.9em}.oculto{display:none}
+nav.tabs.sub{margin:0 0 14px}nav.tabs.sub button{padding:6px 12px;font-size:.92rem}button.on{border-color:var(--ac);box-shadow:inset 0 0 0 1px var(--ac)}
+ul.chk{list-style:none;padding:0;margin:8px 0}ul.chk li{padding:8px 0;border-bottom:1px solid var(--bd)}pre.ficha{max-height:420px;white-space:pre-wrap}
 </style>
 </head>
 <body>
 <main>
 <div class="cab"><h1>Panel de uxyngraphar</h1><div id="ver" aria-live="polite"></div></div>
 <p class="mut">Configura tus proyectos y tu equipo desde aquí. Solo funciona en tu ordenador; nada se guarda sin que veas antes qué cambia.</p>
-<nav class="tabs" aria-label="Secciones"><button data-t="bienvenida" id="tabBien" class="oculto">Bienvenida</button><button data-t="proyectos">Mis proyectos</button><button data-t="proyecto">Configuración del proyecto</button><button data-t="plantilla">Plantilla y sistema</button><button data-t="atajos">Atajos y comandos</button><button onclick="salir()" style="margin-left:auto">Cerrar</button></nav>
+<nav class="tabs" aria-label="Secciones"><button data-t="bienvenida" id="tabBien" class="oculto">Bienvenida</button><button data-t="proyectos">Mis proyectos</button><button data-t="proyecto">Proyecto</button><button data-t="plantilla">Plantilla y sistema</button><button data-t="atajos">Atajos y comandos</button><button onclick="salir()" style="margin-left:auto">Cerrar</button></nav>
 <div id="vista" aria-live="polite"></div>
 </main>
 <script>
@@ -75,7 +77,7 @@ function campos(o,plantilla){const c=[];
  c.push({g:"Copias de seguridad",d:"Antes de actualizar uxyngraphar o de limpiar fichas, se guarda una copia de los archivos que se van a tocar (en .uxyngraphar-respaldo/, fuera de git). Sirven para deshacer. Aquí decides cuánto tiempo se conservan."});
  c.push({p:"respaldos.conservar_dias",t:"num",min:0,l:"Las copias se pueden borrar a los… (días)",h:"Una copia con más días que este número puede borrarse. Ejemplo: 30 = se guardan un mes."});
  c.push({p:"respaldos.conservar_minimo",t:"num",min:0,l:"Pero conserva siempre las últimas… (copias)",h:"Estas copias, las más recientes, nunca se borran aunque superen los días de arriba. Así siempre puedes deshacer las últimas actualizaciones."});
- c.push({p:"respaldos.limpieza_automatica",t:"bool",si:"Sí, al terminar cada actualización o limpieza",l:"Borrar solas las copias que ya pasaron ese plazo",h:"Si lo desmarcas no se borra ninguna sola; las borras tú cuando quieras con «respaldos.py limpiar»."});
+ c.push({p:"respaldos.limpieza_automatica",t:"bool",si:"Sí, al terminar cada actualización o limpieza",l:"Borrar solas las copias que ya pasaron ese plazo",h:"Si lo desmarcas no se borra ninguna sola; las borras tú cuando quieras en «Copias de seguridad»."});
  c.push({g:"Memoria del sistema",d:"Las fichas terminadas (instrucciones, decisiones, propuestas) nunca se borran: con el tiempo pasan a la memoria del sistema (carpeta 95-memoria). Es un archivo que solo consultan las personas; el agente no lo lee, así no gasta su atención en trabajo viejo."});
  c.push({p:"memoria.archivadas_a_memoria_dias",t:"num",min:0,l:"Proponer guardar en la memoria las fichas archivadas a los… (días)",h:"Cuando una ficha lleva estos días archivada, la limpieza propone pasarla a la memoria. No se mueve nada sin que lo confirmes."});
  c.push({p:"memoria.listas_a_memoria_dias",t:"num",min:0,l:"Y las marcadas «para eliminar» a los… (días)",h:"Lo mismo para las fichas que alguien marcó para eliminar: en vez de borrarlas, se proponen para la memoria."});
@@ -122,36 +124,42 @@ async function decidirPath(agregar){const r=await post("/api/panel/path",{agrega
 
 // ---------- Mis proyectos ----------
 function vProyectos(){const r=S.res;if(!r){$("#vista").innerHTML=`<div class="card">Cargando…</div>`;return}
+ const act=r.proyectos.filter(p=>p.existe&&p.packs.some(k=>k.estado==="actualizable")).map(p=>p.ruta);
  let filas=r.proyectos.map(p=>!p.existe?`<tr><td><b>${esc(p.nombre)}</b><br><small class="mut">${esc(p.ruta)}</small></td><td colspan="2"><span class="et er">ya no existe</span></td><td><button onclick='quitar(${JSON.stringify(p.ruta)})'>Quitar del registro</button></td></tr>`:
   p.packs.map(k=>{const s=S.salud[p.ruta+"|"+k.docs];return `<tr><td><b>${esc(p.nombre)}</b> · <code>${esc(k.docs)}</code><br><small class="mut">${esc(p.ruta)}</small></td>
   <td>${esc(k.pack)} ${esc(k.version)}<br><span class="et ${k.estado==="al día"?"ok":"av"}">${esc(k.estado)}</span></td>
   <td>${s?(s.ok?(s.errores?`<span class="et er">${s.errores} errores</span> `:"")+(s.avisos?`<span class="et av">${s.avisos} avisos</span>`:"")+(!s.errores&&!s.avisos?`<span class="et ok">sano</span>`:""):`<span class="et er">${esc(s.error)}</span>`):`<button onclick='salud(${JSON.stringify(p.ruta)},${JSON.stringify(k.docs)})'>Revisar salud</button>`}</td>
-  <td class="fila"><button class="pri" onclick='abrirProyecto(${JSON.stringify(p.ruta)},${JSON.stringify(k.docs)})'>Configurar</button>${k.estado==="actualizable"?`<a href="/actualizar?desde=panel&ruta=${encodeURIComponent(p.ruta)}"><button>Actualizar</button></a>`:""}<button onclick='quitar(${JSON.stringify(p.ruta)})'>Quitar</button></td></tr>`}).join("")).join("");
+  <td class="fila"><button class="pri" onclick='abrirProyecto(${JSON.stringify(p.ruta)},${JSON.stringify(k.docs)},"salud")'>Abrir</button>${k.estado==="actualizable"?`<a href="/actualizar?desde=panel&ruta=${encodeURIComponent(p.ruta)}"><button>Actualizar</button></a>`:""}<button onclick='quitar(${JSON.stringify(p.ruta)})'>Quitar</button></td></tr>`}).join("")).join("");
  $("#vista").innerHTML=aviso()+`<div class="card"><h2>Mis proyectos</h2><p class="mut">Los proyectos con uxyngraphar registrados en este equipo (${esc(r.carpeta)}).</p>
  ${r.proyectos.length?`<table><thead><tr><th>Proyecto</th><th>Versión</th><th>Salud</th><th></th></tr></thead><tbody>${filas}</tbody></table>`:`<div class="aviso av">Aún no hay proyectos registrados.</div>`}
  <h3>Añadir un proyecto que ya tiene uxyngraphar</h3><div class="fila"><input type="text" id="nueva" placeholder="/ruta/a/mi-proyecto" aria-label="Carpeta del proyecto"><button onclick="examinar()">Examinar…</button><button onclick="agregar()">Añadir</button></div>
- <p style="margin-top:12px"><a href="/instalar?desde=panel"><button>Instalar uxyngraphar en un proyecto nuevo</button></a></p>${S.msg}</div>`}
+ <p class="fila" style="margin-top:12px"><a href="/instalar?desde=panel"><button>Instalar uxyngraphar en un proyecto nuevo</button></a>${act.length>1?`<a href="/actualizar?desde=panel&${act.map(x=>"ruta="+encodeURIComponent(x)).join("&")}"><button>Actualizar todos (${act.length})</button></a>`:""}</p>${S.msg}</div>`}
 async function examinar(){const r=await elegirCarpeta($("#nueva").value);if(r)$("#nueva").value=r}
 async function agregar(){const r=await post("/api/panel/agregar",{ruta:$("#nueva").value});S.msg=r.ok?`<div class="aviso ok">Añadido: ${esc(r.ruta)}</div>`:`<div class="aviso er">${esc(r.error)}</div>`;await cargar()}
 async function quitar(ruta){await post("/api/panel/quitar",{ruta});S.msg=`<div class="aviso ok">Quitado del registro (la carpeta no se toca).</div>`;await cargar()}
 async function salud(ruta,docs){S.salud[ruta+"|"+docs]=await post("/api/panel/salud",{ruta,docs});dibujar()}
 
 // ---------- Configuración de un proyecto ----------
-async function abrirProyecto(ruta,docs){S.sel={ruta,docs};S.prev=null;S.msg="";S.mov=null;S.tab="proyecto";S.cfg=await post("/api/panel/ver",{ruta,docs});dibujar()}
+// sub: salud | pendientes | config | copias | memoria | proteccion | reglas (las acciones están en panel_proyecto.html)
+async function abrirProyecto(ruta,docs,sub){const otro=!S.sel||S.sel.ruta!==ruta||S.sel.docs!==docs;S.sel={ruta,docs};S.prev=null;S.msg="";S.mov=null;S.tab="proyecto";
+ if(otro)resetP();S.sub=sub||S.sub||"salud";S.cfg=await post("/api/panel/ver",{ruta,docs});await irSub(S.sub);if(otro&&S.sub!=="pendientes")post("/api/panel/pendientes",sel()).then(r=>{P.pend=P.pend||r;dibujar()})}
 function vProyecto(){const c=S.cfg;
- if(!c){$("#vista").innerHTML=`<div class="card"><h2>Configuración del proyecto</h2><p>Elige un proyecto en «Mis proyectos» y pulsa «Configurar».</p></div>`;return}
+ if(!c){$("#vista").innerHTML=`<div class="card"><h2>Proyecto</h2><p>Elige un proyecto en «Mis proyectos» y pulsa «Abrir».</p></div>`;return}
  if(!c.ok){$("#vista").innerHTML=`<div class="aviso er">${esc(c.error)}</div>`;return}
+ const cab=`<div class="card"><h2>${esc(c.ruta.split(/[\\/]/).pop())} · <code>${esc(c.docs)}</code></h2><p class="mut"><code>${esc(c.ruta)}</code></p>${subnav()}</div>`;
+ if(S.sub!=="config"){$("#vista").innerHTML=aviso()+cab+(P.msg||"")+SUBV[S.sub]();return}
  const lista=campos(c.opciones,false),col=c.colaborar,info=S.res&&S.res.colaboracion;
- $("#vista").innerHTML=aviso()+`<div class="card"><h2>${esc(c.ruta.split(/[\\/]/).pop())} · <code>${esc(c.docs)}</code></h2>
+ $("#vista").innerHTML=aviso()+cab+`<div class="card"><h2>Configuración</h2>
  <p class="mut"><code>${esc(c.archivo)}</code>${c.existe?"":" (aún no existe: se usan los valores por defecto)"} · Guía: <code>${esc(c.guia)}</code></p>
  ${c.ilegible?`<div class="aviso er">El archivo no es JSON válido. Corrígelo a mano; mientras tanto se usan los valores por defecto.</div>`:""}
  ${c.problemas.length?`<div class="aviso er"><b>Valores inválidos ahora mismo:</b><ul class="pl">${c.problemas.map(p=>`<li>${esc(p)}</li>`).join("")}</ul></div>`:""}
  <div id="form">${formulario(lista,c.defecto,c.efectiva,"c")}</div></div>
- <div class="card"><h2>Colaborar en la mejora de uxyngraphar</h2>
+ <div class="card" id="colab"><h2>Colaborar en la mejora de uxyngraphar</h2>
  ${!col.disponible?`<p class="mut">Este proyecto tiene una versión del pack sin envío de sugerencias. Actualízalo para poder elegir.</p>`:
  `<p>Ahora: <b>${col.activo?"Sí, envío activo":col.respondido==="no"?"No":"Sin responder (cuenta como No)"}</b>${col.respondido_en?` · desde ${esc(col.respondido_en)}`:""}</p>
  ${info?`<details><summary>Qué sale y qué no</summary><p><b>Sale:</b></p><ul class="pl">${info.sale.map(x=>`<li>${esc(x)}</li>`).join("")}</ul><p><b>No sale nunca:</b></p><ul class="pl">${info.no_sale.map(x=>`<li>${esc(x)}</li>`).join("")}</ul><p class="mut">${esc(info.cuando)}</p></details>`:""}
- <div class="fila" style="margin-top:8px">${col.activo?`<button onclick="colaborar(false)">Dejar de colaborar</button><label><input type="checkbox" id="borrar"> y pedir que borren lo ya enviado</label>`:`<button onclick="colaborar(true)">Sí, quiero colaborar</button>`}</div>`}</div>
+ <div class="fila" style="margin-top:8px">${col.activo?`<button onclick="colaborar(false)">Dejar de colaborar</button><label><input type="checkbox" id="borrar"> y pedir que borren lo ya enviado</label>`:`<button onclick="colaborar(true)">Sí, quiero colaborar</button>`}<button onclick="feedback('previsualizar')">Ver qué saldría exactamente</button>${col.activo?`<button onclick="feedback('enviar')">Enviar ahora</button>`:""}</div>
+ ${P.fb?(P.fb.ok?`<p class="mut">${P.fb.nada?"No hay nada nuevo que enviar.":"Esto es exactamente lo que saldría (no se envió nada salvo que pulsaras «Enviar ahora»):"}</p>${pre(limpio(P.fb.salida))}`:msg(false,esc(P.fb.error||limpio(P.fb.salida)))):""}`}</div>
  ${tarjetaMover(c)}
  ${S.prev?vistaPrevia(S.prev):""}${S.msg}
  <div class="barra"><button onclick="abrirProyecto(S.sel.ruta,S.sel.docs)">Descartar cambios</button><button class="pri" onclick="revisar()">Revisar cambios</button></div>`;
@@ -176,7 +184,7 @@ function vistaPrevia(p){if(!p.ok)return `<div class="aviso er">${esc(p.error)}</
  return `<div class="card"><h2>Esto es lo que cambiará</h2><ul class="pl">${p.cambios.map(x=>`<li><code>${esc(x)}</code></li>`).join("")}</ul>
  ${p.problemas.length?`<div class="aviso er"><b>No se puede guardar:</b><ul class="pl">${p.problemas.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}
  <details><summary>Ver el archivo línea a línea</summary><pre class="diff">${esc(p.diff.join("\n"))}</pre></details>
- <p class="mut">Antes de escribir se guarda una copia en <code>.uxyngraphar-respaldo/</code> (se restaura con <code>respaldos.py restaurar</code>). Recuerda hacer commit del archivo.</p>
+ <p class="mut">Antes de escribir se guarda una copia en <code>.uxyngraphar-respaldo/</code> (la restauras en «Copias de seguridad»). Recuerda hacer commit del archivo.</p>
  <div class="fila"><button class="pri" ${p.problemas.length?"disabled":""} onclick="guardar()">Guardar</button></div></div>`}
 async function revisar(){const c=S.cfg;S.form=cambiosDe(campos(c.opciones,false),c.efectiva,"c");S.prev=await post("/api/panel/previsualizar",{...S.sel,cambios:S.form});S.msg="";dibujar()}
 async function guardar(){const r=await post("/api/panel/guardar",{...S.sel,cambios:S.form,huella:S.prev.huella});
@@ -285,9 +293,10 @@ async function actualizarHerr(){const u=S.ult;if(!u||!u.hay_nueva||S.actualizand
 async function salir(){await post("/api/salir");document.querySelector("main").innerHTML=`<div class="card"><h2>Panel cerrado</h2><p>Ya puedes cerrar esta pestaña. Para volver a abrirlo: <code>uxyngraphar panel</code></p></div>`}
 async function cargar(){S.res=await post("/api/panel/resumen");dibujarVer();dibujar()}
 (async()=>{const ini=await post("/api/inicio");if(ini.bienvenida){S.bien=ini.bienvenida;S.tab="bienvenida";$("#tabBien").classList.remove("oculto")}await cargar();S.pl=await post("/api/panel/plantilla");const q=new URLSearchParams(location.search);
- if(q.get("ruta"))await abrirProyecto(q.get("ruta"),q.get("docs")||"");
+ if(q.get("ruta"))await abrirProyecto(q.get("ruta"),q.get("docs")||"",q.get("sub")||"salud");
  S.ult=await post("/api/panel/ultima");dibujarVer();if(S.tab==="plantilla")dibujar()})();
 </script>
+<!--PROYECTO-->
 <!--EXPLORADOR-->
 </body>
 </html>

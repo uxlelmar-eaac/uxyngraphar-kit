@@ -13,6 +13,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 import api
+import api_acciones as acc
 import api_actualizar as act
 import api_mover
 import api_panel as panel
@@ -20,6 +21,7 @@ import explorar
 
 AQUI = Path(__file__).resolve().parent
 EXPLORADOR = AQUI / "explorador.html"   # explorador de carpetas común: se inserta donde la página tiene <!--EXPLORADOR-->
+FRAGMENTOS = {"<!--EXPLORADOR-->": EXPLORADOR, "<!--PROYECTO-->": AQUI / "panel_proyecto.html"}   # partes de página que se insertan
 PAGINAS = {"instalar": AQUI / "pagina.html", "actualizar": AQUI / "pagina_actualizar.html", "panel": AQUI / "pagina_panel.html"}
 
 
@@ -52,7 +54,30 @@ def rutas_panel() -> dict:
             "/api/panel/plantilla/aplicar": lambda b: panel.plantilla_en(list(b.get("destinos") or []), b.get("aplicar") is True),
             "/api/panel/path": lambda b: panel.decidir_path(b.get("agregar") is True),
             "/api/panel/mover/ver": lambda b: api_mover.ver(*rd(b), str(b.get("a") or "")),
-            "/api/panel/mover/aplicar": lambda b: api_mover.aplicar(*rd(b), str(b.get("a") or ""))}
+            "/api/panel/mover/aplicar": lambda b: api_mover.aplicar(*rd(b), str(b.get("a") or "")),
+            **rutas_acciones(rd)}
+
+
+def rutas_acciones(rd) -> dict:
+    """Acciones sobre un proyecto (salud, pendientes, copias, memoria, colaboración, protecciones, reglas, orden)."""
+    s = lambda b, k: str(b.get(k) or "")   # noqa: E731
+    lista = lambda b: [str(x) for x in (b.get("archivos") or [])]   # noqa: E731
+    return {"/api/panel/doctor": lambda b: acc.doctor(*rd(b)), "/api/panel/arreglar": lambda b: acc.arreglar(*rd(b)),
+            "/api/panel/pendientes": lambda b: acc.pendientes(*rd(b)), "/api/panel/ficha": lambda b: acc.ficha(*rd(b), s(b, "rel")),
+            "/api/panel/decision/previa": lambda b: acc.decision_previa(*rd(b), s(b, "id"), s(b, "accion")),
+            "/api/panel/decision/aplicar": lambda b: acc.decidir(*rd(b), s(b, "id"), s(b, "accion")),
+            "/api/panel/respaldos": lambda b: acc.respaldos(*rd(b)),
+            "/api/panel/respaldo/plan": lambda b: acc.respaldo_plan(*rd(b), s(b, "id"), lista(b)),
+            "/api/panel/respaldo/diferencia": lambda b: acc.respaldo_diferencia(*rd(b), s(b, "id"), s(b, "rel")),
+            "/api/panel/respaldo/restaurar": lambda b: acc.restaurar(*rd(b), s(b, "id"), lista(b)),
+            "/api/panel/respaldos/limpiar": lambda b: acc.limpiar_respaldos(*rd(b), b.get("aplicar") is True),
+            "/api/panel/memoria": lambda b: acc.memoria(*rd(b), s(b, "orden"), s(b, "id"), s(b, "texto"), s(b, "motivo"), s(b, "confirmar")),
+            "/api/panel/feedback": lambda b: acc.feedback(*rd(b), s(b, "orden")),
+            "/api/panel/protecciones": lambda b: acc.protecciones(*rd(b)),
+            "/api/panel/ganchos": lambda b: acc.ganchos(*rd(b), b.get("quitar") is True, b.get("pre_push") is True),
+            "/api/panel/propietario": lambda b: acc.propietario(*rd(b), s(b, "propietario"), b.get("aplicar") is True),
+            "/api/panel/reglas": lambda b: acc.reglas(*rd(b)),
+            "/api/panel/ordenar": lambda b: acc.ordenar(*rd(b), s(b, "orden"), b.get("dias") if isinstance(b.get("dias"), int) else 0, b.get("aplicar") is True)}
 
 
 def crear(token: str, apagar, modo: str = "instalar", inicial: list[str] | None = None, bienvenida: bool = False) -> type[BaseHTTPRequestHandler]:
@@ -84,7 +109,11 @@ def crear(token: str, apagar, modo: str = "instalar", inicial: list[str] | None 
             otra = PAGINAS.get(camino.strip("/")) if modo == "panel" else None   # desde el panel se abren también instalar y actualizar
             if not self._local() or (camino != "/" and otra is None):
                 return self._enviar(404, b"No encontrado", "text/plain; charset=utf-8")
-            html = (otra or pagina).read_text(encoding="utf-8").replace("<!--EXPLORADOR-->", EXPLORADOR.read_text(encoding="utf-8")).replace("__TOKEN__", token)
+            html = (otra or pagina).read_text(encoding="utf-8")
+            for marca, archivo in FRAGMENTOS.items():
+                if marca in html:
+                    html = html.replace(marca, archivo.read_text(encoding="utf-8"))
+            html = html.replace("__TOKEN__", token)
             self._enviar(200, html.encode("utf-8"), "text/html; charset=utf-8")
 
         def do_POST(self):

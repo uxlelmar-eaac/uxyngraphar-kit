@@ -1,0 +1,112 @@
+<script>
+// Acciones sobre el proyecto abierto en el panel (se inserta en pagina_panel.html): salud y arreglos, pendientes por decidir,
+// copias de seguridad, memoria, protecciones, reglas y orden de fichas. Todo pasa por una vista previa antes de cambiar nada.
+const SUBS=[["salud","Salud"],["pendientes","Pendientes"],["config","Configuración"],["copias","Copias de seguridad"],["memoria","Memoria"],["proteccion","Protecciones"],["reglas","Reglas y fichas"]];
+const P={};
+function resetP(){for(const k in P)delete P[k]}
+// La salida de los scripts trae pistas para la terminal («añade --aplicar»…): en el panel sobran.
+const limpio=t=>String(t||"").split("\n").filter(l=>!/--apply|--aplicar|respaldos\.py|feedback\.py|DOCS roots:/.test(l)).join("\n").trim();
+const pre=t=>`<pre class="diff">${esc(t)}</pre>`;
+const msg=(ok,t)=>`<div class="aviso ${ok?"ok":"er"}">${t}</div>`;
+const res=(r,ok)=>r?(r.ok?(ok||pre(limpio(r.salida)||"Hecho.")):msg(false,esc(r.error||limpio(r.salida)||"No se pudo hacer."))):"";
+const sel=()=>({ruta:S.sel.ruta,docs:S.sel.docs});
+function subnav(){const n=P.pend&&P.pend.items?P.pend.items.length:0;
+ return `<nav class="tabs sub" aria-label="Acciones del proyecto">${SUBS.map(([k,t])=>`<button class="${S.sub===k?"on":""}" onclick="irSub('${k}')">${t}${k==="pendientes"&&n?` <span class="et av">${n}</span>`:""}</button>`).join("")}</nav>`}
+async function irSub(k){S.sub=k;P.msg="";dibujar();const carga={salud:()=>P.doc||cargarSalud(),pendientes:cargarPend,copias:cargarCopias,proteccion:cargarProt,reglas:()=>P.reglas||cargarReglas()}[k];if(carga)await carga()}
+const SUBV={salud:vSalud,pendientes:vPend,copias:vCopias,memoria:vMemoria,proteccion:vProt,reglas:vReglas};
+
+// ---------- Salud ----------
+async function cargarSalud(){P.doc=null;P.fix=null;dibujar();P.doc=await post("/api/panel/doctor",sel());dibujar()}
+function vSalud(){const d=P.doc;if(!d)return `<div class="card">Revisando el proyecto…</div>`;if(!d.ok)return msg(false,esc(d.error)+(d.salida?pre(d.salida):""));
+ const n=d.cuenta,M={ERROR:["er","✕ Error"],WARN:["av","! Aviso"],INFO:["","i Info"],OK:["ok","✓"]},mal=d.chequeos.filter(c=>c.nivel!=="OK"),bien=d.chequeos.filter(c=>c.nivel==="OK");
+ return `<div class="card"><h2>Salud del proyecto</h2><p>${n.ERROR?`<span class="et er">${n.ERROR} errores</span> `:""}${n.WARN?`<span class="et av">${n.WARN} avisos</span> `:""}${!n.ERROR&&!n.WARN?`<span class="et ok">Todo en orden</span> `:""}<span class="mut">${n.OK} comprobaciones bien</span> <button onclick="cargarSalud()">Volver a revisar</button></p>
+ ${mal.length?`<ul class="chk">${mal.map(c=>`<li><span class="et ${M[c.nivel][0]}">${M[c.nivel][1]}</span> ${esc(c.mensaje)}${c.arreglo?`<br><small class="mut">→ ${esc(c.arreglo)}</small>`:""}</li>`).join("")}</ul>`:""}
+ <details><summary>Lo que está bien (${bien.length})</summary><ul class="pl">${bien.map(c=>`<li>${esc(c.mensaje)}</li>`).join("")}</ul></details></div>
+ <div class="card" id="arreglo"><h2>Arreglar lo seguro</h2><p class="mut">Antes de tocar nada se guarda una copia de los archivos que puede cambiar (la restauras en «Copias de seguridad»).</p>
+ <p><b>Qué hace:</b></p><ul class="pl">${d.que_arregla.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
+ <details><summary>Archivos que puede tocar (${d.archivos.length})</summary><ul class="pl">${d.archivos.map(x=>`<li><code>${esc(x)}</code></li>`).join("")}</ul></details>
+ ${P.fix?vFix(P.fix):""}<div class="fila" style="margin-top:8px"><button class="pri" onclick="arreglar()">Arreglar</button></div></div>`}
+function vFix(f){if(!f.ok)return msg(false,esc(f.error));
+ return msg(true,(f.cambiados.length?`Hecho. Cambió: ${f.cambiados.map(x=>`<code>${esc(x)}</code>`).join(", ")}. Copia: <code>${esc(f.respaldo)}</code>. Revisa los cambios y haz commit.`:"Hecho: no hacía falta cambiar ningún archivo.")
+  +(f.hechas.length?`<details><summary>Detalle</summary>${pre(f.hechas.join("\n"))}</details>`:""))}
+async function arreglar(){if(!confirm("¿Aplicar los arreglos seguros? Antes se guarda una copia."))return;const r=await post("/api/panel/arreglar",sel());
+ P.fix=r;if(r.ok)P.doc={...P.doc,chequeos:r.chequeos,cuenta:r.cuenta};dibujar()}
+
+// ---------- Pendientes por decidir ----------
+const TIPOS={instruccion:"Instrucción",mejora:"Mejora (45)",evolucion:"Cambio al pack (EVO)",evo:"Cambio al pack (EVO)",herramienta:"Propuesta de herramienta",propuesta:"Propuesta de herramienta",adr:"Decisión (ADR)",auditoria:"Auditoría"};
+const ACC={aprobar:"Aprobar",rechazar:"Rechazar",cancelar:"Cancelar",posponer:"Posponer",promover:"Promover",aceptar:"Aceptar",obsoleta:"Marcar obsoleta",eliminar:"Pasar a la memoria"};
+async function cargarPend(){P.pend=null;P.dec=null;dibujar();P.pend=await post("/api/panel/pendientes",sel());dibujar()}
+function vPend(){const p=P.pend;if(!p)return `<div class="card">Buscando lo que espera tu decisión…</div>`;if(!p.ok)return msg(false,esc(p.error));
+ if(!p.items.length)return `<div class="card"><h2>Pendientes</h2><div class="aviso ok">No hay nada esperando tu decisión.</div></div>`;
+ return `<div class="card"><h2>Esperan tu decisión (${p.items.length})</h2><p class="mut">Instrucciones que el agente no ejecuta sin tu aprobación, mejoras y cambios propuestos. Léela, elige y verás exactamente qué cambia antes de confirmar.</p>
+ <table><thead><tr><th>Qué</th><th>Tipo</th><th></th></tr></thead><tbody>${p.items.map((it,i)=>`<tr><td><b>${esc(it.title||it.id)}</b><br><small class="mut">${esc(it.id)} · ${esc(it.proposed_at||"sin fecha")}</small></td><td>${esc(TIPOS[it.tipo]||it.tipo)}</td><td><button class="pri" onclick="abrirFicha(${i})">Leer y decidir</button></td></tr>`).join("")}</tbody></table></div>${P.dec?vDecision():""}`}
+async function abrirFicha(i){const it=P.pend.items[i];P.dec={it,ficha:await post("/api/panel/ficha",{...sel(),rel:it.path})};dibujar();const e=$("#decision");if(e)e.scrollIntoView({block:"start"})}
+function vDecision(){const d=P.dec,it=d.it;
+ return `<div class="card" id="decision"><h2>${esc(it.title||it.id)}</h2><p class="mut"><code>${esc(d.ficha.ruta||it.path)}</code></p>
+ ${it.context?`<div class="aviso av"><b>Revisa esto antes de decidir:</b> ${esc(it.context)}</div>`:""}
+ ${d.ficha.ok?`<details open><summary>Leer la ficha</summary><pre class="diff ficha">${esc(d.ficha.texto)}</pre></details>`:msg(false,esc(d.ficha.error))}
+ <p><b>Tu decisión:</b></p><div class="fila">${(it.options||[]).map(o=>`<button class="${d.accion===o.action?"on":""}" onclick="previaDecision('${esc(o.action)}')">${esc(ACC[o.action]||o.label||o.action)}</button>`).join("")}</div>${d.prev?vPreviaDec(d):""}</div>`}
+function vPreviaDec(d){const p=d.prev;if(!p.ok)return msg(false,esc(p.error||"No se puede aplicar."));const r=(p.resultados||[])[0]||{};
+ return `<h3>Esto cambiará si eliges «${esc(ACC[d.accion]||d.accion)}»</h3>${r.note?`<p class="mut">${esc(r.note)}</p>`:""}${r.diff?pre(r.diff):`<p class="mut">No cambia el texto de la ficha.</p>`}
+ <p class="mut">Antes se guarda una copia de la ficha; si te equivocas, la restauras en «Copias de seguridad».</p><div class="fila"><button class="pri" onclick="decidir()">Confirmar: ${esc(ACC[d.accion]||d.accion)}</button></div>`}
+async function previaDecision(a){P.dec.accion=a;P.dec.prev=await post("/api/panel/decision/previa",{...sel(),id:P.dec.it.id,accion:a});dibujar()}
+async function decidir(){const d=P.dec,r=await post("/api/panel/decision/aplicar",{...sel(),id:d.it.id,accion:d.accion});
+ if(!r.ok){d.prev={ok:false,error:r.error};dibujar();return}
+ await cargarPend();P.msg=msg(true,`${esc(ACC[d.accion]||d.accion)}: ${esc(d.it.title||d.it.id)}${r.ruta_final&&r.ruta_final!==d.it.path?` (ahora en <code>${esc(r.ruta_final)}</code>)`:""}. Copia: <code>${esc(r.respaldo||"—")}</code>. Recuerda hacer commit.`);dibujar()}
+
+// ---------- Copias de seguridad ----------
+async function cargarCopias(){P.copias=null;P.rest=null;dibujar();P.copias=await post("/api/panel/respaldos",sel());dibujar()}
+function vCopias(){const c=P.copias;if(!c)return `<div class="card">Cargando copias…</div>`;if(!c.ok)return msg(false,esc(c.error));const pol=c.politica;
+ return `<div class="card"><h2>Copias de seguridad</h2><p class="mut">Se guarda una copia antes de actualizar, limpiar fichas o cambiar algo desde este panel. Restaurar deshace ese cambio (y antes guarda el estado actual: también se puede deshacer). Se conservan ${pol.conservar_dias} días y siempre las ${pol.conservar_minimo} más recientes (cámbialo en «Configuración»).</p>
+ ${c.copias.length?`<table><thead><tr><th>Cuándo</th><th>Qué</th><th></th></tr></thead><tbody>${c.copias.map((x,i)=>`<tr><td>${esc(x.fecha)}<br><small class="mut">hace ${x.dias} d${x.caducada?" · ya se puede borrar":""}</small></td><td>${esc(x.motivo||(x.version_antes?`actualización ${x.version_antes} → ${x.version_despues}`:x.origen))}<br><small class="mut">${x.archivos.length} archivo(s)${x.anadidos.length?` · ${x.anadidos.length} creado(s)`:""}</small></td><td><button onclick="planRest(${i})">Ver y restaurar</button></td></tr>`).join("")}</tbody></table>`:`<div class="aviso ok">No hay copias de seguridad.</div>`}
+ ${P.rest?vRest():""}${P.restHecho?res(P.restHecho,msg(true,"Restaurado. El estado anterior quedó en una copia nueva (arriba). Revisa los cambios y haz commit.")):""}
+ <h3>Borrar copias antiguas</h3><div class="fila"><button onclick="limpiarCopias(false)">Ver cuáles se borrarían</button>${P.limp&&P.limp.ok&&!P.limp.nada&&!P.limp.hecho?`<button class="pri" onclick="limpiarCopias(true)">Borrarlas</button>`:""}</div>${res(P.limp)}</div>`}
+async function planRest(i){const x=P.copias.copias[i];P.restHecho=null;P.rest={x,plan:await post("/api/panel/respaldo/plan",{...sel(),id:x.id}),dif:{}};dibujar();const e=$("#rest");if(e)e.scrollIntoView({block:"start"})}
+function vRest(){const {x,plan,dif}=P.rest;if(!plan.ok)return msg(false,esc(plan.error));
+ return `<div class="card" id="rest"><h3>Restaurar la copia del ${esc(x.fecha)}</h3>${plan.restaurar.length?`<p><b>Vuelven a como estaban:</b></p><ul class="pl">${plan.restaurar.map(f=>`<li><code>${esc(f)}</code> <button onclick='verDif(${JSON.stringify(f)})'>Ver diferencias</button>${dif[f]?pre(dif[f].join("\n")||"(sin diferencias)"):""}</li>`).join("")}</ul>`:""}
+ ${plan.retirar.length?`<p><b>Se retiran (los creó esa operación):</b></p><ul class="pl">${plan.retirar.map(f=>`<li><code>${esc(f)}</code></li>`).join("")}</ul>`:""}
+ <div class="fila"><button class="pri" onclick="restaurar()">Restaurar esta copia</button></div></div>`}
+async function verDif(f){const r=await post("/api/panel/respaldo/diferencia",{...sel(),id:P.rest.x.id,rel:f});P.rest.dif[f]=r.ok?r.diff:[r.error];dibujar()}
+async function restaurar(){if(!confirm("¿Restaurar esta copia? El estado actual se guarda antes en otra copia."))return;const r=await post("/api/panel/respaldo/restaurar",{...sel(),id:P.rest.x.id});await cargarCopias();P.restHecho=r;dibujar()}
+async function limpiarCopias(ap){if(ap&&!confirm("¿Borrar esas copias para siempre?"))return;const r=await post("/api/panel/respaldos/limpiar",{...sel(),aplicar:ap});if(ap)await cargarCopias();P.limp={...r,hecho:ap};dibujar()}
+
+// ---------- Memoria del sistema ----------
+function vMemoria(){return `<div class="card"><h2>Memoria del sistema</h2><p class="mut">Las fichas antiguas no se borran: pasan a la memoria (<code>95-memoria</code>). Solo la consultan personas (el agente no la lee) y cada consulta queda registrada.</p>
+ <div class="fila"><input type="text" id="memq" placeholder="Texto a buscar (vacío = todo)" aria-label="Buscar en la memoria"><button class="pri" onclick="memoria('buscar')">Buscar</button></div>${res(P.mem)}
+ <h3>Abrir o recuperar una memoria</h3><div class="fila"><input type="text" id="memid" placeholder="Id de la memoria (sale en la búsqueda)" aria-label="Id de la memoria"><button onclick="memoria('ver')">Ver</button><button onclick="memoria('recuperar')">Recuperar</button></div>
+ <details><summary>Purgar: borrar para siempre un dato sensible</summary><p class="mut">Solo si se guardó algo que no debe estar (una credencial, un dato personal). Seguirá en el historial de git. El proyecto puede prohibirlo en «Configuración».</p>
+ <div class="fila"><input type="text" id="memmot" placeholder="Motivo" aria-label="Motivo"><input type="text" id="memconf" placeholder="Repite el id para confirmar" aria-label="Repite el id"><button onclick="memoria('purgar')">Purgar</button></div></details>${res(P.mem2)}</div>`}
+async function memoria(o){const v=id=>($(id)||{}).value||"",b={...sel(),orden:o,id:v("#memid"),texto:v("#memq"),motivo:v("#memmot"),confirmar:v("#memconf")};
+ if(o==="recuperar"&&!confirm(`¿Devolver ${b.id} a su carpeta de archivadas?`))return;if(o==="purgar"&&!confirm(`¿Borrar ${b.id} para siempre?`))return;
+ const r=await post("/api/panel/memoria",b);if(o==="buscar")P.mem=r;else P.mem2=r;dibujar();$("#memq").value=b.texto;$("#memid").value=b.id}
+
+// ---------- Protecciones: ganchos de git y CODEOWNERS ----------
+const GANCHOS={"pre-commit":"Antes de cada commit: núcleo íntegro, documentación válida y controles.","commit-msg":"El mensaje del commit (Conventional Commits, R-22).","pre-push":"Antes de subir: el espejo del código (opcional)."};
+async function cargarProt(){P.prot=await post("/api/panel/protecciones",sel());dibujar()}
+function vProt(){const p=P.prot;if(!p)return `<div class="card">Cargando…</div>`;if(!p.ok)return msg(false,esc(p.error));
+ return `<div class="card"><h2>Ganchos de git</h2><p class="mut">Revisan cada commit en tu equipo, como hará el CI. Viven fuera de git (<code>${esc(p.carpeta)}</code>): cada persona los instala en su copia.</p>
+ ${p.git?`<table><tbody>${Object.entries(p.ganchos).map(([n,g])=>`<tr><td><code>${n}</code><br><small class="mut">${GANCHOS[n]}</small></td><td>${g.nuestro?`<span class="et ok">instalado</span>`:g.existe?`<span class="et av">hay otro gancho tuyo (no se toca)</span>`:`<span class="et">no instalado</span>`}</td></tr>`).join("")}</tbody></table>
+ <div class="fila" style="margin-top:8px"><button class="pri" onclick="ganchos(false,false)">Instalar o reparar</button><button onclick="ganchos(false,true)">Instalar también pre-push</button>${Object.values(p.ganchos).some(g=>g.nuestro)?`<button onclick="ganchos(true,false)">Quitar los de uxyngraphar</button>`:""}</div>`:msg(false,"Esta carpeta no es un repositorio git.")}${res(P.gan)}</div>
+ <div class="card"><h2>Quién aprueba los cambios al núcleo</h2><p class="mut">Va en <code>CODEOWNERS</code>: GitHub pide su aprobación en cada PR que toque el núcleo del pack o la configuración.</p>
+ <p>Ahora: <b>${esc(p.propietario||"nadie (sin CODEOWNERS)")}</b>${/CAMBIAR/.test(p.propietario||"")?` <span class="et av">es el de ejemplo: cámbialo</span>`:""}</p>
+ <div class="fila"><input type="text" id="dueno" placeholder="@usuario o @org/equipo" aria-label="Quién aprueba"><button onclick="duenoPrevia()">Revisar cambio</button></div>
+ ${P.due?(P.due.ok?(P.due.hecho?msg(true,`Guardado${P.due.respaldo?`. Copia: <code>${esc(P.due.respaldo)}</code>`:""}. Haz commit de CODEOWNERS.`):`<div class="aviso av">${esc(P.due.antes||"(nadie)")} → <b>${esc(P.due.despues)}</b> en ${P.due.archivos.map(x=>`<code>${esc(x)}</code>`).join(", ")} <button class="pri" onclick="duenoGuardar()">Guardar</button></div>`):msg(false,esc(P.due.error))):""}</div>
+ <div class="card"><h2>Reglas para agentes, CI y .gitignore</h2><p class="mut">Si la salud avisa de que falta alguna protección, «Arreglar» las regenera (con copia antes).</p><button onclick="irSub('salud')">Ir a Salud</button></div>`}
+async function ganchos(quitar,pre_push){if(quitar&&!confirm("¿Quitar los ganchos de uxyngraphar de esta copia del proyecto?"))return;P.gan=await post("/api/panel/ganchos",{...sel(),quitar,pre_push});await cargarProt()}
+async function duenoPrevia(){const v=$("#dueno").value;P.due=await post("/api/panel/propietario",{...sel(),propietario:v});dibujar();$("#dueno").value=v}
+async function duenoGuardar(){const r=await post("/api/panel/propietario",{...sel(),propietario:P.due.despues,aplicar:true});P.due=r.ok?{...r,hecho:true}:r;await cargarProt()}
+
+// ---------- Reglas del equipo y orden de fichas ----------
+async function cargarReglas(){P.reglas=await post("/api/panel/reglas",sel());dibujar()}
+function vReglas(){const r=P.reglas,o=P.ord;return `<div class="card"><h2>Reglas de tu equipo</h2><p class="mut">Las de <code>96-reglas-proyecto</code>. Una regla nueva o un cambio se pide al agente con una instrucción, que apruebas en «Pendientes».</p>
+ ${!r?"Cargando…":!r.ok?msg(false,esc(r.error)):pre(r.lista)+`<div class="aviso ${r.valido?"ok":"er"}">${esc(r.validar)}</div>`}</div>
+ <div class="card"><h2>Ordenar fichas antiguas</h2><p class="mut">Nunca se borra nada: las fichas solo cambian de carpeta.</p>
+ <div class="campo"><label for="darch">Archivar las completadas de más de… (días)</label><small>De <code>03-completadas</code> a <code>04-archivadas</code>.</small><div class="ctl fila"><input type="number" id="darch" min="1" value="${P.darch||90}"><button onclick="ordenar('archivar',false)">Ver cuáles</button></div></div>
+ <div class="campo"><label for="dlimp">Apartar las canceladas de más de… (días)</label><small>De <code>05-canceladas</code> a <code>06-listas-para-eliminar</code>.</small><div class="ctl fila"><input type="number" id="dlimp" min="1" value="${P.dlimp||180}"><button onclick="ordenar('limpiar',false)">Ver cuáles</button></div></div>
+ ${res(o)}${o&&o.ok&&!o.aplicado&&/candidata/.test(o.salida||"")?`<button class="pri" onclick="ordenar('${o.orden}',true)">Moverlas</button>`:""}</div>`}
+async function ordenar(orden,aplicar){P.darch=Number($("#darch").value)||90;P.dlimp=Number($("#dlimp").value)||180;
+ P.ord={...await post("/api/panel/ordenar",{...sel(),orden,dias:orden==="archivar"?P.darch:P.dlimp,aplicar}),orden,aplicado:aplicar};dibujar()}
+
+// ---------- Colaborar: qué saldría exactamente ----------
+async function feedback(orden){if(orden==="enviar"&&!confirm("¿Enviar ahora las fichas EVO nuevas o cambiadas?"))return;P.fb=await post("/api/panel/feedback",{...sel(),orden});dibujar();const e=$("#colab");if(e)e.scrollIntoView({block:"nearest"})}
+</script>
