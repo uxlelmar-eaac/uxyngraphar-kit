@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import json
 import os
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -42,7 +41,8 @@ AYUDA = {
     "panel": ("panel", "Abre el panel del navegador: tus proyectos, su configuración y tu plantilla.",
               "Abre en tu navegador (solo en tu equipo) el panel de uxyngraphar: tus proyectos con su versión y salud, "
               "la configuración de cada uno con vista previa y copia de seguridad, y tu plantilla para proyectos nuevos.",
-              [("--bienvenida", "Primera pantalla tras el instalador de una línea: qué se hizo y qué queda por decidir.")]),
+              [("--bienvenida", "Primera pantalla tras el instalador de una línea: qué se hizo y qué queda por decidir."),
+               ("--fondo", "Sin abrir el navegador ni escribir en la terminal (lo usa el propio panel para reiniciarse tras actualizar).")]),
     "instalar": ("instalar [RUTA] [opciones]", "Siembra el pack en un proyecto (sin argumentos abre la pantalla del navegador).",
                  "Siembra el pack en un proyecto y lo registra. Sin argumentos abre la pantalla del navegador; "
                  "con RUTA u opciones funciona en texto. No borra nada: lo que choque queda como *.uxyngraphar-nuevo.",
@@ -150,7 +150,7 @@ def cmd_panel(args: list[str]) -> int:
     """Panel del navegador. --bienvenida: primera pantalla tras el instalador de una línea (qué se hizo y qué decidir)."""
     import servidor
     try:
-        return servidor.servir(modo="panel", bienvenida="--bienvenida" in args)
+        return servidor.servir(modo="panel", bienvenida="--bienvenida" in args, fondo="--fondo" in args)
     except OSError as exc:
         est.error(f"No pude abrir el panel ({exc}). En texto:  uxyngraphar proyectos  ·  uxyngraphar configuracion [RUTA]")
         return 1
@@ -390,15 +390,9 @@ def cmd_desinstalar(args: list[str]) -> int:
         if r not in ("s", "si", "sí", "y", "yes"):
             print(est.dim("Sin cambios."))
             return 0
-    registro = ar.leer_registro(str(h))
-    for archivo in registro.get("lanzadores", []):
-        if os.path.isfile(archivo) and ar.es_nuestro(archivo):
-            os.remove(archivo)
-    if ar.quitar_de_perfil(registro.get("perfil", "")):
-        est.ok(f"Quité la línea del PATH de {registro['perfil']}.", "")
-    if registro.get("path_windows"):
-        ar._path_windows(registro["path_windows"], False)
-    shutil.rmtree(h, ignore_errors=True)
+    for linea in sistema.desinstalar():
+        if "PATH" in linea:
+            est.ok(linea, "")
     est.ok("uxyngraphar se desinstaló de este equipo. Los proyectos conservan su copia del pack (en uxyngraphar/, o docs/ si se instalaron antes de la 1.1.0).", "")
     return 0
 

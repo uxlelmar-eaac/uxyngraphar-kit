@@ -8,6 +8,7 @@ import secrets
 import subprocess
 import sys
 import threading
+import time
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -17,11 +18,15 @@ import api_acciones as acc
 import api_actualizar as act
 import api_mover
 import api_panel as panel
+import api_sistema as sis
 import explorar
 
 AQUI = Path(__file__).resolve().parent
 EXPLORADOR = AQUI / "explorador.html"   # explorador de carpetas común: se inserta donde la página tiene <!--EXPLORADOR-->
-FRAGMENTOS = {"<!--EXPLORADOR-->": EXPLORADOR, "<!--PROYECTO-->": AQUI / "panel_proyecto.html"}   # partes de página que se insertan
+FRAGMENTOS = {"<!--EXPLORADOR-->": EXPLORADOR, "<!--PROYECTO-->": AQUI / "panel_proyecto.html",
+              "<!--SISTEMA-->": AQUI / "panel_sistema.html"}   # partes de página que se insertan
+ESTADO = {"ultima": time.time(), "despedida": ""}   # última petición (cierre por inactividad en segundo plano) y aviso al cerrar
+INACTIVO_FONDO = 4 * 3600   # un panel en segundo plano sin pestaña que lo use se cierra solo
 PAGINAS = {"instalar": AQUI / "pagina.html", "actualizar": AQUI / "pagina_actualizar.html", "panel": AQUI / "pagina_panel.html"}
 
 
@@ -58,6 +63,19 @@ def rutas_panel() -> dict:
             **rutas_acciones(rd)}
 
 
+def rutas_sistema(apagar) -> dict:
+    """La herramienta de este equipo. Reiniciar y desinstalar cierran este servidor cuando han respondido."""
+    def cerrando(r: dict, aviso: str) -> dict:
+        if r.get("ok"):
+            ESTADO["despedida"] = aviso.format(**r)
+            apagar()
+        return r
+    return {"/api/sistema/info": lambda b: sis.info(), "/api/sistema/usar": lambda b: sis.usar(str(b.get("version") or "")),
+            "/api/sistema/path": lambda b: sis.path(b.get("agregar") is True), "/api/sistema/limpiar": lambda b: sis.limpiar(b.get("aplicar") is True),
+            "/api/sistema/reiniciar": lambda b: cerrando(sis.reiniciar(), "El panel sigue abierto con la versión {version} en {url}\n(en segundo plano: ciérralo con «Cerrar» en la página)."),
+            "/api/sistema/desinstalar": lambda b: cerrando(sis.desinstalar(str(b.get("confirmacion") or "")), "uxyngraphar se desinstaló de este equipo. Tus proyectos no se tocaron.")}
+
+
 def rutas_acciones(rd) -> dict:
     """Acciones sobre un proyecto (salud, pendientes, copias, memoria, colaboración, protecciones, reglas, orden)."""
     s = lambda b, k: str(b.get(k) or "")   # noqa: E731
@@ -86,7 +104,7 @@ def crear(token: str, apagar, modo: str = "instalar", inicial: list[str] | None 
              "/api/act/diferencia": lambda b: act.diferencia(b.get("repo", ""), b.get("docs", ""), b.get("rel", "")), "/api/act/aplicar": lambda b: act.aplicar(b.get("seleccion", []), str(b.get("colaborar", ""))), "/api/act/colaboracion": lambda b: act.info_colaboracion(),
              "/api/inspeccionar": lambda b: api.inspeccionar(b.get("ruta", "")), "/api/colaboracion": lambda b: api.info_colaboracion(), "/api/plan": api.planificar, "/api/ejecutar": lambda b: panel.registrar_instalados({**api.ejecutar(b), "siguientes": api.siguientes_pasos(b)}) if modo == "panel" else {**api.ejecutar(b), "siguientes": api.siguientes_pasos(b)},
              "/api/carpetas": lambda b: explorar.listar(str(b.get("ruta") or ""), b.get("ocultas") is True), "/api/abrir": lambda b: abrir_carpeta(b.get("ruta", "")), "/api/salir": lambda b: (apagar(), {"ok": True})[1],
-             **rutas_panel()}
+             **rutas_panel(), **rutas_sistema(apagar)}
 
     class Manejador(BaseHTTPRequestHandler):
         def log_message(self, *a):  # silencio: la consola del asistente no es para trazas HTTP
@@ -105,6 +123,7 @@ def crear(token: str, apagar, modo: str = "instalar", inicial: list[str] | None 
             self.wfile.write(cuerpo)
 
         def do_GET(self):
+            ESTADO["ultima"] = time.time()
             camino = self.path.split("?")[0]
             otra = PAGINAS.get(camino.strip("/")) if modo == "panel" else None   # desde el panel se abren también instalar y actualizar
             if not self._local() or (camino != "/" and otra is None):
@@ -117,6 +136,7 @@ def crear(token: str, apagar, modo: str = "instalar", inicial: list[str] | None 
             self._enviar(200, html.encode("utf-8"), "text/html; charset=utf-8")
 
         def do_POST(self):
+            ESTADO["ultima"] = time.time()
             if not self._local() or self.headers.get("X-Token") != token or self.path not in rutas:
                 return self._enviar(403, b"{}", "application/json")
             try:
@@ -129,7 +149,14 @@ def crear(token: str, apagar, modo: str = "instalar", inicial: list[str] | None 
     return Manejador
 
 
-def servir(abrir: bool = True, modo: str = "instalar", rutas: list[str] | None = None, bienvenida: bool = False) -> int:
+def _vigilar_inactividad(servidor: ThreadingHTTPServer) -> None:
+    while time.time() - ESTADO["ultima"] < INACTIVO_FONDO:
+        time.sleep(60)
+    servidor.shutdown()
+
+
+def servir(abrir: bool = True, modo: str = "instalar", rutas: list[str] | None = None, bienvenida: bool = False, fondo: bool = False) -> int:
+    """fondo: arrancado por otro panel (tras actualizar): sin navegador ni consola; escribe su dirección en UXYNGRAPHAR_PANEL_URL."""
     token = secrets.token_urlsafe(16)
     servidor: ThreadingHTTPServer | None = None
 
@@ -137,9 +164,16 @@ def servir(abrir: bool = True, modo: str = "instalar", rutas: list[str] | None =
         threading.Thread(target=lambda: servidor.shutdown() if servidor else None, daemon=True).start()
 
     servidor = ThreadingHTTPServer(("127.0.0.1", 0), crear(token, apagar, modo, rutas, bienvenida))
+    servidor.daemon_threads = False   # al cerrar se espera a las respuestas en curso («Cerrar», reiniciar, desinstalar)
     url = f"http://127.0.0.1:{servidor.server_address[1]}/"
-    print(f"{'Panel' if modo == 'panel' else 'Asistente'} de uxyngraphar abierto en tu navegador:\n  {url}\n\nSi no se abrió solo, copia esa dirección en el navegador.\nCuando termines, pulsa «Cerrar» en la página (o Ctrl+C aquí).")
-    if abrir:
+    if fondo:
+        aviso = os.environ.get("UXYNGRAPHAR_PANEL_URL", "")
+        if aviso:
+            Path(aviso).write_text(url + "?tab=sistema", encoding="utf-8")
+        threading.Thread(target=_vigilar_inactividad, args=(servidor,), daemon=True).start()
+    else:
+        print(f"{'Panel' if modo == 'panel' else 'Asistente'} de uxyngraphar abierto en tu navegador:\n  {url}\n\nSi no se abrió solo, copia esa dirección en el navegador.\nCuando termines, pulsa «Cerrar» en la página (o Ctrl+C aquí).")
+    if abrir and not fondo:
         webbrowser.open(url)
     try:
         servidor.serve_forever()
@@ -147,4 +181,6 @@ def servir(abrir: bool = True, modo: str = "instalar", rutas: list[str] | None =
         pass
     finally:
         servidor.server_close()
+    if ESTADO["despedida"] and not fondo:
+        print("\n" + ESTADO["despedida"])
     return 0

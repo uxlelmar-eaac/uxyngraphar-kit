@@ -38,7 +38,7 @@ ul.chk{list-style:none;padding:0;margin:8px 0}ul.chk li{padding:8px 0;border-bot
 <main>
 <div class="cab"><h1>Panel de uxyngraphar</h1><div id="ver" aria-live="polite"></div></div>
 <p class="mut">Configura tus proyectos y tu equipo desde aquí. Solo funciona en tu ordenador; nada se guarda sin que veas antes qué cambia.</p>
-<nav class="tabs" aria-label="Secciones"><button data-t="bienvenida" id="tabBien" class="oculto">Bienvenida</button><button data-t="proyectos">Mis proyectos</button><button data-t="proyecto">Proyecto</button><button data-t="plantilla">Plantilla y sistema</button><button data-t="atajos">Atajos y comandos</button><button onclick="salir()" style="margin-left:auto">Cerrar</button></nav>
+<nav class="tabs" aria-label="Secciones"><button data-t="bienvenida" id="tabBien" class="oculto">Bienvenida</button><button data-t="proyectos">Mis proyectos</button><button data-t="proyecto">Proyecto</button><button data-t="plantilla">Plantilla</button><button data-t="sistema">Sistema</button><button data-t="atajos">Atajos y comandos</button><button onclick="salir()" style="margin-left:auto">Cerrar</button></nav>
 <div id="vista" aria-live="polite"></div>
 </main>
 <script>
@@ -101,7 +101,7 @@ function formulario(lista,base,actual,pref){return lista.map((f,i)=>f.g?`<h3>${e
  `<div class="campo ${igual(get(actual,f.p),get(base,f.p))?"":"mod"}"><label for="${pref}${i}">${esc(f.l)}</label><small>${esc(f.h)}</small><div class="ctl">${control(f,get(actual,f.p),pref+i)}</div></div>`).join("")}
 function cambiosDe(lista,base,pref){const c={};lista.forEach((f,i)=>{if(f.g)return;const v=leerCampo(f,pref+i);if(v!==undefined&&!igual(v,get(base,f.p)))put(c,f.p,v)});return c}
 function tabs(){document.querySelectorAll("nav.tabs button[data-t]").forEach(b=>{b.classList.toggle("on",b.dataset.t===S.tab);b.onclick=()=>{S.tab=b.dataset.t;S.msg="";dibujar()}})}
-function dibujar(){tabs();({atajos:vAtajos,bienvenida:vBienvenida,proyectos:vProyectos,proyecto:vProyecto,plantilla:vPlantilla})[S.tab]()}
+function dibujar(){tabs();({atajos:vAtajos,bienvenida:vBienvenida,proyectos:vProyectos,proyecto:vProyecto,plantilla:vPlantilla,sistema:vSistema})[S.tab]()}
 const aviso=()=>S.res&&S.res.sin_persona?`<div class="aviso er">${esc(S.res.sin_persona)}</div>`:"";
 
 // ---------- Bienvenida (tras el comando de una línea) ----------
@@ -193,13 +193,11 @@ async function guardar(){const r=await post("/api/panel/guardar",{...S.sel,cambi
 async function colaborar(si){const b=$("#borrar");const r=await post("/api/panel/colaborar",{...S.sel,si,borrar_remoto:!!(b&&b.checked)});
  await abrirProyecto(S.sel.ruta,S.sel.docs);S.msg=`<div class="aviso ${r.ok?"ok":"er"}">${esc(r.error||(r.salida||"Hecho").trim().split("\n").pop())}</div>`;dibujar()}
 
-// ---------- Plantilla y sistema ----------
-function vPlantilla(){const r=S.res,u=S.ult,pl=S.pl;if(!r||!pl){$("#vista").innerHTML=`<div class="card">Cargando…</div>`;return}
+// ---------- Plantilla (la pestaña «Sistema» está en panel_sistema.html) ----------
+function vPlantilla(){const r=S.res,pl=S.pl;if(!r||!pl){$("#vista").innerHTML=`<div class="card">Cargando…</div>`;return}
  const base=pl.defecto,actual=JSON.parse(JSON.stringify(base));(function f(d,o){for(const k in o){if(o[k]&&typeof o[k]==="object"&&!Array.isArray(o[k])){d[k]=d[k]||{};f(d[k],o[k])}else d[k]=o[k]}})(actual,S.plBorrador||pl.plantilla);
  const lista=campos(pl.opciones,true),proy=r.proyectos.flatMap(p=>p.packs.map(k=>({ruta:p.ruta,docs:k.docs,nombre:p.nombre})));
- $("#vista").innerHTML=aviso()+`<div class="card"><h2>Sistema</h2><p>Herramienta <b>${esc(r.version)}</b> · carpeta <code>${esc(r.carpeta)}</code></p>
- <p>${estadoVersion(true)}</p>${S.actMsg||""}</div>
- <div class="card"><h2>Plantilla para tus proyectos</h2><p class="mut">Tus valores preferidos. Se aplican solos al <b>instalar</b> uxyngraphar en un proyecto nuevo. En los proyectos que ya tienes solo se aplican si tú lo pides abajo, viendo antes qué cambia. Cada proyecto sigue mandando con su propio archivo (va en git: tu equipo y el CI ven lo mismo). Lo propio de cada repositorio (tipo, carpetas de código, exenciones) y la respuesta a «colaborar» no van en la plantilla.</p>
+ $("#vista").innerHTML=aviso()+`<div class="card"><h2>Plantilla para tus proyectos</h2><p class="mut">Tus valores preferidos. Se aplican solos al <b>instalar</b> uxyngraphar en un proyecto nuevo. En los proyectos que ya tienes solo se aplican si tú lo pides abajo, viendo antes qué cambia. Cada proyecto sigue mandando con su propio archivo (va en git: tu equipo y el CI ven lo mismo). Lo propio de cada repositorio (tipo, carpetas de código, exenciones) y la respuesta a «colaborar» no van en la plantilla.</p>
  <p class="mut"><code>${esc(pl.archivo)}</code>${Object.keys(pl.plantilla).length?"":" · aún vacía: todo con los valores por defecto"}</p>
  <h3>Configuración rápida</h3><p class="mut">Elige un punto de partida: rellena el formulario de abajo. No se guarda nada hasta que revises los cambios y pulses «Guardar plantilla».</p>
  <div class="perfiles">${Object.entries(PERFILES).map(([k,x])=>`<button class="perfil ${S.plPerfil===k?"on":""}" onclick="usarPerfil('${k}')"><b>${esc(x.t)}</b><small>${esc(x.d)}</small></button>`).join("")}</div>
@@ -276,7 +274,7 @@ async function copiar(t,id){try{await navigator.clipboard.writeText(t)}catch(e){
 // ---------- Versión y actualización ----------
 function estadoVersion(largo){const u=S.ult;
  if(S.actualizando)return `<span class="et">Actualizando…</span> <span class="mut">Puede tardar un minuto.</span>`;
- if(S.actualizada)return `<span class="et ok">Versión ${esc(S.actualizada)} instalada</span>${largo?" Cierra el panel y ábrelo de nuevo para usarla.":""}`;
+ if(S.actualizada)return `<span class="et ok">Versión ${esc(S.actualizada)} instalada</span>`;
  if(!u)return `<span class="mut">Comprobando si hay versiones nuevas…</span>`;
  if(!u.ultima)return `<span class="mut">Sin conexión: no sé si hay versiones nuevas.</span>`;
  if(u.hay_nueva)return `<span class="et av">Hay una versión nueva: ${esc(u.ultima)}</span> <button class="pri" onclick="actualizarHerr()">Actualizar a ${esc(u.ultima)}</button>${largo?` <span class="mut">No cambia tus proyectos: luego los actualizas desde «Mis proyectos».</span>`:""}`;
@@ -286,17 +284,19 @@ async function actualizarHerr(){const u=S.ult;if(!u||!u.hay_nueva||S.actualizand
  if(!confirm(`¿Instalar uxyngraphar ${u.ultima}? Tus proyectos no cambian.`))return;
  S.actualizando=true;S.actMsg="";dibujarVer();dibujar();const r=await post("/api/panel/autoactualizar");S.actualizando=false;
  const det=r.salida?`<details><summary>Ver lo que hizo</summary><pre class="diff">${esc(r.salida)}</pre></details>`:"";
- if(r.ok){S.actualizada=u.ultima;S.actMsg=`<div class="aviso ok">Listo: uxyngraphar ${esc(u.ultima)} está instalado. Este panel sigue con la versión anterior: ciérralo y vuelve a abrirlo con <code>uxyngraphar panel</code>. Tus proyectos no han cambiado; actualízalos desde «Mis proyectos» cuando quieras.${det}</div>`}
- else S.actMsg=`<div class="aviso er">${esc(r.error||"No se pudo actualizar.")}${det}</div>`;
- S.msg=S.tab==="plantilla"?"":S.actMsg;dibujarVer();dibujar()}
+ if(r.ok){S.actualizada=u.ultima;S.actMsg=`<div class="aviso ok">Listo: uxyngraphar ${esc(u.ultima)} está instalado. Tus proyectos no han cambiado; actualízalos desde «Mis proyectos» cuando quieras.${det}</div>`;dibujarVer();return reiniciarPanel()}
+ S.actMsg=`<div class="aviso er">${esc(r.error||"No se pudo actualizar.")}${det}</div>`;
+ S.msg=S.tab==="sistema"?"":S.actMsg;dibujarVer();dibujar()}
 
 async function salir(){await post("/api/salir");document.querySelector("main").innerHTML=`<div class="card"><h2>Panel cerrado</h2><p>Ya puedes cerrar esta pestaña. Para volver a abrirlo: <code>uxyngraphar panel</code></p></div>`}
 async function cargar(){S.res=await post("/api/panel/resumen");dibujarVer();dibujar()}
-(async()=>{const ini=await post("/api/inicio");if(ini.bienvenida){S.bien=ini.bienvenida;S.tab="bienvenida";$("#tabBien").classList.remove("oculto")}await cargar();S.pl=await post("/api/panel/plantilla");const q=new URLSearchParams(location.search);
+(async()=>{const ini=await post("/api/inicio"),q=new URLSearchParams(location.search);if(ini.bienvenida){S.bien=ini.bienvenida;S.tab="bienvenida";$("#tabBien").classList.remove("oculto")}
+ else if(["proyectos","plantilla","sistema","atajos"].includes(q.get("tab")))S.tab=q.get("tab");await cargar();S.pl=await post("/api/panel/plantilla");
  if(q.get("ruta"))await abrirProyecto(q.get("ruta"),q.get("docs")||"",q.get("sub")||"salud");
- S.ult=await post("/api/panel/ultima");dibujarVer();if(S.tab==="plantilla")dibujar()})();
+ S.ult=await post("/api/panel/ultima");dibujarVer();if(S.tab==="sistema")dibujar()})();
 </script>
 <!--PROYECTO-->
+<!--SISTEMA-->
 <!--EXPLORADOR-->
 </body>
 </html>

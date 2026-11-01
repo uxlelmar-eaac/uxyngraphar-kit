@@ -10,6 +10,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import shutil
 import tempfile
 from pathlib import Path
 
@@ -119,3 +120,23 @@ def guardar_plantilla(plantilla: dict) -> dict:
     elif archivo.is_file():
         archivo.unlink()
     return {"ok": True, "problemas": [], "archivo": str(archivo), "plantilla": plantilla}
+
+
+# ---------- quitar la herramienta de este equipo ----------
+
+def desinstalar() -> list[str]:
+    """Borra la carpeta de la herramienta, el comando y la línea del PATH. Los proyectos no se tocan. Devuelve qué se hizo."""
+    h, hecho = home(), []
+    registro = ar.leer_registro(str(h))
+    for archivo in registro.get("lanzadores", []):
+        if os.path.isfile(archivo) and ar.es_nuestro(archivo):
+            os.remove(archivo)
+            hecho.append(f"Quité el comando {archivo}.")
+    if ar.quitar_de_perfil(registro.get("perfil", "")):
+        hecho.append(f"Quité la línea del PATH de {registro['perfil']}.")
+    if registro.get("path_windows"):
+        ar._path_windows(registro["path_windows"], False)
+        hecho.append(f"Quité {registro['path_windows']} de tu PATH de usuario.")
+    shutil.rmtree(h, ignore_errors=True)
+    hecho.append(f"Borré {h}.")
+    return hecho

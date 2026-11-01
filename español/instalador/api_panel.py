@@ -82,22 +82,30 @@ def ultima() -> dict:
     return {"ok": True, "ultima": v, "propia": propia, "hay_nueva": bool(v) and sistema.tupla(v) > sistema.tupla(propia)}
 
 
+def ejecutar_herramienta(args: list[str]) -> dict:
+    """Ejecuta un comando de la herramienta (p. ej. autoactualizar) sin abrir otra ventana del navegador."""
+    orden = [sys.executable, str(sistema.ES / "uxyngraphar.py"), *args]
+    entorno = {**os.environ, "UXYNGRAPHAR_CONSOLA": "1", "PYTHONIOENCODING": "utf-8"}
+    try:
+        r = subprocess.run(orden, capture_output=True, text=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL, env=entorno, timeout=600)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return {"ok": False, "error": f"No se pudo completar: {exc}"}
+    salida = (r.stdout + r.stderr).strip()
+    if r.returncode != 0:
+        return {"ok": False, "error": "No se pudo completar. Tu versión actual sigue funcionando.", "salida": salida}
+    return {"ok": True, "salida": salida}
+
+
 def autoactualizar() -> dict:
     """Instala la última versión de la herramienta (lo mismo que «uxyngraphar autoactualizar»). No toca ningún proyecto."""
     motivo = persona_presente()
     if motivo:
         return {"ok": False, "error": motivo}
     antes = sistema.version_herramienta()
-    orden = [sys.executable, str(sistema.ES / "uxyngraphar.py"), "autoactualizar"]
-    entorno = {**os.environ, "UXYNGRAPHAR_CONSOLA": "1"}   # sin abrir otra ventana del navegador
-    try:
-        r = subprocess.run(orden, capture_output=True, text=True, stdin=subprocess.DEVNULL, env=entorno, timeout=600)
-    except (OSError, subprocess.TimeoutExpired) as exc:
-        return {"ok": False, "error": f"No se pudo actualizar: {exc}", "antes": antes}
-    salida = (r.stdout + r.stderr).strip()
-    if r.returncode != 0:
-        return {"ok": False, "error": "La actualización falló. Tu versión actual sigue funcionando.", "salida": salida, "antes": antes}
-    return {"ok": True, "salida": salida, "antes": antes}
+    r = ejecutar_herramienta(["autoactualizar"])
+    if not r["ok"] and "salida" in r:
+        r["error"] = "La actualización falló. Tu versión actual sigue funcionando."
+    return {**r, "antes": antes, "reiniciable": r["ok"]}
 
 
 def agregar(ruta: str) -> dict:
