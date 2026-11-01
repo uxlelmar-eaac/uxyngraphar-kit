@@ -18,9 +18,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
+import sys
+
 import clasificacion as cl
 import lock
 from transaccion import Transaccion
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "control"))
+import uxyngraphar_config as cfgmod  # noqa: E402
 
 
 class Contexto:
@@ -79,9 +84,20 @@ class Migracion:
     aplicar: Callable[[Contexto], list[str]]   # devuelve qué hizo, en frases cortas; [] si no había nada que hacer
 
 
-# Registro en orden de versión. Vacío en la línea base 1.0.0: la primera versión publicada ya instala todo en su
-# forma final (memoria fuera del alcance de la IA, 96-reglas-proyecto, sección reglas_proyecto…), así que no hay nada
-# que migrar. La primera migración llegará con la versión que cambie algo ya instalado.
+def _activacion_en_estado(ctx: Contexto) -> list[str]:
+    """1.1.0: las frases que activan el protocolo (protocolo.alias) se muestran en ESTADO.md, que el agente lee al empezar."""
+    texto = ctx.leer("ESTADO.md")
+    if texto is None:
+        return []
+    cfg = cfgmod._fusionar(cfgmod.por_defecto(), ctx.config() or {})
+    nuevo = cfgmod.con_activacion(texto, cfg)
+    if nuevo == texto:
+        return []
+    ctx.escribir("ESTADO.md", nuevo)
+    return ["ESTADO.md: añadida la línea con las frases que activan el protocolo («sigue el protocolo …»)"]
+
+
+# Registro en orden de versión. 1.0.x no tenía migraciones: la primera versión publicada ya instalaba todo en su forma final.
 REGISTRO: list[Migracion] = []
 
 

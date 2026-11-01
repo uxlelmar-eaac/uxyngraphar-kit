@@ -87,6 +87,16 @@ class TestProyecto(Base):
         self.assertTrue(panel.guardar(str(self.repo), "docs", {"reglas_proyecto": {"cambios_reglas": "solo_humano"}}, self.huella())["ok"])
         self.assertIn("Edit(docs/96-reglas-proyecto/**)", (self.repo / ".claude" / "settings.json").read_text())
 
+    def test_frases_de_activacion(self):
+        (self.repo / "docs" / "ESTADO.md").write_text("# ESTADO\n")
+        self.assertTrue(panel.ver(str(self.repo), "docs")["opciones"]["protocolo"])
+        self.assertFalse(panel.guardar(str(self.repo), "docs", {"protocolo": {"alias": ["uxyn", "UXYN"]}}, self.huella())["ok"])
+        r = panel.guardar(str(self.repo), "docs", {"protocolo": {"alias": ["uxyn", "del sistema"]}}, self.huella())
+        self.assertTrue(r["ok"], r)
+        self.assertEqual(self.config()["protocolo"], {"alias": ["uxyn", "del sistema"]})
+        self.assertIn("«sigue el protocolo uxyn | del sistema»", (self.repo / "docs" / "ESTADO.md").read_text())
+        self.assertEqual(sistema.filtrar_plantilla({"protocolo": {"alias": ["uxyn"], "otra": 1}}), {"protocolo": {"alias": ["uxyn"]}})
+
     def test_colaborar_si_y_no(self):
         self.assertTrue(panel.colaborar(str(self.repo), "docs", True)["ok"])
         self.assertTrue(self.config()["feedback"]["activo"])

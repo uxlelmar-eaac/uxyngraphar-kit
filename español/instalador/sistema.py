@@ -21,7 +21,7 @@ ARCHIVO_PLANTILLA = "plantilla-config.json"
 # repositorio (rol, pila, carpetas de código, exenciones) y el consentimiento de «colaborar» nunca van en la plantilla.
 CLAVES_PLANTILLA = {
     "niveles": None, "limite_lineas": None, "respaldos": None, "memoria": None, "reglas_proyecto": None,
-    "idioma": ("conversacion", "commits", "ramas"), "feedback": ("ocultar",),
+    "idioma": ("conversacion", "commits", "ramas"), "feedback": ("ocultar",), "protocolo": ("alias",),
 }
 
 

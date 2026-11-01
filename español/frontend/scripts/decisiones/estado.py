@@ -7,6 +7,8 @@ import re
 from datetime import date, datetime, timezone
 from pathlib import Path
 
+import sys
+
 from common import resolve_docs_roots
 from metricas import fichas
 
@@ -59,6 +61,9 @@ def cmd_estado(args: argparse.Namespace) -> int:
     bloque = generar(docs)
     if args.escribir:
         print(f"ESTADO.md actualizado: {escribir(docs, bloque)}")
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "control"))
+        import uxyngraphar_config as cfgmod
+        cfgmod.escribir_activacion(docs)   # frases que activan el protocolo (protocolo.alias)
     else:
         print(bloque)
     return 0

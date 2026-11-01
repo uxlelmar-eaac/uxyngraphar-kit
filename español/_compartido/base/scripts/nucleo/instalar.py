@@ -100,6 +100,7 @@ def instalar(pack: Path, repo: Path, docs: str = "docs", perfil: str = "completo
         if estricto:
             cfg["niveles"] = {k: "bloqueante" for k in cfg["niveles"]}
         cfgmod.escribir(repo, docs, cfg)
+        cfgmod.escribir_activacion(repo / docs, cfgmod.cargar(repo, docs)[0])
         lock.escribir(repo, docs, {"formato": lock.FORMATO, "pack": lock.tipo_pack(pack), "version": res.version, "perfil": perfil,
                                    "docs": docs, "instalado": date.today().isoformat(), "fuente": lock.etiqueta_fuente(fuente, res.version), "archivos": inv})
     return res

@@ -55,6 +55,7 @@ python3 docs/scripts/doctor.py       # chequeo «control» (En Windows: py -3 en
 | `memoria.listas_a_memoria_dias` | `30` | Días en `06-listas-para-eliminar` antes de proponerlo. |
 | `memoria.permitir_purgar` | `true` | `false` impide el borrado definitivo (`memoria.py purgar`). Detalle: [memoria.md](memoria.md). |
 | `reglas_proyecto` | `excepciones: en_instruccion`, `cambios_reglas: instruccion_aprobada` | Reglas del proyecto (`96-reglas-proyecto/`). `excepciones`: `en_instruccion` (declarada en la instrucción, aprobada al aprobarla), `ficha_aparte` (además una ficha `EX-*.md` aprobada por una persona) o `prohibidas`. `cambios_reglas`: `instruccion_aprobada` (el agente crea o cambia reglas solo con una instrucción aprobada que las ancle) o `solo_humano` (reglas deny: el agente no puede tocarlas). El control se gradúa con `niveles.reglas_proyecto` (por defecto `bloqueante`). |
+| `protocolo.alias` | `["uxyngraphar", "uxyn", "uxynar"]` | Frases que activan el protocolo: un pedido que termina en «sigue el protocolo <frase>» pide el flujo de `AGENTES.md`. Lista de 1 a N frases, cada una de 1 a 40 caracteres, sin repetir (sin distinguir mayúsculas). Ejemplos: `del sistema`, el nombre de tu equipo. El agente no lee este archivo al empezar: las ve en la línea «Activación» de `ESTADO.md`, que se pone al día al instalar, al guardar desde el panel, con `decisiones.py estado --escribir` y con `doctor.py --fix`. Consulta rápida: `contexto.py --activacion`. |
 | `feedback` | apagado | Envío voluntario de sugerencias (R-25): `activo`, `url`, `consentimiento`, `id_instalacion`, `respondido` (`""`, `"si"`, `"no"`), `respondido_en` y `origen` (**no se editan a mano**: los escriben la pregunta del instalador/actualizador, `feedback.py activar` y `revocar`) y `ocultar` (nombres que se quitan antes de enviar: cliente, producto, empresa; este sí lo editas tú); `activo: true` sin consentimiento es inválido. Detalle: [envio-sugerencias.md](envio-sugerencias.md). |
 
 Controles y nivel por defecto: `lineas` aviso · `instruccion` aviso · `secretos` bloqueante · `nucleo` bloqueante · `espejo` aviso · `idioma` aviso · `commits` aviso · `memoria` bloqueante · `reglas_proyecto` bloqueante. Qué revisa cada uno: [control-de-construccion.md](control-de-construccion.md).
@@ -66,7 +67,8 @@ Ejemplo mínimo (solo lo que cambia respecto a los valores por defecto):
   "niveles": {"lineas": "bloqueante", "idioma": "bloqueante"},
   "exenciones_lineas": ["src/legacy/**"],
   "idioma": {"conversacion": "es", "legacy": ["src/legacy/**"]},
-  "respaldos": {"conservar_dias": 60}
+  "respaldos": {"conservar_dias": 60},
+  "protocolo": {"alias": ["uxyn", "del sistema"]}
 }
 ```
 

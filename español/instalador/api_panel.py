@@ -26,6 +26,7 @@ EDITABLES = {
     "rol": None, "limite_lineas": None, "niveles": None, "exenciones_lineas": None, "secretos_permitir": None,
     "respaldos": None, "memoria": None, "reglas_proyecto": None, "codigo": ("raices", "extensiones", "excluir"),
     "idioma": ("conversacion", "commits", "ramas", "glosario", "excluir", "legacy", "locales"), "feedback": ("ocultar",),
+    "protocolo": ("alias",),
 }
 
 
@@ -191,7 +192,8 @@ def ver(ruta: str, docs: str) -> dict:
     return {"ok": True, "ruta": str(repo), "docs": docs, "archivo": str(archivo), "existe": archivo.is_file(), "huella": _huella(texto),
             "ilegible": crudo is None, "efectiva": efectiva, "problemas": problemas, "defecto": cfgmod.por_defecto(efectiva.get("rol", "servidor")),
             "opciones": {"niveles": list(cfgmod.NIVELES), "controles": list(cfgmod.CONTROLES),
-                         "excepciones": list(getattr(cfgmod, "MODOS_EXCEPCION", ())), "cambios_reglas": list(getattr(cfgmod, "MODOS_CAMBIO_REGLAS", ()))},
+                         "excepciones": list(getattr(cfgmod, "MODOS_EXCEPCION", ())), "cambios_reglas": list(getattr(cfgmod, "MODOS_CAMBIO_REGLAS", ())),
+                         "protocolo": hasattr(cfgmod, "ALIAS_DEFECTO")},
             "colaborar": {"activo": bool(fb.get("activo")), "respondido": fb.get("respondido", ""), "respondido_en": fb.get("respondido_en", ""),
                           "url": fb.get("url", ""), "disponible": (repo / docs / "scripts" / "feedback.py").is_file()},
             "guia": f"{docs}/10-guias/configuracion-uxyngraphar.md"}
@@ -240,6 +242,13 @@ def _proteger_reglas(repo: Path, docs: str) -> None:
     subprocess.run([sys.executable, "-c", codigo, str(scripts), str(repo), docs], capture_output=True, timeout=60)
 
 
+def _activacion(repo: Path, docs: str) -> None:
+    """Pone al día en ESTADO.md las frases que activan el protocolo (con la versión del pack del proyecto; las antiguas no las tienen)."""
+    codigo = ("import sys; sys.path[:0] = [sys.argv[1] + '/control']; import uxyngraphar_config as c; from pathlib import Path; "
+              "getattr(c, 'escribir_activacion', None) and c.escribir_activacion(Path(sys.argv[2]))")
+    subprocess.run([sys.executable, "-c", codigo, str(repo / docs / "scripts"), str(repo / docs)], capture_output=True, timeout=60)
+
+
 def guardar(ruta: str, docs: str, cambios: dict, huella: str, respaldar: bool = True) -> dict:
     motivo = persona_presente()
     if motivo:
@@ -260,6 +269,7 @@ def guardar(ruta: str, docs: str, cambios: dict, huella: str, respaldar: bool = 
     tmp.replace(p["archivo"])
     if (p["despues"].get("reglas_proyecto") or {}).get("cambios_reglas") == "solo_humano":
         _proteger_reglas(p["repo"], docs)
+    _activacion(p["repo"], docs)
     return {"ok": True, "respaldo": respaldo, "cambios": p["cambios"], "archivo": str(p["archivo"])}
 
 
@@ -283,7 +293,8 @@ def ver_plantilla() -> dict:
     cfgmod = sistema.modulo_config()
     return {"ok": True, "plantilla": sistema.leer_plantilla(), "defecto": cfgmod.por_defecto(), "archivo": str(sistema.home() / sistema.ARCHIVO_PLANTILLA),
             "opciones": {"niveles": list(cfgmod.NIVELES), "controles": list(cfgmod.CONTROLES),
-                         "excepciones": list(cfgmod.MODOS_EXCEPCION), "cambios_reglas": list(cfgmod.MODOS_CAMBIO_REGLAS)}}
+                         "excepciones": list(cfgmod.MODOS_EXCEPCION), "cambios_reglas": list(cfgmod.MODOS_CAMBIO_REGLAS),
+                         "protocolo": hasattr(cfgmod, "ALIAS_DEFECTO")}}
 
 
 def guardar_plantilla(plantilla: dict) -> dict:

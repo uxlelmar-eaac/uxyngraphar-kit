@@ -63,6 +63,50 @@ class TestConfig(unittest.TestCase):
         self.assertIsNone(cfg.escribir(self.repo, "docs", c))
 
 
+class TestProtocolo(unittest.TestCase):
+    def test_alias_por_defecto_validos_y_linea(self):
+        c = cfg.por_defecto()
+        self.assertEqual((cfg.alias_protocolo(c), cfg.validar(c)), (["uxyngraphar", "uxyn", "uxynar"], []))
+        self.assertIn("«sigue el protocolo uxyngraphar | uxyn | uxynar»", cfg.linea_activacion(c))
+
+    def test_alias_invalidos(self):
+        for malo, texto in (([], "al menos una"), (["uxyn", "UXYN"], "repetida"), ([""], "no vale"), (["x" * 41], "no vale"),
+                            (["a\nb"], "no vale"), ([3], "no vale"), ("uxyn", "al menos una")):
+            c = {**cfg.por_defecto(), "protocolo": {"alias": malo}}
+            self.assertTrue(any(texto in e for e in cfg.validar(c)), (malo, cfg.validar(c)))
+            self.assertEqual(cfg.alias_protocolo(c), cfg.ALIAS_DEFECTO)   # mal configurado: valen las de por defecto
+
+    def test_la_lista_del_proyecto_reemplaza_la_de_por_defecto(self):
+        with tempfile.TemporaryDirectory() as t:
+            (Path(t) / "docs").mkdir()
+            (Path(t) / "docs" / cfg.NOMBRE).write_text(json.dumps({"protocolo": {"alias": [" del sistema ", "uxyn"]}}))
+            c, p = cfg.cargar(Path(t))
+            self.assertEqual((p, cfg.alias_protocolo(c)), ([], ["del sistema", "uxyn"]))
+
+    def test_activacion_en_estado_es_idempotente_y_no_toca_lo_demas(self):
+        with tempfile.TemporaryDirectory() as t:
+            d = Path(t)
+            self.assertFalse(cfg.escribir_activacion(d))   # sin ESTADO.md no hace nada
+            (d / "ESTADO.md").write_text("# ESTADO\n\nTexto propio.\n")
+            self.assertTrue(cfg.escribir_activacion(d))
+            texto = (d / "ESTADO.md").read_text()
+            self.assertTrue(texto.startswith("# ESTADO\n\n" + cfg.ACT_INI) and texto.endswith("Texto propio.\n"))
+            self.assertFalse(cfg.escribir_activacion(d))
+            (d / cfg.NOMBRE).write_text(json.dumps({"protocolo": {"alias": ["del sistema"]}}))
+            self.assertTrue(cfg.escribir_activacion(d))
+            texto = (d / "ESTADO.md").read_text()
+            self.assertEqual(texto.count(cfg.ACT_INI), 1)
+            self.assertIn("«sigue el protocolo del sistema»", texto)
+            self.assertIn("Texto propio.", texto)
+
+    def test_contexto_activacion(self):
+        with tempfile.TemporaryDirectory() as t:
+            (Path(t) / "docs").mkdir()
+            (Path(t) / "docs" / cfg.NOMBRE).write_text(json.dumps({"protocolo": {"alias": ["uxyn"]}}))
+            r = subprocess.run([sys.executable, str(AQUI.parent / "contexto.py"), "--activacion", "--repo", t], capture_output=True, text=True, encoding="utf-8")
+            self.assertEqual((r.returncode, r.stdout.strip()), (0, cfg.linea_activacion({"protocolo": {"alias": ["uxyn"]}})))
+
+
 class TestPuerta(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()

@@ -169,6 +169,19 @@ def configuracion(repo: Path, docs: str) -> list[Chequeo]:
     return [_c("config", "OK", "configuracion-proyecto.md rellena")] if not pend else [_c("config", "WARN", f"configuracion-proyecto.md con placeholders sin rellenar: {', '.join(pend)}", "Rellena nombre, repositorio y rutas de código")]
 
 
+def activacion(repo: Path, docs: str) -> list[Chequeo]:
+    """ESTADO.md muestra las frases de protocolo.alias (el agente no lee la configuración al empezar)."""
+    f = repo / docs / "ESTADO.md"
+    if not f.is_file():
+        return []
+    cfg = cfgmod.cargar(repo, docs)[0]
+    texto = f.read_text(encoding="utf-8")
+    if cfgmod.con_activacion(texto, cfg) == texto:
+        return [_c("activacion", "OK", "Frases de activación: «sigue el protocolo " + " | ".join(cfgmod.alias_protocolo(cfg)) + "»")]
+    return [_c("activacion", "WARN", "ESTADO.md no muestra las frases de activación actuales (protocolo.alias)",
+               f"doctor.py --fix, o python3 {docs}/scripts/decisiones/decisiones.py estado --escribir")]
+
+
 def control(repo: Path, docs: str) -> list[Chequeo]:
     if not (repo / docs / cfgmod.NOMBRE).is_file():
         return [_c("control", "INFO", f"Sin {cfgmod.NOMBRE}: la puerta de control usa valores por defecto", "instalar-pack.py lo genera; o créalo (10-guias/control-de-construccion.md)")]
@@ -283,7 +296,7 @@ def diagnosticar(repo: Path, docs: str = "docs", pack: Path | None = None, hoy: 
     if not (repo / docs).is_dir():
         return resultado + [_c("docs", "ERROR", f"No existe {docs}/ en {repo}", "instalar-pack.py")]
     for paso in (lambda: estado_lock(repo, docs), lambda: raiz_agentes(repo, docs), lambda: integridad(repo, docs, pack), lambda: proteccion_activa(repo, docs),
-                 lambda: gitignore(repo, docs), lambda: servidor(repo, docs), lambda: estructura(repo, docs), lambda: configuracion(repo, docs), lambda: control(repo, docs), lambda: secretos(repo, docs), lambda: memoria(repo, docs), lambda: ajustes(repo, docs), lambda: reglas_proyecto(repo, docs), lambda: residuos(repo, docs, hoy),
+                 lambda: gitignore(repo, docs), lambda: servidor(repo, docs), lambda: estructura(repo, docs), lambda: configuracion(repo, docs), lambda: activacion(repo, docs), lambda: control(repo, docs), lambda: secretos(repo, docs), lambda: memoria(repo, docs), lambda: ajustes(repo, docs), lambda: reglas_proyecto(repo, docs), lambda: residuos(repo, docs, hoy),
                  lambda: colas(repo, docs, hoy)):
         resultado += paso()
     return resultado
@@ -310,6 +323,8 @@ def arreglar(repo: Path, docs: str) -> list[str]:
         if dueno:   # el bloque de CODEOWNERS existe: se regenera para incluir lo nuevo que protege el pack
             proteccion.codeowners(repo, docs, dueno)
             hechas.append("CODEOWNERS regenerado" + (" (sigue con el propietario de ejemplo)" if "CAMBIAR" in dueno else ""))
+    if cfgmod.escribir_activacion(repo / docs, cfgmod.cargar(repo, docs)[0]):
+        hechas.append("ESTADO.md: frases de activación al día")
     if not ci._ejecuta_uxyngraphar(repo):
         hechas.append(f"CI creado: {ci.workflow(repo, docs)[0].relative_to(repo).as_posix()}")
     try:

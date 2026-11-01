@@ -4,6 +4,7 @@ Punto de entrada. Lee **solo esto** (+ `docs/ESTADO.md`). Detalle bajo demanda: 
 
 ## Flujo
 (`docs/` = la carpeta junto a este archivo; en un monorepo, la de tu app.)
+Un pedido que termina en «sigue el protocolo <frase>» pide este flujo (por defecto: uxyngraphar, uxyn, uxynar; las del proyecto, en la línea «Activación» de `docs/ESTADO.md`), aunque la frase llegue con otra grafía.
 1. ¿Hay ficha `docs/35-herramientas/autorizadas/<id>.md` con `status: authorized` que cubra el pedido? → ejecútala (solo ficha + anclas).
 2. Si no: pedido vago o nuevo → crea la instrucción `awaiting_approval` (`python3 docs/scripts/decisiones/decisiones.py new instruccion --slug <slug>`) y **espera aprobación**. Sin `status: approved` no se edita código ni docs.
 3. Con instrucción aprobada: `python3 docs/scripts/contexto.py <id>` imprime todo lo necesario (ficha, lectura mínima, anclas con rango). **No abras nada más.**

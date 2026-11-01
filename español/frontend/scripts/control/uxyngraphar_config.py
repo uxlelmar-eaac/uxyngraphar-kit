@@ -45,6 +45,9 @@ IDIOMA_DEFECTO = {
     "ramas": "",                   # regex de nombres de rama; vacío = tipo/alcance-descripcion (control/idioma.py)
 }
 # Pistas de cliente (UI); el resto de pilas se asume servidor.
+# Frases que activan el protocolo: «sigue el protocolo <alias>» al final de un pedido (10-guias/configuracion-uxyngraphar.md).
+ALIAS_DEFECTO = ["uxyngraphar", "uxyn", "uxynar"]
+ALIAS_MAX = 40
 PISTAS_CLIENTE = ("react", "vue", "svelte", "next", "angular", "expo", "react-native", "electron", "flutter", "@ionic", "vite")
 
 
@@ -60,6 +63,7 @@ def por_defecto(rol: str = "servidor") -> dict:
         "niveles": {"lineas": "aviso", "instruccion": "aviso", "secretos": "bloqueante", "nucleo": "bloqueante", "espejo": "aviso",
                     "idioma": "aviso", "commits": "aviso", "memoria": "bloqueante", "reglas_proyecto": "bloqueante"},
         "idioma": json.loads(json.dumps(IDIOMA_DEFECTO)),
+        "protocolo": {"alias": list(ALIAS_DEFECTO)},
         "respaldos": {"conservar_dias": 30, "conservar_minimo": 3, "limpieza_automatica": True},
         "memoria": {"archivadas_a_memoria_dias": 180, "listas_a_memoria_dias": 30, "permitir_purgar": True},   # R-24
         # Reglas del proyecto: excepción declarada en la instrucción aprobada; cambios de reglas solo con instrucción aprobada.
@@ -102,6 +106,7 @@ def validar(cfg: dict) -> list[str]:
     if not isinstance(mem.get("permitir_purgar"), bool):
         errores.append("memoria.permitir_purgar: true o false")
     errores += _validar_feedback(cfg.get("feedback"))
+    errores += _validar_protocolo(cfg.get("protocolo"))
     rp = cfg.get("reglas_proyecto", {})
     if not isinstance(rp, dict):
         errores.append("reglas_proyecto: debe ser un objeto")
@@ -131,6 +136,67 @@ def validar(cfg: dict) -> list[str]:
     if cfg.get("rol") not in ("servidor", "cliente"):
         errores.append("rol: 'servidor' o 'cliente'")
     return errores
+
+
+def _validar_protocolo(p: object) -> list[str]:
+    if not isinstance(p, dict):
+        return ["protocolo: debe ser un objeto"]
+    alias = p.get("alias")
+    if not isinstance(alias, list) or not alias:
+        return ["protocolo.alias: lista con al menos una frase (p. ej. [\"uxyngraphar\", \"uxyn\"])"]
+    errores, vistos = [], set()
+    for a in alias:
+        if not isinstance(a, str) or not a.strip() or len(a.strip()) > ALIAS_MAX or "\n" in a:
+            errores.append(f"protocolo.alias: {a!r} no vale (texto de 1 a {ALIAS_MAX} caracteres, en una línea)")
+        elif a.strip().casefold() in vistos:
+            errores.append(f"protocolo.alias: «{a.strip()}» está repetida")
+        else:
+            vistos.add(a.strip().casefold())
+    return errores
+
+
+def alias_protocolo(cfg: dict) -> list[str]:
+    """Las frases válidas tal como se escriben tras «sigue el protocolo». Si la sección está mal, las de por defecto."""
+    p = cfg.get("protocolo")
+    if _validar_protocolo(p):
+        return list(ALIAS_DEFECTO)
+    return [a.strip() for a in p["alias"]]
+
+
+def linea_activacion(cfg: dict) -> str:
+    """Una línea para el arranque del agente (ESTADO.md, contexto.py, CLAUDE.md)."""
+    return "Activación: un pedido que termina en «sigue el protocolo " + " | ".join(alias_protocolo(cfg)) + "» → aplica el flujo de AGENTES.md."
+
+
+ACT_INI, ACT_FIN = "<!-- uxyngraphar:activacion -->", "<!-- /uxyngraphar:activacion -->"
+
+
+def bloque_activacion(cfg: dict) -> str:
+    return f"{ACT_INI}\n{linea_activacion(cfg)}\n{ACT_FIN}"
+
+
+def con_activacion(texto: str, cfg: dict) -> str:
+    """El texto de ESTADO.md con la línea de activación al día: solo cambia lo que hay entre sus marcas; si no están, la pone bajo el título."""
+    bloque = bloque_activacion(cfg)
+    if ACT_INI in texto and ACT_FIN in texto and texto.index(ACT_INI) < texto.index(ACT_FIN):
+        return texto[: texto.index(ACT_INI)] + bloque + texto[texto.index(ACT_FIN) + len(ACT_FIN):]
+    cabeza, _, resto = texto.partition("\n")
+    if not cabeza.startswith("#"):
+        return bloque + "\n\n" + texto
+    return cabeza + "\n\n" + bloque + "\n\n" + resto.lstrip("\n")
+
+
+def escribir_activacion(carpeta: Path, cfg: dict | None = None) -> bool:
+    """Pone al día la línea de activación en <carpeta>/ESTADO.md (lo que el agente lee al empezar). True si cambió."""
+    f = carpeta / "ESTADO.md"
+    if not f.is_file():
+        return False
+    texto = f.read_text(encoding="utf-8")
+    nuevo = con_activacion(texto, cargar(carpeta, "")[0] if cfg is None else cfg)
+    if nuevo == texto:
+        return False
+    f.write_text(nuevo, encoding="utf-8", newline="\n")
+    return True
 
 
 def url_permitida(url: str) -> bool:

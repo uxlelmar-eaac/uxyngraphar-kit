@@ -1,5 +1,9 @@
 # ESTADO — orientación rápida (documento vivo)
 
+<!-- uxyngraphar:activacion -->
+Activación: un pedido que termina en «sigue el protocolo uxyngraphar | uxyn | uxynar» → aplica el flujo de AGENTES.md.
+<!-- /uxyngraphar:activacion -->
+
 Estado actual del proyecto documentado para que un agente entre en contexto **sin releer el historial**. Máx. ~20 líneas; actualizar al cerrar cada instrucción (y en revisión de pendientes).
 
 | Dato | Valor |

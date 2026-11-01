@@ -2,6 +2,7 @@
 """Imprime el paquete de contexto de una instrucción aprobada: ficha compacta, lectura mínima, espejo y rangos de código.
 
 Uso:  python3 docs/scripts/contexto.py <id|slug|ruta> [--docs docs] [--max-tokens 12000] [--lista]
+      python3 docs/scripts/contexto.py --activacion     # las frases que activan el protocolo (protocolo.alias)
   --lista   solo el plan (qué incluiría y cuánto pesa), sin imprimir el contenido
   --max-tokens por defecto: UXYNGRAPHAR_MAX_TOKENS (alias de respaldo: uxyngraphar_MAX_TOKENS) o 12000
 Lee `lectura_minima` (admite `ruta#seccion` para traer solo una sección), `espejo_leer` y `anclas_codigo` (con rango).
@@ -26,14 +27,22 @@ def main(argv: list[str] | None = None) -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("instruccion")
+    ap.add_argument("instruccion", nargs="?")
     ap.add_argument("--repo", default=".")
     ap.add_argument("--docs", default="docs")
     ap.add_argument("--max-tokens", type=int, default=int(os.environ.get("UXYNGRAPHAR_MAX_TOKENS") or os.environ.get("uxyngraphar_MAX_TOKENS") or "12000"))
     ap.add_argument("--lista", action="store_true")
+    ap.add_argument("--activacion", action="store_true", help="imprime las frases que activan el protocolo y termina")
     a = ap.parse_args(argv)
     repo = Path(a.repo).resolve()
     docs = repo / a.docs
+    if a.activacion:
+        sys.path.insert(0, str(Path(__file__).resolve().parent / "control"))
+        import uxyngraphar_config as cfgmod
+        print(cfgmod.linea_activacion(cfgmod.cargar(repo, a.docs)[0]))
+        return 0
+    if not a.instruccion:
+        ap.error("falta la instrucción (id, slug o ruta), o usa --activacion")
     ficha = localizar_instruccion(docs, a.instruccion)
     if ficha is None:
         print(f"ERROR: no se encontró la instrucción «{a.instruccion}» en {docs / '05-instrucciones'}", file=sys.stderr)

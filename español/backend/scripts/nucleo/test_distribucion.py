@@ -58,6 +58,7 @@ class TestZip(Base):
         r = subprocess.run([sys.executable, "-X", "utf8", "-I", str(AQUI.parent / "instalar-pack.py"), str(z), "--repo", str(self.repo), "--claude-md"], capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertIn("AGENTES.md", (self.repo / "CLAUDE.md").read_text(encoding="utf-8"))
+        self.assertIn("sigue el protocolo", (self.repo / "CLAUDE.md").read_text(encoding="utf-8"))
         self.assertTrue((self.repo / "docs/.uxyngraphar.lock").is_file())
 
 

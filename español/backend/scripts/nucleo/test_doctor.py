@@ -31,6 +31,31 @@ class TestDoctor(Base):
         self.assertEqual((n["nucleo"], n["version"], n["lock"]), ("OK", "OK", "OK"))
         self.assertEqual((n["deny"], n["codeowners"], n["gancho"]), ("WARN", "WARN", "WARN"))
 
+    def test_frases_de_activacion_en_estado(self) -> None:
+        estado = self.repo / "docs" / "ESTADO.md"
+        self.assertIn("«sigue el protocolo uxyngraphar | uxyn | uxynar»", estado.read_text(encoding="utf-8"))
+        self.assertEqual(self.niveles()["activacion"], "OK")
+        (self.repo / "docs" / "uxyngraphar.config.json").write_text(json.dumps({"protocolo": {"alias": ["del sistema"]}}), encoding="utf-8")
+        self.assertEqual(self.niveles()["activacion"], "WARN")
+        self.assertIn("ESTADO.md: frases de activación al día", dr.arreglar(self.repo, "docs"))
+        self.assertEqual(self.niveles()["activacion"], "OK")
+        self.assertIn("«sigue el protocolo del sistema»", estado.read_text(encoding="utf-8"))
+
+    def test_migracion_activacion_en_estado(self) -> None:
+        import migraciones
+        import transaccion
+        estado = self.repo / "docs" / "ESTADO.md"
+        estado.write_text("# Estado\n\nNotas propias.\n", encoding="utf-8")   # como lo dejaba la 1.0.x
+        tx = transaccion.Transaccion(self.repo, "docs", version_antes="1.0.2", version_despues="1.1.0")
+        ctx = migraciones.Contexto(self.repo, "docs", tx)
+        self.assertTrue(migraciones._activacion_en_estado(ctx))
+        tx.confirmar()
+        self.assertIn("sigue el protocolo uxyngraphar", estado.read_text(encoding="utf-8"))
+        self.assertIn("Notas propias.", estado.read_text(encoding="utf-8"))
+        tx = transaccion.Transaccion(self.repo, "docs", version_antes="1.1.0", version_despues="1.1.0")
+        self.assertEqual(migraciones._activacion_en_estado(migraciones.Contexto(self.repo, "docs", tx)), [])   # idempotente
+        tx.deshacer("prueba")
+
     def test_fix_activa_deny_y_gancho_pero_no_toca_el_nucleo(self) -> None:
         antes = (self.repo / "docs/REGLAS.md").read_bytes()
         self.assertTrue(any("deny" in h for h in dr.arreglar(self.repo, "docs")))

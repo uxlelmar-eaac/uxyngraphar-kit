@@ -23,8 +23,17 @@ import lock  # noqa: E402
 import proteccion  # noqa: E402
 import uxyngraphar_config as cfgmod  # noqa: E402
 
-CLAUDE_MD = ("# CLAUDE.md\n\nEste proyecto usa uxyngraphar. Lee **solo** [AGENTES.md](AGENTES.md) al empezar y sigue su flujo "
-             "(instrucción aprobada → `python3 docs/scripts/contexto.py <id>`). No edites el núcleo (R-20).\n")
+# CLAUDE.md que escribieron versiones anteriores (para reconocer el de la herramienta y poder ponerlo al día sin pisar uno propio).
+CLAUDE_MD_ANTERIORES = ("# CLAUDE.md\n\nEste proyecto usa uxyngraphar. Lee **solo** [AGENTES.md](AGENTES.md) al empezar y sigue su flujo "
+                        "(instrucción aprobada → `python3 docs/scripts/contexto.py <id>`). No edites el núcleo (R-20).\n",)
+
+
+def texto_claude_md(docs: str) -> str:
+    carpeta = docs.rpartition("/")[2]
+    return ("# CLAUDE.md\n\nEste proyecto usa uxyngraphar. Lee **solo** [AGENTES.md](AGENTES.md) al empezar y sigue su flujo "
+            f"(instrucción aprobada → `python3 {carpeta}/scripts/contexto.py <id>`). No edites el núcleo (R-20).\n"
+            f"Un pedido que termina en «sigue el protocolo …» pide ese flujo: frases en la línea «Activación» de `{carpeta}/ESTADO.md` "
+            f"(por defecto {', '.join(cfgmod.ALIAS_DEFECTO)}).\n")
 
 
 @dataclass
@@ -86,7 +95,7 @@ def instalar_completo(pack: Path, repo: Path, docs: str, *, adoptar: bool = Fals
     if claude_md:
         f = repo / cl.padre(docs) / "CLAUDE.md"
         if not f.exists():
-            f.write_text(CLAUDE_MD, encoding="utf-8", newline="\n")
+            f.write_text(texto_claude_md(docs), encoding="utf-8", newline="\n")
             res.add("CLAUDE.md creado: apunta a AGENTES.md")
     if proteger:
         proteccion.reglas_agente(repo, docs)

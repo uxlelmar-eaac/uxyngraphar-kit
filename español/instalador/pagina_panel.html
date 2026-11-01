@@ -52,6 +52,8 @@ const igual=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 const CONTROLES={lineas:"Archivos de código por encima del límite de líneas.",instruccion:"Cambios de código sin una instrucción aprobada.",secretos:"Credenciales o llaves dentro del código.",nucleo:"Cambios en el núcleo del pack.",espejo:"Código sin su ficha en el espejo (50-sistema-integral).",idioma:"Código del producto que no está en inglés (R-22).",commits:"Mensajes de commit y nombres de rama.",memoria:"Cambios en la memoria del sistema (95-memoria).",reglas_proyecto:"Reglas del propio equipo (96-reglas-proyecto)."};
 const NIV={bloqueante:"Bloquea: el commit o el CI no pasan",aviso:"Avisa: solo muestra el problema",apagado:"Apagado: no se revisa"};
 function campos(o,plantilla){const c=[];
+ if(o.protocolo){c.push({g:"Cómo se pide el protocolo",d:"La frase con la que terminas un pedido para que el agente siga el flujo de uxyngraphar. El agente la ve al empezar, en ESTADO.md."});
+  c.push({p:"protocolo.alias",t:"lista",l:"Frases para activar el protocolo",h:"Una por línea. Escribe al final de tu pedido: sigue el protocolo X. Por ejemplo: uxyn, uxynar, del sistema."})}
  c.push({g:"Controles",d:"Qué pasa cuando la puerta de control encuentra un problema."});
  (o.controles||[]).forEach(k=>c.push({p:"niveles."+k,t:"sel",l:k.replace("_"," "),h:CONTROLES[k]||"",op:o.niveles.map(n=>[n,NIV[n]||n])}));
  c.push({g:"General"});
