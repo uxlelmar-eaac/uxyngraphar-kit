@@ -23,6 +23,8 @@ Si no tienes `py`, usa `python`.
 3. Expone el comando `uxyngraphar` (suele quedar en `~/.local/bin/` o el `bin` de la herramienta en Windows).
 4. Al terminar abre el **panel** en tu navegador (solo en tu equipo) con todo lo que pasó en la terminal y lo que queda por decidir: añadir el comando al PATH, tu plantilla de configuración e instalar en tu primer proyecto. Sin escritorio, en CI o con `--consola`, todo sigue en la terminal.
 
+A partir de ahí, **el único comando que necesitas es `uxyngraphar`**: abre el panel, y desde él se hace todo lo demás (instalar en proyectos, configurarlos, aprobar, actualizar, versiones, PATH, desinstalar). Ver [../03-uso-humano/panel.md](../03-uso-humano/panel.md).
+
 Cada proyecto lleva su copia del pack en `uxyngraphar/` (va en git) y su versión en `uxyngraphar/.uxyngraphar.lock`, así que pueden convivir proyectos en versiones distintas y quien clona el proyecto no necesita la herramienta.
 
 ## Dónde queda
@@ -37,8 +39,8 @@ Descarga por HTTPS, comprueba la huella SHA256 de la versión antes de escribir 
 ## PATH / «command not found»
 
 1. Cierra y abre la terminal (el instalador puede haber tocado `.bashrc` / `.zshrc` / PATH de usuario).
-2. Comprueba: `uxyngraphar version`
-3. Si instalaste con `--sin-path`, añade a mano el `bin` de la herramienta al PATH o invoca `python3 ~/.uxyngraphar/…` según la estructura instalada.
+2. Comprueba: `uxyngraphar` (abre el panel)
+3. Si instalaste con `--sin-path` o dijiste «No» en la bienvenida, abre el panel con la ruta completa del comando (la muestra el instalador) y añádelo en **Sistema → El comando uxyngraphar en tu terminal**.
 4. Variables: `UXYNGRAPHAR_HOME` (cambia la carpeta base; el comando queda en `<carpeta>/bin` y no se toca el PATH), `UXYNGRAPHAR_BIN` (carpeta del comando), `UXYNGRAPHAR_SIN_PATH`.
 
 ## Opciones del instalador de una línea
@@ -50,8 +52,6 @@ Descarga por HTTPS, comprueba la huella SHA256 de la versión antes de escribir 
 
 ## Desinstalar solo la herramienta
 
-```bash
-uxyngraphar desinstalar
-```
+Panel → **Sistema → Desinstalar** (escribe «desinstalar» para confirmar). Avanzado: `uxyngraphar desinstalar`.
 
 No borra `uxyngraphar/` de tus proyectos. Ver [../05-comandos/referencia-cli.md](../05-comandos/referencia-cli.md).

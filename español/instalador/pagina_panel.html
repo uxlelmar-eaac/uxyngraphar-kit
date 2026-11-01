@@ -111,7 +111,7 @@ function vBienvenida(){const b=S.bien;
  <details><summary>Lo que se hizo en la terminal (${b.pasos.length} líneas)</summary><pre class="diff">${esc(b.pasos.join("\n"))}</pre></details></div>
  ${b.path_pendiente?`<div class="card" id="pathcard"><h2>1. ¿Añadir el comando <code>uxyngraphar</code> a tu terminal?</h2>
  <p>Para escribir <code>uxyngraphar</code> desde cualquier carpeta, su carpeta (<code>${esc(b.bin)}</code>) tiene que estar en el PATH.</p>
- <ul class="pl"><li><b>Sí (recomendado):</b> añado un bloque marcado a tu archivo de inicio de la terminal (o al PATH de usuario en Windows). Se quita solo con <code>uxyngraphar desinstalar</code>. Abre una terminal nueva después.</li>
+ <ul class="pl"><li><b>Sí (recomendado):</b> añado un bloque marcado a tu archivo de inicio de la terminal (o al PATH de usuario en Windows). Se quita cuando quieras en «Sistema». Abre una terminal nueva después.</li>
  <li><b>No:</b> no toco nada; usarás la ruta completa <code>${esc(b.lanzador)}</code>.</li></ul>
  <div class="fila"><button class="pri" onclick="decidirPath(true)">Sí, añadirlo</button><button onclick="decidirPath(false)">No</button></div></div>`:""}
  ${S.msgBien||""}
@@ -119,7 +119,7 @@ function vBienvenida(){const b=S.bien;
  <div class="campo"><label>Fijar tus preferencias</label><small>Niveles de control, límite de líneas, idioma, copias de seguridad… Se aplicarán a cada proyecto nuevo. Hazlo antes de instalar.</small><div class="ctl"><button onclick="S.tab='plantilla';dibujar()">Abrir la plantilla</button></div></div>
  <div class="campo"><label>Instalar uxyngraphar en un proyecto</label><small>El asistente de 5 pasos: proyecto, qué instalar, protección, colaborar y el plan exacto antes de escribir nada.</small><div class="ctl"><a href="/instalar?desde=panel"><button class="pri">Instalar en un proyecto</button></a></div></div>
  <div class="campo"><label>Ya tengo proyectos con uxyngraphar</label><small>Regístralos para verlos, configurarlos y actualizarlos desde aquí.</small><div class="ctl"><button onclick="S.tab='proyectos';dibujar()">Mis proyectos</button></div></div>
- </div><p class="mut">Puedes volver a este panel cuando quieras con <code>${esc(b.comando||"uxyngraphar")} panel</code>.</p>`}
+ </div><p class="mut">Para volver a este panel solo necesitas un comando: <code>${esc(b.comando||"uxyngraphar")}</code>. Todo lo demás se hace desde aquí.</p>`}
 async function decidirPath(agregar){const r=await post("/api/panel/path",{agregar});S.bien.path_pendiente=false;S.msgBien=`<div class="aviso ${r.ok?"ok":"er"}">${esc(r.texto||r.error)}</div>`;dibujar()}
 
 // ---------- Mis proyectos ----------
@@ -239,35 +239,50 @@ async function aplicarPlantilla(){const d=S.plPrev.destinos.map(x=>({ruta:x.ruta
  r.destinos=(r.destinos||[]).map(x=>({...x,aplicado:true}));S.plPrev=r;dibujar()}
 
 // ---------- Atajos y comandos ----------
-// Agrupados por lo que quieres hacer. Regla para recordarlos: «uxyngraphar» + un verbo; dentro de un proyecto, «uxyngraphar/scripts/» + un nombre (en instalaciones anteriores a 1.1.0, «docs/scripts/»).
+// Primero: dónde está cada cosa en el panel (el único comando es «uxyngraphar»). Después, plegados, los comandos de terminal.
+const DONDE=[
+ ["Instalar uxyngraphar en un proyecto","Mis proyectos → «Instalar uxyngraphar en un proyecto nuevo»","proyectos"],
+ ["Ver la salud de un proyecto y arreglar lo seguro","Proyecto → Salud → «Arreglar»","proyecto:salud"],
+ ["Aprobar o rechazar una instrucción (y mejoras, EVO, propuestas)","Proyecto → Pendientes → «Leer y decidir»","proyecto:pendientes"],
+ ["Cambiar la configuración de un proyecto","Proyecto → Configuración","proyecto:config"],
+ ["Deshacer un cambio (restaurar una copia de seguridad)","Proyecto → Copias de seguridad","proyecto:copias"],
+ ["Buscar en la memoria del sistema","Proyecto → Memoria","proyecto:memoria"],
+ ["Ganchos de git y quién aprueba el núcleo (CODEOWNERS)","Proyecto → Protecciones","proyecto:proteccion"],
+ ["Reglas del equipo y archivar fichas antiguas","Proyecto → Reglas y fichas","proyecto:reglas"],
+ ["Colaborar en la mejora de uxyngraphar (y ver qué saldría)","Proyecto → Configuración → Colaborar","proyecto:config"],
+ ["Actualizar un proyecto (o todos)","Mis proyectos → «Actualizar» / «Actualizar todos»","proyectos"],
+ ["Actualizar la herramienta","Arriba a la derecha («Actualizar a X») o Sistema","sistema"],
+ ["Volver a una versión anterior","Sistema → Versiones guardadas","sistema"],
+ ["Añadir o quitar el comando del PATH","Sistema → El comando uxyngraphar en tu terminal","sistema"],
+ ["Quitar proyectos que ya no existen","Sistema → Limpiar","sistema"],
+ ["Preferencias para proyectos nuevos","Plantilla","plantilla"],
+ ["Desinstalar uxyngraphar de este equipo","Sistema → Desinstalar","sistema"]];
+function irA(d){const [tab,sub]=d.split(":");if(tab==="proyecto"){if(!S.sel){S.tab="proyectos";S.msg=`<div class="aviso av">Elige primero un proyecto y pulsa «Abrir».</div>`;dibujar();return}return abrirProyecto(S.sel.ruta,S.sel.docs,sub)}S.tab=tab;S.msg="";dibujar()}
+// Para usuarios avanzados, CI y agentes: lo mismo desde la terminal. Regla: «uxyngraphar» + un verbo; dentro de un proyecto, «uxyngraphar/scripts/» + un nombre.
 const ATAJOS=[
- {g:"Empezar",d:"Una vez por equipo y una vez por proyecto.",c:[
-  ["curl -fsSL https://github.com/uxlelmar-eaac/uxyngraphar-kit/releases/latest/download/instalar-uxyngraphar.py | python3 -","Instala la herramienta en este equipo y abre este panel (Windows: irm … | py -)."],
-  ["uxyngraphar panel","Abre este panel: todo lo de abajo se puede hacer desde aquí."],
-  ["uxyngraphar instalar","Pone uxyngraphar en el proyecto de la carpeta donde estás (asistente en el navegador)."]]},
- {g:"Mantener al día",d:"Primero la herramienta, después los proyectos.",c:[
-  ["uxyngraphar estado","¿Qué versión tengo y hay una nueva?"],
-  ["uxyngraphar autoactualizar","Descarga la última versión de la herramienta. No toca tus proyectos."],
-  ["uxyngraphar actualizar","Lleva el proyecto de esta carpeta a tu versión (con copia de seguridad antes)."],
-  ["uxyngraphar actualizar --todos","Lo mismo para todos tus proyectos registrados."],
-  ["uxyngraphar usar 1.7.1","Vuelve a una versión anterior de la herramienta."]]},
- {g:"Mis proyectos",d:"La lista de proyectos de este equipo.",c:[
-  ["uxyngraphar proyectos","Lista tus proyectos y su versión."],
-  ["uxyngraphar proyectos --salud","Lo mismo, diciendo si cada uno está sano."],
-  ["uxyngraphar proyectos --agregar RUTA","Añade a la lista un proyecto que ya tiene uxyngraphar."],
-  ["uxyngraphar configuracion","Muestra en texto la configuración del proyecto de esta carpeta."]]},
- {g:"Dentro de un proyecto",d:"Desde la raíz del proyecto. En Windows escribe py -3 en lugar de python3.",c:[
-  ["python3 uxyngraphar/scripts/doctor.py","Chequeo completo: ¿está todo bien? Con --fix arregla lo seguro."],
-  ["python3 uxyngraphar/scripts/controlar.py --staged","Pasa los controles a lo que vas a commitear, como hará el CI."],
-  ["python3 uxyngraphar/scripts/decisiones/decisiones.py scan","Lo que está esperando tu decisión."],
-  ["python3 uxyngraphar/scripts/reglas.py listar","Las reglas de tu equipo que están activas."],
-  ["python3 uxyngraphar/scripts/respaldos.py listar","Las copias de seguridad; restaurar para deshacer."],
-  ["python3 uxyngraphar/scripts/memoria.py buscar TEXTO","Busca en la memoria del sistema (fichas antiguas)."],
-  ["python3 uxyngraphar/scripts/feedback.py previsualizar","Qué saldría exactamente si colaboras. No envía nada."]]},
- {g:"Quitar",d:"",c:[["uxyngraphar desinstalar","Quita la herramienta de este equipo. Tus proyectos no se tocan."]]}];
+ {g:"Instalar la herramienta",d:"Una vez por equipo. Al terminar abre este panel.",c:[
+  ["curl -fsSL https://github.com/uxlelmar-eaac/uxyngraphar-kit/releases/latest/download/instalar-uxyngraphar.py | python3 -","Linux y macOS (Windows: irm … | py -)."]]},
+ {g:"La herramienta",d:"",c:[
+  ["uxyngraphar ayuda","Todos los comandos, agrupados."],
+  ["uxyngraphar instalar RUTA --pack servidor --si","Siembra el pack sin preguntas (scripts, agentes)."],
+  ["uxyngraphar actualizar --todos --consola --si","Actualiza todos los proyectos registrados sin navegador."],
+  ["uxyngraphar estado","Versión del proyecto, de la herramienta y la última publicada."],
+  ["uxyngraphar autoactualizar","Descarga la última versión de la herramienta."],
+  ["uxyngraphar usar 1.1.0","Vuelve a una versión anterior."],
+  ["uxyngraphar desinstalar --si","Quita la herramienta sin preguntar."]]},
+ {g:"Dentro de un proyecto",d:"Desde la raíz del proyecto. En Windows escribe py -3 en lugar de python3; en instalaciones anteriores a 1.1.0, docs/ en lugar de uxyngraphar/.",c:[
+  ["python3 uxyngraphar/scripts/doctor.py --fix","Chequeo completo y arreglos seguros."],
+  ["python3 uxyngraphar/scripts/controlar.py --staged","Los controles sobre lo que vas a commitear, como el CI."],
+  ["python3 uxyngraphar/scripts/decisiones/decisiones.py scan","Lo que espera una decisión."],
+  ["python3 uxyngraphar/scripts/respaldos.py listar","Copias de seguridad (restaurar ID --aplicar para deshacer)."],
+  ["python3 uxyngraphar/scripts/memoria.py buscar TEXTO","Busca en la memoria del sistema."],
+  ["python3 uxyngraphar/scripts/feedback.py previsualizar","Qué saldría si colaboras. No envía nada."]]}];
 function vAtajos(){let i=0;
- $("#vista").innerHTML=`<div class="card"><h2>Atajos y comandos</h2><p class="mut">Para recordarlos: <b>uxyngraphar + un verbo</b> (panel, instalar, actualizar, estado…) para la herramienta, y <b>python3 uxyngraphar/scripts/ + un nombre</b> (o <code>docs/scripts/</code> si tu proyecto se instaló antes de la 1.1.0) dentro de un proyecto. ¿Dudas? <code>uxyngraphar ayuda</code> los lista todos.</p></div>`+
- ATAJOS.map(x=>`<div class="card"><h2>${esc(x.g)}</h2>${x.d?`<p class="mut">${esc(x.d)}</p>`:""}<table><tbody>${x.c.map(([cmd,txt])=>`<tr><td style="width:55%"><code>${esc(cmd)}</code></td><td>${esc(txt)}</td><td style="width:1%"><button id="cp${i}" onclick='copiar(${JSON.stringify(cmd)},"cp${i++}")'>Copiar</button></td></tr>`).join("")}</tbody></table></div>`).join("")}
+ $("#vista").innerHTML=`<div class="card"><h2>Solo necesitas un comando: <code>uxyngraphar</code></h2><p>Escríbelo en una terminal y se abre este panel. Todo lo demás se hace desde aquí, viendo antes qué cambia.</p>
+ <div class="fila"><code>uxyngraphar</code><button id="cp-uno" onclick='copiar("uxyngraphar","cp-uno")'>Copiar</button></div></div>
+ <div class="card"><h2>Dónde está cada cosa</h2><table><tbody>${DONDE.map(([q,d,a])=>`<tr><td>${esc(q)}</td><td><small class="mut">${esc(d)}</small></td><td style="width:1%"><button onclick="irA('${a}')">Ir</button></td></tr>`).join("")}</tbody></table></div>
+ <div class="card"><details><summary><b>Para usuarios avanzados, CI y agentes</b></summary><p class="mut">Los mismos pasos desde la terminal. Para recordarlos: <b>uxyngraphar + un verbo</b> para la herramienta y <b>python3 uxyngraphar/scripts/ + un nombre</b> dentro de un proyecto.</p>`+
+ ATAJOS.map(x=>`<h3>${esc(x.g)}</h3>${x.d?`<p class="mut">${esc(x.d)}</p>`:""}<table><tbody>${x.c.map(([cmd,txt])=>`<tr><td style="width:55%"><code>${esc(cmd)}</code></td><td>${esc(txt)}</td><td style="width:1%"><button id="cp${i}" onclick='copiar(${JSON.stringify(cmd)},"cp${i++}")'>Copiar</button></td></tr>`).join("")}</tbody></table>`).join("")+`</details></div>`}
 async function copiar(t,id){try{await navigator.clipboard.writeText(t)}catch(e){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();document.execCommand("copy");a.remove()}
  const b=document.getElementById(id);if(b){b.textContent="Copiado";setTimeout(()=>{b.textContent="Copiar"},1500)}}
 
@@ -288,7 +303,7 @@ async function actualizarHerr(){const u=S.ult;if(!u||!u.hay_nueva||S.actualizand
  S.actMsg=`<div class="aviso er">${esc(r.error||"No se pudo actualizar.")}${det}</div>`;
  S.msg=S.tab==="sistema"?"":S.actMsg;dibujarVer();dibujar()}
 
-async function salir(){await post("/api/salir");document.querySelector("main").innerHTML=`<div class="card"><h2>Panel cerrado</h2><p>Ya puedes cerrar esta pestaña. Para volver a abrirlo: <code>uxyngraphar panel</code></p></div>`}
+async function salir(){await post("/api/salir");document.querySelector("main").innerHTML=`<div class="card"><h2>Panel cerrado</h2><p>Ya puedes cerrar esta pestaña. Para volver a abrirlo, escribe <code>uxyngraphar</code> en una terminal.</p></div>`}
 async function cargar(){S.res=await post("/api/panel/resumen");dibujarVer();dibujar()}
 (async()=>{const ini=await post("/api/inicio"),q=new URLSearchParams(location.search);if(ini.bienvenida){S.bien=ini.bienvenida;S.tab="bienvenida";$("#tabBien").classList.remove("oculto")}
  else if(["proyectos","plantilla","sistema","atajos"].includes(q.get("tab")))S.tab=q.get("tab");await cargar();S.pl=await post("/api/panel/plantilla");

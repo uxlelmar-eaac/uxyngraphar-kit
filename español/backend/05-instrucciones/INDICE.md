@@ -26,7 +26,7 @@ Las instrucciones se organizan por **estado** y, dentro, por **fecha de creació
 
 ## Vista viva de pendientes
 
-`python3 uxyngraphar/scripts/decisiones/decisiones.py scan` — lista instrucciones `awaiting_approval` y fichas pendientes de todo el pack.
+`python3 uxyngraphar/scripts/decisiones/decisiones.py scan` — lista instrucciones `awaiting_approval` y fichas pendientes de todo el pack. Una persona las lee y decide en el panel: `uxyngraphar` → Proyecto → Pendientes.
 
 (En Windows: `py -3` en lugar de `python3`.)
 

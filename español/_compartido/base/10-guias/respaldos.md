@@ -26,7 +26,11 @@ Política en `uxyngraphar/uxyngraphar.config.json`:
 - Con `limpieza_automatica: true` las caducadas se borran solas al terminar cada actualización o depuración. Con `false` solo se avisa.
 - `doctor.py` informa de las copias caducadas en ambas carpetas y de cómo borrarlas.
 
-## Comandos
+## Desde el panel
+
+`uxyngraphar` → **Proyecto → Copias de seguridad**: cada copia con su fecha y motivo, las diferencias de cada archivo, «Restaurar» (antes guarda el estado actual en otra copia) y «Borrar copias antiguas». Los cambios que hace el propio panel (configuración, «Arreglar», decisiones, CODEOWNERS) también dejan su copia aquí.
+
+## Comandos (terminal, avanzado)
 
 ```bash
 python3 uxyngraphar/scripts/respaldos.py listar                        # todas, con política, antigüedad y versiones

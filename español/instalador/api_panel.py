@@ -2,7 +2,7 @@
 
 Lee y escribe <carpeta del pack>/uxyngraphar.config.json con el lector de la versión del pack que tiene cada proyecto. Antes de
 escribir enseña qué cambia, comprueba que nadie tocó el archivo mientras tanto y deja una copia en .uxyngraphar-respaldo/
-(se restaura con «respaldos.py restaurar»). La respuesta a «colaborar» pasa por el feedback.py del propio proyecto.
+(se restaura en el panel: Proyecto → Copias de seguridad). La respuesta a «colaborar» pasa por el feedback.py del propio proyecto.
 """
 
 from __future__ import annotations
@@ -113,7 +113,7 @@ def agregar(ruta: str) -> dict:
     if not info["ok"]:
         return {"ok": False, "error": info["error"]}
     if not info["instalados"]:
-        return {"ok": False, "error": f"«{info['nombre']}» no tiene uxyngraphar. Instálalo primero (uxyngraphar instalar)."}
+        return {"ok": False, "error": f"«{info['nombre']}» no tiene uxyngraphar. Instálalo primero con «Instalar uxyngraphar en un proyecto nuevo»."}
     sistema.guardar_proyectos(sistema.leer_proyectos() + [info["ruta"]])
     return {"ok": True, "ruta": info["ruta"]}
 

@@ -51,6 +51,8 @@ uxyngraphar/95-memoria/
 
 ## Consultar (solo personas)
 
+En el panel: `uxyngraphar` → **Proyecto → Memoria** (buscar, ver, recuperar y purgar). En la terminal:
+
 ```bash
 python3 uxyngraphar/scripts/memoria.py buscar pagos                      # busca en el catálogo: id, título, motivo, ruta original
 python3 uxyngraphar/scripts/memoria.py buscar --seccion decisiones       # todo lo de una sección

@@ -268,15 +268,15 @@ def instalar(version, sin_path=False, con_panel=False):
                               "path_pendiente": path_pendiente, "sin_path": sin_path})
     if anterior == version:
         decir("\nYa tenías uxyngraphar {}: no hay nada que actualizar.".format(version), "ok")
-        decir("El panel sigue disponible cuando lo necesites:  {} panel".format(comando))
+        decir("El panel sigue disponible cuando lo necesites:  {}".format(comando))
         return SIN_CAMBIOS
     decir("\nListo: uxyngraphar {} {}.".format(version, "activo (antes {})".format(anterior) if anterior else "instalado"), "ok")
     if aviso_path:
         decir(aviso_path, "aviso")
     if anterior:
-        decir("Tus proyectos siguen como estaban. Para llevarlos a esta versión:  {} actualizar  (o  {} actualizar --todos)".format(comando, comando))
+        decir("Tus proyectos siguen como estaban. Para llevarlos a esta versión, abre el panel con  {}  y ve a «Mis proyectos».".format(comando))
         return 0
-    decir("\nQué sigue:\n  1. Entra en la carpeta de tu proyecto.\n  2. Ejecuta:  {} instalar\n  3. Más adelante, para actualizar:  {} autoactualizar  y luego  {} actualizar".format(comando, comando, comando), "seccion")
+    decir("\nQué sigue: abre el panel con  {}  (es el único comando que necesitas).\nDesde ahí instalas uxyngraphar en tus proyectos, los configuras y los actualizas.".format(comando), "seccion")
     return 0
 
 

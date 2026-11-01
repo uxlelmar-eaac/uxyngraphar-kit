@@ -1,6 +1,6 @@
 ---
 id: EVO-20261101-todo-desde-el-panel
-status: approved
+status: done
 source: human
 tipo: proceso
 impacto: general

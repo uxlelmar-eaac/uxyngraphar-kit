@@ -10,12 +10,12 @@ Al final de un pedido escribes **«sigue el protocolo uxyngraphar»** (o `uxyn`,
 { "protocolo": { "alias": ["uxyngraphar", "uxyn", "uxynar", "del sistema"] } }
 ```
 
-Con eso vale «sigue el protocolo del sistema». Desde el panel: **Configuración del proyecto → Cómo se pide el protocolo** (también en la **Plantilla**, para los proyectos nuevos). El agente las lee en la línea «Activación» de `ESTADO.md`. Si editas el archivo a mano, ponla al día con `python3 uxyngraphar/scripts/doctor.py --fix`.
+Con eso vale «sigue el protocolo del sistema». Desde el panel: **Proyecto → Configuración → Cómo se pide el protocolo** (también en la **Plantilla**, para los proyectos nuevos). El agente las lee en la línea «Activación» de `ESTADO.md`. Si editas el archivo a mano, ponla al día con **Proyecto → Salud → «Arreglar»** (o `python3 uxyngraphar/scripts/doctor.py --fix`).
 
 ## Cómo editarlo
 
-- **Recomendado:** `uxyngraphar panel` → configuración del proyecto
-- Consulta: `uxyngraphar configuracion [RUTA]`
+- **Recomendado:** `uxyngraphar` → **Proyecto → Configuración** (vista previa de cada cambio y copia antes de guardar)
+- Consulta en texto (avanzado): `uxyngraphar configuracion [RUTA]`
 - A mano solo si sabes el esquema
 
 ## Reglas

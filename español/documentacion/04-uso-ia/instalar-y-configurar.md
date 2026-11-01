@@ -23,7 +23,7 @@ uxyngraphar instalar "$REPO" --pack servidor --si --colaborar no
 
 1. Inspecciona el árbol real.
 2. Rellena plantillas P ([../02-configuracion/configuracion-proyecto.md](../02-configuracion/configuracion-proyecto.md)).
-3. Propón config JSON; confirma con humano.
+3. Propón config JSON; confirma con humano. La persona la cambia en su panel (`uxyngraphar` → Proyecto → Configuración).
 4. No `feedback.py activar|enviar`.
 
 ## D. Verificar
@@ -37,4 +37,4 @@ python3 uxyngraphar/scripts/doctor.py
 
 1. Archivos para commit (sin `.env`).
 2. [Checklist](../01-instalacion/checklist.md).
-3. [Instruir humano](instruir-humano.md). Ante errores: [../01-instalacion/fallos-comunes.md](../01-instalacion/fallos-comunes.md).
+3. [Instruir humano](instruir-humano.md): su único comando es `uxyngraphar`; dile dónde está cada cosa en el panel, no qué comandos ejecutar. Ante errores: [../01-instalacion/fallos-comunes.md](../01-instalacion/fallos-comunes.md).

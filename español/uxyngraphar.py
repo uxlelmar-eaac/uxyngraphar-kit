@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """uxyngraphar: la herramienta que instala y actualiza el pack en tus proyectos.
 
-La ayuda que ve la persona (uxyngraphar, uxyngraphar ayuda <comando>) se genera desde AYUDA y GRUPOS.
+Lo único que necesita una persona es `uxyngraphar` (sin nada más): abre el panel del navegador, donde se hace todo.
+Sin una persona delante (CI, un agente, sin escritorio) imprime la ayuda. Los comandos siguen para CI, agentes y scripts.
+La ayuda (uxyngraphar ayuda, uxyngraphar ayuda <comando>) se genera desde AYUDA y GRUPOS.
 
-  uxyngraphar panel                        abre el panel del navegador: tus proyectos, su configuración y tu plantilla
+  uxyngraphar                              abre el panel (igual que «uxyngraphar panel»)
+  uxyngraphar panel                        abre el panel del navegador: proyectos, configuración, pendientes, copias, sistema…
   uxyngraphar instalar [RUTA] [opciones]   siembra el pack en un proyecto (sin argumentos abre la pantalla del navegador)
   uxyngraphar actualizar [RUTA…] [--todos] lleva proyectos a la versión de la herramienta (con respaldo; --consola, --si)
   uxyngraphar estado [RUTA]                versión del proyecto, de la herramienta y la última publicada
@@ -38,9 +41,10 @@ COMANDOS = ("panel", "instalar", "actualizar", "estado", "proyectos", "configura
 
 # Ayuda: comando -> (sintaxis corta, qué hace en una línea, explicación larga, opciones [(opción, qué hace)]).
 AYUDA = {
-    "panel": ("panel", "Abre el panel del navegador: tus proyectos, su configuración y tu plantilla.",
-              "Abre en tu navegador (solo en tu equipo) el panel de uxyngraphar: tus proyectos con su versión y salud, "
-              "la configuración de cada uno con vista previa y copia de seguridad, y tu plantilla para proyectos nuevos.",
+    "panel": ("panel", "Abre el panel del navegador (lo mismo que «uxyngraphar» sin nada más).",
+              "Abre en tu navegador (solo en tu equipo) el panel de uxyngraphar, donde se hace todo: instalar y actualizar "
+              "proyectos, su salud y arreglos, aprobar lo pendiente, configuración, copias de seguridad, memoria, protecciones, "
+              "tu plantilla y la propia herramienta (versiones, PATH, desinstalar). Cada cambio muestra antes qué hará.",
               [("--bienvenida", "Primera pantalla tras el instalador de una línea: qué se hizo y qué queda por decidir."),
                ("--fondo", "Sin abrir el navegador ni escribir en la terminal (lo usa el propio panel para reiniciarse tras actualizar).")]),
     "instalar": ("instalar [RUTA] [opciones]", "Siembra el pack en un proyecto (sin argumentos abre la pantalla del navegador).",
@@ -76,7 +80,7 @@ AYUDA = {
                    ("--salud", "Añade un diagnóstico rápido de cada proyecto.")]),
     "configuracion": ("configuracion [RUTA]", "Configuración del proyecto (uxyngraphar.config.json) y sus problemas.",
                       "Muestra cómo queda la configuración del proyecto (uxyngraphar.config.json, en la carpeta del pack) con los valores "
-                      "por defecto aplicados y qué valores son inválidos. Para editarla en pantalla: uxyngraphar panel.", []),
+                      "por defecto aplicados y qué valores son inválidos. Para editarla en pantalla: uxyngraphar (abre el panel).", []),
     "mover-carpeta": ("mover-carpeta [RUTA] [--a uxyngraphar|docs] [--si]", "Mueve el pack de docs/ a uxyngraphar/ (opcional).",
                       "Los proyectos instalados antes de la 1.1.0 tienen el pack en docs/ y siguen funcionando así. Si prefieres "
                       "uxyngraphar/, esto lo mueve con git mv y pone al día lo que escribió uxyngraphar (lock, ganchos, reglas para "
@@ -97,9 +101,9 @@ AYUDA = {
                     "Borra la carpeta de la herramienta y el comando uxyngraphar. Los proyectos conservan su copia del pack (en uxyngraphar/, o docs/ si se instalaron antes de la 1.1.0).",
                     [("--si", "Sin pedir confirmación.")]),
 }
-GRUPOS = (("Empezar", ("panel", "instalar")),
-          ("Tus proyectos", ("actualizar", "estado", "proyectos", "configuracion", "mover-carpeta")),
-          ("La herramienta", ("autoactualizar", "usar", "version", "desinstalar")))
+GRUPOS = (("Lo único que necesitas", ("panel",)),
+          ("Avanzado: tus proyectos desde la terminal", ("instalar", "actualizar", "estado", "proyectos", "configuracion", "mover-carpeta")),
+          ("Avanzado: la herramienta desde la terminal", ("autoactualizar", "usar", "version", "desinstalar")))
 
 
 def home() -> Path:
@@ -152,7 +156,7 @@ def cmd_panel(args: list[str]) -> int:
     try:
         return servidor.servir(modo="panel", bienvenida="--bienvenida" in args, fondo="--fondo" in args)
     except OSError as exc:
-        est.error(f"No pude abrir el panel ({exc}). En texto:  uxyngraphar proyectos  ·  uxyngraphar configuracion [RUTA]")
+        est.error(f"No pude abrir el panel ({exc}). Los comandos de texto están en:  uxyngraphar ayuda")
         return 1
 
 
@@ -284,7 +288,7 @@ def cmd_configuracion(args: list[str]) -> int:
         codigo = codigo or (1 if problemas else 0)
         print(json.dumps(cfg, ensure_ascii=False, indent=2))
         print(est.dim("Qué significa cada sección y cómo cambiarla: ") + f"{inst['docs']}/10-guias/configuracion-uxyngraphar.md"
-              + est.dim("  ·  en pantalla: ") + est.comando("uxyngraphar panel") + "\n")
+              + est.dim("  ·  en pantalla: ") + est.comando("uxyngraphar") + "\n")
     return codigo
 
 
@@ -401,7 +405,9 @@ def cmd_desinstalar(args: list[str]) -> int:
 
 def ayuda_general() -> list[str]:
     lineas = [est.pintar(f"uxyngraphar {version_herramienta()}", "titulo") + est.dim("  ·  instala y actualiza el pack documental en tus proyectos"),
-              "", est.dim("Uso: ") + est.comando("uxyngraphar <comando> [opciones]")]
+              "", "Solo necesitas un comando: " + est.comando("uxyngraphar") + "  (abre el panel en tu navegador; todo se hace allí)",
+              est.dim("Los comandos de abajo hacen lo mismo desde la terminal: para usuarios avanzados, CI y agentes."),
+              "", est.dim("Uso avanzado: ") + est.comando("uxyngraphar <comando> [opciones]")]
     izquierda = max(len(AYUDA[c][0]) for c in COMANDOS)
     for nombre, comandos in GRUPOS:
         lineas += ["", est.pintar(nombre, "seccion")]
@@ -433,7 +439,9 @@ def cmd_ayuda(args: list[str]) -> int:
 def main(argv: list[str] | None = None) -> int:
     ar.preparar_consola()
     argv = list(sys.argv[1:] if argv is None else argv)
-    if not argv or argv[0] in ("-h", "--help", "ayuda"):
+    if not argv:   # una persona en su terminal: el panel; CI, un agente o sin escritorio: la ayuda
+        return cmd_panel([]) if ar.puede_abrir_panel() else cmd_ayuda([])
+    if argv[0] in ("-h", "--help", "ayuda"):
         return cmd_ayuda(argv[1:])
     if argv[0] in ("--version", "-V"):
         argv[0] = "version"

@@ -49,6 +49,8 @@ Si tus fichas nombran a un cliente, un producto o tu empresa, añádelos: `"feed
 
 ## Uso a mano
 
+En el panel: `uxyngraphar` → **Proyecto → Configuración → Colaborar** («Ver qué saldría exactamente», activar, dejar de colaborar y «Enviar ahora»). En la terminal:
+
 ```bash
 python3 uxyngraphar/scripts/feedback.py previsualizar --salida copia.json   # mira exactamente qué saldría
 python3 uxyngraphar/scripts/feedback.py activar                             # usa el receptor oficial; --url para otro

@@ -32,7 +32,7 @@ Dejar un proyecto **con el pack sembrado, configurado y usable**, e **instruir a
    No edites `uxyngraphar.config.json` sin confirmación humana. **No** ejecutes `feedback.py activar|enviar`.
 6. **Verificar** → [02-configuracion/doctor.md](02-configuracion/doctor.md)  
    `python3 uxyngraphar/scripts/doctor.py` (ruta según subcarpeta). Remedia con `--fix` solo si el propio doctor lo indica como seguro.
-7. **Cerrar** → checklist [01-instalacion/checklist.md](01-instalacion/checklist.md) + [04-uso-ia/instruir-humano.md](04-uso-ia/instruir-humano.md)
+7. **Cerrar** → checklist [01-instalacion/checklist.md](01-instalacion/checklist.md) + [04-uso-ia/instruir-humano.md](04-uso-ia/instruir-humano.md). A la persona no le pidas comandos: su único comando es `uxyngraphar` (abre el panel); dile en qué parte del panel está cada cosa ([03-uso-humano/panel.md](03-uso-humano/panel.md)).
 
 ## Reglas duras
 

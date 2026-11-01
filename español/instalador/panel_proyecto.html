@@ -6,6 +6,9 @@ const P={};
 function resetP(){for(const k in P)delete P[k]}
 // La salida de los scripts trae pistas para la terminal («añade --aplicar»…): en el panel sobran.
 const limpio=t=>String(t||"").split("\n").filter(l=>!/--apply|--aplicar|respaldos\.py|feedback\.py|DOCS roots:/.test(l)).join("\n").trim();
+// Los arreglos que sugiere el doctor nombran órdenes de terminal: en el panel se dice qué botón usar.
+const arreglo=t=>String(t||"").replace(/(python3? \S*)?doctor\.py --fix/g,"«Arreglar» (abajo)").replace(/python3? \S*instalar-ganchos\.py[^,;)]*/g,"Protecciones → «Instalar o reparar»")
+ .replace(/uxyngraphar actualizar( o actualizar-pack\.py --apply)?|actualizar-pack\.py --apply \(o uxyngraphar actualizar\)/g,"Mis proyectos → «Actualizar»");
 const pre=t=>`<pre class="diff">${esc(t)}</pre>`;
 const msg=(ok,t)=>`<div class="aviso ${ok?"ok":"er"}">${t}</div>`;
 const res=(r,ok)=>r?(r.ok?(ok||pre(limpio(r.salida)||"Hecho.")):msg(false,esc(r.error||limpio(r.salida)||"No se pudo hacer."))):"";
@@ -20,7 +23,7 @@ async function cargarSalud(){P.doc=null;P.fix=null;dibujar();P.doc=await post("/
 function vSalud(){const d=P.doc;if(!d)return `<div class="card">Revisando el proyecto…</div>`;if(!d.ok)return msg(false,esc(d.error)+(d.salida?pre(d.salida):""));
  const n=d.cuenta,M={ERROR:["er","✕ Error"],WARN:["av","! Aviso"],INFO:["","i Info"],OK:["ok","✓"]},mal=d.chequeos.filter(c=>c.nivel!=="OK"),bien=d.chequeos.filter(c=>c.nivel==="OK");
  return `<div class="card"><h2>Salud del proyecto</h2><p>${n.ERROR?`<span class="et er">${n.ERROR} errores</span> `:""}${n.WARN?`<span class="et av">${n.WARN} avisos</span> `:""}${!n.ERROR&&!n.WARN?`<span class="et ok">Todo en orden</span> `:""}<span class="mut">${n.OK} comprobaciones bien</span> <button onclick="cargarSalud()">Volver a revisar</button></p>
- ${mal.length?`<ul class="chk">${mal.map(c=>`<li><span class="et ${M[c.nivel][0]}">${M[c.nivel][1]}</span> ${esc(c.mensaje)}${c.arreglo?`<br><small class="mut">→ ${esc(c.arreglo)}</small>`:""}</li>`).join("")}</ul>`:""}
+ ${mal.length?`<ul class="chk">${mal.map(c=>`<li><span class="et ${M[c.nivel][0]}">${M[c.nivel][1]}</span> ${esc(c.mensaje)}${c.arreglo?`<br><small class="mut">→ ${esc(arreglo(c.arreglo))}</small>`:""}</li>`).join("")}</ul>`:""}
  <details><summary>Lo que está bien (${bien.length})</summary><ul class="pl">${bien.map(c=>`<li>${esc(c.mensaje)}</li>`).join("")}</ul></details></div>
  <div class="card" id="arreglo"><h2>Arreglar lo seguro</h2><p class="mut">Antes de tocar nada se guarda una copia de los archivos que puede cambiar (la restauras en «Copias de seguridad»).</p>
  <p><b>Qué hace:</b></p><ul class="pl">${d.que_arregla.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>

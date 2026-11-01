@@ -77,7 +77,6 @@
 45-mejoras-propuestas/_PROTOCOLO.md
 46-evolucion-documentacion/01-pendientes/2026-08-23/README.md
 46-evolucion-documentacion/02-en-progreso/2026-08-23/README.md
-46-evolucion-documentacion/02-en-progreso/2026-11-01/EVO-20261101-todo-desde-el-panel.md
 46-evolucion-documentacion/03-completadas/2026-08-23/EVO-20260823-actualizador-pack.md
 46-evolucion-documentacion/03-completadas/2026-08-23/EVO-20260823-archivado-periodico.md
 46-evolucion-documentacion/03-completadas/2026-08-23/EVO-20260823-cli-andamiaje.md
@@ -103,6 +102,7 @@
 46-evolucion-documentacion/03-completadas/2026-10-30/EVO-20261030-reglas-del-proyecto.md
 46-evolucion-documentacion/03-completadas/2026-11-01/EVO-20261101-carpeta-uxyngraphar.md
 46-evolucion-documentacion/03-completadas/2026-11-01/EVO-20261101-frases-activacion.md
+46-evolucion-documentacion/03-completadas/2026-11-01/EVO-20261101-todo-desde-el-panel.md
 46-evolucion-documentacion/04-archivadas/2026-08-23/README.md
 46-evolucion-documentacion/05-canceladas/2026-08-23/README.md
 46-evolucion-documentacion/06-listas-para-eliminar/2026-08-23/README.md

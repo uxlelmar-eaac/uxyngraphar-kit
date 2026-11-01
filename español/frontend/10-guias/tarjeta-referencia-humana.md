@@ -2,14 +2,14 @@
 
 Una página: **qué hacer tú** y **qué hace la IA**. Guía visual: [!00_franco-documentacion-practica.html](../!00_franco-documentacion-practica.html).
 
-**¿Qué es “revisión de pendientes”?** Revisar periódicamente las **bandejas** donde la IA dejó cosas sin ejecutar: instrucciones por aprobar, mejoras (45), cambios al pack (46) y propuestas de herramientas. Se hace con [`decisiones-pendientes`](../35-herramientas/autorizadas/decisiones-pendientes.md) (aprobar / posponer / rechazar).
+**¿Qué es “revisión de pendientes”?** Revisar periódicamente las **bandejas** donde la IA dejó cosas sin ejecutar: instrucciones por aprobar, mejoras (45), cambios al pack (46) y propuestas de herramientas. Se hace en el panel: `uxyngraphar` → **Proyecto → Pendientes** (leer, ver el cambio y aprobar / posponer / rechazar), o en la terminal con [`decisiones-pendientes`](../35-herramientas/autorizadas/decisiones-pendientes.md).
 
 ## Tres momentos
 
 | Momento | Tú | IA |
 |---------|-----|-----|
 | **1 — Pedir** | Describe el cambio en lenguaje natural | Redacta instrucción `awaiting_approval` + plan |
-| **2 — Aprobar** | Revisa alcance; marca `decision:aprobar` | Espera `approved`; no codea |
+| **2 — Aprobar** | Revisa alcance y aprueba en el panel (Proyecto → Pendientes) | Espera `approved`; no codea |
 | **3 — Revisión de pendientes** | [`decisiones-pendientes`](../35-herramientas/autorizadas/decisiones-pendientes.md) periódico | Ya cerró con `done` + colas 45/46 si aplica |
 
 ## Cuándo instrucción vs revisión de pendientes vs herramienta
@@ -19,7 +19,7 @@ Una página: **qué hacer tú** y **qué hace la IA**. Guía visual: [!00_franco
 | Feature, fix, docs de producto | Instrucción normal ([`_PLANTILLA.md`](../05-instrucciones/_PLANTILLA.md)) |
 | Solo actualizar docs / espejo | [`_PLANTILLA-solo-documentacion.md`](../05-instrucciones/_PLANTILLA-solo-documentacion.md) |
 | Acción repetible ya autorizada | Pedir en chat → IA ejecuta ficha autorizada **sin** instrucción nueva |
-| Revisar bandejas MEJ / EVO / propuestas | `python3 uxyngraphar/scripts/decisiones/decisiones.py scan` |
+| Revisar bandejas MEJ / EVO / propuestas | Panel (`uxyngraphar`) → Proyecto → Pendientes · terminal: `python3 uxyngraphar/scripts/decisiones/decisiones.py scan` |
 | Cambio al pack (taxonomía, plantillas) | Aprobar `EVO-*` → instrucción derivada; **no** pedir a la IA que reorganice carpetas |
 
 (En Windows: `py -3` en lugar de `python3`.)

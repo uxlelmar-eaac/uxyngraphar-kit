@@ -1,12 +1,10 @@
 # Sembrar el pack en un proyecto
 
-## Con la herramienta (recomendado)
+## Desde el panel (recomendado)
 
-```bash
-uxyngraphar instalar /ruta/al/repo
-```
+Abre el panel con `uxyngraphar` → **Mis proyectos** → «Instalar uxyngraphar en un proyecto nuevo». Es un asistente de 5 pasos que enseña el plan exacto antes de escribir nada y registra el proyecto al terminar. (`uxyngraphar instalar` abre el mismo asistente.) En el paso 1 escribe la ruta o pulsa **Examinar…**: se abre un explorador de carpetas dentro de la misma página (no depende del selector del sistema, así funciona igual en Linux, macOS y Windows). Desde ahí entras en las carpetas con un clic, subes con «↑ Subir» o con la ruta de arriba, saltas con los atajos (carpeta personal, Escritorio, Documentos, tus proyectos registrados y, en Windows, las unidades) y eliges con «Usar esta carpeta». Las etiquetas «git» y «uxyngraphar» marcan las carpetas que ya son repositorio o ya tienen uxyngraphar. Las carpetas ocultas aparecen si marcas «Mostrar carpetas ocultas»; `Esc` cierra sin elegir.
 
-Sin ruta abre el asistente en el navegador. En el paso 1 escribe la ruta o pulsa **Examinar…**: se abre un explorador de carpetas dentro de la misma página (no depende del selector del sistema, así funciona igual en Linux, macOS y Windows). Desde ahí entras en las carpetas con un clic, subes con «↑ Subir» o con la ruta de arriba, saltas con los atajos (carpeta personal, Escritorio, Documentos, tus proyectos registrados y, en Windows, las unidades) y eliges con «Usar esta carpeta». Las etiquetas «git» y «uxyngraphar» marcan las carpetas que ya son repositorio o ya tienen uxyngraphar. Las carpetas ocultas aparecen si marcas «Mostrar carpetas ocultas»; `Esc` cierra sin elegir.
+## Avanzado: desde la terminal (scripts, agentes, CI)
 
 ### Un solo pack (raíz del repo)
 
@@ -71,5 +69,5 @@ python3 español/instalar.py \
 
 1. Commit de `AGENTES.md` + `uxyngraphar/` (sin secretos)
 2. Configuración → [../02-configuracion/configuracion-proyecto.md](../02-configuracion/configuracion-proyecto.md)
-3. Doctor → [../02-configuracion/doctor.md](../02-configuracion/doctor.md)
-4. Si usas la herramienta: `uxyngraphar proyectos --agregar /ruta` si no quedó registrado
+3. Salud: panel → **Proyecto → Salud** ([../02-configuracion/doctor.md](../02-configuracion/doctor.md))
+4. Si no quedó registrado (instalado desde la terminal): panel → **Mis proyectos** → «Añadir»

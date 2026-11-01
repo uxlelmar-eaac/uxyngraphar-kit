@@ -20,13 +20,13 @@ Por eso basta con escribir **solo lo que el proyecto cambia**.
 
 ## Cómo se edita: el panel
 
-Con la herramienta instalada, `uxyngraphar panel` abre en tu navegador (solo en tu equipo) un panel con tres partes:
+Con la herramienta instalada, `uxyngraphar` (sin nada más) abre en tu navegador (solo en tu equipo) el panel. Lo que toca a esta configuración:
 
 - **Mis proyectos:** los proyectos registrados en este equipo, con su versión y su salud; añadir, quitar, actualizar o instalar en uno nuevo.
-- **Configuración del proyecto:** un formulario con cada sección de esta tabla, explicada. Valida mientras eliges, enseña qué cambia (también línea a línea) antes de guardar, no pisa el archivo si alguien lo cambió mientras tanto y deja una copia en `.uxyngraphar-respaldo/` (se restaura con `respaldos.py restaurar`). «Colaborar» Sí/No pasa por `feedback.py activar`/`revocar`; los campos de consentimiento, `version`, `pila` e `idioma.artefactos` no se editan desde ahí. Con `cambios_reglas: solo_humano` añade las reglas deny del agente.
-- **Plantilla y sistema:** versión de la herramienta y aviso si hay otra publicada, y la **plantilla** de este equipo (`plantilla-config.json` en la carpeta de la herramienta): tus valores preferidos de `niveles`, `limite_lineas`, `idioma.conversacion`/`commits`/`ramas`, `respaldos`, `memoria`, `reglas_proyecto` y `feedback.ocultar`. Se aplica sola al **instalar** un proyecto nuevo; en los existentes solo si lo pides, viendo antes qué cambia en cada uno. La plantilla nunca manda sobre este archivo: lo que vale es lo que está aquí (va en git, así tu equipo y el CI ven lo mismo).
+- **Proyecto → Configuración:** un formulario con cada sección de esta tabla, explicada. Valida mientras eliges, enseña qué cambia (también línea a línea) antes de guardar, no pisa el archivo si alguien lo cambió mientras tanto y deja una copia en `.uxyngraphar-respaldo/` (se restaura en **Proyecto → Copias de seguridad**). «Colaborar» Sí/No pasa por `feedback.py activar`/`revocar`; los campos de consentimiento, `version`, `pila` e `idioma.artefactos` no se editan desde ahí. Con `cambios_reglas: solo_humano` añade las reglas deny del agente.
+- **Plantilla:** la **plantilla** de este equipo (`plantilla-config.json` en la carpeta de la herramienta): tus valores preferidos de `niveles`, `limite_lineas`, `idioma.conversacion`/`commits`/`ramas`, `respaldos`, `memoria`, `reglas_proyecto` y `feedback.ocultar`. Se aplica sola al **instalar** un proyecto nuevo; en los existentes solo si lo pides, viendo antes qué cambia en cada uno. La plantilla nunca manda sobre este archivo: lo que vale es lo que está aquí (va en git, así tu equipo y el CI ven lo mismo).
 
-El panel solo lo usa una persona: si detecta CI o un agente (`CLAUDECODE`, `UXYNGRAPHAR_AGENTE`…) no cambia nada. El comando de instalación de una línea lo abre al terminar, en modo bienvenida.
+El resto del panel (salud y arreglos, pendientes por aprobar, copias, memoria, protecciones, la herramienta) se describe en el manual del kit. El panel solo lo usa una persona: si detecta CI o un agente (`CLAUDECODE`, `UXYNGRAPHAR_AGENTE`…) no cambia nada. El comando de instalación de una línea lo abre al terminar, en modo bienvenida.
 
 Ver la configuración efectiva y sus problemas en texto:
 

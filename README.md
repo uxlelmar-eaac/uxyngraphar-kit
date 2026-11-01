@@ -17,6 +17,8 @@ Toda la documentación está en **[`español/documentacion/`](./español/documen
 curl -fsSL https://github.com/uxlelmar-eaac/uxyngraphar-kit/releases/latest/download/instalar-uxyngraphar.py | python3 -
 ```
 
+Después, el único comando que necesitas es **`uxyngraphar`**: abre el panel en tu navegador y desde ahí se instala, configura y actualiza todo.
+
 ## Licencia
 
 Copyright © 2026 uxleleaac / uxlelmar

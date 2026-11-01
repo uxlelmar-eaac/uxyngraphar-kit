@@ -103,6 +103,22 @@ class TestAyuda(unittest.TestCase):
             self.assertIn(grupo, r.stdout)
         self.assertIn("uxyngraphar ayuda <comando>", r.stdout)
 
+    def test_sin_argumentos_abre_el_panel_solo_con_una_persona(self):
+        sys.path.insert(0, str(ES))
+        import uxyngraphar
+        with mock.patch.object(uxyngraphar.ar, "puede_abrir_panel", return_value=True), \
+             mock.patch.object(uxyngraphar, "cmd_panel", return_value=0) as panel, mock.patch.object(uxyngraphar, "cmd_ayuda") as ayuda:
+            self.assertEqual(uxyngraphar.main([]), 0)
+        panel.assert_called_once_with([])
+        ayuda.assert_not_called()
+        with mock.patch.object(uxyngraphar.ar, "puede_abrir_panel", return_value=False), \
+             mock.patch.object(uxyngraphar, "cmd_panel") as panel, mock.patch.object(uxyngraphar, "cmd_ayuda", return_value=0) as ayuda:
+            self.assertEqual(uxyngraphar.main([]), 0)
+        panel.assert_not_called()
+        ayuda.assert_called_once_with([])
+        r = self.correr()   # sin terminal (tubería): imprime la ayuda, que empieza por el único comando necesario
+        self.assertIn("Solo necesitas un comando", r.stdout)
+
     def test_ayuda_de_un_comando(self):
         r = self.correr("ayuda", "instalar")
         self.assertEqual(r.returncode, 0, r.stderr)

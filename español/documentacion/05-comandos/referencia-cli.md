@@ -1,4 +1,6 @@
-# Referencia CLI
+# Referencia CLI (avanzado)
+
+**Una persona solo necesita `uxyngraphar`**: abre el panel, donde se hace todo ([../03-uso-humano/panel.md](../03-uso-humano/panel.md)). Esta página es para usuarios avanzados, CI, agentes y scripts: todos los comandos siguen funcionando igual.
 
 En Windows, si no tienes `python3`, usa `py -3` (o `python`) en lugar de `python3`. Tras instalar la herramienta, abre una **terminal nueva** si `uxyngraphar` no se encuentra (PATH).
 
@@ -6,10 +8,12 @@ En Windows, si no tienes `python3`, usa `py -3` (o `python`) en lugar de `python
 
 | Comando | Qué hace |
 |---------|----------|
-| `uxyngraphar` · `uxyngraphar ayuda` | Ayuda: los comandos agrupados (Empezar, Tus proyectos, La herramienta) |
+| `uxyngraphar` | Abre el panel. Sin una persona delante (CI, un agente, sin escritorio o sin terminal interactiva) imprime la ayuda |
+| `uxyngraphar ayuda` | Ayuda: los comandos agrupados |
 | `uxyngraphar ayuda COMANDO` | Sintaxis completa y opciones de ese comando |
 | `uxyngraphar panel` | Panel local en el navegador |
 | `uxyngraphar panel --bienvenida` | Panel tras el instalador de una línea |
+| `uxyngraphar panel --fondo` | Panel sin navegador ni consola; escribe su dirección en el archivo de `UXYNGRAPHAR_PANEL_URL` (lo usa el propio panel para reabrirse tras actualizar) |
 | `uxyngraphar instalar [RUTA]` | Siembra el pack (sin args → UI) |
 | `uxyngraphar actualizar [RUTA…]` | Actualiza el núcleo |
 | `uxyngraphar actualizar --todos` | Actualiza todos los proyectos registrados |
@@ -72,6 +76,22 @@ python3 instalar-uxyngraphar.py --version X.Y.Z --sin-path --consola
 | `--consola` | No abrir el panel al terminar |
 
 Variables útiles: `UXYNGRAPHAR_HOME`, `UXYNGRAPHAR_SIN_PATH`.
+
+## Equivalencias con el panel
+
+| Terminal | Panel |
+|----------|-------|
+| `instalar`, `actualizar [--todos]`, `estado`, `proyectos`, `configuracion`, `mover-carpeta` | Mis proyectos · Proyecto → Configuración |
+| `autoactualizar`, `usar X.Y.Z`, `version`, `desinstalar`, PATH | Arriba a la derecha · Sistema |
+| `doctor.py [--fix]` | Proyecto → Salud |
+| `decisiones.py scan/register/apply` | Proyecto → Pendientes |
+| `respaldos.py listar/ver/restaurar/limpiar` | Proyecto → Copias de seguridad |
+| `memoria.py buscar/ver/recuperar/purgar` | Proyecto → Memoria |
+| `feedback.py estado/previsualizar/activar/revocar/enviar` | Proyecto → Configuración → Colaborar |
+| `instalar-ganchos.py`, CODEOWNERS | Proyecto → Protecciones |
+| `reglas.py listar/validar`, `decisiones.py archivar/limpiar` | Proyecto → Reglas y fichas |
+
+Sin equivalente en el panel (los usan agentes, CI y ganchos): `controlar.py`, `verificar-nucleo.py`, `validar-documentacion.py`, `verificar-espejo.py`, `contexto.py`, `presupuesto.py`, `costo-tokens.py`, `decisiones.py new/cerrar/estado/metricas/depurar`, `reglas.py indice`, `ajustes.py`, `actualizar-pack.py --migracion-aprobada`.
 
 ## Scripts frecuentes **dentro del proyecto** (tras sembrar)
 

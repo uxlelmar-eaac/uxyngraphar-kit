@@ -6,7 +6,7 @@ Marca en orden. La IA debe devolver este checklist al humano al terminar.
 
 - [ ] Python ≥ 3.10 (`python3` o `py -3`)
 - [ ] git disponible
-- [ ] `uxyngraphar version` OK **o** clon con `español/instalar.py`
+- [ ] `uxyngraphar` abre el panel **o** clon con `español/instalar.py`
 - [ ] Si falló el comando: PATH / terminal nueva ([herramienta.md](herramienta.md))
 
 ## Proyecto
@@ -25,12 +25,12 @@ Marca en orden. La IA debe devolver este checklist al humano al terminar.
 
 ## Verificación
 
-- [ ] `python3 uxyngraphar/scripts/doctor.py` (o ruta en subcarpeta) sin errores bloqueantes
+- [ ] Panel → **Proyecto → Salud** sin errores (o `python3 uxyngraphar/scripts/doctor.py`)
 - [ ] (Opcional) `validar-documentacion.py` y `decisiones/decisiones.py scan`
 - [ ] CI con `controlar.py` si el repo es compartido
 
 ## Handoff humano
 
 - [ ] Persona sabe aprobar instrucciones ([../03-uso-humano/aprobar-instrucciones.md](../03-uso-humano/aprobar-instrucciones.md))
-- [ ] Persona conoce el panel ([../03-uso-humano/panel.md](../03-uso-humano/panel.md))
+- [ ] Persona sabe que su único comando es `uxyngraphar` y conoce el panel ([../03-uso-humano/panel.md](../03-uso-humano/panel.md))
 - [ ] Si algo falla: [fallos-comunes.md](fallos-comunes.md)
