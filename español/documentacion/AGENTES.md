@@ -40,6 +40,7 @@ Dejar un proyecto **con el pack sembrado, configurado y usable**, e **instruir a
 - No edites el **núcleo** instalado a mano (`10-guias/`, `scripts/`, `PROTOCOLO.md`, lock…).
 - No inventes carpetas numeradas del pack (R-14).
 - No leas `95-memoria/` (R-24).
+- Si arrancas un servidor, un watcher u otra instancia para probar, ciérrala antes de terminar el turno. No dejes procesos ocupando puertos ni ralentizando a la persona. Si el puerto ya está en uso, no levantes otra copia.
 - Límites: [04-uso-ia/limites.md](04-uso-ia/limites.md).
 - Salto **MAYOR** de versión: no fuerces `actualizar`; sigue `actualizar-pack.py --migracion-aprobada` ([03-uso-humano/actualizar.md](03-uso-humano/actualizar.md)).
 

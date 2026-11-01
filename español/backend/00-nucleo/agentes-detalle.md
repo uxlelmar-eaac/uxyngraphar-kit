@@ -146,5 +146,6 @@ Instrucción [`_PLANTILLA-generar-espejo-integral.md`](../05-instrucciones/_PLAN
 - Tocar más de 5 archivos de código sin fraccionar ni ampliación aprobada, o pedir más de 2× (R-21).
 - Código, archivos, commits o ramas del producto fuera de inglés/ASCII o con idiomas mezclados (R-22).
 - Nombres genéricos, abreviaturas no universales, constantes mágicas o comentarios que explican el *qué* en lugar de renombrar (R-23).
+- Dejar en marcha un servidor, un watcher u otra instancia que hayas arrancado. Ciérrala antes de terminar el turno. Si el puerto ya está ocupado, no levantes otra copia.
 
 Operaciones → `docs/30-manuales/` únicamente en tareas ops.

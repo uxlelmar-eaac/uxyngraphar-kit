@@ -23,6 +23,7 @@ Un pedido que termina en «sigue el protocolo <frase>» pide este flujo (por def
 - Ajustes locales (R-25): si `97-ajustes-locales/INDICE.md` lista un ajuste activo para un archivo del núcleo que usas, síguelo; donde se contradigan, manda el ajuste. No crees ni edites ajustes, ni actives o ejecutes `feedback.py`: eso lo hace una persona.
 - No leer `INDICE.md`, `PROTOCOLO.md`, `10-guias/`, `90-archivo/` ni volcar `50-sistema-integral/` (usa `espejo-mapa.py`). No escribir en `35-herramientas/autorizadas/` ni ejecutar `propuestas/`.
 - No dupliques fichas HTTP del servidor: cítalas por `id`.
+- Si arrancas un servidor, un watcher u otra instancia para probar, ciérrala antes de terminar el turno. No dejes procesos ocupando puertos ni ralentizando a la persona. Si el puerto ya está en uso, no levantes otra copia.
 
 ## Núcleo de solo lectura (R-20)
 No editar, borrar, renombrar ni crear archivos en: `AGENTES.md`, `AGENTS.md`, `REGLAS.md`, `PROTOCOLO.md`, `00-nucleo/` (salvo `configuracion-proyecto`, `arquitectura`, `restricciones`, `registro-ids-compartidos`, `mapa-dependencias`), `10-guias/`, `55-automatizaciones/`, `scripts/`, `_PLANTILLA*`, `_PROTOCOLO*`; tampoco `.uxyngraphar.lock`, `.claude/settings.json`, `CODEOWNERS`, CI ni ganchos git, ni evites la verificación. Mejora al sistema → solo ficha `EVO-*`. Si el núcleo aparece alterado, **detente y avisa al humano**.

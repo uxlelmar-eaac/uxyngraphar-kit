@@ -4,6 +4,13 @@ Evolución versionada del pack. Este archivo **viaja dentro de cada pack**: el r
 
 Formato: una entrada por lote de cambios; origen (plan/EVO/decisión humana) siempre citado.
 
+## [Sin publicar]
+
+Origen: decisión humana (Uxleleaac, 2026-10-31: al levantar instancias, cerrarlas al terminar para no ralentizar el trabajo). Aplica a **ambos packs**.
+
+### Protocolo del agente
+- `AGENTES.md` y `00-nucleo/agentes-detalle.md`: quien arranque un servidor, un watcher u otra instancia la cierra antes de terminar el turno. Si el puerto ya está en uso, no levanta otra copia.
+
 ## [1.1.0] — 2026-11-01
 
 Origen: decisión humana (uxlelmar, 2026-11-01: «Ya no quiero que la carpeta se llame Docs, quiero que sea una carpeta que haga referencia a uxyngraphar» y poder configurar la frase «sigue el protocolo …»; nombre elegido: `uxyngraphar/`). Fichas: EVO-20261101-frases-activacion y EVO-20261101-carpeta-uxyngraphar. Aplica a **ambos packs**. Menor: sin cambios en el texto de las reglas R-xx; una migración automática.
