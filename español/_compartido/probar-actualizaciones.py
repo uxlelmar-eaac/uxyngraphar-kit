@@ -36,11 +36,12 @@ PACKS = {"servidor": ("go.mod", "module example.com/app\n"), "cliente": ("packag
 ETIQUETA = re.compile(r"^v(\d+\.\d+\.\d+)$")
 ENTORNO = {**os.environ, "GIT_AUTHOR_NAME": "prueba", "GIT_AUTHOR_EMAIL": "prueba@example.com", "GIT_COMMITTER_NAME": "prueba",
            "GIT_COMMITTER_EMAIL": "prueba@example.com", "PYTHONIOENCODING": "utf-8", "UXYNGRAPHAR_SIN_PATH": "1"}
-# Contenido propio del proyecto (no es del pack): tras actualizar debe seguir idéntico.
+# Contenido propio del proyecto (no es del pack): tras actualizar debe seguir idéntico. {d} = carpeta del pack.
 PROPIO = {
     "src/app.py": "def main() -> None:\n    print('hello')\n",
-    "docs/25-areas/pagos/CONTEXTO.md": "# Pagos\n\nContexto propio del proyecto.\n",
+    "{d}/25-areas/pagos/CONTEXTO.md": "# Pagos\n\nContexto propio del proyecto.\n",
 }
+CARPETAS = ("uxyngraphar", "docs")   # 1.1.0+ instala en uxyngraphar/; las anteriores, en docs/
 
 
 def correr(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
@@ -52,9 +53,13 @@ def huellas(raiz: Path, rutas: list[str]) -> dict[str, str]:
     return {r: hashlib.sha256((raiz / r).read_bytes()).hexdigest() if (raiz / r).is_file() else "falta" for r in rutas}
 
 
-def foto_docs(proyecto: Path) -> dict[str, str]:
+def foto_docs(proyecto: Path, d: str) -> dict[str, str]:
     return {p.relative_to(proyecto).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
-            for p in sorted((proyecto / "docs").rglob("*")) if p.is_file() and "__pycache__" not in p.parts}
+            for p in sorted((proyecto / d).rglob("*")) if p.is_file() and "__pycache__" not in p.parts}
+
+
+def carpeta_instalada(proyecto: Path) -> str:
+    return next((d for d in CARPETAS if (proyecto / d / lock.LOCK_NOMBRE).is_file()), "")
 
 
 def extraer(git: Path, ref: str, destino: Path) -> Path:
@@ -73,19 +78,20 @@ def preparar_proyecto(carpeta: Path, rol: str) -> None:
     (carpeta / marcador).write_text(texto, encoding="utf-8")
 
 
-def anadir_contenido(proyecto: Path) -> list[str]:
-    for rel, texto in PROPIO.items():
+def anadir_contenido(proyecto: Path, d: str) -> list[str]:
+    propio = {rel.format(d=d): texto for rel, texto in PROPIO.items()}
+    for rel, texto in propio.items():
         (proyecto / rel).parent.mkdir(parents=True, exist_ok=True)
         (proyecto / rel).write_text(texto, encoding="utf-8")
-    plantilla = proyecto / "docs/00-nucleo/configuracion-proyecto.md"
+    plantilla = proyecto / d / "00-nucleo/configuracion-proyecto.md"
     plantilla.write_text(plantilla.read_text(encoding="utf-8") + "\n- Nota propia del equipo.\n", encoding="utf-8")
-    cfg = proyecto / "docs/uxyngraphar.config.json"
+    cfg = proyecto / d / "uxyngraphar.config.json"
     datos = json.loads(cfg.read_text(encoding="utf-8"))
     datos["limite_lineas"] = 300
     cfg.write_text(json.dumps(datos, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     correr(["git", "add", "-A"], proyecto)
     correr(["git", "commit", "-q", "--no-verify", "-m", "chore: initial project"], proyecto)
-    return [*PROPIO, "docs/00-nucleo/configuracion-proyecto.md", "docs/uxyngraphar.config.json"]
+    return [*propio, f"{d}/00-nucleo/configuracion-proyecto.md", f"{d}/uxyngraphar.config.json"]
 
 
 def probar_salto(vieja: Path, version: str, rol: str, tmp: Path) -> list[str]:
@@ -93,9 +99,10 @@ def probar_salto(vieja: Path, version: str, rol: str, tmp: Path) -> list[str]:
     proyecto = tmp / f"{version}-{rol}"
     preparar_proyecto(proyecto, rol)
     r = correr([sys.executable, str(vieja / "instalar.py"), "--consola", "--proyecto", str(proyecto), "--pack", rol, "--si"], tmp)
-    if r.returncode != 0 or not (proyecto / "docs" / lock.LOCK_NOMBRE).is_file():
+    d = carpeta_instalada(proyecto)
+    if r.returncode != 0 or not d:
         return [f"no se pudo instalar {version} con su instalador: {(r.stdout + r.stderr).strip()[-400:]}"]
-    propios = anadir_contenido(proyecto)
+    propios = anadir_contenido(proyecto, d)
     antes = huellas(proyecto, propios)
     fallos: list[str] = []
     r = correr([sys.executable, str(ES / "actualizar.py"), str(proyecto), "--si"], tmp)
@@ -103,7 +110,7 @@ def probar_salto(vieja: Path, version: str, rol: str, tmp: Path) -> list[str]:
     if r.returncode != 0 or "Traceback" in salida:
         return [f"actualizar terminó con {r.returncode}: {salida.strip()[-600:]}"]
     actual = lock.version_de(ES / "backend")
-    if (lock.leer(proyecto, "docs") or {}).get("version") != actual:
+    if (lock.leer(proyecto, d) or {}).get("version") != actual:
         fallos.append(f"el lock no quedó en {actual}")
     cambiados = [k for k, v in huellas(proyecto, propios).items() if v != antes[k]]
     if cambiados:
@@ -111,8 +118,8 @@ def probar_salto(vieja: Path, version: str, rol: str, tmp: Path) -> list[str]:
     nuevos = sorted(p.relative_to(proyecto).as_posix() for p in proyecto.rglob("*.uxyngraphar-nuevo"))
     if nuevos:
         fallos.append(f"conflictos sin haber editado el núcleo: {', '.join(nuevos)}")
-    fallos += [f"herramienta rota: {f}" for f in contrato.probar(proyecto, "docs")]
-    r = correr([sys.executable, "docs/scripts/verificar-nucleo.py", "--docs", "docs"], proyecto)
+    fallos += [f"herramienta rota: {f}" for f in contrato.probar(proyecto, d)]
+    r = correr([sys.executable, f"{d}/scripts/verificar-nucleo.py", "--docs", d], proyecto)
     if r.returncode != 0:
         fallos.append(f"verificar-nucleo falla tras actualizar: {(r.stdout + r.stderr).strip()[-300:]}")
     (proyecto / "src/app.py").write_text(PROPIO["src/app.py"] + "\n\nmain()\n", encoding="utf-8")
@@ -120,9 +127,9 @@ def probar_salto(vieja: Path, version: str, rol: str, tmp: Path) -> list[str]:
     r = correr(["git", "commit", "-q", "-m", "chore: update app"], proyecto)
     if r.returncode != 0:
         fallos.append(f"un commit normal no pasa los ganchos tras actualizar: {(r.stdout + r.stderr).strip()[-400:]}")
-    foto = foto_docs(proyecto)
+    foto = foto_docs(proyecto, d)
     r = correr([sys.executable, str(ES / "actualizar.py"), str(proyecto), "--si"], tmp)
-    if r.returncode != 0 or foto_docs(proyecto) != foto:
+    if r.returncode != 0 or foto_docs(proyecto, d) != foto:
         fallos.append("actualizar por segunda vez cambió algo (debería estar al día)")
     return fallos
 
