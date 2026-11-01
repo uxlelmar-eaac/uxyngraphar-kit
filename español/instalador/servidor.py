@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import secrets
+import socketserver
 import subprocess
 import sys
 import threading
@@ -149,6 +150,13 @@ def crear(token: str, apagar, modo: str = "instalar", inicial: list[str] | None 
     return Manejador
 
 
+class Servidor(ThreadingHTTPServer):
+    """Sin la consulta DNS de HTTPServer.server_bind (socket.getfqdn): en algunos macOS tarda decenas de segundos."""
+    def server_bind(self):
+        socketserver.TCPServer.server_bind(self)
+        self.server_name, self.server_port = self.server_address[:2]
+
+
 def _vigilar_inactividad(servidor: ThreadingHTTPServer) -> None:
     while time.time() - ESTADO["ultima"] < INACTIVO_FONDO:
         time.sleep(60)
@@ -158,12 +166,12 @@ def _vigilar_inactividad(servidor: ThreadingHTTPServer) -> None:
 def servir(abrir: bool = True, modo: str = "instalar", rutas: list[str] | None = None, bienvenida: bool = False, fondo: bool = False) -> int:
     """fondo: arrancado por otro panel (tras actualizar): sin navegador ni consola; escribe su dirección en UXYNGRAPHAR_PANEL_URL."""
     token = secrets.token_urlsafe(16)
-    servidor: ThreadingHTTPServer | None = None
+    servidor: Servidor | None = None
 
     def apagar():
         threading.Thread(target=lambda: servidor.shutdown() if servidor else None, daemon=True).start()
 
-    servidor = ThreadingHTTPServer(("127.0.0.1", 0), crear(token, apagar, modo, rutas, bienvenida))
+    servidor = Servidor(("127.0.0.1", 0), crear(token, apagar, modo, rutas, bienvenida))
     servidor.daemon_threads = False   # al cerrar se espera a las respuestas en curso («Cerrar», reiniciar, desinstalar)
     url = f"http://127.0.0.1:{servidor.server_address[1]}/"
     if fondo:

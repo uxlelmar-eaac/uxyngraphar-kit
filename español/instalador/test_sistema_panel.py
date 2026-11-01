@@ -112,6 +112,12 @@ class TestReinicio(Base):
         self.assertIn("se rompió al arrancar", r["error"])
         self.assertEqual(list(self.home.glob(".panel-*")), [])
 
+    def test_el_servidor_no_consulta_dns(self):   # getfqdn colgaba el panel en macOS
+        with mock.patch("socket.getfqdn", side_effect=AssertionError("getfqdn")):
+            srv = servidor.Servidor(("127.0.0.1", 0), servidor.crear("t", lambda: None))
+        srv.server_close()
+        self.assertEqual(srv.server_name, "127.0.0.1")
+
     @unittest.skipIf(os.name == "nt", "un enlace simbólico en Windows pide permisos")
     def test_panel_real_en_segundo_plano(self):
         (self.home / "versiones").mkdir()
