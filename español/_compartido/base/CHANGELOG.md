@@ -4,6 +4,26 @@ Evolución versionada del pack. Este archivo **viaja dentro de cada pack**: el r
 
 Formato: una entrada por lote de cambios; origen (plan/EVO/decisión humana) siempre citado.
 
+## [1.1.0] — 2026-11-01
+
+Origen: decisión humana (uxlelmar, 2026-11-01: «Ya no quiero que la carpeta se llame Docs, quiero que sea una carpeta que haga referencia a uxyngraphar» y poder configurar la frase «sigue el protocolo …»; nombre elegido: `uxyngraphar/`). Fichas: EVO-20261101-frases-activacion y EVO-20261101-carpeta-uxyngraphar. Aplica a **ambos packs**. Menor: sin cambios en el texto de las reglas R-xx; una migración automática.
+
+### Frases que activan el protocolo
+- Nueva sección `protocolo.alias` en `uxyngraphar.config.json` (por defecto `uxyngraphar`, `uxyn`, `uxynar`): un pedido que termina en «sigue el protocolo <frase>» pide el flujo de `AGENTES.md`. Se edita en el panel (proyecto y plantilla).
+- El agente las ve al empezar en la línea «Activación» de `ESTADO.md` (al instalar, al guardar desde el panel, con `decisiones.py estado --escribir` y `doctor.py --fix`; el doctor avisa si está desfasada). `contexto.py --activacion` la imprime.
+
+### Carpeta del pack: `uxyngraphar/`
+- Las instalaciones nuevas van a `uxyngraphar/` (o `apps/<app>/uxyngraphar/`). Las anteriores siguen en `docs/` y funcionan igual: actualizar no mueve nada.
+- Las herramientas deducen la carpeta si no se indica `--docs` (`scripts/carpeta_pack.py`) y aceptan rutas con cualquiera de los dos prefijos en las fichas.
+- `AGENTES.md` escribe las rutas relativas a «la carpeta del pack»; guías y ejemplos usan `uxyngraphar/`.
+- Opcional: `uxyngraphar mover-carpeta` (o el panel) mueve `docs/` → `uxyngraphar/` con `git mv`, pone al día solo lo que escribió uxyngraphar (lock, ganchos, reglas para agentes, CODEOWNERS, `.gitignore`, y `CLAUDE.md`/CI si no se cambiaron) y vuelve atrás si algo falla.
+
+### Migración
+- `1.1.0-activacion-en-estado`: añade a `ESTADO.md` la línea de activación con las frases del proyecto.
+
+### Correcciones
+- Al reescribir un archivo dentro de una actualización se conservan sus permisos (un gancho de git sigue siendo ejecutable).
+
 ## [1.0.2] — 2026-10-31
 
 Origen: decisión humana (uxlelmar, 2026-10-31: el repositorio de GitHub pasa a llamarse **uxyngraphar-kit**; y «quiero elegir la carpeta desde la propia interfaz», tras ver que «Examinar…» fallaba en Linux sin selector del sistema; publicar como **v1.0.2**). Aplica a **ambos packs**. Parche: sin cambios de reglas, de estructura del pack ni migraciones.

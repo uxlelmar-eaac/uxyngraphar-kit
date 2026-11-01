@@ -1,12 +1,13 @@
 # Versión del núcleo
 
 ```yaml
-version: 1.0.2
-fecha: 2026-10-31
+version: 1.1.0
+fecha: 2026-11-01
 ```
 
 ## Historial
 
+- `1.1.0` — Menor: la carpeta del pack pasa a llamarse `uxyngraphar/` en las instalaciones nuevas (las anteriores siguen en `docs/`; moverlas es opcional con `uxyngraphar mover-carpeta`) y las frases que activan el protocolo («sigue el protocolo uxyngraphar | uxyn | uxynar») se configuran en `protocolo.alias`. Sin cambios en el texto de las reglas. Una migración automática (línea de activación en `ESTADO.md`). Aplica a ambos packs.
 - `1.0.2` — Parche: el repositorio pasa a llamarse `uxlelmar-eaac/uxyngraphar-kit` (enlaces y descargas apuntan ahí; el nombre anterior sigue redirigiendo) y «Examinar…» abre un explorador de carpetas dentro de la página en lugar del selector del sistema. Sin cambios de reglas ni de estructura del pack. Aplica a ambos packs.
 - `1.0.1` — Parche: panel más claro (configuraciones rápidas, pestaña de atajos y comandos, versión actual y actualizar con un clic), toda la documentación del kit reunida en `español/documentacion/` y consola más clara y con color (ayuda por grupos y `uxyngraphar ayuda <comando>`). Sin cambios de reglas ni de estructura del pack. Aplica a ambos packs.
 - `1.0.0` — Primera versión publicada de **uxyngraphar**. Packs backend y frontend autosuficientes con protocolo R-01–R-25, instalación y actualización, control de construcción, CI, núcleo inviolable, memoria del sistema, reglas del proyecto, ajustes locales y envío de sugerencias, panel visual (`uxyngraphar panel`) para proyectos, configuración y plantilla del equipo, e instalador interactivo. Aplica a ambos packs.

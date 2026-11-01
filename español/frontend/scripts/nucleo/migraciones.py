@@ -97,8 +97,10 @@ def _activacion_en_estado(ctx: Contexto) -> list[str]:
     return ["ESTADO.md: añadida la línea con las frases que activan el protocolo («sigue el protocolo …»)"]
 
 
-# Registro en orden de versión. 1.0.x no tenía migraciones: la primera versión publicada ya instalaba todo en su forma final.
-REGISTRO: list[Migracion] = []
+# Registro en orden de versión (1.0.x no tenía migraciones: la primera versión publicada ya instalaba todo en su forma final).
+REGISTRO: list[Migracion] = [
+    Migracion("1.1.0", "1.1.0-activacion-en-estado", "Mostrar en ESTADO.md las frases que activan el protocolo", _activacion_en_estado),
+]
 
 
 def pendientes(adoptada: str, nueva: str, hechas: set[str], registro: list[Migracion] | None = None) -> list[Migracion]:
