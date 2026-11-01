@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import os
 import secrets
+import signal
 import subprocess
 import sys
 import time
@@ -137,7 +138,8 @@ def reiniciar(espera: float = 25) -> dict:
         return {"ok": False, "error": f"Cierra este panel y vuelve a abrirlo con «uxyngraphar» para usar la {v or 'versión nueva'}."}
     nombre = f".panel-{secrets.token_hex(6)}"
     aviso, registro = h / f"{nombre}.url", h / f"{nombre}.log"   # el log guarda los errores del panel nuevo si no arranca
-    env = {**os.environ, "UXYNGRAPHAR_HOME": str(h), "UXYNGRAPHAR_PANEL_URL": str(aviso)}
+    env = {**os.environ, "UXYNGRAPHAR_HOME": str(h), "UXYNGRAPHAR_PANEL_URL": str(aviso),
+           "PYTHONFAULTHANDLER": "1"}   # si se queda colgado, SIGABRT deja en el log dónde estaba
     opciones = ({"creationflags": 0x00000008 | 0x00000200} if ar.ES_WINDOWS   # DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
                 else {"start_new_session": True})   # sigue vivo cuando este proceso y su terminal terminen
     try:
@@ -159,16 +161,24 @@ def reiniciar(espera: float = 25) -> dict:
         if terminado or time.time() >= limite:
             break
         time.sleep(0.2)
-    if hijo.poll() is None:   # no respondió: que no se quede colgado en segundo plano
+    if hijo.poll() is None and not ar.ES_WINDOWS:   # no respondió: primero que cuente dónde se quedó (faulthandler)
+        hijo.send_signal(signal.SIGABRT)
+        try:
+            hijo.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            pass
+    if hijo.poll() is None:   # que no se quede colgado en segundo plano
         hijo.kill()
     try:
         hijo.wait(timeout=10)
     except subprocess.TimeoutExpired:
         pass
     _HIJOS.remove(hijo)
-    detalle = registro.read_text(encoding="utf-8", errors="replace").strip()[-800:] if registro.is_file() else ""
+    detalle = registro.read_text(encoding="utf-8", errors="replace").strip()[-3000:] if registro.is_file() else ""
     _borrar(aviso)
     _borrar(registro)
+    if not detalle and terminado and hijo.returncode:
+        detalle = f"(terminó con el código {hijo.returncode})"
     error = f"El panel de la {v} no respondió a tiempo. Cierra este y ábrelo con «uxyngraphar»."
     return {"ok": False, "error": error + (f"\n\n{detalle}" if detalle else "")}
 

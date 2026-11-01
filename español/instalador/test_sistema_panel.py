@@ -97,6 +97,14 @@ class TestReinicio(Base):
         self.assertIn("no respondió", sis.reiniciar(espera=0.5)["error"])
         self.assertEqual(len(sis._HIJOS), antes, "el panel que no respondió se cierra")
 
+    @unittest.skipIf(os.name == "nt", "SIGABRT y faulthandler solo fuera de Windows")
+    def test_colgado_cuenta_donde_se_quedo(self):
+        self.version("1.2.0", "import time\n\ndef esperando_algo():\n    time.sleep(60)\n\nesperando_algo()\n")
+        (self.home / "actual").write_text("1.2.0\n")
+        r = sis.reiniciar(espera=3)
+        self.assertIn("esperando_algo", r["error"])
+        self.assertEqual(list(self.home.glob(".panel-*")), [])
+
     def test_cuenta_por_que_fallo(self):
         self.version("1.2.0", "import sys\nsys.exit('se rompió al arrancar')\n")
         (self.home / "actual").write_text("1.2.0\n")
