@@ -39,4 +39,4 @@ El pedido humano pasaba directo a instrucción `awaiting_approval`. No había fa
 - Config `preguntas: { activo: true, rondas: [10, 5, 3] }` (omisión por config o pedido «salta preguntas»).
 - Adaptar `_PLANTILLA.md` de instrucción: sección **Clarificación (preguntas y respuestas)** + campos `preguntas_id` / `preguntas_omitidas`.
 - Mandato en `AGENTES.md`: fase de preguntas **antes** de `new instruccion` cuando aplica; R-03 intacto (no codear sin instrucción aprobada).
-- Taxonomía, validador, clasificación, memoria, paridad y docs humanas/IA alineados. Versión **1.3.0** (MENOR).
+- Taxonomía, validador, clasificación, memoria, paridad y docs humanas/IA alineados. Versión **1.2.3**.
