@@ -69,6 +69,9 @@ class TestActualizarWeb(unittest.TestCase):
         self.assertEqual(r[2]["packs"], [])                       # el repetido no se duplica
         self.assertEqual(r[0]["packs"][0]["estado"], "al_dia")
 
+        # R-20: la instalación protege el núcleo; descongelar para simular una edición del usuario.
+        import proteccion
+        proteccion.descongelar_fs(self.repo, "uxyngraphar")
         regla = self.repo / "uxyngraphar" / "REGLAS.md"
         regla.write_text(regla.read_text(encoding="utf-8") + "\nmi nota\n", encoding="utf-8")
         self.lock(version=VERSION, base={"REGLAS.md": "0" * 64})

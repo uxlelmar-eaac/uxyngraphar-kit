@@ -15,6 +15,7 @@ import json
 import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 from datetime import datetime
@@ -113,8 +114,11 @@ def respaldar(repo: Path, rels: list[str], motivo: str) -> Path:
         carpeta, n = repo / ".uxyngraphar-respaldo" / f"{base}-{n}", n + 1
     existentes = sorted({r for r in rels if (repo / r).is_file()})
     for rel in existentes:
-        (carpeta / rel).parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(repo / rel, carpeta / rel)
+        dest = carpeta / rel
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(repo / rel, dest)
+        # R-20: copy2 conserva solo-lectura; la copia debe poder podarse (Windows no borra sin escritura).
+        os.chmod(dest, stat.S_IMODE(dest.stat().st_mode) | stat.S_IWUSR)
     _manifiesto(carpeta, existentes, [], motivo)
     return carpeta
 
@@ -126,6 +130,17 @@ def _manifiesto(carpeta: Path, archivos: list[str], añadidos: list[str], motivo
     (carpeta / "_respaldo.json").write_text(json.dumps(datos, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
 
 
+def _borrar_copia(p: Path) -> None:
+    """Borra un archivo de la carpeta de respaldo; en Windows hace falta escritura si vino de un núcleo congelado."""
+    if not p.is_file():
+        return
+    try:
+        p.unlink()
+    except PermissionError:
+        os.chmod(p, stat.S_IMODE(p.stat().st_mode) | stat.S_IWUSR)
+        p.unlink()
+
+
 def cerrar_respaldo(carpeta: Path, antes: dict, despues: dict, motivo: str) -> tuple[str, list[str]]:
     """Deja en la copia solo lo que cambió (y anota lo creado, que se retira al restaurar). Sin cambios, la borra."""
     cambiados = sorted(r for r in set(antes) | set(despues) if antes.get(r) != despues.get(r))
@@ -133,7 +148,7 @@ def cerrar_respaldo(carpeta: Path, antes: dict, despues: dict, motivo: str) -> t
         shutil.rmtree(carpeta, ignore_errors=True)
         return "", []
     for rel in [r for r in antes if antes[r] and r not in cambiados]:
-        (carpeta / rel).unlink(missing_ok=True)
+        _borrar_copia(carpeta / rel)
     _manifiesto(carpeta, [r for r in cambiados if antes.get(r)], [r for r in cambiados if not antes.get(r)], motivo)
     return f"actualizacion/{carpeta.name}", cambiados
 

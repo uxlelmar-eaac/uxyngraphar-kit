@@ -67,11 +67,11 @@ class TestVersiones(Base):
 
     def test_usar_una_que_no_esta_la_descarga(self):
         with mock.patch.object(sis.panel, "ejecutar_herramienta", return_value={"ok": True, "salida": "Listo"}) as ej:
-            r = sis.usar("1.2.1")
+            r = sis.usar("1.2.2")
         self.assertTrue(r["ok"] and r["reiniciable"], r)
-        self.assertEqual(ej.call_args.args[0], ["autoactualizar", "--version", "1.2.1"])
+        self.assertEqual(ej.call_args.args[0], ["autoactualizar", "--version", "1.2.2"])
         with mock.patch.object(sis.panel, "ejecutar_herramienta", return_value={"ok": False, "error": "sin red"}):
-            self.assertFalse(sis.usar("1.2.1")["ok"])
+            self.assertFalse(sis.usar("1.2.2")["ok"])
 
 
 class TestReinicio(Base):

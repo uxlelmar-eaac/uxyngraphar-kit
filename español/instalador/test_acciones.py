@@ -96,6 +96,9 @@ class TestSalud(Base):
         self.assertEqual((self.repo / ".gitignore").read_text(), "x\n")
 
     def test_pack_antiguo_sin_script(self):
+        # R-20: con --proteger scripts/ y doctor.py están en solo lectura; hay que descongelar para simular el pack viejo.
+        import proteccion
+        proteccion.descongelar_fs(self.repo, D)
         (self.repo / D / "scripts" / "doctor.py").unlink()
         self.assertIn("actualízalo", acc.doctor(self.r, D)["error"])
         self.assertIn("actualízalo", acc.arreglar(self.r, D)["error"])

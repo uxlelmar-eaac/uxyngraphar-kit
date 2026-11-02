@@ -1,12 +1,13 @@
 # Versión del núcleo
 
 ```yaml
-version: 1.2.1
+version: 1.2.2
 fecha: 2026-11-01
 ```
 
 ## Historial
 
+- `1.2.2` — Parche: el panel deja las copias de `.uxyngraphar-respaldo/` escribibles tras respaldar archivos congelados (R-20; Windows no podía podar `settings.json`) y las pruebas del instalador descongelan antes de simular alteraciones. Sin migraciones. Aplica a ambos packs.
 - `1.2.1` — Parche: núcleo inviolable fail-closed en proyectos (hooks Cursor con `failClosed`, manifiesto, regla `.cursor/rules`, archivos N y carpetas del núcleo en solo lectura; doctor ERROR si falta protección; `niveles.nucleo` obligado a bloqueante; restaurar/deshacer/lock respetan el congelado). Sin migraciones. Aplica a ambos packs.
 - `1.2.0` — Menor: el único comando que necesita una persona es `uxyngraphar`, que abre el panel; desde él se hace todo (salud y arreglos, aprobar pendientes, copias de seguridad, memoria, protecciones, versiones, PATH, desinstalar) y se reabre solo tras actualizar. Los comandos siguen para CI, agentes y scripts. Los agentes cierran las instancias que levantan. Sin cambios en el texto de las reglas ni migraciones. Aplica a ambos packs.
 - `1.1.0` — Menor: la carpeta del pack pasa a llamarse `uxyngraphar/` en las instalaciones nuevas (las anteriores siguen en `docs/`; moverlas es opcional con `uxyngraphar mover-carpeta`) y las frases que activan el protocolo («sigue el protocolo uxyngraphar | uxyn | uxynar») se configuran en `protocolo.alias`. Sin cambios en el texto de las reglas. Una migración automática (línea de activación en `ESTADO.md`). Aplica a ambos packs.

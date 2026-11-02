@@ -4,6 +4,14 @@ Evolución versionada del pack. Este archivo **viaja dentro de cada pack**: el r
 
 Formato: una entrada por lote de cambios; origen (plan/EVO/decisión humana) siempre citado.
 
+## [1.2.2] — 2026-11-01
+
+Origen: CI de `v1.2.1` (PermissionError al podar respaldos y al simular alteraciones sobre núcleo congelado R-20). Aplica a **ambos packs**. Parche: sin migraciones.
+
+### Instalador / panel
+- Tras copiar a `.uxyngraphar-respaldo/`, se restaura escritura en la copia (R-20 / Windows: no se podía borrar `.claude/settings.json` al cerrar el respaldo de «Arreglar»).
+- Pruebas del instalador: `descongelar_fs` antes de mutar `doctor.py` / `REGLAS.md` en instalaciones con `--proteger`.
+
 ## [1.2.1] — 2026-11-01
 
 Origen: decisión humana (Uxleleaac, 2026-11-01: los agentes no deben poder destruir ni alterar el núcleo de uxyn en un proyecto real; framework rígido — nadie, ni el humano del proyecto, altera el núcleo). Aplica a **ambos packs**. Parche: sin migraciones.
