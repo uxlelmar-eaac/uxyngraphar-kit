@@ -137,6 +137,15 @@ class TestPreguntas(unittest.TestCase):
             self.assertEqual(cfg.preguntas_efectivas(c), {"activo": False, "rondas": [4, 2]})
             self.assertEqual(cfg.validar(c), [])
 
+    def test_preguntas_no_relajan_nucleo(self):
+        c = cfg.por_defecto()
+        c["preguntas"] = {"activo": False, "rondas": [1]}
+        c["niveles"]["nucleo"] = "aviso"
+        self.assertTrue(any("nucleo" in e and "bloqueante" in e for e in cfg.validar(c)))
+        c["niveles"]["nucleo"] = "bloqueante"
+        self.assertEqual(cfg.validar(c), [])
+        self.assertEqual(c["niveles"]["nucleo"], "bloqueante")
+
 
 class TestPuerta(unittest.TestCase):
     def setUp(self):
