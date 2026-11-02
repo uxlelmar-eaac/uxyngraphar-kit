@@ -82,6 +82,8 @@ def rutas_acciones(rd) -> dict:
     s = lambda b, k: str(b.get(k) or "")   # noqa: E731
     lista = lambda b: [str(x) for x in (b.get("archivos") or [])]   # noqa: E731
     return {"/api/panel/doctor": lambda b: acc.doctor(*rd(b)), "/api/panel/arreglar": lambda b: acc.arreglar(*rd(b)),
+            "/api/panel/restaurar-nucleo": lambda b: acc.restaurar_nucleo(*rd(b)),
+            "/api/panel/abrir": lambda b: acc.abrir(*rd(b), s(b, "rel")),
             "/api/panel/pendientes": lambda b: acc.pendientes(*rd(b)), "/api/panel/ficha": lambda b: acc.ficha(*rd(b), s(b, "rel")),
             "/api/panel/decision/previa": lambda b: acc.decision_previa(*rd(b), s(b, "id"), s(b, "accion")),
             "/api/panel/decision/aplicar": lambda b: acc.decidir(*rd(b), s(b, "id"), s(b, "accion")),

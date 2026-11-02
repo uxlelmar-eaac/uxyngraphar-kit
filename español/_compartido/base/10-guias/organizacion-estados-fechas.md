@@ -49,8 +49,9 @@ Regla dura: [R-17](../PROTOCOLO.md).
 
 ## Mapeo `status` de frontmatter ↔ carpeta de estado
 
-| Sección | `01-pendientes` | `02-en-progreso` | `03-completadas` | `04-archivadas` | `05-canceladas` | `06-listas-para-eliminar` |
-|---------|-----------------|------------------|------------------|-----------------|-----------------|---------------------------|
+| Sección | `01-pendientes` / `01-en-curso` | `02-en-progreso` | `03-completadas` | `04-archivadas` | `05-canceladas` | `06-listas-para-eliminar` |
+|---------|----------------------------------|------------------|------------------|-----------------|-----------------|---------------------------|
+| `03-preguntas` | `en-curso` (`01-en-curso`) | — | `completada` | — | `cancelada` | — |
 | `05-instrucciones` | `draft`, `awaiting_approval` | `approved`, `executing` | `done` | `archivada` | `cancelled` | `para-eliminar` |
 | `20-decisiones` (ADR) | `propuesta` | `en-evaluacion` (raro) | `aceptada` | `reemplazada`, `obsoleta` | `rechazada` | `para-eliminar` |
 | `40-auditorias` | `pendiente` | `activa` | `cerrada` | `archivada` | `cancelada` | `para-eliminar` |
@@ -64,6 +65,7 @@ Enums completos: [convenciones-frontmatter.md](../00-nucleo/convenciones-frontma
 
 | Sección | Qué acumula |
 |---------|-------------|
+| `03-preguntas/` | Sesiones de clarificación antes de la instrucción (estados reducidos: `01-en-curso`, `03-completadas`, `05-canceladas`; ver [fase-preguntas.md](fase-preguntas.md)) |
 | `05-instrucciones/` | Instrucciones de tarea |
 | `20-decisiones/` | ADR |
 | `40-auditorias/` | Auditorías e investigaciones formales |

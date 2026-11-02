@@ -50,6 +50,11 @@ class TestClasificacion(unittest.TestCase):
             "46-evolucion-documentacion/03-completadas/2026-08-23/README.md": "N",
             "05-instrucciones/02-en-progreso/2026-01-01/a.md": "C", "35-herramientas/autorizadas/decisiones-pendientes.md": "N",
             "35-herramientas/autorizadas/mi-herramienta.md": "C", "scripts/__pycache__/a.pyc": "X", "PARIDAD-PACKS.md": "X", "docs-extra.md": None,
+            # 03-preguntas (v1.3): esqueleto N/M; fichas de sesión C — no debilita R-20
+            "03-preguntas/_PROTOCOLO.md": "N", "03-preguntas/INDICE.md": "M",
+            "03-preguntas/01-en-curso/2026-08-23/README.md": "N",
+            "03-preguntas/01-en-curso/2026-11-02/PRE-20261102-001-auth.md": "C",
+            "00-nucleo/frontmatter/preguntas.md": "N", "10-guias/fase-preguntas.md": "N",
         }
         for rel, esperado in casos.items():
             self.assertEqual(cl.clasificar(rel), esperado, rel)

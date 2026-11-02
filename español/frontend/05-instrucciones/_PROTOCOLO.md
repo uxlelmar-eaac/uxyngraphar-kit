@@ -23,13 +23,13 @@
 
 ## Obligatorio (incl. eficiencia IA)
 
-1. Crear instrucción **antes** de editar código o documentación (en `01-pendientes/YYYY-MM-DD/`).
-2. Rellenar **`lectura_minima`**, **`anclas_codigo`**, **`espejo_actualizar`**, **`espejo_leer`**, **`acto`**, **`vinculos_entrada`** en frontmatter (listas cerradas).
+1. **Antes de crear** la instrucción: si `preguntas.activo` y el humano no omitió la fase → rondas en chat + ficha en `03-preguntas/` ([fase-preguntas.md](../10-guias/fase-preguntas.md)); el Q&A se vuelca a § Clarificación. Luego crear la instrucción en `01-pendientes/YYYY-MM-DD/` **antes** de editar código o documentación.
+2. Rellenar **`lectura_minima`**, **`anclas_codigo`**, **`espejo_actualizar`**, **`espejo_leer`**, **`acto`**, **`vinculos_entrada`** en frontmatter (listas cerradas). Si hubo fase: `preguntas_id`; si se omitió: `preguntas_omitidas: true`.
 3. Al aprobar: `status: approved` + `approved_at` + mover a `02-en-progreso/` (misma carpeta de fecha).
 4. Al cerrar (`done`): rellenar **`vinculos_salida`** con ids y paths de docs tocados + mover a `03-completadas/`.
 5. **`espejo_actualizar`:** obligatorio si `anclas_codigo` no está vacío (mapeo 1:1 a `uxyngraphar/50-sistema-integral/...`). Typos sin cambio de rol → puede quedar `[]` (excepción documentada en alcance).
 6. **`espejo_leer`:** default `[]`. Poblar solo si el humano pide consultar mapa existente (≤3 paths).
-7. Plan en **Plan de ejecución**; estado `awaiting_approval` hasta OK humano.
+7. Plan en **Plan de ejecución** (debe reflejar las respuestas de Clarificación); estado `awaiting_approval` hasta OK humano.
 8. Al cerrar: Resultado con docs operativas **y** espejo.
 9. Respetar presupuestos; ampliar → aprobación.
 10. **Más de 5 archivos de código (R-21):** evaluar primero si es sumamente necesario. No lo es → fraccionar en instrucciones hijas de ≤5 (`fraccion_de`, `depende_de`). Lo es → `ampliacion_factor` 1.5–2 (tope 7–10) + `ampliacion_justificacion`; aprobar fija `ampliacion_aprobada_at` y sin él no se ejecuta. Ver [ampliacion-alcance.md](../00-nucleo/ampliacion-alcance.md).

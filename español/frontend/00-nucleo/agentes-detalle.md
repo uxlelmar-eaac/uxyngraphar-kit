@@ -2,7 +2,7 @@
 
 Detalle completo de las reglas del agente. **No se carga por defecto**: `AGENTES.md` (raíz) es el punto de entrada compacto. Léelo solo si una instrucción lo cita o necesitas una regla concreta; solo lo que indique la instrucción aprobada (presupuesto abajo). (Compatibilidad: `AGENTS.md` en la raíz es un alias que apunta aquí.)
 
-**Pedido humano vago:** redactar instrucción `awaiting_approval` (plantilla según `acto` en [ciclo-vinculante.md](ciclo-vinculante.md)) **antes** de leer más docs o codear.
+**Pedido humano vago o nuevo:** si `preguntas.activo` y el humano no omitió la fase → rondas en chat + ficha en `03-preguntas/` ([fase-preguntas.md](../10-guias/fase-preguntas.md)); **después** redactar instrucción `awaiting_approval` (plantilla según `acto` en [ciclo-vinculante.md](ciclo-vinculante.md)) con § Clarificación, **antes** de leer más docs o codear. Si la fase está apagada u omitida → instrucción directa como antes.
 
 ## Presupuesto IA (obligatorio)
 

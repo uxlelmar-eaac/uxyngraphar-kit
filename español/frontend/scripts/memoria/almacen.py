@@ -29,11 +29,13 @@ from depurar import enlaces_entrantes  # noqa: E402
 CARPETA = "95-memoria"
 CATALOGO, ACCESOS = "catalogo.jsonl", "registro-accesos.jsonl"
 FIJOS = {"INDICE.md", CATALOGO, ACCESOS}
-SECCIONES = {"05-instrucciones": "instrucciones", "20-decisiones": "decisiones", "40-auditorias": "auditorias",
-             "45-mejoras-propuestas": "mejoras", "46-evolucion-documentacion": "evolucion", "35-herramientas/propuestas": "herramientas"}
+SECCIONES = {"03-preguntas": "preguntas", "05-instrucciones": "instrucciones", "20-decisiones": "decisiones",
+             "40-auditorias": "auditorias", "45-mejoras-propuestas": "mejoras",
+             "46-evolucion-documentacion": "evolucion", "35-herramientas/propuestas": "herramientas"}
 GUARDABLES = ("03-completadas", "04-archivadas", "05-canceladas", "06-listas-para-eliminar")   # 01 y 02 siguen vivas
 FICHA_RE = re.compile(r"^(?P<seccion>" + "|".join(re.escape(s) for s in SECCIONES) + r")/(?P<estado>0[1-6]-[a-z-]+)/(?P<fecha>\d{4}-\d{2}-\d{2})/(?P<nombre>[^/]+\.md)$")
-STATUS_RECUPERADA = {"20-decisiones": "obsoleta"}   # el resto de secciones: «archivada» (R-17, 04-archivadas)
+STATUS_RECUPERADA = {"20-decisiones": "obsoleta", "03-preguntas": "completada"}   # resto: «archivada» (04); preguntas vuelven a 03-completadas
+ESTADO_RECUPERADA = {"03-preguntas": "03-completadas"}   # resto: 04-archivadas
 
 
 class ErrorMemoria(ValueError):
@@ -171,12 +173,13 @@ def leer(docs: Path, ident: str) -> str:
 
 
 def recuperar(docs: Path, ident: str) -> str:
-    """Devuelve la ficha a <sección>/04-archivadas/<fecha de creación>/ sin el bloque memoria_*. Devuelve la ruta nueva."""
+    """Devuelve la ficha a la carpeta de estado recuperable (04-archivadas, o 03-completadas en preguntas) sin memoria_*."""
     mem = _una(docs, ident)
     m = FICHA_RE.match(mem.desde)
     if not m:
         raise ErrorMemoria(f"{ident}: ruta de origen no reconocida ({mem.desde})")
-    destino = docs / m["seccion"] / "04-archivadas" / m["fecha"] / m["nombre"]
+    estado = ESTADO_RECUPERADA.get(m["seccion"], "04-archivadas")
+    destino = docs / m["seccion"] / estado / m["fecha"] / m["nombre"]
     if destino.exists():
         raise ErrorMemoria(f"ya existe {destino.relative_to(docs).as_posix()}")
     raw, _fm, cuerpo = split_frontmatter_parts((docs / mem.ruta).read_text(encoding="utf-8"))

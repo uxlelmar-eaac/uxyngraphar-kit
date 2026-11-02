@@ -22,7 +22,7 @@ CARPETA = carpeta_pack.CARPETA   # carpeta del pack en instalaciones nuevas («d
 CLASES = ("N", "P", "M", "C", "X")
 ESTADO = r"0[1-6]-[a-z-]+"
 FECHA = r"\d{4}-\d{2}-\d{2}"
-SECCIONES_ESTADO = r"(?:05-instrucciones|20-decisiones|35-herramientas/propuestas|40-auditorias|45-mejoras-propuestas|46-evolucion-documentacion)"
+SECCIONES_ESTADO = r"(?:03-preguntas|05-instrucciones|20-decisiones|35-herramientas/propuestas|40-auditorias|45-mejoras-propuestas|46-evolucion-documentacion)"
 
 # El orden importa: gana la primera regla que coincide.
 REGLAS: list[tuple[str, str]] = [
@@ -38,7 +38,7 @@ REGLAS: list[tuple[str, str]] = [
     (r"(?:.*/)?INDICE\.md|README\.md|35-herramientas/(?:autorizadas|propuestas)/README\.md", "M"),
     (r"35-herramientas/autorizadas/decisiones-pendientes\.md", "N"),
     (r"(?:AGENTES|AGENTS|REGLAS|PROTOCOLO|VERSION|CHANGELOG)\.md|!00_.*\.html|90-archivo/capacitacion/README\.md|(?:00-nucleo|10-guias|55-automatizaciones|scripts)/.+|50-sistema-integral/(?:mapa-capas|vision-espejo)\.md", "N"),
-    (r"(?:15-rutas|25-areas|35-herramientas/(?:autorizadas|propuestas)|40-auditorias|45-mejoras-propuestas|46-evolucion-documentacion|50-sistema-integral|90-archivo|95-memoria|96-reglas-proyecto|97-ajustes-locales|20-decisiones|05-instrucciones)/.+", "C"),
+    (r"(?:15-rutas|25-areas|35-herramientas/(?:autorizadas|propuestas)|40-auditorias|45-mejoras-propuestas|46-evolucion-documentacion|50-sistema-integral|90-archivo|95-memoria|96-reglas-proyecto|97-ajustes-locales|20-decisiones|05-instrucciones|03-preguntas)/.+", "C"),
 ]
 _COMPILADAS = [(re.compile(p), c) for p, c in REGLAS]
 # Archivos que se instalan fuera de la carpeta del pack (raíz del repo del proyecto).

@@ -19,6 +19,8 @@ mejoras_propuestas: []
 evolucion_documentacion: []
 presupuesto_max_docs: 8
 presupuesto_max_archivos_codigo: 0
+preguntas_id: null
+preguntas_omitidas: false
 related_audits: []
 related_endpoints: []
 tipo: solo-documentacion
@@ -31,6 +33,10 @@ tipo: solo-documentacion
 ## Pedido (síntesis)
 
 - Actualizar docs operativas y/o espejo de módulos sin tocar código.
+
+## Clarificación (preguntas y respuestas)
+
+- Si hubo fase: rondas pregunta → respuesta + síntesis (3–6 viñetas). Si se omitió: `Omitida (config|pedido humano)`.
 
 ## Objetivo
 

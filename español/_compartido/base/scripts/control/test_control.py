@@ -107,6 +107,46 @@ class TestProtocolo(unittest.TestCase):
             self.assertEqual((r.returncode, r.stdout.strip()), (0, cfg.linea_activacion({"protocolo": {"alias": ["uxyn"]}})))
 
 
+class TestPreguntas(unittest.TestCase):
+    def test_por_defecto_activo_con_rondas(self):
+        c = cfg.por_defecto()
+        self.assertEqual(cfg.validar(c), [])
+        self.assertEqual(c["preguntas"], {"activo": True, "rondas": [10, 5, 3]})
+        self.assertEqual(cfg.preguntas_efectivas(c)["rondas"], [10, 5, 3])
+
+    def test_rondas_invalidas(self):
+        casos = [
+            ({"rondas": []}, "lista no vacía"),
+            ({"rondas": [0]}, "entre 1 y"),
+            ({"rondas": [21]}, "entre 1 y"),
+            ({"rondas": [True]}, "entre 1 y"),
+            ({"activo": "si"}, "true o false"),
+            ({"rondas": [10] * 11}, "como máximo"),
+            ("10", "objeto"),
+        ]
+        for preguntas, texto in casos:
+            c = {**cfg.por_defecto(), "preguntas": preguntas}
+            self.assertTrue(any(texto in e for e in cfg.validar(c)), (preguntas, cfg.validar(c)))
+
+    def test_proyecto_puede_apagar_y_cambiar_rondas(self):
+        with tempfile.TemporaryDirectory() as t:
+            (Path(t) / "docs").mkdir()
+            (Path(t) / "docs" / cfg.NOMBRE).write_text(json.dumps({"preguntas": {"activo": False, "rondas": [4, 2]}}))
+            c, p = cfg.cargar(Path(t))
+            self.assertEqual(p, [])
+            self.assertEqual(cfg.preguntas_efectivas(c), {"activo": False, "rondas": [4, 2]})
+            self.assertEqual(cfg.validar(c), [])
+
+    def test_preguntas_no_relajan_nucleo(self):
+        c = cfg.por_defecto()
+        c["preguntas"] = {"activo": False, "rondas": [1]}
+        c["niveles"]["nucleo"] = "aviso"
+        self.assertTrue(any("nucleo" in e and "bloqueante" in e for e in cfg.validar(c)))
+        c["niveles"]["nucleo"] = "bloqueante"
+        self.assertEqual(cfg.validar(c), [])
+        self.assertEqual(c["niveles"]["nucleo"], "bloqueante")
+
+
 class TestPuerta(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()

@@ -6,7 +6,7 @@ Punto de entrada. Lee **solo esto** (+ `ESTADO.md`). Detalle bajo demanda: `00-n
 (Rutas relativas a la carpeta del pack: `uxyngraphar/` junto a este archivo, o `docs/` si se instaló antes de la 1.1.0; en un monorepo, la de tu app.)
 Un pedido que termina en «sigue el protocolo <frase>» pide este flujo (por defecto: uxyngraphar, uxyn, uxynar; las del proyecto, en la línea «Activación» de `ESTADO.md`), aunque la frase llegue con otra grafía.
 1. ¿Hay ficha `35-herramientas/autorizadas/<id>.md` con `status: authorized` que cubra el pedido? → ejecútala (solo ficha + anclas).
-2. Si no: pedido vago o nuevo → crea la instrucción `awaiting_approval` (`python3 uxyngraphar/scripts/decisiones/decisiones.py new instruccion --slug <slug>`) y **espera aprobación** (la persona la aprueba en su panel: `uxyngraphar` → Proyecto → Pendientes). Sin `status: approved` no se edita código ni docs.
+2. Si no: con preguntas activas (salvo «salta preguntas») → rondas en chat + ficha `03-preguntas/` (defecto 10→5→3; `10-guias/fase-preguntas.md`). Luego: `python3 uxyngraphar/scripts/decisiones/decisiones.py new instruccion --slug <slug>` (§ Clarificación, `preguntas_id`/`preguntas_omitidas`) y **espera aprobación** (panel → Pendientes). Sin `approved` no edites código ni docs.
 3. Con instrucción aprobada: `python3 uxyngraphar/scripts/contexto.py <id>` imprime todo lo necesario (ficha, lectura mínima, anclas con rango). **No abras nada más.**
 4. Implementa solo dentro de `anclas_codigo`. Al verificar y al cerrar, marca la fase: `python3 uxyngraphar/scripts/costo-tokens.py fase <id> verificacion|cierre`. Al cerrar: escribe `espejo_actualizar` y ejecuta `python3 uxyngraphar/scripts/decisiones/decisiones.py cerrar <id>` (escribe el costo en tokens).
 

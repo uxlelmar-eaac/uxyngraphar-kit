@@ -32,6 +32,7 @@ pre.diff{background:var(--bg);border:1px solid var(--bd);border-radius:8px;paddi
 ul.pl{padding-left:20px;margin:6px 0}code{font-size:.9em}.oculto{display:none}
 nav.tabs.sub{margin:0 0 14px}nav.tabs.sub button{padding:6px 12px;font-size:.92rem}button.on{border-color:var(--ac);box-shadow:inset 0 0 0 1px var(--ac)}
 ul.chk{list-style:none;padding:0;margin:8px 0}ul.chk li{padding:8px 0;border-bottom:1px solid var(--bd)}pre.ficha{max-height:420px;white-space:pre-wrap}
+button.linkish{background:transparent;border:0;padding:0;color:inherit;font:inherit;cursor:pointer;text-align:left}button.linkish:hover{opacity:.85}
 </style>
 </head>
 <body>
@@ -56,6 +57,9 @@ const NIV={bloqueante:"Bloquea: el commit o el CI no pasan",aviso:"Avisa: solo m
 function campos(o,plantilla){const c=[];
  if(o.protocolo){c.push({g:"Cómo se pide el protocolo",d:"La frase con la que terminas un pedido para que el agente siga el flujo de uxyngraphar. El agente la ve al empezar, en ESTADO.md."});
   c.push({p:"protocolo.alias",t:"lista",l:"Frases para activar el protocolo",h:"Una por línea. Escribe al final de tu pedido: sigue el protocolo X. Por ejemplo: uxyn, uxynar, del sistema."})}
+ if(o.preguntas){c.push({g:"Fase de preguntas",d:"Antes de crear la instrucción, el agente aclara el pedido en el chat con rondas adaptativas. Las respuestas quedan en la instrucción."});
+  c.push({p:"preguntas.activo",t:"bool",si:"Sí, preguntar antes de redactar la instrucción",l:"Activar la fase de preguntas",h:"Si lo desmarcas, el agente crea la instrucción enseguida. En un pedido concreto también puedes escribir «salta preguntas»."});
+  c.push({p:"preguntas.rondas",t:"enteros",l:"Preguntas por ronda",h:"Un número por línea (ronda 1, 2, …). Por defecto: 10, 5 y 3. Máximo 10 rondas y 20 preguntas por ronda."})}
  c.push({g:"Controles",d:"Qué pasa cuando la puerta de control encuentra un problema."});
  (o.controles||[]).forEach(k=>c.push({p:"niveles."+k,t:"sel",l:k.replace("_"," "),h:CONTROLES[k]||"",op:o.niveles.map(n=>[n,NIV[n]||n])}));
  c.push({g:"General"});
@@ -92,10 +96,11 @@ function control(f,v,id){const val=v??"";
  if(f.t==="sel")return `<select id="${id}">${f.op.map(([k,t])=>`<option value="${esc(k)}" ${k===val?"selected":""}>${esc(t)}</option>`).join("")}</select>`;
  if(f.t==="num")return `<input type="number" id="${id}" min="${f.min}" value="${esc(val)}">`;
  if(f.t==="bool")return `<label><input type="checkbox" id="${id}" ${val?"checked":""}> ${esc(f.si||"Sí")}</label>`;
- if(f.t==="lista")return `<textarea id="${id}">${esc((val||[]).join("\n"))}</textarea>`;
+ if(f.t==="lista"||f.t==="enteros")return `<textarea id="${id}">${esc((val||[]).join("\n"))}</textarea>`;
  return `<input type="text" id="${id}" value="${esc(val)}">`}
 function leerCampo(f,id){const e=document.getElementById(id);if(!e)return undefined;
  if(f.t==="num")return e.value===""?null:Number(e.value);if(f.t==="bool")return e.checked;
+ if(f.t==="enteros")return e.value.split("\n").map(x=>x.trim()).filter(Boolean).map(x=>Number(x));
  if(f.t==="lista")return e.value.split("\n").map(x=>x.trim()).filter(Boolean);return e.value}
 function formulario(lista,base,actual,pref){return lista.map((f,i)=>f.g?`<h3>${esc(f.g)}</h3>${f.d?`<p class="mut">${esc(f.d)}</p>`:""}`:
  `<div class="campo ${igual(get(actual,f.p),get(base,f.p))?"":"mod"}"><label for="${pref}${i}">${esc(f.l)}</label><small>${esc(f.h)}</small><div class="ctl">${control(f,get(actual,f.p),pref+i)}</div></div>`).join("")}
@@ -126,10 +131,12 @@ async function decidirPath(agregar){const r=await post("/api/panel/path",{agrega
 function vProyectos(){const r=S.res;if(!r){$("#vista").innerHTML=`<div class="card">Cargando…</div>`;return}
  const act=r.proyectos.filter(p=>p.existe&&p.packs.some(k=>k.estado==="actualizable")).map(p=>p.ruta);
  let filas=r.proyectos.map(p=>!p.existe?`<tr><td><b>${esc(p.nombre)}</b><br><small class="mut">${esc(p.ruta)}</small></td><td colspan="2"><span class="et er">ya no existe</span></td><td><button onclick='quitar(${JSON.stringify(p.ruta)})'>Quitar del registro</button></td></tr>`:
-  p.packs.map(k=>{const s=S.salud[p.ruta+"|"+k.docs];return `<tr><td><b>${esc(p.nombre)}</b> · <code>${esc(k.docs)}</code><br><small class="mut">${esc(p.ruta)}</small></td>
+  p.packs.map(k=>{const s=S.salud[p.ruta+"|"+k.docs],clave=`${JSON.stringify(p.ruta)},${JSON.stringify(k.docs)}`;
+  const badge=s?(s.ok?(s.errores||s.avisos?`<button type="button" class="linkish" onclick='abrirProyecto(${clave},"salud")'>${s.errores?`<span class="et er">${s.errores} errores</span> `:""}${s.avisos?`<span class="et av">${s.avisos} avisos</span>`:""}</button>`:`<button type="button" class="linkish" onclick='abrirProyecto(${clave},"salud")'><span class="et ok">sano</span></button>`):`<span class="et er">${esc(s.error)}</span>`):`<button onclick='salud(${clave})'>Revisar salud</button>`;
+  return `<tr><td><b>${esc(p.nombre)}</b> · <code>${esc(k.docs)}</code><br><small class="mut">${esc(p.ruta)}</small></td>
   <td>${esc(k.pack)} ${esc(k.version)}<br><span class="et ${k.estado==="al día"?"ok":"av"}">${esc(k.estado)}</span></td>
-  <td>${s?(s.ok?(s.errores?`<span class="et er">${s.errores} errores</span> `:"")+(s.avisos?`<span class="et av">${s.avisos} avisos</span>`:"")+(!s.errores&&!s.avisos?`<span class="et ok">sano</span>`:""):`<span class="et er">${esc(s.error)}</span>`):`<button onclick='salud(${JSON.stringify(p.ruta)},${JSON.stringify(k.docs)})'>Revisar salud</button>`}</td>
-  <td class="fila"><button class="pri" onclick='abrirProyecto(${JSON.stringify(p.ruta)},${JSON.stringify(k.docs)},"salud")'>Abrir</button>${k.estado==="actualizable"?`<a href="/actualizar?desde=panel&ruta=${encodeURIComponent(p.ruta)}"><button>Actualizar</button></a>`:""}<button onclick='quitar(${JSON.stringify(p.ruta)})'>Quitar</button></td></tr>`}).join("")).join("");
+  <td>${badge}</td>
+  <td class="fila"><button class="pri" onclick='abrirProyecto(${clave},"salud")'>Abrir</button>${s&&s.ok&&(s.errores||s.avisos)?`<button onclick='abrirProyecto(${clave},"salud")'>Ver y corregir</button>`:""}${k.estado==="actualizable"?`<a href="/actualizar?desde=panel&ruta=${encodeURIComponent(p.ruta)}"><button>Actualizar</button></a>`:""}<button onclick='quitar(${JSON.stringify(p.ruta)})'>Quitar</button></td></tr>`}).join("")).join("");
  $("#vista").innerHTML=aviso()+`<div class="card"><h2>Mis proyectos</h2><p class="mut">Los proyectos con uxyngraphar registrados en este equipo (${esc(r.carpeta)}).</p>
  ${r.proyectos.length?`<table><thead><tr><th>Proyecto</th><th>Versión</th><th>Salud</th><th></th></tr></thead><tbody>${filas}</tbody></table>`:`<div class="aviso av">Aún no hay proyectos registrados.</div>`}
  <h3>Añadir un proyecto que ya tiene uxyngraphar</h3><div class="fila"><input type="text" id="nueva" placeholder="/ruta/a/mi-proyecto" aria-label="Carpeta del proyecto"><button onclick="examinar()">Examinar…</button><button onclick="agregar()">Añadir</button></div>
@@ -242,7 +249,7 @@ async function aplicarPlantilla(){const d=S.plPrev.destinos.map(x=>({ruta:x.ruta
 // Primero: dónde está cada cosa en el panel (el único comando es «uxyngraphar»). Después, plegados, los comandos de terminal.
 const DONDE=[
  ["Instalar uxyngraphar en un proyecto","Mis proyectos → «Instalar uxyngraphar en un proyecto nuevo»","proyectos"],
- ["Ver la salud de un proyecto y arreglar lo seguro","Proyecto → Salud → «Arreglar»","proyecto:salud"],
+ ["Ver la salud de un proyecto y corregir cada hallazgo","Mis proyectos → badge o «Ver y corregir» → Salud (botón por aviso)","proyecto:salud"],
  ["Aprobar o rechazar una instrucción (y mejoras, EVO, propuestas)","Proyecto → Pendientes → «Leer y decidir»","proyecto:pendientes"],
  ["Cambiar la configuración de un proyecto","Proyecto → Configuración","proyecto:config"],
  ["Deshacer un cambio (restaurar una copia de seguridad)","Proyecto → Copias de seguridad","proyecto:copias"],

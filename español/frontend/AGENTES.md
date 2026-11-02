@@ -6,7 +6,7 @@ Punto de entrada. Lee **solo esto** (+ `ESTADO.md`). Detalle bajo demanda: `00-n
 (Rutas relativas a la carpeta del pack: `uxyngraphar/` junto a este archivo, o `docs/` si se instaló antes de la 1.1.0; en un monorepo, la de tu app.)
 Un pedido que termina en «sigue el protocolo <frase>» pide este flujo (por defecto: uxyngraphar, uxyn, uxynar; las del proyecto, en la línea «Activación» de `ESTADO.md`), aunque la frase llegue con otra grafía.
 1. ¿Hay ficha `35-herramientas/autorizadas/<id>.md` con `status: authorized` que cubra el pedido? → ejecútala (solo ficha + anclas).
-2. Si no: pedido vago o nuevo → crea la instrucción `awaiting_approval` (`python3 uxyngraphar/scripts/decisiones/decisiones.py new instruccion --slug <slug>`) y **espera aprobación** (la persona la aprueba en su panel: `uxyngraphar` → Proyecto → Pendientes). Sin `status: approved` no se edita código ni docs.
+2. Si no: con preguntas activas (salvo «salta preguntas») → rondas en chat + ficha `03-preguntas/` (defecto 10→5→3; `10-guias/fase-preguntas.md`). Luego: `python3 uxyngraphar/scripts/decisiones/decisiones.py new instruccion --slug <slug>` (§ Clarificación, `preguntas_id`/`preguntas_omitidas`) y **espera aprobación** (panel → Pendientes). Sin `approved` no edites código ni docs.
 3. Con instrucción aprobada: `python3 uxyngraphar/scripts/contexto.py <id>` imprime todo lo necesario (ficha, lectura mínima, anclas con rango). **No abras nada más.**
 4. Implementa solo dentro de `anclas_codigo`. Al verificar y al cerrar, marca la fase: `python3 uxyngraphar/scripts/costo-tokens.py fase <id> verificacion|cierre`. Al cerrar: escribe `espejo_actualizar` y ejecuta `python3 uxyngraphar/scripts/decisiones/decisiones.py cerrar <id>` (escribe el costo en tokens).
 
@@ -22,8 +22,8 @@ Un pedido que termina en «sigue el protocolo <frase>» pide este flujo (por def
 - Reglas del proyecto: `96-reglas-proyecto/INDICE.md`; cúmplelas. Excepción (`excepciones_reglas`) o cambio de reglas: solo con instrucción aprobada por una persona.
 - Ajustes locales (R-25): si `97-ajustes-locales/INDICE.md` lista un ajuste activo para un archivo del núcleo que usas, síguelo; donde se contradigan, manda el ajuste. No crees ni edites ajustes, ni actives o ejecutes `feedback.py`: eso lo hace una persona.
 - No leer `INDICE.md`, `PROTOCOLO.md`, `10-guias/`, `90-archivo/` ni volcar `50-sistema-integral/` (usa `espejo-mapa.py`). No escribir en `35-herramientas/autorizadas/` ni ejecutar `propuestas/`.
-- No dupliques fichas HTTP del servidor: cítalas por `id`.
-- Si arrancas un servidor, un watcher u otra instancia para probar, ciérrala antes de terminar el turno. No dejes procesos ocupando puertos ni ralentizando a la persona. Si el puerto ya está en uso, no levantes otra copia.
+- Fichas HTTP del servidor: cítalas por `id` (no dupliques).
+- Si levantas servidor/watcher para probar, ciérralo al terminar. No dejes puertos ocupados ni otra copia si ya hay una.
 
 ## Núcleo de solo lectura (R-20)
 No editar, borrar, renombrar ni crear archivos en: `AGENTES.md`, `AGENTS.md`, `REGLAS.md`, `PROTOCOLO.md`, `00-nucleo/` (salvo `configuracion-proyecto`, `arquitectura`, `restricciones`, `registro-ids-compartidos`, `mapa-dependencias`), `10-guias/`, `55-automatizaciones/`, `scripts/`, `_PLANTILLA*`, `_PROTOCOLO*`; tampoco `.uxyngraphar.lock`, `.claude/settings.json`, `.cursor/hooks*`, manifiesto Cursor, `CODEOWNERS`, CI ni ganchos git, ni evites la verificación. Si el IDE u OS niega la escritura al núcleo, **no intentes bypass** (`chmod`, shell, `--no-verify`). Mejora al sistema → solo ficha `EVO-*`. Si el núcleo aparece alterado, **detente y avisa al humano**.

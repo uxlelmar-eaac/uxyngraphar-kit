@@ -13,10 +13,16 @@
 00-nucleo/frontmatter/herramienta.md
 00-nucleo/frontmatter/instruccion.md
 00-nucleo/frontmatter/mejora.md
+00-nucleo/frontmatter/preguntas.md
 00-nucleo/frontmatter/reglas.md
 00-nucleo/glosario-dominio.md
 00-nucleo/nombres-autoexplicativos.md
 00-nucleo/politica-idioma.md
+03-preguntas/01-en-curso/2026-08-23/README.md
+03-preguntas/03-completadas/2026-08-23/README.md
+03-preguntas/05-canceladas/2026-08-23/README.md
+03-preguntas/INDICE.md
+03-preguntas/_PROTOCOLO.md
 05-instrucciones/01-pendientes/2026-08-23/README.md
 05-instrucciones/02-en-progreso/2026-08-23/README.md
 05-instrucciones/03-completadas/2026-08-23/README.md
@@ -36,6 +42,7 @@
 10-guias/costo-tokens.md
 10-guias/elegir-pack.md
 10-guias/envio-sugerencias.md
+10-guias/fase-preguntas.md
 10-guias/memoria.md
 10-guias/organizacion-estados-fechas.md
 10-guias/respaldos.md
@@ -103,6 +110,7 @@
 46-evolucion-documentacion/03-completadas/2026-11-01/EVO-20261101-carpeta-uxyngraphar.md
 46-evolucion-documentacion/03-completadas/2026-11-01/EVO-20261101-frases-activacion.md
 46-evolucion-documentacion/03-completadas/2026-11-01/EVO-20261101-todo-desde-el-panel.md
+46-evolucion-documentacion/03-completadas/2026-11-02/EVO-20261102-fase-preguntas.md
 46-evolucion-documentacion/04-archivadas/2026-08-23/README.md
 46-evolucion-documentacion/05-canceladas/2026-08-23/README.md
 46-evolucion-documentacion/06-listas-para-eliminar/2026-08-23/README.md

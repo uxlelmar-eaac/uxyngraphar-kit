@@ -5,6 +5,7 @@
 
 - [comunes](comunes.md) — campos comunes + organización por estados (R-17).
 - [instruccion](instruccion.md) — `05-instrucciones/`.
+- [preguntas](preguntas.md) — `03-preguntas/`.
 - [auditoria](auditoria.md) — `40-auditorias/`.
 - [herramienta](herramienta.md) — `35-herramientas/`.
 - [mejora](mejora.md) — `45-mejoras-propuestas/`.

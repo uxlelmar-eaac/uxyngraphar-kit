@@ -6,7 +6,7 @@ Cada instrucción termina con una tabla de cuántos tokens costó, separada por 
 
 | Fase | Desde | Hasta |
 |------|-------|-------|
-| Análisis | inicio de la sesión (o cierre de la instrucción anterior) | se crea la ficha |
+| Análisis | inicio de la sesión (o cierre de la instrucción anterior) | se crea la ficha (incluye la fase de preguntas en chat si aplica) |
 | Creación de la instrucción | `decisiones.py new instruccion` (automático) | se pide el contexto |
 | Implementación | `contexto.py <id>` (automático) | marca de verificación |
 | Verificación | `costo-tokens.py fase <id> verificacion` (pruebas, `controlar.py`, validadores) | marca de cierre |
