@@ -172,7 +172,9 @@ class TestMigraciones(BaseActualizar):
 
 class TestLockDanado(BaseActualizar):
     def test_usa_la_copia_del_ultimo_respaldo(self) -> None:
+        import proteccion
         act.aplicar(self.nuevo, self.repo, "docs", self.plan())
+        proteccion.descongelar_fs(self.repo, "docs")  # simular corrupción a mano sobre el lock congelado
         lock.ruta_lock(self.repo, "docs").write_text("{roto", encoding="utf-8")
         datos = lock.leer(self.repo, "docs")
         self.assertIn("copia del respaldo", datos["danado"])
@@ -183,6 +185,8 @@ class TestLockDanado(BaseActualizar):
         self.assertNotIn("danado", json.loads(lock.ruta_lock(self.repo, "docs").read_text(encoding="utf-8")))
 
     def test_sin_copia_no_pisa_nada(self) -> None:
+        import proteccion
+        proteccion.descongelar_fs(self.repo, "docs")
         self.reglas.write_text("mi versión", encoding="utf-8")
         lock.ruta_lock(self.repo, "docs").write_text("no es json", encoding="utf-8")
         p = self.plan()

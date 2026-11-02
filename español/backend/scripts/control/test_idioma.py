@@ -111,7 +111,7 @@ class TestPuertaIdioma(unittest.TestCase):
         git(self.repo, "init", "-q", "-b", "main")
         (self.repo / "src").mkdir()
         (self.repo / "docs").mkdir()
-        self.cfg = {"codigo": {"raices": ["src"], "extensiones": [".ts"]}, "niveles": {"nucleo": "apagado", "instruccion": "apagado", "espejo": "apagado"}}
+        self.cfg = {"codigo": {"raices": ["src"], "extensiones": [".ts"]}, "niveles": {"nucleo": "bloqueante", "instruccion": "apagado", "espejo": "apagado"}}
         self.escribir_cfg()
         (self.repo / "README.md").write_text("x")
         git(self.repo, "add", "-A")

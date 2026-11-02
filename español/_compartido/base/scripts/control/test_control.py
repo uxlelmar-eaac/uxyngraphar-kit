@@ -114,7 +114,7 @@ class TestPuerta(unittest.TestCase):
         git(self.repo, "init", "-q")
         (self.repo / "src").mkdir()
         (self.repo / "docs").mkdir()
-        (self.repo / "docs" / cfg.NOMBRE).write_text(json.dumps({"codigo": {"raices": ["src"], "extensiones": [".py"]}, "niveles": {"lineas": "bloqueante", "nucleo": "apagado"}, "limite_lineas": 60}))
+        (self.repo / "docs" / cfg.NOMBRE).write_text(json.dumps({"codigo": {"raices": ["src"], "extensiones": [".py"]}, "niveles": {"lineas": "bloqueante", "nucleo": "bloqueante"}, "limite_lineas": 60}))
         (self.repo / "README.md").write_text("x")
         git(self.repo, "add", "-A")
         git(self.repo, "commit", "-qm", "base")

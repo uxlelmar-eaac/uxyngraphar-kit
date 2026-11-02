@@ -81,6 +81,19 @@ class Transaccion:
         deshacer_carpeta(self.repo, self.carpeta, motivo)
 
 
+def _escribible(p: Path) -> None:
+    """R-20: permite sustituir/borrar aunque el archivo o su carpeta estén en solo lectura (p. ej. Windows)."""
+    if p.exists():
+        modo = stat.S_IMODE(p.stat().st_mode)
+        if not (modo & stat.S_IWUSR):
+            os.chmod(p, modo | stat.S_IWUSR | (stat.S_IXUSR if p.is_dir() else 0))
+    padre = p.parent
+    if padre.is_dir():
+        modo = stat.S_IMODE(padre.stat().st_mode)
+        if not (modo & stat.S_IWUSR):
+            os.chmod(padre, modo | stat.S_IWUSR | stat.S_IXUSR)
+
+
 def deshacer_carpeta(repo: Path, carpeta: Path, motivo: str = "") -> list[str]:
     """Devuelve el repo al estado anterior según el diario. Idempotente: repetirlo no cambia nada más."""
     entradas = []
@@ -93,11 +106,16 @@ def deshacer_carpeta(repo: Path, carpeta: Path, motivo: str = "") -> list[str]:
     copiados = [e["rel"] for e in entradas if e.get("op") == "copia"]
     añadidos = [e["rel"] for e in entradas if e.get("op") == "nuevo"]
     for rel in reversed(añadidos):
-        (repo / rel).unlink(missing_ok=True)
-        (repo / rel).with_name(Path(rel).name + ".uxyngraphar-tmp").unlink(missing_ok=True)
+        destino = repo / rel
+        _escribible(destino)
+        destino.unlink(missing_ok=True)
+        tmp = destino.with_name(Path(rel).name + ".uxyngraphar-tmp")
+        _escribible(tmp)
+        tmp.unlink(missing_ok=True)
     for rel in reversed(copiados):
         destino, tmp = repo / rel, (repo / rel).with_name(Path(rel).name + ".uxyngraphar-tmp")
         destino.parent.mkdir(parents=True, exist_ok=True)
+        _escribible(destino)
         shutil.copy2(carpeta / rel, tmp)
         os.replace(tmp, destino)
     for e in reversed([e for e in entradas if e.get("op") == "mover"]):   # carpetas movidas: vuelven a su sitio

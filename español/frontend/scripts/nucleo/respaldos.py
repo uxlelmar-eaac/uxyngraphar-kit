@@ -158,19 +158,24 @@ def restaurar(repo: Path, docs: str, r: Respaldo, solo: list[str] | None = None)
     tocar = plan["restaurar"] + plan["retirar"]
     if not tocar:
         return plan, None
-    previa = nueva_carpeta(repo, docs, r.origen)
-    existentes = [a for a in tocar if (r.base / a).exists()]
-    for a in existentes:
-        (previa / a).parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(r.base / a, previa / a)
-    escribir_manifiesto(previa, r.origen, existentes, [a for a in plan["restaurar"] if not (r.base / a).exists()],
-                        motivo=f"estado previo a restaurar {r.id}")
-    for a in plan["restaurar"]:
-        destino = r.base / a
-        destino.parent.mkdir(parents=True, exist_ok=True)
-        tmp = destino.with_name(destino.name + ".tmp")
-        shutil.copy2(r.carpeta / a, tmp)
-        os.replace(tmp, destino)
-    for a in plan["retirar"]:
-        (r.base / a).unlink()
-    return plan, previa
+    import proteccion  # local: evita ciclo al importar el módulo
+    proteccion.descongelar_fs(repo, docs)  # R-20: el núcleo/carpetas pueden estar en solo lectura
+    try:
+        previa = nueva_carpeta(repo, docs, r.origen)
+        existentes = [a for a in tocar if (r.base / a).exists()]
+        for a in existentes:
+            (previa / a).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(r.base / a, previa / a)
+        escribir_manifiesto(previa, r.origen, existentes, [a for a in plan["restaurar"] if not (r.base / a).exists()],
+                            motivo=f"estado previo a restaurar {r.id}")
+        for a in plan["restaurar"]:
+            destino = r.base / a
+            destino.parent.mkdir(parents=True, exist_ok=True)
+            tmp = destino.with_name(destino.name + ".tmp")
+            shutil.copy2(r.carpeta / a, tmp)
+            os.replace(tmp, destino)
+        for a in plan["retirar"]:
+            (r.base / a).unlink()
+        return plan, previa
+    finally:
+        proteccion.congelar_fs(repo, docs)

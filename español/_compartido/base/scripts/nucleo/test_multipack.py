@@ -81,6 +81,9 @@ class TestMismoRepo(unittest.TestCase):
             pack = PACKS / ("backend" if app == "api" else "frontend")
             r = subprocess.run([sys.executable, "-X", "utf8", "-I", str(pack / "scripts" / "verificar-nucleo.py"), "--docs", f"apps/{app}/docs"], cwd=self.repo, capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        # R-20: con --proteger el FS está en solo lectura; hay que descongelar para simular la alteración.
+        import proteccion
+        proteccion.descongelar_fs(self.repo, "apps/web/docs")
         (self.repo / "apps/web/AGENTES.md").write_text("alterado\n")
         pack = PACKS / "frontend"
         r = subprocess.run([sys.executable, "-X", "utf8", "-I", str(pack / "scripts" / "verificar-nucleo.py"), "--docs", "apps/web/docs"], cwd=self.repo, capture_output=True, text=True)

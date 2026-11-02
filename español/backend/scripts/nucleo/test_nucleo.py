@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -384,9 +385,12 @@ class TestProteccion(Base):
         self.assertTrue(reglas.stat().st_mode & 0o200)
         proteccion.congelar_fs(self.repo, "docs")
         self.assertFalse(reglas.stat().st_mode & 0o222)
-        # Carpetas puras: no se puede crear un archivo nuevo (persona/agente)
-        with self.assertRaises(OSError):
-            (self.repo / "docs/10-guias/intruso.md").write_text("x", encoding="utf-8")
+        guias = self.repo / "docs/10-guias"
+        self.assertFalse(guias.stat().st_mode & 0o222)
+        # Carpetas puras: en POSIX no se puede crear un archivo nuevo; en Windows chmod no bloquea mkdir/create.
+        if os.name != "nt":
+            with self.assertRaises(OSError):
+                (guias / "intruso.md").write_text("x", encoding="utf-8")
         # Plantilla P sigue escribible
         p = self.repo / "docs/00-nucleo/configuracion-proyecto.md"
         p.write_text(p.read_text(encoding="utf-8") + "\n", encoding="utf-8")

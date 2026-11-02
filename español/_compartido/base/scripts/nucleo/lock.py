@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import re
+import stat
 from pathlib import Path
 from typing import Any
 
@@ -121,6 +122,10 @@ def escribir(repo: Path, docs: str, datos: dict[str, Any]) -> None:
     datos["sello"] = sello(datos.get("archivos", {}))
     f = ruta_lock(repo, docs)
     f.parent.mkdir(parents=True, exist_ok=True)
+    if f.is_file():  # R-20: el lock puede estar en solo lectura; Windows exige escritura para os.replace
+        modo = stat.S_IMODE(f.stat().st_mode)
+        if not (modo & stat.S_IWUSR):
+            os.chmod(f, modo | stat.S_IWUSR)
     tmp = f.with_suffix(".tmp")
     tmp.write_text(json.dumps(datos, indent=2, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
     os.replace(tmp, f)

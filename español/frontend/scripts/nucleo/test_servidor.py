@@ -108,6 +108,9 @@ class TestServidor(Base):
         h = puerta.control_config(["src/a.py", "docs/uxyngraphar.config.json"], "docs", {})
         self.assertEqual([(x.control, x.nivel) for x in h], [("config", "aviso")])
         self.assertEqual(puerta.control_config(["src/a.py"], "docs", {}), [])
+        # R-20: si la config intenta apagar el control nucleo, se bloquea además del aviso.
+        h2 = puerta.control_config(["docs/uxyngraphar.config.json"], "docs", {"niveles": {"nucleo": "apagado"}})
+        self.assertEqual([(x.control, x.nivel) for x in h2], [("config", "aviso"), ("nucleo", "bloqueante")])
 
 
 if __name__ == "__main__":
