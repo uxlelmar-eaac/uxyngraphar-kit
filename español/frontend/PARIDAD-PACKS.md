@@ -44,9 +44,9 @@ La verificación automática solo opera cuando ambos packs están juntos (proyec
 | `05-instrucciones/_PLANTILLA-consolidar-espejo-integral.md` | identico | ambos (sincronizar por hash) | 2026-08-09 |
 | `05-instrucciones/_PLANTILLA-generar-espejo-integral.md` | adaptado | servidor | 2026-08-09 |
 | `05-instrucciones/_PLANTILLA-politica-espejo-incremental.md` | identico | ambos (sincronizar por hash) | 2026-08-09 |
-| `05-instrucciones/_PLANTILLA-solo-documentacion.md` | adaptado | servidor | 2026-08-09 |
-| `05-instrucciones/_PLANTILLA.md` | adaptado | servidor | 2026-08-09 |
-| `05-instrucciones/_PROTOCOLO.md` | identico | ambos (sincronizar por hash) | 2026-10-15 |
+| `05-instrucciones/_PLANTILLA-solo-documentacion.md` | adaptado | servidor | 2026-11-02 |
+| `05-instrucciones/_PLANTILLA.md` | adaptado | servidor | 2026-11-02 |
+| `05-instrucciones/_PROTOCOLO.md` | identico | ambos (sincronizar por hash) | 2026-11-02 |
 | `10-guias/INDICE.md` | adaptado | servidor | 2026-08-09 |
 | `10-guias/adopcion-pack.md` | adaptado | servidor | 2026-08-09 |
 | `10-guias/ci-validacion-documentacion.md` | identico | ambos (sincronizar por hash) | 2026-08-09 |
@@ -55,7 +55,7 @@ La verificación automática solo opera cuando ambos packs están juntos (proyec
 | `10-guias/ciclo-integral-actos.md` | adaptado | servidor | 2026-08-09 |
 | `10-guias/contratos-api.md` | especifico | cada pack | 2026-08-09 |
 | `10-guias/espejo-incremental-proyectos-grandes.md` | adaptado | servidor | 2026-08-09 |
-| `10-guias/flujo-instrucciones-documentacion.md` | adaptado | servidor | 2026-08-09 |
+| `10-guias/flujo-instrucciones-documentacion.md` | adaptado | servidor | 2026-11-02 |
 | `10-guias/generar-documentacion-integral.md` | adaptado | servidor | 2026-08-09 |
 | `10-guias/herramientas-autorizadas-vs-propuestas.md` | adaptado | servidor | 2026-08-09 |
 | `10-guias/incorporacion.md` | especifico | cada pack | 2026-08-09 |
@@ -67,7 +67,7 @@ La verificación automática solo opera cuando ambos packs están juntos (proyec
 | `10-guias/sistema-integral-vs-detalle.md` | adaptado | servidor | 2026-08-09 |
 | `10-guias/sync-documentacion-pr.md` | adaptado | servidor | 2026-08-09 |
 | `10-guias/sync-multi-repo.md` | adaptado | servidor | 2026-08-09 |
-| `10-guias/tarjeta-referencia-humana.md` | adaptado | servidor | 2026-08-09 |
+| `10-guias/tarjeta-referencia-humana.md` | adaptado | servidor | 2026-11-02 |
 | `15-rutas/INDICE.md` | adaptado | servidor | 2026-08-09 |
 | `15-rutas/_PLANTILLA.md` | especifico | cada pack | 2026-08-09 |
 | `15-rutas/_PROTOCOLO.md` | adaptado | servidor | 2026-08-09 |
@@ -144,14 +144,14 @@ La verificación automática solo opera cuando ambos packs están juntos (proyec
 | `scripts/decisiones/test_decisiones_seguridad.py` | identico | ambos (sincronizar por hash) | 2026-10-15 |
 | `90-archivo/INDICE.md` | adaptado | servidor | 2026-08-09 |
 | `90-archivo/capacitacion/README.md` | identico | ambos (sincronizar por hash) | 2026-08-09 |
-| `AGENTES.md` | adaptado | servidor | 2026-09-14 |
+| `AGENTES.md` | adaptado | servidor | 2026-11-02 |
 | `AGENTS.md` | identico | ambos (sincronizar por hash) | 2026-08-23 |
 | `ESTADO.md` | identico | ambos (sincronizar por hash) | 2026-10-15 |
-| `CHANGELOG.md` | identico | ambos (sincronizar por hash) | 2026-08-23 |
+| `CHANGELOG.md` | identico | ambos (sincronizar por hash) | 2026-11-02 |
 | `INDICE.md` | adaptado | servidor | 2026-08-09 |
 | `PARIDAD-PACKS.md` | identico | ambos (este archivo) | 2026-08-09 |
-| `PROTOCOLO.md` | adaptado | servidor | 2026-09-14 |
-| `README.md` | adaptado | servidor | 2026-10-15 |
+| `PROTOCOLO.md` | adaptado | servidor | 2026-11-02 |
+| `README.md` | adaptado | servidor | 2026-11-02 |
 | `VERSION.md` | identico | ambos (sincronizar por hash) | 2026-10-15 |
 | `REGLAS.md` | adaptado | servidor | 2026-09-14 |
 | `scripts/decisiones/alcance.py` | identico | ambos (sincronizar por hash) | 2026-10-26 |
@@ -204,14 +204,15 @@ La verificación automática solo opera cuando ambos packs están juntos (proyec
 | `scripts/nucleo/test_doctor_gancho.py` | identico | ambos (fuente: `_compartido/base`) | 2026-10-15 |
 | `scripts/nucleo/test_subcarpeta.py` | identico | ambos (fuente: `_compartido/base`) | 2026-10-15 |
 | `scripts/controlar.py` | identico | ambos (fuente: `_compartido/base`) | 2026-10-28 |
-| `scripts/control/uxyngraphar_config.py` | identico | ambos (fuente: `_compartido/base`) | 2026-10-28 |
+| `scripts/control/uxyngraphar_config.py` | identico | ambos (fuente: `_compartido/base`) | 2026-11-02 |
 | `scripts/control/puerta.py` | identico | ambos (fuente: `_compartido/base`) | 2026-10-28 |
-| `scripts/control/test_control.py` | identico | ambos (fuente: `_compartido/base`) | 2026-10-15 |
+| `scripts/control/test_control.py` | identico | ambos (fuente: `_compartido/base`) | 2026-11-02 |
 | `scripts/control/idioma.py` | identico | ambos (fuente: `_compartido/base`) | 2026-10-28 |
 | `scripts/control/test_idioma.py` | identico | ambos (fuente: `_compartido/base`) | 2026-10-28 |
 | `10-guias/elegir-pack.md` | identico | ambos (fuente: `_compartido/base`) | 2026-10-15 |
 | `10-guias/control-de-construccion.md` | identico | ambos (fuente: `_compartido/base`) | 2026-10-29 |
-| `10-guias/configuracion-uxyngraphar.md` | identico | ambos (fuente: `_compartido/base`) | 2026-10-29 |
+| `10-guias/configuracion-uxyngraphar.md` | identico | ambos (fuente: `_compartido/base`) | 2026-11-02 |
+| `46-evolucion-documentacion/03-completadas/2026-11-02/EVO-20261102-preguntas-proporcionales.md` | identico | ambos (fuente: `_compartido/base`) | 2026-11-02 |
 | `46-evolucion-documentacion/03-completadas/2026-10-15/EVO-20261015-control-construccion-universal.md` | identico | ambos (fuente: `_compartido/base`) | 2026-10-15 |
 | `scripts/verificar-nucleo.py` | identico | ambos (sincronizar por hash) | 2026-10-15 |
 | `scripts/decisiones/depurar.py` | identico | ambos (sincronizar por hash) | 2026-10-15 |
@@ -286,8 +287,8 @@ La verificación automática solo opera cuando ambos packs están juntos (proyec
 | `scripts/nucleo/empaquetar.py` | identico | ambos (sincronizar por hash) | 2026-10-15 |
 | `scripts/nucleo/analizar.py` | identico | ambos (sincronizar por hash) | 2026-10-15 |
 | `scripts/nucleo/test_distribucion.py` | identico | ambos (sincronizar por hash) | 2026-10-15 |
-| `05-instrucciones/_PLANTILLA-compacta.md` | identico | ambos (sincronizar por hash) | 2026-10-15 |
-| `00-nucleo/agentes-detalle.md` | adaptado | servidor | 2026-10-15 |
+| `05-instrucciones/_PLANTILLA-compacta.md` | identico | ambos (sincronizar por hash) | 2026-11-02 |
+| `00-nucleo/agentes-detalle.md` | adaptado | servidor | 2026-11-02 |
 | `scripts/verificar-paridad.py` | identico | ambos (sincronizar por hash) | 2026-10-28 |
 | `*/01-pendientes/*/README.md` | identico | ambos (sincronizar por hash) | 2026-08-23 |
 | `*/01-en-curso/*/README.md` | identico | ambos (sincronizar por hash) | 2026-11-02 |

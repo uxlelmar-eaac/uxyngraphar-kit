@@ -16,7 +16,7 @@ Canon: [estrategia-instrucciones.md](../00-nucleo/estrategia-instrucciones.md). 
 ```mermaid
 flowchart TD
   H[Humano solicita cambio] --> Q{Fase preguntas?}
-  Q -->|si| Rondas[Rondas en chat + 03-preguntas]
+  Q -->|si| Rondas[Decisiones en chat + 03-preguntas]
   Rondas --> I[Crear instruccion con Clarificacion]
   Q -->|omitida| I
   I --> P[Plan: codigo docs_operativas espejo]
@@ -35,11 +35,11 @@ flowchart TD
 
 ## Paso 1 — Solicitud humana
 
-El humano describe el pedido. El agente **no codea ni documenta** todavía. Si `preguntas.activo` (por defecto sí) y no se pidió omitir, hace la [fase de preguntas](fase-preguntas.md) en el chat y persiste en `03-preguntas/`.
+El humano describe el pedido. El agente **no codea ni documenta** todavía. Si `preguntas.activo` (por defecto sí) y no se pidió omitir, hace la [fase de preguntas](fase-preguntas.md) en el chat (decisiones proporcionales al impacto) y persiste en `03-preguntas/`.
 
 ## Paso 2 — Redactar instrucción
 
-Tras la fase (o si se omitió): copiar [`_PLANTILLA.md`](../05-instrucciones/_PLANTILLA.md) → `05-instrucciones/01-pendientes/YYYY-MM-DD/<slug>.md` (R-17), con § Clarificación rellena.
+Tras la fase (o si se omitió): copiar [`_PLANTILLA.md`](../05-instrucciones/_PLANTILLA.md) → `05-instrucciones/01-pendientes/YYYY-MM-DD/<slug>.md` (R-17), con § Clarificación = decisiones.
 
 Rellenar obligatorio:
 

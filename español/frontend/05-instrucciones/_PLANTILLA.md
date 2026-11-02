@@ -41,9 +41,9 @@ related_endpoints: []
 
 - Máx. 3–5 viñetas.
 
-## Clarificación (preguntas y respuestas)
+## Clarificación (decisiones)
 
-- Si hubo fase activa (`preguntas_id`): por cada ronda, pregunta → respuesta; cerrar con 3–6 viñetas de síntesis que alimentan Objetivo, Alcance y Plan. Guía: [fase-preguntas.md](../10-guias/fase-preguntas.md).
+- Si hubo fase activa (`preguntas_id`): impacto estimado; por cada decisión: pregunta | opción elegida | efecto acordado; cerrar con 3–6 viñetas de síntesis que alimentan Objetivo, Alcance y Plan. Detalle completo en la ficha `03-preguntas/`. Guía: [fase-preguntas.md](../10-guias/fase-preguntas.md).
 - Si se omitió: una línea `Omitida (config|pedido humano)` y `preguntas_omitidas: true`.
 
 ## Objetivo

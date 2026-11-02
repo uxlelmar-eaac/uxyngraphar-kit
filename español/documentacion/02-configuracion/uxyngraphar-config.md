@@ -14,10 +14,10 @@ Con eso vale «sigue el protocolo del sistema». Desde el panel: **Proyecto → 
 
 ## Fase de preguntas
 
-Por defecto, antes de crear una instrucción el agente hace rondas de preguntas en el chat (`activo: true`, `rondas: [10, 5, 3]`). Puedes apagarlo o cambiar el número de preguntas por ronda:
+Por defecto, antes de crear una instrucción el agente aclara el pedido con decisiones en el chat (`activo: true`, topes `rondas: [6, 4, 2]`, `presupuesto_max: 12`). `rondas` es un techo por ronda (no cuota); el impacto del pedido decide cuántas se usan. Puedes apagarlo o cambiar topes y presupuesto:
 
 ```json
-{ "preguntas": { "activo": true, "rondas": [10, 5, 3] } }
+{ "preguntas": { "activo": true, "rondas": [6, 4, 2], "presupuesto_max": 12 } }
 ```
 
 Panel: **Proyecto → Configuración → Fase de preguntas**. En un pedido concreto: «salta preguntas». Guía: `uxyngraphar/10-guias/fase-preguntas.md`.

@@ -50,9 +50,12 @@ ALIAS_DEFECTO = ["uxyngraphar", "uxyn", "uxynar"]
 ALIAS_MAX = 40
 PISTAS_CLIENTE = ("react", "vue", "svelte", "next", "angular", "expo", "react-native", "electron", "flutter", "@ionic", "vite")
 # Fase de preguntas antes de la instrucción (10-guias/fase-preguntas.md).
-PREGUNTAS_DEFECTO = {"activo": True, "rondas": [10, 5, 3]}
+# `rondas` = tope máximo de preguntas por ronda (no cuota exacta); `presupuesto_max` = techo de la sesión.
+PREGUNTAS_DEFECTO = {"activo": True, "rondas": [6, 4, 2], "presupuesto_max": 12}
 PREGUNTAS_MAX_RONDAS = 10
 PREGUNTAS_MAX_POR_RONDA = 20
+PREGUNTAS_PRESUPUESTO_MIN = 1
+PREGUNTAS_PRESUPUESTO_MAX = 40
 
 
 def por_defecto(rol: str = "servidor") -> dict:
@@ -171,6 +174,12 @@ def _validar_preguntas(p: object) -> list[str]:
     errores = []
     if "activo" in p and not isinstance(p["activo"], bool):
         errores.append("preguntas.activo: true o false")
+    if "presupuesto_max" in p:
+        pm = p["presupuesto_max"]
+        if isinstance(pm, bool) or not isinstance(pm, int) or pm < PREGUNTAS_PRESUPUESTO_MIN or pm > PREGUNTAS_PRESUPUESTO_MAX:
+            errores.append(
+                f"preguntas.presupuesto_max: entero entre {PREGUNTAS_PRESUPUESTO_MIN} y {PREGUNTAS_PRESUPUESTO_MAX}"
+            )
     r = p.get("rondas")
     if r is None:
         return errores
@@ -185,7 +194,7 @@ def _validar_preguntas(p: object) -> list[str]:
 
 
 def preguntas_efectivas(cfg: dict) -> dict:
-    """Sección preguntas fusionada con el defecto (activo + rondas)."""
+    """Sección preguntas fusionada con el defecto (activo + rondas tope + presupuesto_max)."""
     base = json.loads(json.dumps(PREGUNTAS_DEFECTO))
     p = cfg.get("preguntas")
     if isinstance(p, dict):

@@ -1,12 +1,13 @@
 # Versión del núcleo
 
 ```yaml
-version: 1.2.3
+version: 1.2.4
 fecha: 2026-11-02
 ```
 
 ## Historial
 
+- `1.2.4` — Fase de preguntas proporcional: `rondas` = tope (default `[6, 4, 2]`), `presupuesto_max` 12, formato de decisión (contexto + opciones + efecto); Clarificación = decisiones. EVO-20261102-preguntas-proporcionales. Sin migraciones de fichas. Aplica a ambos packs.
 - `1.2.3` — Fase de preguntas antes de la instrucción (`03-preguntas/`, config `preguntas` activo por defecto con rondas `[10, 5, 3]`; Q&A en la plantilla de instrucción). EVO-20261102-fase-preguntas. Sin migraciones de formato. Aplica a ambos packs.
 - `1.2.2` — Parche: el panel deja las copias de `.uxyngraphar-respaldo/` escribibles tras respaldar archivos congelados (R-20; Windows no podía podar `settings.json`) y las pruebas del instalador descongelan antes de simular alteraciones. Sin migraciones. Aplica a ambos packs.
 - `1.2.1` — Parche: núcleo inviolable fail-closed en proyectos (hooks Cursor con `failClosed`, manifiesto, regla `.cursor/rules`, archivos N y carpetas del núcleo en solo lectura; doctor ERROR si falta protección; `niveles.nucleo` obligado a bloqueante; restaurar/deshacer/lock respetan el congelado). Sin migraciones. Aplica a ambos packs.

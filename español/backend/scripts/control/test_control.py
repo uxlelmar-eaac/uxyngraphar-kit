@@ -111,8 +111,9 @@ class TestPreguntas(unittest.TestCase):
     def test_por_defecto_activo_con_rondas(self):
         c = cfg.por_defecto()
         self.assertEqual(cfg.validar(c), [])
-        self.assertEqual(c["preguntas"], {"activo": True, "rondas": [10, 5, 3]})
-        self.assertEqual(cfg.preguntas_efectivas(c)["rondas"], [10, 5, 3])
+        self.assertEqual(c["preguntas"], {"activo": True, "rondas": [6, 4, 2], "presupuesto_max": 12})
+        self.assertEqual(cfg.preguntas_efectivas(c)["rondas"], [6, 4, 2])
+        self.assertEqual(cfg.preguntas_efectivas(c)["presupuesto_max"], 12)
 
     def test_rondas_invalidas(self):
         casos = [
@@ -122,6 +123,9 @@ class TestPreguntas(unittest.TestCase):
             ({"rondas": [True]}, "entre 1 y"),
             ({"activo": "si"}, "true o false"),
             ({"rondas": [10] * 11}, "como máximo"),
+            ({"presupuesto_max": 0}, "presupuesto_max"),
+            ({"presupuesto_max": 41}, "presupuesto_max"),
+            ({"presupuesto_max": True}, "presupuesto_max"),
             ("10", "objeto"),
         ]
         for preguntas, texto in casos:
@@ -131,15 +135,34 @@ class TestPreguntas(unittest.TestCase):
     def test_proyecto_puede_apagar_y_cambiar_rondas(self):
         with tempfile.TemporaryDirectory() as t:
             (Path(t) / "docs").mkdir()
-            (Path(t) / "docs" / cfg.NOMBRE).write_text(json.dumps({"preguntas": {"activo": False, "rondas": [4, 2]}}))
+            (Path(t) / "docs" / cfg.NOMBRE).write_text(
+                json.dumps({"preguntas": {"activo": False, "rondas": [4, 2], "presupuesto_max": 8}})
+            )
             c, p = cfg.cargar(Path(t))
             self.assertEqual(p, [])
-            self.assertEqual(cfg.preguntas_efectivas(c), {"activo": False, "rondas": [4, 2]})
+            self.assertEqual(
+                cfg.preguntas_efectivas(c),
+                {"activo": False, "rondas": [4, 2], "presupuesto_max": 8},
+            )
+            self.assertEqual(cfg.validar(c), [])
+
+    def test_fusion_presupuesto_con_rondas_legacy(self):
+        """Proyectos con solo activo+rondas reciben presupuesto_max del defecto."""
+        with tempfile.TemporaryDirectory() as t:
+            (Path(t) / "docs").mkdir()
+            (Path(t) / "docs" / cfg.NOMBRE).write_text(
+                json.dumps({"preguntas": {"activo": True, "rondas": [10, 5, 3]}})
+            )
+            c, p = cfg.cargar(Path(t))
+            self.assertEqual(p, [])
+            ef = cfg.preguntas_efectivas(c)
+            self.assertEqual(ef["rondas"], [10, 5, 3])
+            self.assertEqual(ef["presupuesto_max"], 12)
             self.assertEqual(cfg.validar(c), [])
 
     def test_preguntas_no_relajan_nucleo(self):
         c = cfg.por_defecto()
-        c["preguntas"] = {"activo": False, "rondas": [1]}
+        c["preguntas"] = {"activo": False, "rondas": [1], "presupuesto_max": 3}
         c["niveles"]["nucleo"] = "aviso"
         self.assertTrue(any("nucleo" in e and "bloqueante" in e for e in cfg.validar(c)))
         c["niveles"]["nucleo"] = "bloqueante"

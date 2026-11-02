@@ -23,7 +23,7 @@ ARCHIVO_PLANTILLA = "plantilla-config.json"
 CLAVES_PLANTILLA = {
     "niveles": None, "limite_lineas": None, "respaldos": None, "memoria": None, "reglas_proyecto": None,
     "idioma": ("conversacion", "commits", "ramas"), "feedback": ("ocultar",), "protocolo": ("alias",),
-    "preguntas": ("activo", "rondas"),
+    "preguntas": ("activo", "rondas", "presupuesto_max"),
 }
 
 

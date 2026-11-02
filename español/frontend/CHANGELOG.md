@@ -4,6 +4,17 @@ Evolución versionada del pack. Este archivo **viaja dentro de cada pack**: el r
 
 Formato: una entrada por lote de cambios; origen (plan/EVO/decisión humana) siempre citado.
 
+## [1.2.4] — 2026-11-02
+
+Origen: decisión humana (Uxleleaac, 2026-11-02: preguntas proporcionales al impacto; formato de decisión con contexto + opciones + efecto; Clarificación = síntesis de decisiones, no transcript). Ficha EVO-20261102-preguntas-proporcionales. Aplica a **ambos packs**. Sin migraciones de fichas `PRE-*` antiguas; configs con `rondas: [10,5,3]` siguen válidas.
+
+### Fase de preguntas (proporcional + decisión)
+- `rondas` pasa a **tope** por ronda (default `[6, 4, 2]`); nuevo `presupuesto_max` (default `12`, validación 1–40).
+- Protocolo: impacto `bajo`/`medio`/`alto`, capas de decisión, bloque canónico (contexto + 2–3 opciones + efecto); cierre por suficiencia.
+- Frontmatter: `impacto_estimado`, `presupuesto_max`, `preguntas_hechas` (deja de exigir `preguntas_por_ronda` = copia del objetivo).
+- Plantillas de instrucción: § Clarificación (decisiones); detalle completo en `03-preguntas/`.
+- Panel / plantilla de config: textos de tope + campo presupuesto; allowlist actualizada.
+
 ## [1.2.3] — 2026-11-02
 
 Origen: decisión humana (Uxleleaac, 2026-11-02: fase de preguntas adaptativas antes de la instrucción; carpeta `preguntas`; defaults 3 rondas 10/5/3 activas; Q&A en la instrucción sin plantilla nueva de tipo), ficha EVO-20261102-fase-preguntas. Aplica a **ambos packs**. Sin migraciones de formato de config.

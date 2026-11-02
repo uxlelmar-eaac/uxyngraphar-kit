@@ -26,7 +26,7 @@ EDITABLES = {
     "rol": None, "limite_lineas": None, "niveles": None, "exenciones_lineas": None, "secretos_permitir": None,
     "respaldos": None, "memoria": None, "reglas_proyecto": None, "codigo": ("raices", "extensiones", "excluir"),
     "idioma": ("conversacion", "commits", "ramas", "glosario", "excluir", "legacy", "locales"), "feedback": ("ocultar",),
-    "protocolo": ("alias",), "preguntas": ("activo", "rondas"),
+    "protocolo": ("alias",), "preguntas": ("activo", "rondas", "presupuesto_max"),
 }
 
 

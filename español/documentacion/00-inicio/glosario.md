@@ -7,7 +7,7 @@
 | **Plantilla P** | Archivo “rellenar una vez” (p. ej. `configuracion-proyecto.md`). |
 | **Contenido C** | Tu trabajo en el proyecto; el instalador **no** lo sobrescribe. |
 | **Instrucción** | Contrato de tarea en `05-instrucciones/` con estados (awaiting_approval → approved…). |
-| **Fase de preguntas** | Rondas de clarificación en chat antes de la instrucción (`03-preguntas/`; config `preguntas`, por defecto 10/5/3). El Q&A se vuelca a la instrucción. |
+| **Fase de preguntas** | Clarificación proporcional en chat antes de la instrucción (`03-preguntas/`; config `preguntas`, topes 6/4/2 y presupuesto 12). Cada pregunta es una decisión (contexto + opciones + efecto); las decisiones se vuelcan a la instrucción. |
 | **Anclas** | Rutas de código/docs que la instrucción autoriza tocar. |
 | **EVO** | Ficha en `46-evolucion-documentacion/` sobre el propio sistema documental. |
 | **Lock** | `uxyngraphar/.uxyngraphar.lock` — versión del pack en ese proyecto. |

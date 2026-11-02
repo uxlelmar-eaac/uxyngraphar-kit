@@ -34,9 +34,9 @@ tipo: solo-documentacion
 
 - Actualizar docs operativas y/o espejo UI sin tocar código.
 
-## Clarificación (preguntas y respuestas)
+## Clarificación (decisiones)
 
-- Si hubo fase: rondas pregunta → respuesta + síntesis (3–6 viñetas). Si se omitió: `Omitida (config|pedido humano)`.
+- Si hubo fase: impacto; por cada decisión: opción elegida + efecto; síntesis (3–6 viñetas). Si se omitió: `Omitida (config|pedido humano)`.
 
 ## Objetivo
 

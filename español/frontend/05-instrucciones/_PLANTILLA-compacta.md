@@ -19,8 +19,8 @@ preguntas_omitidas: false
 
 > **Contrato IA:** hasta **Decisión a tomar**. Compacta. Opcionales: [instruccion.md](../00-nucleo/frontmatter/instruccion.md).
 
-## Clarificación
-Q&A por rondas o `Omitida (config|pedido)`. [fase-preguntas.md](../10-guias/fase-preguntas.md).
+## Clarificación (decisiones)
+Impacto; por cada decisión: opción elegida + efecto; síntesis 3–6 viñetas. O `Omitida (config|pedido)`. [fase-preguntas.md](../10-guias/fase-preguntas.md).
 
 ## Objetivo
 Una frase: qué quedará verdadero al terminar.

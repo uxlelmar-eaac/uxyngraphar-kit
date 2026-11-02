@@ -61,7 +61,7 @@ class TestProyecto(Base):
         self.assertEqual(v["efectiva"]["limite_lineas"], 350)
         self.assertIn("reglas_proyecto", v["opciones"]["controles"])
         self.assertTrue(v["opciones"].get("preguntas"))
-        self.assertEqual(v["efectiva"]["preguntas"], {"activo": True, "rondas": [10, 5, 3]})
+        self.assertEqual(v["efectiva"]["preguntas"], {"activo": True, "rondas": [6, 4, 2], "presupuesto_max": 12})
         self.assertTrue(v["colaborar"]["disponible"])
 
     def test_solo_cambia_lo_editable(self):
@@ -101,11 +101,18 @@ class TestProyecto(Base):
 
     def test_preguntas_editables(self):
         self.assertFalse(panel.guardar(str(self.repo), "docs", {"preguntas": {"rondas": [0]}}, self.huella())["ok"])
-        r = panel.guardar(str(self.repo), "docs", {"preguntas": {"activo": False, "rondas": [4, 2]}}, self.huella())
+        self.assertFalse(panel.guardar(str(self.repo), "docs", {"preguntas": {"presupuesto_max": 0}}, self.huella())["ok"])
+        r = panel.guardar(
+            str(self.repo), "docs",
+            {"preguntas": {"activo": False, "rondas": [4, 2], "presupuesto_max": 8}},
+            self.huella(),
+        )
         self.assertTrue(r["ok"], r)
-        self.assertEqual(self.config()["preguntas"], {"activo": False, "rondas": [4, 2]})
-        self.assertEqual(sistema.filtrar_plantilla({"preguntas": {"activo": True, "rondas": [8], "x": 1}}),
-                         {"preguntas": {"activo": True, "rondas": [8]}})
+        self.assertEqual(self.config()["preguntas"], {"activo": False, "rondas": [4, 2], "presupuesto_max": 8})
+        self.assertEqual(
+            sistema.filtrar_plantilla({"preguntas": {"activo": True, "rondas": [8], "presupuesto_max": 10, "x": 1}}),
+            {"preguntas": {"activo": True, "rondas": [8], "presupuesto_max": 10}},
+        )
 
     def test_colaborar_si_y_no(self):
         self.assertTrue(panel.colaborar(str(self.repo), "docs", True)["ok"])

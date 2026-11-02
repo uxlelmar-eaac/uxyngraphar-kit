@@ -8,7 +8,7 @@ Una página: **qué hacer tú** y **qué hace la IA**. Guía visual: [!00_franco
 
 | Momento | Tú | IA |
 |---------|-----|-----|
-| **1 — Pedir** | Describe el cambio en lenguaje natural (responde las rondas de preguntas si aplican; o di «salta preguntas») | Fase de preguntas → instrucción `awaiting_approval` + plan |
+| **1 — Pedir** | Describe el cambio en lenguaje natural (elige opciones en las preguntas de decisión si aplican; o di «salta preguntas») | Fase de preguntas → instrucción `awaiting_approval` + plan |
 | **2 — Aprobar** | Revisa alcance y aprueba en el panel (Proyecto → Pendientes) | Espera `approved`; no codea |
 | **3 — Revisión de pendientes** | [`decisiones-pendientes`](../35-herramientas/autorizadas/decisiones-pendientes.md) periódico | Ya cerró con `done` + colas 45/46 si aplica |
 

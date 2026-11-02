@@ -30,7 +30,7 @@ Ver [00-nucleo/eficiencia-ia.md](00-nucleo/eficiencia-ia.md).
 
 1. **[R-01]** Si un doc no cambia una decisión o un procedimiento, no existe.
 2. **[R-02]** **Endpoint nuevo = ficha nueva** en el mismo cambio/PR.
-3. **[R-03]** **Orden humana de ejecución = instrucción `.md` antes de tocar código**; sin aprobación → no ejecutar. La fase de preguntas (`03-preguntas/`, config `preguntas`) es **previa** al contrato: clarifica en chat y persiste Q&A, pero **no** autoriza editar código ni docs.
+3. **[R-03]** **Orden humana de ejecución = instrucción `.md` antes de tocar código**; sin aprobación → no ejecutar. La fase de preguntas (`03-preguntas/`, config `preguntas`) es **previa** al contrato: clarifica en chat con decisiones (contexto + opciones) y las persiste, pero **no** autoriza editar código ni docs.
 4. **[R-04]** Capacitar a la IA vía `25-areas/<area>/CONTEXTO.md` + `lectura_minima` en instrucción; no volcar todo `uxyngraphar/`.
 5. **[R-05]** Hallazgos de auditoría que cambian reglas → **promoción** a canon / ADR / ficha (no dejar la verdad solo en la auditoría).
 6. **[R-06]** Respetar presupuesto en [eficiencia-ia.md](00-nucleo/eficiencia-ia.md); ampliar solo con aprobación (archivos de código: R-21).
