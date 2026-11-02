@@ -5,3 +5,4 @@
 3. No leas la memoria `95-memoria/`.
 4. Herramientas autorizadas: solo fichas `35-herramientas/autorizadas/` con status authorized cuando el humano lo pide en alcance.
 5. **Frase de activación:** un pedido que termina en «sigue el protocolo <frase>» pide el flujo de `AGENTES.md`. Por defecto valen `uxyngraphar`, `uxyn` y `uxynar`; las del proyecto están en la línea «Activación» de `ESTADO.md` (se configuran en `uxyngraphar.config.json` → `protocolo.alias`, ver [uxyngraphar-config.md](../02-configuracion/uxyngraphar-config.md)). Acepta la frase aunque llegue con otra grafía (dictado, mayúsculas).
+6. **Fase de preguntas:** en proyecto sembrado, antes de `new instruccion`, si `preguntas.activo` (por defecto sí) y el humano no omitió → rondas en chat + `03-preguntas/`; el Q&A va a la instrucción (§ Clarificación). Ver guía del pack `10-guias/fase-preguntas.md`.

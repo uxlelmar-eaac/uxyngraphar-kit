@@ -34,7 +34,7 @@ def crear_pack(raiz: Path, titulo: str = "servidor") -> Pack:
         (docs / d).mkdir(parents=True, exist_ok=True)
         (docs / d / "INDICE.md").write_text("# i\n", encoding="utf-8")
     for sec in validar_estructura.SECCIONES_ESTADO:
-        for est in validar_estructura.ESTADOS:
+        for est in validar_estructura.estados_de(sec):
             (docs / sec / est).mkdir(parents=True, exist_ok=True)
     for n in ("INDICE.md", "PROTOCOLO.md"):
         (docs / n).write_text("# x\n", encoding="utf-8")

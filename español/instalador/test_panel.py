@@ -60,6 +60,8 @@ class TestProyecto(Base):
         self.assertTrue(v["ok"])
         self.assertEqual(v["efectiva"]["limite_lineas"], 350)
         self.assertIn("reglas_proyecto", v["opciones"]["controles"])
+        self.assertTrue(v["opciones"].get("preguntas"))
+        self.assertEqual(v["efectiva"]["preguntas"], {"activo": True, "rondas": [10, 5, 3]})
         self.assertTrue(v["colaborar"]["disponible"])
 
     def test_solo_cambia_lo_editable(self):
@@ -96,6 +98,14 @@ class TestProyecto(Base):
         self.assertEqual(self.config()["protocolo"], {"alias": ["uxyn", "del sistema"]})
         self.assertIn("«sigue el protocolo uxyn | del sistema»", (self.repo / "docs" / "ESTADO.md").read_text())
         self.assertEqual(sistema.filtrar_plantilla({"protocolo": {"alias": ["uxyn"], "otra": 1}}), {"protocolo": {"alias": ["uxyn"]}})
+
+    def test_preguntas_editables(self):
+        self.assertFalse(panel.guardar(str(self.repo), "docs", {"preguntas": {"rondas": [0]}}, self.huella())["ok"])
+        r = panel.guardar(str(self.repo), "docs", {"preguntas": {"activo": False, "rondas": [4, 2]}}, self.huella())
+        self.assertTrue(r["ok"], r)
+        self.assertEqual(self.config()["preguntas"], {"activo": False, "rondas": [4, 2]})
+        self.assertEqual(sistema.filtrar_plantilla({"preguntas": {"activo": True, "rondas": [8], "x": 1}}),
+                         {"preguntas": {"activo": True, "rondas": [8]}})
 
     def test_colaborar_si_y_no(self):
         self.assertTrue(panel.colaborar(str(self.repo), "docs", True)["ok"])

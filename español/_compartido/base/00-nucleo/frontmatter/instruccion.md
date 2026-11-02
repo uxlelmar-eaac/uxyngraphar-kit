@@ -28,3 +28,5 @@ Ruta: `05-instrucciones/<estado>/YYYY-MM-DD/<slug>.md`. Estados:
 | `ampliacion_aprobada_at` | datetime | no | Lo fija la aprobación humana (`decisiones.py apply`); sin él la ampliación no se ejecuta |
 | `fraccion_de` | string | no | Id de la instrucción plan de la que es fracción (R-21, camino B) |
 | `depende_de` | string[] | no | Ids de fracciones que deben cerrarse antes |
+| `preguntas_id` | string \| null | no | Id de la sesión en `03-preguntas/` si hubo fase de clarificación |
+| `preguntas_omitidas` | boolean | no | `true` si la fase se saltó (config o pedido humano); default `false` |

@@ -13,7 +13,8 @@
 | [ajustes-locales.md](ajustes-locales.md) | **Ajustes locales** (R-25): aplicar una EVO aprobada en el proyecto sin tocar el núcleo (`ajustes.py`) |
 | [envio-sugerencias.md](envio-sugerencias.md) | **Envío de sugerencias** (opcional, apagado por defecto): mandar las fichas de 46 a quien mantiene uxyngraphar (`feedback.py`) |
 | [adopcion-pack.md](adopcion-pack.md) | Roadmap primer mes |
-| [flujo-instrucciones-documentacion.md](flujo-instrucciones-documentacion.md) | Pedido → instrucción → sync docs + espejo |
+| [flujo-instrucciones-documentacion.md](flujo-instrucciones-documentacion.md) | Pedido → (preguntas) → instrucción → sync docs + espejo |
+| [fase-preguntas.md](fase-preguntas.md) | **Fase de preguntas** — rondas adaptativas antes de la instrucción (`03-preguntas/`, config `preguntas`) |
 | [pruebas.md](pruebas.md) | Cómo probar |
 | [contratos-api.md](contratos-api.md) | Consumo API por id |
 | [sync-documentacion-pr.md](sync-documentacion-pr.md) | Checklist PR + promoción auditoría |

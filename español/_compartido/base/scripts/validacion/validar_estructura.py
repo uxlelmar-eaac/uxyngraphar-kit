@@ -5,19 +5,27 @@ from __future__ import annotations
 from validar_comun import FECHA_RE, Opciones, Pack, Reporte, leer_ficha
 
 CARPETAS = (
-    "00-nucleo", "05-instrucciones", "10-guias", "15-rutas", "20-decisiones", "25-areas",
-    "30-manuales", "35-herramientas", "40-auditorias", "45-mejoras-propuestas",
+    "00-nucleo", "03-preguntas", "05-instrucciones", "10-guias", "15-rutas", "20-decisiones",
+    "25-areas", "30-manuales", "35-herramientas", "40-auditorias", "45-mejoras-propuestas",
     "46-evolucion-documentacion", "50-sistema-integral", "90-archivo", "95-memoria",
 )
 SECCIONES_ESTADO = (
-    "05-instrucciones", "20-decisiones", "40-auditorias", "45-mejoras-propuestas",
+    "03-preguntas", "05-instrucciones", "20-decisiones", "40-auditorias", "45-mejoras-propuestas",
     "46-evolucion-documentacion", "35-herramientas/propuestas",
 )
 ESTADOS = (
     "01-pendientes", "02-en-progreso", "03-completadas", "04-archivadas",
     "05-canceladas", "06-listas-para-eliminar",
 )
+# 03-preguntas usa un subconjunto (sin panel de decisiones por ronda).
+ESTADOS_POR_SECCION = {
+    "03-preguntas": ("01-en-curso", "03-completadas", "05-canceladas"),
+}
 PLANTILLAS_CON_FRONTMATTER = ("05-instrucciones/_PLANTILLA.md", "40-auditorias/_PLANTILLA.md")
+
+
+def estados_de(sec: str) -> tuple[str, ...]:
+    return ESTADOS_POR_SECCION.get(sec, ESTADOS)
 
 
 def validar_indices(pack: Pack, rep: Reporte) -> None:
@@ -38,9 +46,10 @@ def validar_indices(pack: Pack, rep: Reporte) -> None:
 def validar_estados(pack: Pack, rep: Reporte) -> None:
     for sec in SECCIONES_ESTADO:
         base = pack.docs / sec
-        if not (base / "01-pendientes").is_dir():
-            rep.fail(f"Falta carpeta de estado {base / '01-pendientes'}")
-        for est in ESTADOS:
+        estados = estados_de(sec)
+        if not (base / estados[0]).is_dir():
+            rep.fail(f"Falta carpeta de estado {base / estados[0]}")
+        for est in estados:
             carpeta = base / est
             if not carpeta.is_dir():
                 rep.warn(f"Sin estado {est}: {carpeta}")

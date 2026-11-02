@@ -1,12 +1,13 @@
 # Versión del núcleo
 
 ```yaml
-version: 1.2.2
-fecha: 2026-11-01
+version: 1.3.0
+fecha: 2026-11-02
 ```
 
 ## Historial
 
+- `1.3.0` — Menor: fase de preguntas antes de la instrucción (`03-preguntas/`, config `preguntas` activo por defecto con rondas `[10, 5, 3]`; Q&A en la plantilla de instrucción). EVO-20261102-fase-preguntas. Sin migraciones de formato. Aplica a ambos packs.
 - `1.2.2` — Parche: el panel deja las copias de `.uxyngraphar-respaldo/` escribibles tras respaldar archivos congelados (R-20; Windows no podía podar `settings.json`) y las pruebas del instalador descongelan antes de simular alteraciones. Sin migraciones. Aplica a ambos packs.
 - `1.2.1` — Parche: núcleo inviolable fail-closed en proyectos (hooks Cursor con `failClosed`, manifiesto, regla `.cursor/rules`, archivos N y carpetas del núcleo en solo lectura; doctor ERROR si falta protección; `niveles.nucleo` obligado a bloqueante; restaurar/deshacer/lock respetan el congelado). Sin migraciones. Aplica a ambos packs.
 - `1.2.0` — Menor: el único comando que necesita una persona es `uxyngraphar`, que abre el panel; desde él se hace todo (salud y arreglos, aprobar pendientes, copias de seguridad, memoria, protecciones, versiones, PATH, desinstalar) y se reabre solo tras actualizar. Los comandos siguen para CI, agentes y scripts. Los agentes cierran las instancias que levantan. Sin cambios en el texto de las reglas ni migraciones. Aplica a ambos packs.

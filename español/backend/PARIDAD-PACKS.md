@@ -37,6 +37,8 @@ La verificación automática solo opera cuando ambos packs están juntos (proyec
 | `00-nucleo/limite-350-lineas.md` | adaptado | servidor | 2026-09-14 |
 | `00-nucleo/restricciones.md` | especifico | cada pack | 2026-09-14 |
 | `00-nucleo/vision-documentacion.md` | adaptado | servidor | 2026-08-09 |
+| `03-preguntas/INDICE.md` | identico | ambos (sincronizar por hash) | 2026-11-02 |
+| `03-preguntas/_PROTOCOLO.md` | identico | ambos (sincronizar por hash) | 2026-11-02 |
 | `05-instrucciones/INDICE.md` | identico | ambos (sincronizar por hash) | 2026-10-15 |
 | `05-instrucciones/_PLANTILLA-adopcion-inicial-pack.md` | adaptado | servidor | 2026-08-09 |
 | `05-instrucciones/_PLANTILLA-consolidar-espejo-integral.md` | identico | ambos (sincronizar por hash) | 2026-08-09 |
@@ -49,6 +51,7 @@ La verificación automática solo opera cuando ambos packs están juntos (proyec
 | `10-guias/adopcion-pack.md` | adaptado | servidor | 2026-08-09 |
 | `10-guias/ci-validacion-documentacion.md` | identico | ambos (sincronizar por hash) | 2026-08-09 |
 | `10-guias/organizacion-estados-fechas.md` | identico | ambos (sincronizar por hash) | 2026-10-15 |
+| `10-guias/fase-preguntas.md` | identico | ambos (sincronizar por hash) | 2026-11-02 |
 | `10-guias/ciclo-integral-actos.md` | adaptado | servidor | 2026-08-09 |
 | `10-guias/contratos-api.md` | especifico | cada pack | 2026-08-09 |
 | `10-guias/espejo-incremental-proyectos-grandes.md` | adaptado | servidor | 2026-08-09 |
@@ -117,6 +120,7 @@ La verificación automática solo opera cuando ambos packs están juntos (proyec
 | `00-nucleo/frontmatter/ficha-ruta.md` | identico | ambos (sincronizar por hash) | 2026-10-15 |
 | `00-nucleo/frontmatter/herramienta.md` | identico | ambos (sincronizar por hash) | 2026-10-15 |
 | `00-nucleo/frontmatter/instruccion.md` | identico | ambos (sincronizar por hash) | 2026-10-15 |
+| `00-nucleo/frontmatter/preguntas.md` | identico | ambos (sincronizar por hash) | 2026-11-02 |
 | `00-nucleo/frontmatter/mejora.md` | identico | ambos (sincronizar por hash) | 2026-10-15 |
 | `00-nucleo/frontmatter/reglas.md` | identico | ambos (sincronizar por hash) | 2026-10-15 |
 | `10-guias/actualizar-nucleo.md` | identico | ambos (sincronizar por hash) | 2026-10-15 |
@@ -286,6 +290,7 @@ La verificación automática solo opera cuando ambos packs están juntos (proyec
 | `00-nucleo/agentes-detalle.md` | adaptado | servidor | 2026-10-15 |
 | `scripts/verificar-paridad.py` | identico | ambos (sincronizar por hash) | 2026-10-28 |
 | `*/01-pendientes/*/README.md` | identico | ambos (sincronizar por hash) | 2026-08-23 |
+| `*/01-en-curso/*/README.md` | identico | ambos (sincronizar por hash) | 2026-11-02 |
 | `*/02-en-progreso/*/README.md` | identico | ambos (sincronizar por hash) | 2026-08-23 |
 | `*/03-completadas/*/README.md` | identico | ambos (sincronizar por hash) | 2026-08-23 |
 | `*/04-archivadas/*/README.md` | identico | ambos (sincronizar por hash) | 2026-08-23 |

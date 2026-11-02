@@ -15,7 +15,11 @@ vinculos_salida: []
 
 # YYYYMMDD-NNN — Título corto
 
-> **Contrato IA:** frontmatter + secciones hasta **Decisión a tomar**; no leer más. Plantilla **compacta** (bajo costo de tokens). Añade al frontmatter solo los campos que necesites (`vinculos_entrada`, `excepciones_reglas`, `espejo_leer`, `mejoras_propuestas`, `evolucion_documentacion`, `presupuesto_max_docs`…); ver [instruccion.md](../00-nucleo/frontmatter/instruccion.md).
+> **Contrato IA:** frontmatter + secciones hasta **Decisión a tomar**; no leer más. Plantilla **compacta** (bajo costo de tokens). Añade al frontmatter solo los campos que necesites (`vinculos_entrada`, `excepciones_reglas`, `espejo_leer`, `mejoras_propuestas`, `evolucion_documentacion`, `presupuesto_max_docs`, `preguntas_id`, `preguntas_omitidas`…); ver [instruccion.md](../00-nucleo/frontmatter/instruccion.md).
+
+## Clarificación (preguntas y respuestas)
+
+- Rondas Q&A o `Omitida (config|pedido humano)`. Guía: [fase-preguntas.md](../10-guias/fase-preguntas.md).
 
 ## Objetivo
 

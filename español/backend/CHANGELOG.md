@@ -4,6 +4,17 @@ Evolución versionada del pack. Este archivo **viaja dentro de cada pack**: el r
 
 Formato: una entrada por lote de cambios; origen (plan/EVO/decisión humana) siempre citado.
 
+## [1.3.0] — 2026-11-02
+
+Origen: decisión humana (Uxleleaac, 2026-11-02: fase de preguntas adaptativas antes de la instrucción; carpeta `preguntas`; defaults 3 rondas 10/5/3 activas; Q&A en la instrucción sin plantilla nueva de tipo), ficha EVO-20261102-fase-preguntas. Aplica a **ambos packs**. Menor: sin migraciones de formato de config.
+
+### Fase de preguntas
+- Nueva sección `03-preguntas/` (`01-en-curso` / `03-completadas` / `05-canceladas`) con protocolo; el agente aclara en el chat y persiste la sesión.
+- Config `preguntas: { activo: true, rondas: [10, 5, 3] }` (validación, panel Configuración / plantilla, docs).
+- `_PLANTILLA.md` de instrucción: § Clarificación + `preguntas_id` / `preguntas_omitidas`.
+- `AGENTES.md` / PROTOCOLO R-03·R-17: preguntas **antes** de `new instruccion`; no autorizan codear.
+- Taxonomía, validador, clasificación, memoria, guías y manual del kit alineados.
+
 ## [1.2.2] — 2026-11-01
 
 Origen: CI de `v1.2.1` (PermissionError al podar respaldos y al simular alteraciones sobre núcleo congelado R-20). Aplica a **ambos packs**. Parche: sin migraciones.

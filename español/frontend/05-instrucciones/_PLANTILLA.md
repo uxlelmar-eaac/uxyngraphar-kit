@@ -25,6 +25,8 @@ ampliacion_justificacion: ""       # R-21: qué se rompe si se entrega en partes
 ampliacion_aprobada_at: null       # R-21: lo fija la aprobación humana; sin él no se ejecuta la ampliación
 fraccion_de: null                  # R-21: id de la instrucción plan, si esta es una fracción
 depende_de: []                     # R-21: fracciones que deben cerrarse antes
+preguntas_id: null                 # id PRE-… de 03-preguntas/ si hubo fase de clarificación
+preguntas_omitidas: false          # true si se saltó la fase (config o pedido «salta preguntas»)
 related_audits: []
 related_endpoints: []
 ---
@@ -38,6 +40,11 @@ related_endpoints: []
 ## Pedido (síntesis)
 
 - Máx. 3–5 viñetas.
+
+## Clarificación (preguntas y respuestas)
+
+- Si hubo fase activa (`preguntas_id`): por cada ronda, pregunta → respuesta; cerrar con 3–6 viñetas de síntesis que alimentan Objetivo, Alcance y Plan. Guía: [fase-preguntas.md](../10-guias/fase-preguntas.md).
+- Si se omitió: una línea `Omitida (config|pedido humano)` y `preguntas_omitidas: true`.
 
 ## Objetivo
 

@@ -57,6 +57,9 @@ const NIV={bloqueante:"Bloquea: el commit o el CI no pasan",aviso:"Avisa: solo m
 function campos(o,plantilla){const c=[];
  if(o.protocolo){c.push({g:"Cómo se pide el protocolo",d:"La frase con la que terminas un pedido para que el agente siga el flujo de uxyngraphar. El agente la ve al empezar, en ESTADO.md."});
   c.push({p:"protocolo.alias",t:"lista",l:"Frases para activar el protocolo",h:"Una por línea. Escribe al final de tu pedido: sigue el protocolo X. Por ejemplo: uxyn, uxynar, del sistema."})}
+ if(o.preguntas){c.push({g:"Fase de preguntas",d:"Antes de crear la instrucción, el agente aclara el pedido en el chat con rondas adaptativas. Las respuestas quedan en la instrucción."});
+  c.push({p:"preguntas.activo",t:"bool",si:"Sí, preguntar antes de redactar la instrucción",l:"Activar la fase de preguntas",h:"Si lo desmarcas, el agente crea la instrucción enseguida. En un pedido concreto también puedes escribir «salta preguntas»."});
+  c.push({p:"preguntas.rondas",t:"enteros",l:"Preguntas por ronda",h:"Un número por línea (ronda 1, 2, …). Por defecto: 10, 5 y 3. Máximo 10 rondas y 20 preguntas por ronda."})}
  c.push({g:"Controles",d:"Qué pasa cuando la puerta de control encuentra un problema."});
  (o.controles||[]).forEach(k=>c.push({p:"niveles."+k,t:"sel",l:k.replace("_"," "),h:CONTROLES[k]||"",op:o.niveles.map(n=>[n,NIV[n]||n])}));
  c.push({g:"General"});
@@ -93,10 +96,11 @@ function control(f,v,id){const val=v??"";
  if(f.t==="sel")return `<select id="${id}">${f.op.map(([k,t])=>`<option value="${esc(k)}" ${k===val?"selected":""}>${esc(t)}</option>`).join("")}</select>`;
  if(f.t==="num")return `<input type="number" id="${id}" min="${f.min}" value="${esc(val)}">`;
  if(f.t==="bool")return `<label><input type="checkbox" id="${id}" ${val?"checked":""}> ${esc(f.si||"Sí")}</label>`;
- if(f.t==="lista")return `<textarea id="${id}">${esc((val||[]).join("\n"))}</textarea>`;
+ if(f.t==="lista"||f.t==="enteros")return `<textarea id="${id}">${esc((val||[]).join("\n"))}</textarea>`;
  return `<input type="text" id="${id}" value="${esc(val)}">`}
 function leerCampo(f,id){const e=document.getElementById(id);if(!e)return undefined;
  if(f.t==="num")return e.value===""?null:Number(e.value);if(f.t==="bool")return e.checked;
+ if(f.t==="enteros")return e.value.split("\n").map(x=>x.trim()).filter(Boolean).map(x=>Number(x));
  if(f.t==="lista")return e.value.split("\n").map(x=>x.trim()).filter(Boolean);return e.value}
 function formulario(lista,base,actual,pref){return lista.map((f,i)=>f.g?`<h3>${esc(f.g)}</h3>${f.d?`<p class="mut">${esc(f.d)}</p>`:""}`:
  `<div class="campo ${igual(get(actual,f.p),get(base,f.p))?"":"mod"}"><label for="${pref}${i}">${esc(f.l)}</label><small>${esc(f.h)}</small><div class="ctl">${control(f,get(actual,f.p),pref+i)}</div></div>`).join("")}

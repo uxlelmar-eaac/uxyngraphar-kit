@@ -49,6 +49,10 @@ IDIOMA_DEFECTO = {
 ALIAS_DEFECTO = ["uxyngraphar", "uxyn", "uxynar"]
 ALIAS_MAX = 40
 PISTAS_CLIENTE = ("react", "vue", "svelte", "next", "angular", "expo", "react-native", "electron", "flutter", "@ionic", "vite")
+# Fase de preguntas antes de la instrucción (10-guias/fase-preguntas.md).
+PREGUNTAS_DEFECTO = {"activo": True, "rondas": [10, 5, 3]}
+PREGUNTAS_MAX_RONDAS = 10
+PREGUNTAS_MAX_POR_RONDA = 20
 
 
 def por_defecto(rol: str = "servidor") -> dict:
@@ -64,6 +68,7 @@ def por_defecto(rol: str = "servidor") -> dict:
                     "idioma": "aviso", "commits": "aviso", "memoria": "bloqueante", "reglas_proyecto": "bloqueante"},
         "idioma": json.loads(json.dumps(IDIOMA_DEFECTO)),
         "protocolo": {"alias": list(ALIAS_DEFECTO)},
+        "preguntas": json.loads(json.dumps(PREGUNTAS_DEFECTO)),
         "respaldos": {"conservar_dias": 30, "conservar_minimo": 3, "limpieza_automatica": True},
         "memoria": {"archivadas_a_memoria_dias": 180, "listas_a_memoria_dias": 30, "permitir_purgar": True},   # R-24
         # Reglas del proyecto: excepción declarada en la instrucción aprobada; cambios de reglas solo con instrucción aprobada.
@@ -109,6 +114,7 @@ def validar(cfg: dict) -> list[str]:
         errores.append("memoria.permitir_purgar: true o false")
     errores += _validar_feedback(cfg.get("feedback"))
     errores += _validar_protocolo(cfg.get("protocolo"))
+    errores += _validar_preguntas(cfg.get("preguntas"))
     rp = cfg.get("reglas_proyecto", {})
     if not isinstance(rp, dict):
         errores.append("reglas_proyecto: debe ser un objeto")
@@ -155,6 +161,36 @@ def _validar_protocolo(p: object) -> list[str]:
         else:
             vistos.add(a.strip().casefold())
     return errores
+
+
+def _validar_preguntas(p: object) -> list[str]:
+    if p is None:
+        return []
+    if not isinstance(p, dict):
+        return ["preguntas: debe ser un objeto"]
+    errores = []
+    if "activo" in p and not isinstance(p["activo"], bool):
+        errores.append("preguntas.activo: true o false")
+    r = p.get("rondas")
+    if r is None:
+        return errores
+    if not isinstance(r, list) or not r:
+        return errores + ["preguntas.rondas: lista no vacía de enteros ≥ 1"]
+    if len(r) > PREGUNTAS_MAX_RONDAS:
+        errores.append(f"preguntas.rondas: como máximo {PREGUNTAS_MAX_RONDAS} rondas")
+    for i, n in enumerate(r):
+        if isinstance(n, bool) or not isinstance(n, int) or n < 1 or n > PREGUNTAS_MAX_POR_RONDA:
+            errores.append(f"preguntas.rondas[{i}]: entero entre 1 y {PREGUNTAS_MAX_POR_RONDA}")
+    return errores
+
+
+def preguntas_efectivas(cfg: dict) -> dict:
+    """Sección preguntas fusionada con el defecto (activo + rondas)."""
+    base = json.loads(json.dumps(PREGUNTAS_DEFECTO))
+    p = cfg.get("preguntas")
+    if isinstance(p, dict):
+        _fusionar(base, p)
+    return base
 
 
 def alias_protocolo(cfg: dict) -> list[str]:

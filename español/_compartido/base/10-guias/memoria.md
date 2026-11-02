@@ -45,7 +45,7 @@ uxyngraphar/95-memoria/
 └── <sección>/<AAAA>/<AAAA-MM>/<ficha>.md
 ```
 
-- Secciones: `instrucciones`, `decisiones`, `auditorias`, `mejoras`, `evolucion`, `herramientas`. Las carpetas son por la fecha en que se guardó.
+- Secciones: `preguntas`, `instrucciones`, `decisiones`, `auditorias`, `mejoras`, `evolucion`, `herramientas`. Las carpetas son por la fecha en que se guardó.
 - La ficha conserva su frontmatter y gana `memoria_desde` (ruta original), `memoria_estado_previo`, `memoria_guardada` y `memoria_motivo`.
 - Cada apunte `guardada` del catálogo lleva la huella sha256 de la ficha: así se sabe si alguien la tocó.
 

@@ -12,6 +12,16 @@ Al final de un pedido escribes **«sigue el protocolo uxyngraphar»** (o `uxyn`,
 
 Con eso vale «sigue el protocolo del sistema». Desde el panel: **Proyecto → Configuración → Cómo se pide el protocolo** (también en la **Plantilla**, para los proyectos nuevos). El agente las lee en la línea «Activación» de `ESTADO.md`. Si editas el archivo a mano, ponla al día con **Proyecto → Salud → «Arreglar»** (o `python3 uxyngraphar/scripts/doctor.py --fix`).
 
+## Fase de preguntas
+
+Por defecto, antes de crear una instrucción el agente hace rondas de preguntas en el chat (`activo: true`, `rondas: [10, 5, 3]`). Puedes apagarlo o cambiar el número de preguntas por ronda:
+
+```json
+{ "preguntas": { "activo": true, "rondas": [10, 5, 3] } }
+```
+
+Panel: **Proyecto → Configuración → Fase de preguntas**. En un pedido concreto: «salta preguntas». Guía: `uxyngraphar/10-guias/fase-preguntas.md`.
+
 ## Cómo editarlo
 
 - **Recomendado:** `uxyngraphar` → **Proyecto → Configuración** (vista previa de cada cambio y copia antes de guardar)

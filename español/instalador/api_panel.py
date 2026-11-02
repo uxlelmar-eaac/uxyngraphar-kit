@@ -26,7 +26,7 @@ EDITABLES = {
     "rol": None, "limite_lineas": None, "niveles": None, "exenciones_lineas": None, "secretos_permitir": None,
     "respaldos": None, "memoria": None, "reglas_proyecto": None, "codigo": ("raices", "extensiones", "excluir"),
     "idioma": ("conversacion", "commits", "ramas", "glosario", "excluir", "legacy", "locales"), "feedback": ("ocultar",),
-    "protocolo": ("alias",),
+    "protocolo": ("alias",), "preguntas": ("activo", "rondas"),
 }
 
 
@@ -201,7 +201,8 @@ def ver(ruta: str, docs: str) -> dict:
             "ilegible": crudo is None, "efectiva": efectiva, "problemas": problemas, "defecto": cfgmod.por_defecto(efectiva.get("rol", "servidor")),
             "opciones": {"niveles": list(cfgmod.NIVELES), "controles": list(cfgmod.CONTROLES),
                          "excepciones": list(getattr(cfgmod, "MODOS_EXCEPCION", ())), "cambios_reglas": list(getattr(cfgmod, "MODOS_CAMBIO_REGLAS", ())),
-                         "protocolo": hasattr(cfgmod, "ALIAS_DEFECTO")},
+                         "protocolo": hasattr(cfgmod, "ALIAS_DEFECTO"),
+                         "preguntas": hasattr(cfgmod, "PREGUNTAS_DEFECTO")},
             "colaborar": {"activo": bool(fb.get("activo")), "respondido": fb.get("respondido", ""), "respondido_en": fb.get("respondido_en", ""),
                           "url": fb.get("url", ""), "disponible": (repo / docs / "scripts" / "feedback.py").is_file()},
             "guia": f"{docs}/10-guias/configuracion-uxyngraphar.md"}
@@ -302,7 +303,8 @@ def ver_plantilla() -> dict:
     return {"ok": True, "plantilla": sistema.leer_plantilla(), "defecto": cfgmod.por_defecto(), "archivo": str(sistema.home() / sistema.ARCHIVO_PLANTILLA),
             "opciones": {"niveles": list(cfgmod.NIVELES), "controles": list(cfgmod.CONTROLES),
                          "excepciones": list(cfgmod.MODOS_EXCEPCION), "cambios_reglas": list(cfgmod.MODOS_CAMBIO_REGLAS),
-                         "protocolo": hasattr(cfgmod, "ALIAS_DEFECTO")}}
+                         "protocolo": hasattr(cfgmod, "ALIAS_DEFECTO"),
+                         "preguntas": hasattr(cfgmod, "PREGUNTAS_DEFECTO")}}
 
 
 def guardar_plantilla(plantilla: dict) -> dict:

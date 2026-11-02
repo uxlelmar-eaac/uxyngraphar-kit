@@ -13,6 +13,7 @@ from common_constantes import ENUMS_FICHA  # noqa: E402
 import alcance  # noqa: E402  (R-21)
 
 SECCIONES = {
+    "03-preguntas": "preguntas",
     "05-instrucciones": "instruccion",
     "20-decisiones": "adr",
     "35-herramientas/propuestas": "herramienta",
@@ -24,6 +25,7 @@ _COLA = {"01-pendientes": {"pending"}, "02-en-progreso": {"approved"}, "03-compl
          "04-archivadas": {"archivada"}, "05-canceladas": {"rejected"}, "06-listas-para-eliminar": {"para-eliminar"}}
 # Estado de carpeta → status admitidos, por tipo (fuente: 00-nucleo/frontmatter/<tipo>.md).
 STATUS_POR_ESTADO: dict[str, dict[str, set[str]]] = {
+    "preguntas": {"01-en-curso": {"en-curso"}, "03-completadas": {"completada"}, "05-canceladas": {"cancelada"}},
     "instruccion": {"01-pendientes": {"draft", "awaiting_approval"}, "02-en-progreso": {"approved", "executing"},
                     "03-completadas": {"done"}, "04-archivadas": {"archivada"}, "05-canceladas": {"cancelled"},
                     "06-listas-para-eliminar": {"para-eliminar"}},

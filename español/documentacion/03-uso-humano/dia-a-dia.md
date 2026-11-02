@@ -1,7 +1,7 @@
 # Día a día (humano)
 
 1. Pides un cambio a la IA.
-2. La IA crea o actualiza una **instrucción** en espera de aprobación.
+2. Por defecto la IA te hace **rondas de preguntas** en el chat (configurables; se pueden saltar con «salta preguntas») y guarda el Q&A; luego crea la **instrucción** en espera de aprobación con esa clarificación.
 3. **Tú** la apruebas en el panel: `uxyngraphar` → **Proyecto → Pendientes** ([aprobar-instrucciones.md](aprobar-instrucciones.md)).
 4. La IA implementa solo dentro de las anclas y límites.
 5. Al cerrar, documentación espejo y colas 45/46 quedan alineadas.
