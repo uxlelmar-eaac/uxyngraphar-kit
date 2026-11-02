@@ -27,9 +27,15 @@ class TestDoctor(Base):
 
     def test_instalacion_nueva_sin_errores_con_avisos_de_proteccion(self) -> None:
         n = self.niveles(pack=self.pack)
-        self.assertNotIn("ERROR", n.values())
         self.assertEqual((n["nucleo"], n["version"], n["lock"]), ("OK", "OK", "OK"))
-        self.assertEqual((n["deny"], n["codeowners"], n["gancho"]), ("WARN", "WARN", "WARN"))
+        # Sin --proteger: faltan capas R-20 → ERROR (framework rígido)
+        self.assertEqual((n["deny"], n["cursor"], n["fs"], n["codeowners"]), ("ERROR", "ERROR", "ERROR", "ERROR"))
+        self.assertEqual(n["gancho"], "WARN")
+        dr.arreglar(self.repo, "docs")
+        n2 = self.niveles(pack=self.pack)
+        self.assertEqual((n2["deny"], n2["cursor"], n2["fs"], n2["gancho"]), ("OK", "OK", "OK", "OK"))
+        self.assertIn(n2["codeowners"], ("OK", "WARN"))  # WARN si queda @CAMBIAR-PROPIETARIO
+        self.assertEqual([k for k, v in n2.items() if v == "ERROR"], [])
 
     def test_frases_de_activacion_en_estado(self) -> None:
         estado = self.repo / "docs" / "ESTADO.md"
@@ -99,9 +105,11 @@ class TestDoctor(Base):
     def test_cli_codigos_de_salida_y_json(self) -> None:
         cli = str(AQUI.parent / "doctor.py")
         r = subprocess.run([sys.executable, "-X", "utf8", "-I", cli, "--repo", str(self.repo)], capture_output=True, text=True)
-        self.assertEqual(r.returncode, 0)
+        self.assertEqual(r.returncode, 1)  # sin proteger: ERROR de capas R-20
+        r = subprocess.run([sys.executable, "-X", "utf8", "-I", cli, "--repo", str(self.repo), "--fix"], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0)  # --fix regenera protecciones (WARN de propietario ejemplo no falla)
         r = subprocess.run([sys.executable, "-X", "utf8", "-I", cli, "--repo", str(self.repo), "--strict"], capture_output=True, text=True)
-        self.assertEqual(r.returncode, 1)
+        self.assertEqual(r.returncode, 1)  # --strict: WARN (p. ej. CODEOWNERS de ejemplo) también falla
         r = subprocess.run([sys.executable, "-X", "utf8", "-I", cli, "--repo", str(self.repo), "--json"], capture_output=True, text=True)
         self.assertTrue(any(c["id"] == "nucleo" for c in json.loads(r.stdout)))
 

@@ -322,7 +322,8 @@ class TestProteccion(Base):
         deny = json.loads(f.read_text(encoding="utf-8"))["permissions"]["deny"]
         self.assertIn("Edit(docs/REGLAS.md)", deny)
         self.assertIn("Write(docs/10-guias/**)", deny)
-        for extra in ("Edit(docs/.uxyngraphar.lock)", "Edit(.claude/settings.json)", "Edit(.github/CODEOWNERS)"):
+        for extra in ("Edit(docs/.uxyngraphar.lock)", "Edit(.claude/settings.json)", "Edit(.github/CODEOWNERS)",
+                      "Edit(.cursor/hooks.json)", "Edit(.cursor/uxyngraphar-protegido.json)"):
             self.assertIn(extra, deny)
         self.assertNotIn("Edit(docs/00-nucleo/configuracion-proyecto.md)", deny)
         self.assertEqual(len(deny), len(set(deny)))
@@ -339,6 +340,69 @@ class TestProteccion(Base):
         cfg = json.loads(f.read_text(encoding="utf-8"))
         self.assertEqual(cfg["otra"], 1)
         self.assertEqual(cfg["permissions"]["allow"], ["Bash(ls)"])
+
+    def test_hooks_cursor_fail_closed_y_fs(self) -> None:
+        self.instalar()
+        for _ in range(2):
+            proteccion.hooks_cursor(self.repo, "docs")
+            proteccion.congelar_fs(self.repo, "docs")
+        self.assertTrue(proteccion.cursor_hooks_ok(self.repo))
+        hooks = json.loads((self.repo / proteccion.HOOKS_JSON_REL).read_text(encoding="utf-8"))
+        for ev in ("preToolUse", "beforeShellExecution"):
+            entradas = hooks["hooks"][ev]
+            self.assertTrue(any(e.get("command") == proteccion.GUARDIA_CMD and e.get("failClosed") is True for e in entradas))
+        man = json.loads((self.repo / proteccion.MANIFIESTO_REL).read_text(encoding="utf-8"))
+        self.assertIn("docs/REGLAS.md", man["protegidas"])
+        self.assertTrue((self.repo / proteccion.REGLA_MDC_REL).is_file())
+        reglas = (self.repo / "docs/REGLAS.md")
+        self.assertFalse(reglas.stat().st_mode & 0o222)
+        self.assertEqual(proteccion.archivos_n_escribibles(self.repo, "docs"), [])
+        # Guardia: niega Write al núcleo; permite Write a contenido C / plantilla P
+        deny = proteccion.decidir_guardia(
+            {"hook_event_name": "preToolUse", "tool_name": "Write", "tool_input": {"path": "docs/REGLAS.md"}},
+            self.repo,
+        )
+        self.assertEqual(deny.get("permission"), "deny")
+        allow_p = proteccion.decidir_guardia(
+            {"hook_event_name": "preToolUse", "tool_name": "Write",
+             "tool_input": {"path": "docs/00-nucleo/configuracion-proyecto.md"}},
+            self.repo,
+        )
+        self.assertEqual(allow_p.get("permission"), "allow")
+        deny_shell = proteccion.decidir_guardia(
+            {"hook_event_name": "beforeShellExecution", "command": "rm -f docs/REGLAS.md"},
+            self.repo,
+        )
+        self.assertEqual(deny_shell.get("permission"), "deny")
+        allow_run = proteccion.decidir_guardia(
+            {"hook_event_name": "beforeShellExecution",
+             "command": "python3 docs/scripts/doctor.py"},
+            self.repo,
+        )
+        self.assertEqual(allow_run.get("permission"), "allow")
+        proteccion.descongelar_fs(self.repo, "docs")
+        self.assertTrue(reglas.stat().st_mode & 0o200)
+        proteccion.congelar_fs(self.repo, "docs")
+        self.assertFalse(reglas.stat().st_mode & 0o222)
+        # Carpetas puras: no se puede crear un archivo nuevo (persona/agente)
+        with self.assertRaises(OSError):
+            (self.repo / "docs/10-guias/intruso.md").write_text("x", encoding="utf-8")
+        # Plantilla P sigue escribible
+        p = self.repo / "docs/00-nucleo/configuracion-proyecto.md"
+        p.write_text(p.read_text(encoding="utf-8") + "\n", encoding="utf-8")
+
+    def test_doctor_fix_regenera_cursor_y_fs(self) -> None:
+        import doctor
+        self.instalar()
+        proteccion.hooks_cursor(self.repo, "docs")
+        proteccion.congelar_fs(self.repo, "docs")
+        proteccion.descongelar_mecanismos(self.repo)
+        (self.repo / proteccion.HOOKS_JSON_REL).unlink()
+        proteccion.descongelar_fs(self.repo, "docs")
+        hechas = doctor.arreglar(self.repo, "docs")
+        self.assertTrue(any("Cursor" in h or "hooks" in h or "solo lectura" in h for h in hechas))
+        self.assertTrue(proteccion.cursor_hooks_ok(self.repo))
+        self.assertEqual(proteccion.archivos_n_escribibles(self.repo, "docs"), [])
 
 
 if __name__ == "__main__":

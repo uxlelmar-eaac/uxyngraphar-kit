@@ -128,6 +128,8 @@ def aplicar(pack: Path, repo: Path, docs: str, plan: Plan, migracion: str = "", 
     if not escribir and not fusiones and not conflictos and not pendientes and plan.nueva == plan.adoptada:
         return None
     antes = {contrato.clave(f) for f in contrato.probar(repo, docs)} if probar else set()
+    import proteccion
+    proteccion.descongelar_fs(repo, docs)
     tx = transaccion.Transaccion(repo, docs, version_antes=plan.adoptada, version_despues=plan.nueva)
     try:
         for a in escribir:
@@ -150,8 +152,13 @@ def aplicar(pack: Path, repo: Path, docs: str, plan: Plan, migracion: str = "", 
                                          "todo quedó como estaba. Avisa al equipo de uxyngraphar con este detalle:\n  " + "\n  ".join(rotas))
     except BaseException as exc:   # también Ctrl+C: nada queda a medias
         tx.deshacer(f"{type(exc).__name__}: {exc}"[:300])
+        proteccion.congelar_fs(repo, docs)
         raise
     carpeta = tx.confirmar()
+    # Tras actualizar: regenera capas Cursor si ya existían y vuelve a congelar el núcleo en disco.
+    if (repo / proteccion.MANIFIESTO_REL).is_file() or (repo / proteccion.HOOKS_JSON_REL).is_file():
+        proteccion.hooks_cursor(repo, docs)
+    proteccion.congelar_fs(repo, docs)
     respaldos.podar_automatico(repo, docs)
     return carpeta
 

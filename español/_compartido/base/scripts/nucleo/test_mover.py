@@ -18,6 +18,7 @@ import doctor as dr  # noqa: E402
 import flujo  # noqa: E402
 import lock  # noqa: E402
 import mover  # noqa: E402
+import proteccion  # noqa: E402
 import transaccion  # noqa: E402
 from test_nucleo import Base  # noqa: E402
 
@@ -57,6 +58,7 @@ class TestMover(Base):
         self.assertEqual(antes, {r: self.leer(r) for r in antes})
 
     def test_mover_deja_todo_funcionando(self) -> None:
+        proteccion.descongelar_mecanismos(self.repo)
         reglas_usuario = json.loads(self.leer(".claude/settings.json"))
         reglas_usuario["permissions"]["deny"].append("Read(secretos-propios/**)")
         (self.repo / ".claude/settings.json").write_text(json.dumps(reglas_usuario, indent=2), encoding="utf-8")
@@ -106,6 +108,7 @@ class TestMover(Base):
         with self.assertRaisesRegex(mover.ErrorMover, "sin commit"):
             mover.planificar(self.repo, "docs")
         self.commit("nota")
+        proteccion.descongelar_fs(self.repo, "docs")
         (self.repo / "docs/scripts/carpeta_pack.py").unlink()   # como un pack 1.0.x (sus ganchos no lo necesitan; estos sí)
         self.git("add", "-A")
         self.git("commit", "-qm", "chore: pack antiguo", "--no-verify")

@@ -100,9 +100,11 @@ def instalar_completo(pack: Path, repo: Path, docs: str, *, adoptar: bool = Fals
     if proteger:
         proteccion.reglas_agente(repo, docs)
         proteccion.exclusiones_agentes(repo, docs)
-        res.add("Protección para agentes activada: no podrán editar el núcleo ni leer .env, llaves ni la memoria del sistema",
-                detalle=".claude/settings.json · .cursorignore · .geminiignore · .aiexclude")
+        proteccion.hooks_cursor(repo, docs)
         proteccion.codeowners(repo, docs, propietario or "@CAMBIAR-PROPIETARIO")
+        proteccion.congelar_fs(repo, docs)  # al final: codeowners/deny/hooks descongelan mecanismos al escribir
+        res.add("Protección del núcleo activada (fail-closed): agentes y personas no pueden alterarlo en el proyecto",
+                detalle=".claude/settings.json · .cursor/hooks (failClosed) · .cursor/rules · FS solo lectura · .cursorignore · .geminiignore · .aiexclude")
         wf, creado = ci.workflow(repo, docs)
         res.add(f"Verificación en el servidor: {wf.relative_to(repo).as_posix()} " + ("creado" if creado else "ya existía"), "ok",
                 "Hazlo obligatorio en GitHub: Settings → Branches → «Require status checks»; sin eso el gancho local se puede saltar con --no-verify" if creado else "")

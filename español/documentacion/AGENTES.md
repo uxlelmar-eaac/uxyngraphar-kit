@@ -37,7 +37,7 @@ Dejar un proyecto **con el pack sembrado, configurado y usable**, e **instruir a
 ## Reglas duras
 
 - No actives ni envíes sugerencias EVO.
-- No edites el **núcleo** instalado a mano (`10-guias/`, `scripts/`, `PROTOCOLO.md`, lock…).
+- No edites el **núcleo** instalado a mano (`10-guias/`, `scripts/`, `PROTOCOLO.md`, lock…). Si el IDE niega la escritura, no hagas bypass.
 - No inventes carpetas numeradas del pack (R-14).
 - No leas `95-memoria/` (R-24).
 - Si arrancas un servidor, un watcher u otra instancia para probar, ciérrala antes de terminar el turno. No dejes procesos ocupando puertos ni ralentizando a la persona. Si el puerto ya está en uso, no levantes otra copia.

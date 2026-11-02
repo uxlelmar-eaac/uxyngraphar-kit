@@ -201,7 +201,15 @@ def _menciones(repo: Path, desde: str, hacia: str, hechos: set[str]) -> list[str
     """Líneas del proyecto (seguidas por git) que nombran la carpeta vieja y que uxyngraphar no pone al día."""
     if not _es_git(repo):
         return []
-    r = _git(repo, "grep", "-n", "-I", "-F", f"{desde}/", "--", ".", f":(exclude){desde}/**", ":(exclude).uxyngraphar-respaldo/**")
+    # El manifiesto/hooks Cursor los regenera aplicar(); no listarlos como «revisar tú».
+    excluir_cursor = (
+        f":(exclude){proteccion.MANIFIESTO_REL}",
+        f":(exclude){proteccion.HOOKS_JSON_REL}",
+        f":(exclude){proteccion.GUARDIA_REL}",
+        f":(exclude){proteccion.REGLA_MDC_REL}",
+    )
+    r = _git(repo, "grep", "-n", "-I", "-F", f"{desde}/", "--", ".", f":(exclude){desde}/**",
+             ":(exclude).uxyngraphar-respaldo/**", *excluir_cursor)
     salida = []
     for linea in r.stdout.splitlines():
         rel = linea.split(":", 1)[0]
@@ -217,6 +225,7 @@ def _menciones(repo: Path, desde: str, hacia: str, hechos: set[str]) -> list[str
 def aplicar(plan: Plan) -> Path:
     """Ejecuta el plan como una transacción. Devuelve la carpeta de respaldo. Si algo falla, todo vuelve a como estaba."""
     repo = plan.repo
+    proteccion.descongelar_fs(repo, plan.desde)
     tx = transaccion.Transaccion(repo, plan.desde, accion=f"mover la carpeta del pack: {plan.desde}/ → {plan.hacia}/")
     try:
         for rel in plan._textos:
@@ -236,8 +245,23 @@ def aplicar(plan: Plan) -> Path:
                     _git(repo, "add", "--", rel)
     except BaseException as exc:   # también Ctrl+C: nada queda a medias
         tx.deshacer(f"{type(exc).__name__}: {exc}"[:300])
+        proteccion.congelar_fs(repo, plan.desde if (repo / plan.desde).is_dir() else plan.hacia)
         raise
-    return tx.confirmar(motivo=f"mover la carpeta del pack: {plan.desde}/ → {plan.hacia}/")
+    carpeta = tx.confirmar(motivo=f"mover la carpeta del pack: {plan.desde}/ → {plan.hacia}/")
+    if (repo / proteccion.MANIFIESTO_REL).is_file() or (repo / proteccion.HOOKS_JSON_REL).is_file():
+        man = repo / proteccion.MANIFIESTO_REL
+        if man.is_file():
+            try:
+                datos_m = json.loads(man.read_text(encoding="utf-8"))
+                packs = datos_m.get("packs") if isinstance(datos_m, dict) else None
+                if isinstance(packs, dict) and plan.desde in packs:
+                    packs[plan.hacia] = packs.pop(plan.desde)
+                    man.write_text(json.dumps(datos_m, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
+            except ValueError:
+                pass
+        proteccion.hooks_cursor(repo, plan.hacia)
+    proteccion.congelar_fs(repo, plan.hacia)
+    return carpeta
 
 
 def formatear(plan: Plan) -> str:

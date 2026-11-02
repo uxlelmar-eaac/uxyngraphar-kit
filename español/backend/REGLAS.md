@@ -55,11 +55,11 @@ Resumen de bajo costo para IA. Detalle: [AGENTES.md](../AGENTES.md) · [00-nucle
 
 ## Núcleo inviolable (R-20)
 
-1. El núcleo solo cambia en el repo fuente de uxyngraphar; en el proyecto entra solo con `actualizar-pack.py` (humano).
-2. No editar, borrar, renombrar ni crear archivos en zonas de núcleo (lista en [AGENTES.md](../AGENTES.md)); tampoco `.uxyngraphar.lock`, `.claude/settings.json`, `CODEOWNERS`, CI ni ganchos git.
+1. El núcleo es un framework rígido: solo cambia en el repo fuente de uxyngraphar; en el proyecto entra solo con `actualizar-pack.py` / panel (humano).
+2. Nadie del proyecto (agente ni persona) edita, borra, renombra ni crea en zonas de núcleo (lista en [AGENTES.md](../AGENTES.md)); tampoco lock, `.claude/`, `.cursor/hooks*`, CODEOWNERS, CI ni ganchos.
 3. Mejora al sistema → solo ficha `EVO-*` en `46-evolucion-documentacion/` (buzón hacia el pack). Nunca aplicarla.
-4. No saltarse la verificación (`--no-verify`, `--warn`, desactivar ganchos o CI).
-5. Núcleo alterado o `doctor.py` en rojo → parar y avisar al humano; no reparar a mano.
+4. No saltarse la verificación (`--no-verify`, `--warn`, desactivar ganchos/CI, `niveles.nucleo` ≠ bloqueante, `chmod` al núcleo).
+5. Si el IDE/OS niega escritura al núcleo: no intentes bypass. Núcleo alterado o `doctor.py` en rojo → parar y avisar; no reparar a mano.
 
 ## Prohibido
 

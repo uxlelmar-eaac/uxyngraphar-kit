@@ -4,6 +4,26 @@ Evolución versionada del pack. Este archivo **viaja dentro de cada pack**: el r
 
 Formato: una entrada por lote de cambios; origen (plan/EVO/decisión humana) siempre citado.
 
+## [1.3.1] — 2026-11-01
+
+Origen: decisión humana (Uxleleaac, 2026-11-01: corroborar límites; framework rígido — nadie, ni el humano del proyecto, altera el núcleo). Aplica a **ambos packs**. Parche: sin migraciones.
+
+### Cierre de huecos R-20
+- Carpetas `10-guias/`, `scripts/`, `55-automatizaciones/`, `00-nucleo/` y mecanismos (hooks Cursor, deny, CODEOWNERS) también en solo lectura; no se pueden crear archivos nuevos en zonas N.
+- `doctor.py`: deny / Cursor / FS / CODEOWNERS faltantes = **ERROR**; `--fix` crea CODEOWNERS si falta.
+- `controlar.py`: control `nucleo` siempre bloqueante; `niveles.nucleo` ≠ bloqueante es inválido en la config.
+- `PROTOCOLO.md` R-20, `REGLAS.md` y `congelamiento.md` alineados al framework rígido.
+
+## [1.3.0] — 2026-11-01
+
+Origen: decisión humana (Uxleleaac, 2026-11-01: los agentes no deben poder destruir ni alterar el núcleo de uxyn en un proyecto real; fail-closed para agentes y personas). Aplica a **ambos packs**. Menor.
+
+### Núcleo inviolable (fail-closed)
+- Al proteger (`--proteger` / panel / `doctor.py --fix`): manifiesto `.cursor/uxyngraphar-protegido.json`, guardia `.cursor/hooks/uxyngraphar-guardia-nucleo.py`, `.cursor/hooks.json` con `failClosed: true` en `preToolUse` y `beforeShellExecution`, y regla `.cursor/rules/uxyngraphar-nucleo.mdc`.
+- Archivos clase N (+ lock) quedan en solo lectura en disco; `actualizar-pack.py` descongela, escribe y vuelve a congelar.
+- `doctor.py` avisa si faltan hooks Cursor o si el núcleo sigue escribible; `--fix` regenera capas y reaplica el congelado.
+- Documentación: `00-nucleo/congelamiento.md`, `protecciones.md`, `AGENTES.md`, `control-de-construccion.md`.
+
 ## [1.2.0] — 2026-11-01
 
 Origen: decisión humana (uxlelmar, 2026-11-01: «dejar de usar la consola de comandos y que todo se pueda gestionar, configurar, actualizar de forma sencilla, directa y rápida desde el panel visual. Que como tal el único comando que se utilice con la consola de comandos es para abrir el panel.»), ficha EVO-20261101-todo-desde-el-panel; y (Uxleleaac, 2026-10-31) cerrar las instancias que levanta el agente. Aplica a **ambos packs**. Menor: sin cambios en el texto de las reglas R-xx ni migraciones.

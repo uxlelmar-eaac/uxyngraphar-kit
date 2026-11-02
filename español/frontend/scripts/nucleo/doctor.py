@@ -109,12 +109,22 @@ def proteccion_activa(repo: Path, docs: str) -> list[Chequeo]:
         deny = []
     esperadas = {f"{h}({r})" for r in proteccion.rutas_protegidas(repo, docs) for h in ("Edit", "Write")}
     faltan = esperadas - set(deny)
+    # Con lock presente el proyecto debe estar protegido: fallos de capa R-20 son ERROR (no aviso).
     out.append(_c("deny", "OK", "Reglas deny para agentes completas") if not faltan else
-               _c("deny", "WARN", f"Faltan {len(faltan)} reglas deny en .claude/settings.json (los agentes podrían editar el núcleo)", "doctor.py --fix"))
+               _c("deny", "ERROR", f"Faltan {len(faltan)} reglas deny en .claude/settings.json (se puede editar el núcleo)", "doctor.py --fix"))
+    if proteccion.cursor_hooks_ok(repo):
+        out.append(_c("cursor", "OK", "Hooks Cursor fail-closed protegen el núcleo"))
+    else:
+        out.append(_c("cursor", "ERROR", "Faltan hooks Cursor fail-closed (.cursor/hooks): se puede editar el núcleo", "doctor.py --fix"))
+    escribibles = proteccion.archivos_n_escribibles(repo, docs)
+    if not escribibles:
+        out.append(_c("fs", "OK", "Núcleo y mecanismos en solo lectura en disco"))
+    else:
+        out.append(_c("fs", "ERROR", f"{len(escribibles)} ruta(s) del núcleo/mecanismos siguen escribibles (p. ej. {escribibles[0]})", "doctor.py --fix"))
     co = repo / ".github" / "CODEOWNERS"
     texto = co.read_text(encoding="utf-8") if co.is_file() else ""
     if proteccion.MARCA_INI not in texto:
-        out.append(_c("codeowners", "WARN", "CODEOWNERS no protege el núcleo", "instalar-pack.py --proteger --propietario @usuario (o añadir el bloque a mano)"))
+        out.append(_c("codeowners", "ERROR", "CODEOWNERS no protege el núcleo", "instalar-pack.py --proteger --propietario @usuario (o doctor.py --fix + propietario)"))
     elif "@CAMBIAR-PROPIETARIO" in texto:
         out.append(_c("codeowners", "WARN", "CODEOWNERS conserva el propietario de ejemplo", "Sustituye @CAMBIAR-PROPIETARIO por el usuario/equipo real"))
     else:
@@ -318,13 +328,17 @@ def arreglar(repo: Path, docs: str) -> list[str]:
         lock.escribir(repo, docs, datos)
         hechas.append("lock: «fuente» ya no guarda una ruta local")
     if lock.leer(repo, docs):
+        proteccion.descongelar_fs(repo, docs)
         proteccion.reglas_agente(repo, docs)
         hechas.append("reglas deny regeneradas")
         hechas += [f"{n}: memoria y respaldos fuera del alcance de la IA" for n in proteccion.exclusiones_agentes(repo, docs)]
-        dueno = proteccion.propietario_actual(repo, docs)
-        if dueno:   # el bloque de CODEOWNERS existe: se regenera para incluir lo nuevo que protege el pack
-            proteccion.codeowners(repo, docs, dueno)
-            hechas.append("CODEOWNERS regenerado" + (" (sigue con el propietario de ejemplo)" if "CAMBIAR" in dueno else ""))
+        for art in proteccion.hooks_cursor(repo, docs):
+            hechas.append(f"Cursor: {art}")
+        dueno = proteccion.propietario_actual(repo, docs) or "@CAMBIAR-PROPIETARIO"
+        proteccion.codeowners(repo, docs, dueno)
+        hechas.append("CODEOWNERS regenerado" + (" (sigue con el propietario de ejemplo)" if "CAMBIAR" in dueno else ""))
+        n_fs = proteccion.congelar_fs(repo, docs)
+        hechas.append(f"núcleo/mecanismos en solo lectura ({n_fs} rutas)" if n_fs else "núcleo/mecanismos en solo lectura (ya estaba)")
     if cfgmod.escribir_activacion(repo / docs, cfgmod.cargar(repo, docs)[0]):
         hechas.append("ESTADO.md: frases de activación al día")
     if not ci._ejecuta_uxyngraphar(repo):

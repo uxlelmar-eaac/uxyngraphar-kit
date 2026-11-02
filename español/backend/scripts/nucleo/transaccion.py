@@ -54,7 +54,10 @@ class Transaccion:
         tmp = destino.with_name(destino.name + ".uxyngraphar-tmp")
         tmp.write_bytes(datos)
         if destino.is_file():   # conserva los permisos (un gancho de git debe seguir siendo ejecutable)
-            os.chmod(tmp, stat.S_IMODE(destino.stat().st_mode))
+            modo = stat.S_IMODE(destino.stat().st_mode)
+            if not (modo & stat.S_IWUSR):   # núcleo congelado (R-20): hace falta escribir aunque el archivo sea solo lectura
+                os.chmod(destino, modo | stat.S_IWUSR)
+            os.chmod(tmp, modo)
         os.replace(tmp, destino)
 
     def copiar(self, rel: str, origen: Path) -> None:

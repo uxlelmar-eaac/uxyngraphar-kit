@@ -58,6 +58,7 @@ Detecta patrones, no intención: los secretos se buscan por formato (claves cono
 | `controlar.py` (commit/PR) | Bloquea archivos `.env*`, `*.pem`, `*.key`, `id_rsa`, `credentials.json`, `*.tfstate`… (salvo `.env.example`, `*.pub`) y credenciales por formato (AWS, GitHub, Slack, Stripe, Google, JWT, claves privadas, URLs `usuario:clave@host`, asignaciones literales). Los hallazgos salen **enmascarados**. |
 | `.gitignore` | `instalar-pack.py` y `doctor.py --fix` añaden los patrones de credenciales. |
 | Reglas `deny` (`--proteger`) | El agente no puede leer ni escribir `.env`, llaves, `~/.ssh`, `~/.aws`, `~/.kube`… |
+| Hooks Cursor fail-closed + FS solo lectura | Cursor no edita el núcleo; el IDE no puede guardar archivos N; ver [congelamiento.md](../00-nucleo/congelamiento.md) |
 | `escanear-secretos.py` | Auditoría del árbol y, con `--historia`, de **todo el historial**; úsalo en CI y al adoptar un repositorio existente. |
 | `doctor.py` | Chequeo `secretos`: ERROR si hay credenciales en el árbol, WARN si faltan las reglas `deny`. |
 

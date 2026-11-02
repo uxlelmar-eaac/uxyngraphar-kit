@@ -91,6 +91,8 @@ def validar(cfg: dict) -> list[str]:
             errores.append(f"niveles.{k}: control desconocido (válidos: {', '.join(CONTROLES)})")
         elif v not in NIVELES:
             errores.append(f"niveles.{k}={v!r}: use {', '.join(NIVELES)}")
+        elif k == "nucleo" and v != "bloqueante":
+            errores.append("niveles.nucleo: R-20 exige «bloqueante» (no se puede aviso/apagado)")
     if not isinstance(cfg.get("limite_lineas"), int) or cfg["limite_lineas"] < 50:
         errores.append("limite_lineas: entero ≥ 50")
     r = cfg.get("respaldos", {})

@@ -130,7 +130,11 @@ def control_config(cambiados: list[str], docs: str, cfg: dict) -> list[Hallazgo]
     """La configuración fija los niveles de la puerta: tocarla puede relajarla, así que se señala siempre para revisión humana."""
     if f"{docs}/uxyngraphar.config.json" not in cambiados:
         return []
-    return [Hallazgo("config", "aviso", f"{docs}/uxyngraphar.config.json cambió: puede relajar niveles, exenciones o secretos_permitir. Debe aprobarlo el propietario (CODEOWNERS); un agente no edita este archivo.")]
+    out = [Hallazgo("config", "aviso", f"{docs}/uxyngraphar.config.json cambió: puede relajar niveles, exenciones o secretos_permitir. Debe aprobarlo el propietario (CODEOWNERS); un agente no edita este archivo.")]
+    if (cfg.get("niveles") or {}).get("nucleo") != "bloqueante":
+        out.append(Hallazgo("nucleo", "bloqueante",
+                            f"{docs}/uxyngraphar.config.json: niveles.nucleo debe ser «bloqueante» (R-20); no se admite aviso/apagado."))
+    return out
 
 
 def control_commits(textos: list[str], rama: str, cfg: dict) -> list[Hallazgo]:
@@ -150,9 +154,11 @@ def evaluar(repo: Path, cambiados: list[str], anadidas: dict[str, list[str]], cf
         h += control_lineas(repo, codigo, cfg)
     if n["secretos"] != "apagado":
         h += control_secretos(anadidas, cambiados, cfg)
-    if n["nucleo"] != "apagado":
-        h += control_nucleo(repo, docs, cfg)
-        h += control_config(cambiados, docs, cfg)
+    # R-20: el control `nucleo` es siempre bloqueante; no se puede apagar desde la config del proyecto.
+    cfg_nucleo = dict(cfg)
+    cfg_nucleo["niveles"] = {**n, "nucleo": "bloqueante"}
+    h += control_nucleo(repo, docs, cfg_nucleo)
+    h += control_config(cambiados, docs, cfg_nucleo)
     if n.get("memoria", "bloqueante") != "apagado":
         h += control_memoria(repo, cambiados, docs, cfg)
     if n.get("idioma", "aviso") != "apagado":
