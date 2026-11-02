@@ -11,6 +11,7 @@ import tempfile
 import threading
 import unittest
 import urllib.request
+from contextlib import nullcontext
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 from unittest import mock
@@ -74,6 +75,44 @@ class TestSalud(Base):
         self.assertEqual(d["cuenta"]["ERROR"], 0)
         self.assertIn(".gitignore", d["archivos"])
         self.assertTrue(any("núcleo" in x for x in d["que_arregla"]))
+
+    def test_doctor_enriquece_acciones_por_hallazgo(self):
+        # Placeholders de configuración → acción abrir con destino a la ficha.
+        cfg = self.repo / D / "00-nucleo" / "configuracion-proyecto.md"
+        cfg.write_text(cfg.read_text(encoding="utf-8") + "\n<nombre>\n", encoding="utf-8")
+        d = acc.doctor(self.r, D)
+        self.assertTrue(d["ok"], d)
+        conf = next(c for c in d["chequeos"] if c["id"] == "config" and c["nivel"] != "OK")
+        self.assertEqual(conf["accion"], "abrir")
+        self.assertEqual(conf["destino"], f"{D}/00-nucleo/configuracion-proyecto.md")
+        self.assertTrue(conf["etiqueta"])
+        self.assertTrue(conf["titulo"])
+        # CODEOWNERS de ejemplo → propietario.
+        co = next(c for c in d["chequeos"] if c["id"] == "codeowners" and c["nivel"] != "OK")
+        self.assertEqual(co["accion"], "propietario")
+
+    def test_abrir_solo_dentro_del_repo(self):
+        with mock.patch("api_acciones.subprocess.Popen"), mock.patch("api_acciones.os.startfile", create=True):
+            ok = acc.abrir(self.r, D, f"{D}/00-nucleo/configuracion-proyecto.md")
+        self.assertTrue(ok["ok"], ok)
+        self.assertFalse(acc.abrir(self.r, D, "../etc/passwd")["ok"])
+        self.assertFalse(acc.abrir(self.r, D, "")["ok"])
+        self.assertFalse(acc.abrir(self.r, D, "no-existe-xyz.md")["ok"])
+
+    def test_restaurar_nucleo_desde_pack(self):
+        import proteccion
+        proteccion.descongelar_fs(self.repo, D)
+        reglas = self.repo / D / "REGLAS.md"
+        original = reglas.read_bytes()
+        reglas.write_text("editada a mano\n", encoding="utf-8")
+        d = acc.doctor(self.r, D)
+        self.assertTrue(any(c.get("accion") == "restaurar_nucleo" for c in d["chequeos"] if c["nivel"] != "OK"), d["chequeos"])
+        with self.agente():
+            self.assertFalse(acc.restaurar_nucleo(self.r, D)["ok"])
+        r = acc.restaurar_nucleo(self.r, D)
+        self.assertTrue(r["ok"], r)
+        self.assertEqual(reglas.read_bytes(), original)
+        self.assertEqual(r["cuenta"]["ERROR"], 0)
 
     def test_arreglar_con_copia_y_solo_lo_que_cambia(self):
         gi = self.repo / ".gitignore"
@@ -212,12 +251,21 @@ class TestHttp(Base):
         try:
             html = urllib.request.urlopen(base + "/").read().decode()
             self.assertIn("function vPend()", html)
+            self.assertIn("function accionSalud(", html)
+            self.assertIn("Ver y corregir", html)
             self.assertNotIn("<!--PROYECTO-->", html)
-            for ruta in ("/api/panel/doctor", "/api/panel/pendientes", "/api/panel/respaldos", "/api/panel/protecciones", "/api/panel/reglas"):
+            for ruta in ("/api/panel/doctor", "/api/panel/pendientes", "/api/panel/respaldos", "/api/panel/protecciones", "/api/panel/reglas",
+                         "/api/panel/abrir"):
                 with self.assertRaises(urllib.error.HTTPError):
                     urllib.request.urlopen(urllib.request.Request(base + ruta, cuerpo, {"X-Token": "otro"}))
-                r = json.loads(urllib.request.urlopen(urllib.request.Request(base + ruta, cuerpo, {"X-Token": "tk"})).read())
+                body = cuerpo if ruta != "/api/panel/abrir" else json.dumps({"ruta": self.r, "docs": D, "rel": f"{D}/PROTOCOLO.md"}).encode()
+                ctx = mock.patch("api_acciones.subprocess.Popen") if ruta == "/api/panel/abrir" else nullcontext()
+                with ctx:
+                    r = json.loads(urllib.request.urlopen(urllib.request.Request(base + ruta, body, {"X-Token": "tk"})).read())
                 self.assertTrue(r["ok"], (ruta, r))
+                if ruta == "/api/panel/doctor":
+                    mal = [c for c in r["chequeos"] if c.get("nivel") != "OK"]
+                    self.assertTrue(all("accion" in c and "titulo" in c for c in mal), mal)
         finally:
             srv.shutdown()
             srv.server_close()

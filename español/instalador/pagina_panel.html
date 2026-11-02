@@ -32,6 +32,7 @@ pre.diff{background:var(--bg);border:1px solid var(--bd);border-radius:8px;paddi
 ul.pl{padding-left:20px;margin:6px 0}code{font-size:.9em}.oculto{display:none}
 nav.tabs.sub{margin:0 0 14px}nav.tabs.sub button{padding:6px 12px;font-size:.92rem}button.on{border-color:var(--ac);box-shadow:inset 0 0 0 1px var(--ac)}
 ul.chk{list-style:none;padding:0;margin:8px 0}ul.chk li{padding:8px 0;border-bottom:1px solid var(--bd)}pre.ficha{max-height:420px;white-space:pre-wrap}
+button.linkish{background:transparent;border:0;padding:0;color:inherit;font:inherit;cursor:pointer;text-align:left}button.linkish:hover{opacity:.85}
 </style>
 </head>
 <body>
@@ -126,10 +127,12 @@ async function decidirPath(agregar){const r=await post("/api/panel/path",{agrega
 function vProyectos(){const r=S.res;if(!r){$("#vista").innerHTML=`<div class="card">Cargando…</div>`;return}
  const act=r.proyectos.filter(p=>p.existe&&p.packs.some(k=>k.estado==="actualizable")).map(p=>p.ruta);
  let filas=r.proyectos.map(p=>!p.existe?`<tr><td><b>${esc(p.nombre)}</b><br><small class="mut">${esc(p.ruta)}</small></td><td colspan="2"><span class="et er">ya no existe</span></td><td><button onclick='quitar(${JSON.stringify(p.ruta)})'>Quitar del registro</button></td></tr>`:
-  p.packs.map(k=>{const s=S.salud[p.ruta+"|"+k.docs];return `<tr><td><b>${esc(p.nombre)}</b> · <code>${esc(k.docs)}</code><br><small class="mut">${esc(p.ruta)}</small></td>
+  p.packs.map(k=>{const s=S.salud[p.ruta+"|"+k.docs],clave=`${JSON.stringify(p.ruta)},${JSON.stringify(k.docs)}`;
+  const badge=s?(s.ok?(s.errores||s.avisos?`<button type="button" class="linkish" onclick='abrirProyecto(${clave},"salud")'>${s.errores?`<span class="et er">${s.errores} errores</span> `:""}${s.avisos?`<span class="et av">${s.avisos} avisos</span>`:""}</button>`:`<button type="button" class="linkish" onclick='abrirProyecto(${clave},"salud")'><span class="et ok">sano</span></button>`):`<span class="et er">${esc(s.error)}</span>`):`<button onclick='salud(${clave})'>Revisar salud</button>`;
+  return `<tr><td><b>${esc(p.nombre)}</b> · <code>${esc(k.docs)}</code><br><small class="mut">${esc(p.ruta)}</small></td>
   <td>${esc(k.pack)} ${esc(k.version)}<br><span class="et ${k.estado==="al día"?"ok":"av"}">${esc(k.estado)}</span></td>
-  <td>${s?(s.ok?(s.errores?`<span class="et er">${s.errores} errores</span> `:"")+(s.avisos?`<span class="et av">${s.avisos} avisos</span>`:"")+(!s.errores&&!s.avisos?`<span class="et ok">sano</span>`:""):`<span class="et er">${esc(s.error)}</span>`):`<button onclick='salud(${JSON.stringify(p.ruta)},${JSON.stringify(k.docs)})'>Revisar salud</button>`}</td>
-  <td class="fila"><button class="pri" onclick='abrirProyecto(${JSON.stringify(p.ruta)},${JSON.stringify(k.docs)},"salud")'>Abrir</button>${k.estado==="actualizable"?`<a href="/actualizar?desde=panel&ruta=${encodeURIComponent(p.ruta)}"><button>Actualizar</button></a>`:""}<button onclick='quitar(${JSON.stringify(p.ruta)})'>Quitar</button></td></tr>`}).join("")).join("");
+  <td>${badge}</td>
+  <td class="fila"><button class="pri" onclick='abrirProyecto(${clave},"salud")'>Abrir</button>${s&&s.ok&&(s.errores||s.avisos)?`<button onclick='abrirProyecto(${clave},"salud")'>Ver y corregir</button>`:""}${k.estado==="actualizable"?`<a href="/actualizar?desde=panel&ruta=${encodeURIComponent(p.ruta)}"><button>Actualizar</button></a>`:""}<button onclick='quitar(${JSON.stringify(p.ruta)})'>Quitar</button></td></tr>`}).join("")).join("");
  $("#vista").innerHTML=aviso()+`<div class="card"><h2>Mis proyectos</h2><p class="mut">Los proyectos con uxyngraphar registrados en este equipo (${esc(r.carpeta)}).</p>
  ${r.proyectos.length?`<table><thead><tr><th>Proyecto</th><th>Versión</th><th>Salud</th><th></th></tr></thead><tbody>${filas}</tbody></table>`:`<div class="aviso av">Aún no hay proyectos registrados.</div>`}
  <h3>Añadir un proyecto que ya tiene uxyngraphar</h3><div class="fila"><input type="text" id="nueva" placeholder="/ruta/a/mi-proyecto" aria-label="Carpeta del proyecto"><button onclick="examinar()">Examinar…</button><button onclick="agregar()">Añadir</button></div>
@@ -242,7 +245,7 @@ async function aplicarPlantilla(){const d=S.plPrev.destinos.map(x=>({ruta:x.ruta
 // Primero: dónde está cada cosa en el panel (el único comando es «uxyngraphar»). Después, plegados, los comandos de terminal.
 const DONDE=[
  ["Instalar uxyngraphar en un proyecto","Mis proyectos → «Instalar uxyngraphar en un proyecto nuevo»","proyectos"],
- ["Ver la salud de un proyecto y arreglar lo seguro","Proyecto → Salud → «Arreglar»","proyecto:salud"],
+ ["Ver la salud de un proyecto y corregir cada hallazgo","Mis proyectos → badge o «Ver y corregir» → Salud (botón por aviso)","proyecto:salud"],
  ["Aprobar o rechazar una instrucción (y mejoras, EVO, propuestas)","Proyecto → Pendientes → «Leer y decidir»","proyecto:pendientes"],
  ["Cambiar la configuración de un proyecto","Proyecto → Configuración","proyecto:config"],
  ["Deshacer un cambio (restaurar una copia de seguridad)","Proyecto → Copias de seguridad","proyecto:copias"],

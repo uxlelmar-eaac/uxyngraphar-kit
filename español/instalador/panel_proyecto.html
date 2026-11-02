@@ -19,21 +19,40 @@ async function irSub(k){S.sub=k;P.msg="";dibujar();const carga={salud:()=>P.doc|
 const SUBV={salud:vSalud,pendientes:vPend,copias:vCopias,memoria:vMemoria,proteccion:vProt,reglas:vReglas};
 
 // ---------- Salud ----------
-async function cargarSalud(){P.doc=null;P.fix=null;dibujar();P.doc=await post("/api/panel/doctor",sel());dibujar()}
+async function cargarSalud(){P.doc=null;P.fix=null;P.msgAcc="";dibujar();P.doc=await post("/api/panel/doctor",sel());
+ if(P.doc&&P.doc.ok&&S.sel){const n=P.doc.cuenta;S.salud[S.sel.ruta+"|"+S.sel.docs]={ok:true,errores:n.ERROR||0,avisos:n.WARN||0,motivos:(P.doc.chequeos||[]).filter(c=>c.nivel==="ERROR"||c.nivel==="WARN").map(c=>c.id)}}
+ dibujar()}
+function btnSalud(c,i){if(!c.accion||c.accion==="manual"||!c.etiqueta)return c.accion==="manual"?`<br><small class="mut">${esc(c.titulo||c.arreglo||"Revísalo a mano; el panel no puede hacerlo solo.")}</small>`:"";
+ return ` <button class="pri" onclick="accionSalud(${i})">${esc(c.etiqueta)}</button>`}
 function vSalud(){const d=P.doc;if(!d)return `<div class="card">Revisando el proyecto…</div>`;if(!d.ok)return msg(false,esc(d.error)+(d.salida?pre(d.salida):""));
  const n=d.cuenta,M={ERROR:["er","✕ Error"],WARN:["av","! Aviso"],INFO:["","i Info"],OK:["ok","✓"]},mal=d.chequeos.filter(c=>c.nivel!=="OK"),bien=d.chequeos.filter(c=>c.nivel==="OK");
+ P.mal=mal;
  return `<div class="card"><h2>Salud del proyecto</h2><p>${n.ERROR?`<span class="et er">${n.ERROR} errores</span> `:""}${n.WARN?`<span class="et av">${n.WARN} avisos</span> `:""}${!n.ERROR&&!n.WARN?`<span class="et ok">Todo en orden</span> `:""}<span class="mut">${n.OK} comprobaciones bien</span> <button onclick="cargarSalud()">Volver a revisar</button></p>
- ${mal.length?`<ul class="chk">${mal.map(c=>`<li><span class="et ${M[c.nivel][0]}">${M[c.nivel][1]}</span> ${esc(c.mensaje)}${c.arreglo?`<br><small class="mut">→ ${esc(arreglo(c.arreglo))}</small>`:""}</li>`).join("")}</ul>`:""}
+ ${P.msgAcc||""}
+ ${mal.length?`<ul class="chk">${mal.map((c,i)=>`<li><span class="et ${M[c.nivel][0]}">${M[c.nivel][1]}</span> <b>${esc(c.titulo||c.mensaje)}</b>${btnSalud(c,i)}
+ <details><summary class="mut">Detalle técnico</summary>${esc(c.mensaje)}${c.arreglo?`<br><small class="mut">→ ${esc(arreglo(c.arreglo))}</small>`:""}${c.destino?`<br><small class="mut">Archivo: <code>${esc(c.destino)}</code></small>`:""}</details></li>`).join("")}</ul>`:""}
  <details><summary>Lo que está bien (${bien.length})</summary><ul class="pl">${bien.map(c=>`<li>${esc(c.mensaje)}</li>`).join("")}</ul></details></div>
- <div class="card" id="arreglo"><h2>Arreglar lo seguro</h2><p class="mut">Antes de tocar nada se guarda una copia de los archivos que puede cambiar (la restauras en «Copias de seguridad»).</p>
+ <div class="card" id="arreglo"><h2>Arreglar lo seguro</h2><p class="mut">Aplica de golpe los arreglos automáticos (protección, gitignore, ganchos…). Antes se guarda una copia (la restauras en «Copias de seguridad»). Para un solo hallazgo usa el botón de arriba.</p>
  <p><b>Qué hace:</b></p><ul class="pl">${d.que_arregla.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
  <details><summary>Archivos que puede tocar (${d.archivos.length})</summary><ul class="pl">${d.archivos.map(x=>`<li><code>${esc(x)}</code></li>`).join("")}</ul></details>
- ${P.fix?vFix(P.fix):""}<div class="fila" style="margin-top:8px"><button class="pri" onclick="arreglar()">Arreglar</button></div></div>`}
-function vFix(f){if(!f.ok)return msg(false,esc(f.error));
- return msg(true,(f.cambiados.length?`Hecho. Cambió: ${f.cambiados.map(x=>`<code>${esc(x)}</code>`).join(", ")}. Copia: <code>${esc(f.respaldo)}</code>. Revisa los cambios y haz commit.`:"Hecho: no hacía falta cambiar ningún archivo.")
-  +(f.hechas.length?`<details><summary>Detalle</summary>${pre(f.hechas.join("\n"))}</details>`:""))}
-async function arreglar(){if(!confirm("¿Aplicar los arreglos seguros? Antes se guarda una copia."))return;const r=await post("/api/panel/arreglar",sel());
- P.fix=r;if(r.ok)P.doc={...P.doc,chequeos:r.chequeos,cuenta:r.cuenta};dibujar()}
+ ${P.fix?vFix(P.fix):""}<div class="fila" style="margin-top:8px"><button class="pri" onclick="arreglar()">Arreglar todo lo seguro</button></div></div>`}
+function vFix(f){if(!f.ok)return msg(false,esc(f.error||f.aviso||"No se pudo."));
+ const aviso=f.aviso?esc(f.aviso)+" ":"";
+ return msg(true,aviso+(f.cambiados&&f.cambiados.length?`Hecho. Cambió: ${f.cambiados.map(x=>`<code>${esc(x)}</code>`).join(", ")}. Copia: <code>${esc(f.respaldo)}</code>. Revisa los cambios y haz commit.`:(f.aviso?"":"Hecho: no hacía falta cambiar ningún archivo."))
+  +(f.hechas&&f.hechas.length?`<details><summary>Detalle</summary>${pre(f.hechas.join("\n"))}</details>`:""))}
+async function refrescarSaludTras(r){P.fix=r;if(r&&r.ok&&r.chequeos){P.doc={...P.doc,...r,que_arregla:P.doc.que_arregla,archivos:P.doc.archivos};const n=r.cuenta;if(S.sel)S.salud[S.sel.ruta+"|"+S.sel.docs]={ok:true,errores:n.ERROR||0,avisos:n.WARN||0}}
+ else if(r&&r.ok)await cargarSalud();dibujar()}
+async function arreglar(){if(!confirm("¿Aplicar los arreglos seguros? Antes se guarda una copia."))return;const r=await post("/api/panel/arreglar",sel());await refrescarSaludTras(r)}
+async function accionSalud(i){const c=(P.mal||[])[i];if(!c)return;
+ if(c.accion==="arreglar"){if(!confirm("¿Aplicar los arreglos seguros de uxyngraphar? Antes se guarda una copia."))return;return refrescarSaludTras(await post("/api/panel/arreglar",sel()))}
+ if(c.accion==="restaurar_nucleo"){if(!confirm("¿Restaurar el núcleo desde el pack de origen?\n\nSe sobrescriben los archivos del núcleo alterados. La copia anterior queda en el respaldo del actualizador. No toca tu contenido ni las fichas del proyecto."))return;
+  if(!confirm("Confirma otra vez: restaurar el núcleo (solo lo puede hacer una persona)."))return;
+  P.msgAcc=msg(true,"Restaurando el núcleo…");dibujar();return refrescarSaludTras(await post("/api/panel/restaurar-nucleo",sel()))}
+ if(c.accion==="propietario"){P.msgAcc="";return irSub("proteccion")}
+ if(c.accion==="actualizar"){location.href="/actualizar?desde=panel&ruta="+encodeURIComponent(S.sel.ruta);return}
+ if(c.accion==="abrir"){const rel=c.destino||"";if(!rel){P.msgAcc=msg(false,"No sé qué archivo abrir para este aviso.");dibujar();return}
+  const r=await post("/api/panel/abrir",{...sel(),rel});P.msgAcc=r.ok?msg(true,`Abierto: <code>${esc(r.ruta||rel)}</code>. Complétalo o resuélvelo y vuelve a revisar.`):msg(false,esc(r.error));dibujar();return}
+ P.msgAcc=msg(false,"Este aviso hay que revisarlo a mano.");dibujar()}
 
 // ---------- Pendientes por decidir ----------
 const TIPOS={instruccion:"Instrucción",mejora:"Mejora (45)",evolucion:"Cambio al pack (EVO)",evo:"Cambio al pack (EVO)",herramienta:"Propuesta de herramienta",propuesta:"Propuesta de herramienta",adr:"Decisión (ADR)",auditoria:"Auditoría"};

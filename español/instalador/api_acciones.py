@@ -43,6 +43,47 @@ QUE_ARREGLA = ["Termina o deshace una actualización que quedó a medias (con su
                "Nunca toca el núcleo del pack ni tu contenido."]
 GANCHOS = ("pre-commit", "commit-msg", "pre-push")
 PROPIETARIO_RE = re.compile(r"^(@[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)?|[^@\s]+@[^@\s]+\.[^@\s]+)$")
+# Acción del panel por id de Chequeo (funciona con packs ya instalados; no exige doctor nuevo).
+# accion: arreglar | propietario | actualizar | restaurar_nucleo | abrir | manual | ganchos
+ACCION_POR_ID = {
+    "deny": ("arreglar", "Arreglar esto", "Faltan reglas que protegen el núcleo"),
+    "cursor": ("arreglar", "Arreglar esto", "Faltan ganchos de protección en Cursor"),
+    "fs": ("arreglar", "Arreglar esto", "Hay archivos del núcleo que aún se pueden editar"),
+    "gitignore": ("arreglar", "Arreglar esto", "Faltan entradas en .gitignore"),
+    "gitattributes": ("arreglar", "Arreglar esto", "Falta .gitattributes del pack"),
+    "gancho": ("arreglar", "Arreglar esto", "El gancho pre-commit no está al día"),
+    "lock-fuente": ("arreglar", "Arreglar esto", "El lock guarda una ruta local"),
+    "activacion": ("arreglar", "Arreglar esto", "Faltan las frases de activación en ESTADO.md"),
+    "actualizacion-interrumpida": ("arreglar", "Arreglar esto", "Una actualización quedó a medias"),
+    "codeowners": ("arreglar", "Arreglar esto", "CODEOWNERS no protege el núcleo"),
+    "version": ("actualizar", "Actualizar el pack", "Hay una versión más nueva del pack"),
+    "agentes-raiz": ("actualizar", "Actualizar el pack", "Faltan AGENTES.md / AGENTS.md"),
+    "lock": ("actualizar", "Actualizar o reinstalar", "Falta o está dañado el lock del pack"),
+    "memoria": ("actualizar", "Actualizar el pack", "La memoria del sistema no está al día"),
+    "lock-sello": ("restaurar_nucleo", "Restaurar el núcleo", "El sello del lock no es válido"),
+    "nucleo": ("restaurar_nucleo", "Restaurar el núcleo", "El núcleo del pack está alterado"),
+    "nucleo-modificado": ("restaurar_nucleo", "Restaurar el núcleo", "Un archivo del núcleo cambió respecto a lo esperado"),
+    "nucleo-eliminado": ("restaurar_nucleo", "Restaurar el núcleo", "Falta un archivo del núcleo"),
+    "nucleo-extendido": ("restaurar_nucleo", "Restaurar el núcleo", "Hay un archivo nuevo en una zona reservada"),
+    "diverge-del-pack": ("restaurar_nucleo", "Restaurar el núcleo", "Un archivo difiere del pack de origen"),
+    "fuera-de-taxonomia": ("restaurar_nucleo", "Restaurar el núcleo", "Hay una ruta fuera de la taxonomía del pack"),
+    "lock-alterado": ("restaurar_nucleo", "Restaurar el núcleo", "El lock fue editado a mano"),
+    "config": ("abrir", "Abrir la ficha", "Completa los datos de tu proyecto"),
+    "conflictos": ("abrir", "Abrir el conflicto", "Hay una actualización pendiente por revisar"),
+    "control": ("abrir", "Abrir la configuración", "Revisa la configuración de la puerta de control"),
+    "pyc": ("manual", "", "Hay bytecode versionado: quítalo del índice de git"),
+    "secretos": ("manual", "", "Revisa posibles credenciales o reglas deny"),
+    "validador": ("manual", "", "Hay avisos o errores de validación de documentación"),
+    "python": ("manual", "", "La versión de Python no cumple el mínimo"),
+    "git": ("manual", "", "La carpeta no es un repositorio git"),
+    "pendientes": ("manual", "", "Hay pendientes antiguos por decidir"),
+    "ajustes": ("manual", "", "Hay ajustes locales por revisar"),
+    "reglas_proyecto": ("manual", "", "Hay reglas del proyecto inválidas"),
+    "arranque": ("manual", "", "El arranque del agente supera el límite de tokens"),
+    "respaldos": ("manual", "", "Revisa las copias de seguridad antiguas"),
+    "ci": ("manual", "", "Revisa la configuración de CI"),
+    "ci-ubicacion": ("manual", "", "Hay workflows de CI mal ubicados"),
+}
 
 
 # ---------- ejecutar los scripts del proyecto ----------
@@ -161,13 +202,58 @@ def _candidatos(repo: Path, docs: str) -> list[str]:
     return sorted({*TOCA_ARREGLAR, f"{docs}/.uxyngraphar.lock", f"{docs}/ESTADO.md", *extra})
 
 
-def _chequeos(r: dict) -> dict:
+def _destino_chequeo(cid: str, mensaje: str, docs: str) -> str:
+    """Ruta relativa al repo que el panel puede abrir para este hallazgo."""
+    if cid == "config":
+        return f"{docs}/00-nucleo/configuracion-proyecto.md"
+    if cid == "control":
+        return f"{docs}/uxyngraphar.config.json"
+    if cid == "conflictos":
+        m = re.search(r"sin resolver:\s*(.+)$", mensaje or "")
+        if m:
+            primero = m.group(1).split(",")[0].strip()
+            if primero:
+                return primero
+    return ""
+
+
+def _meta_accion(cid: str, nivel: str, mensaje: str, docs: str) -> dict:
+    """Traduce un Chequeo del doctor a acción de panel (botón + título humano)."""
+    base = ACCION_POR_ID.get(cid, ("manual", "", (mensaje or cid)[:120]))
+    accion, etiqueta, titulo = base
+    msg = mensaje or ""
+    if cid == "codeowners" and (nivel == "WARN" or "ejemplo" in msg.lower() or "CAMBIAR-PROPIETARIO" in msg):
+        accion, etiqueta, titulo = "propietario", "Definir propietario", "Quién aprueba los cambios al núcleo"
+    elif cid == "secretos" and nivel == "WARN":
+        accion, etiqueta, titulo = "arreglar", "Arreglar esto", "Los agentes pueden leer .env o llaves"
+    elif cid == "secretos" and nivel == "ERROR":
+        accion, etiqueta, titulo = "manual", "", "Hay posibles credenciales en el árbol"
+    elif cid == "validador" and "Falta scripts" in msg:
+        accion, etiqueta, titulo = "actualizar", "Actualizar el pack", "Falta el validador de documentación"
+    destino = _destino_chequeo(cid, msg, docs) if accion == "abrir" else ""
+    return {"accion": accion, "etiqueta": etiqueta, "titulo": titulo, "destino": destino}
+
+
+def _enriquecer(lista: list[dict], docs: str) -> list[dict]:
+    out = []
+    for c in lista:
+        if c.get("nivel") == "OK":
+            out.append(c)
+            continue
+        meta = _meta_accion(str(c.get("id") or ""), str(c.get("nivel") or ""), str(c.get("mensaje") or ""), docs)
+        out.append({**c, **meta})
+    return out
+
+
+def _chequeos(r: dict, docs: str = "") -> dict:
     try:
         lista = json.loads(r.get("stdout") or "")
     except ValueError:
         return {"ok": False, "error": r.get("error") or "El doctor no respondió como se esperaba.", "salida": r.get("salida", "")}
     orden = {"ERROR": 0, "WARN": 1, "INFO": 2, "OK": 3}
     lista.sort(key=lambda c: orden.get(c.get("nivel"), 9))
+    if docs:
+        lista = _enriquecer(lista, docs)
     cuenta = {n: sum(1 for c in lista if c.get("nivel") == n) for n in orden}
     return {"ok": True, "chequeos": lista, "cuenta": cuenta}
 
@@ -175,7 +261,7 @@ def _chequeos(r: dict) -> dict:
 def doctor(ruta: str, docs: str) -> dict:
     """Chequeo completo (solo lee) y qué haría «Arreglar», con los archivos que podría tocar."""
     repo, docs, _ = _ubicar(ruta, docs)
-    r = _chequeos(correr(str(repo), docs, "doctor.py", ["--json", "--repo", str(repo), "--docs", docs]))
+    r = _chequeos(correr(str(repo), docs, "doctor.py", ["--json", "--repo", str(repo), "--docs", docs]), docs)
     if r["ok"]:
         r.update(que_arregla=QUE_ARREGLA, archivos=[x for x in _candidatos(repo, docs) if (repo / x).is_file()])
     return r
@@ -194,7 +280,62 @@ def arreglar(ruta: str, docs: str) -> dict:
     despues = {rel: _huella(repo / rel) for rel in _candidatos(repo, docs)}
     respaldo, cambiados = cerrar_respaldo(carpeta, antes, despues, "Arreglar (doctor --fix) desde el panel")
     hechas = [l[5:] for l in (r.get("stderr") or "").splitlines() if l.startswith("fix: ")]
-    return {**_chequeos(r), "hechas": hechas, "cambiados": cambiados, "respaldo": respaldo}
+    return {**_chequeos(r, docs), "hechas": hechas, "cambiados": cambiados, "respaldo": respaldo}
+
+
+def _pack_instalado(repo: Path, docs: str) -> Path | None:
+    """Carpeta del pack en el kit (misma resolución que el asistente de actualización)."""
+    from api import PACKS
+    sys.path.insert(0, str(repo / docs / "scripts" / "nucleo"))
+    try:
+        import lock  # type: ignore
+        return PACKS.get((lock.leer(repo, docs) or {}).get("pack", ""))
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def restaurar_nucleo(ruta: str, docs: str) -> dict:
+    """Sobrescribe el núcleo alterado desde el pack de origen (humano; deja copia el actualizador)."""
+    if (no := _sin_persona()):
+        return no
+    repo, docs, scripts = _ubicar(ruta, docs)
+    if not (scripts / "actualizar-pack.py").is_file():
+        return {"ok": False, "error": SIN_SCRIPT.format("actualizar-pack.py")}
+    pack = _pack_instalado(repo, docs)
+    if not pack or not pack.is_dir():
+        return {"ok": False, "error": "No encuentro el pack de origen en este equipo. Actualiza uxyngraphar o reinstala el pack."}
+    r = correr(str(repo), docs, "actualizar-pack.py",
+               [str(pack), "--apply", "--restaurar-nucleo", "--repo", str(repo), "--docs", docs], humano=True)
+    diag = _chequeos(correr(str(repo), docs, "doctor.py", ["--json", "--repo", str(repo), "--docs", docs]), docs)
+    if not r.get("ok") and not diag.get("ok"):
+        return {"ok": False, "error": r.get("error") or "No se pudo restaurar el núcleo.", "salida": r.get("salida", "")}
+    # actualizar-pack puede devolver código distinto de 0 si aún quedan pendientes no-núcleo; el núcleo sí se restauró.
+    return {**diag, "ok": True, "hechas": [l for l in (r.get("salida") or "").splitlines() if l.strip()][:40],
+            "cambiados": [], "respaldo": "", "salida": r.get("salida", ""),
+            "aviso": "Se restauró el núcleo desde el pack. La copia alterada quedó en el respaldo del actualizador (.uxyngraphar-respaldo/). Revisa y haz commit."}
+
+
+def abrir(ruta: str, docs: str, rel: str) -> dict:
+    """Abre un archivo o carpeta del proyecto en el explorador del sistema (solo rutas dentro del repo)."""
+    repo, docs, _ = _ubicar(ruta, docs)
+    rel = (rel or "").replace("\\", "/").lstrip("/")
+    if not rel or ".." in Path(rel).parts:
+        return {"ok": False, "error": "Indica un archivo o carpeta dentro del proyecto."}
+    destino = (repo / rel).resolve()
+    try:
+        destino.relative_to(repo.resolve())
+    except ValueError:
+        return {"ok": False, "error": "Esa ruta queda fuera del proyecto."}
+    if not destino.exists():
+        return {"ok": False, "error": f"No existe {rel} en el proyecto."}
+    try:
+        if sys.platform.startswith("win"):
+            os.startfile(str(destino))  # type: ignore[attr-defined]  # noqa: S606
+        else:
+            subprocess.Popen(["open" if sys.platform == "darwin" else "xdg-open", str(destino)])
+    except OSError as exc:
+        return {"ok": False, "error": f"No se pudo abrir: {exc}"}
+    return {"ok": True, "ruta": str(destino)}
 
 
 # ---------- pendientes por decidir (instrucciones, mejoras, EVO, propuestas, ADR, auditorías) ----------
