@@ -1,0 +1,115 @@
+"""Pruebas funcionales de los paquetes temáticos extraídos del 1.x, instalados juntos en una app temporal."""
+
+from __future__ import annotations
+
+import tempfile
+import unittest
+from pathlib import Path
+
+import _rutas  # noqa: F401
+import repo
+from test_pilotos import correr
+
+PAQUETES = ["calidad-codigo", "espejo-sistema", "areas-modulos", "mapa-rutas-api", "auditorias", "herramientas-autorizadas",
+            "memoria-archivo", "decisiones-adr"]
+
+
+class TestExtraidos(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.TemporaryDirectory()
+        cls.app = Path(cls.tmp.name) / "app"
+        (cls.app / "src" / "orders").mkdir(parents=True)
+        repo.instalar(cls.app, PAQUETES)
+
+    @classmethod
+    def tearDownClass(cls):
+        repo.borrar_arbol(Path(cls.tmp.name))
+        cls.tmp.cleanup()
+
+    def s(self, pid: str, script: str) -> Path:
+        return self.app / "uxyngraphar" / pid / "scripts" / script
+
+    def trabajo(self, pid: str) -> Path:
+        return self.app / "uxyngraphar-work" / pid
+
+    def escribir(self, ruta: Path, texto: str) -> Path:
+        ruta.parent.mkdir(parents=True, exist_ok=True)
+        ruta.write_text(texto, encoding="utf-8")
+        return ruta
+
+    def test_calidad_limite_de_lineas(self):
+        largo = self.escribir(self.app / "src" / "orders" / "big-service.ts", "export const x = 1;\n" * 351)
+        r = correr(self.s("calidad-codigo", "revisar.py"), str(largo), cwd=self.app)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("351 líneas", r.stdout)
+        largo.write_text("export const x = 1;\n" * 10, encoding="utf-8")
+        self.assertEqual(correr(self.s("calidad-codigo", "revisar.py"), str(largo), cwd=self.app).returncode, 0)
+
+    def test_espejo_cobertura_y_huerfanos(self):
+        self.escribir(self.app / "src" / "orders" / "service.ts", "export {};\n")
+        r = correr(self.s("espejo-sistema", "espejo.py"), "nuevo", "src/orders/service.ts", cwd=self.app)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertTrue((self.trabajo("espejo-sistema") / "src/orders/service.md").is_file())
+        self.assertEqual(correr(self.s("espejo-sistema", "verificar-espejo.py"), cwd=self.app).returncode, 0)
+        huerfano = self.escribir(self.trabajo("espejo-sistema") / "src/orders/borrado.md", "# x\n")
+        r = correr(self.s("espejo-sistema", "verificar-espejo.py"), cwd=self.app)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("src/orders/borrado.md", r.stderr)
+        huerfano.unlink()
+
+    def test_areas_ciclo(self):
+        areas = self.trabajo("areas-modulos")
+        self.escribir(areas / "a" / "CONTEXTO.md", "---\nid: a\nstatus: active\ndepends_on: [b]\n---\n# A\n")
+        self.escribir(areas / "b" / "CONTEXTO.md", "---\nid: b\nstatus: active\ndepends_on: [a]\n---\n# B\n")
+        r = correr(self.s("areas-modulos", "verificar-areas.py"), cwd=self.app)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("ciclo", r.stderr)
+        (areas / "b" / "CONTEXTO.md").write_text("---\nid: b\nstatus: active\ndepends_on: [auth]\n---\n# B\n", encoding="utf-8")
+        r = correr(self.s("areas-modulos", "verificar-areas.py"), cwd=self.app)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("aún no está documentada", r.stdout)
+
+    def test_rutas_duplicadas(self):
+        rutas = self.trabajo("mapa-rutas-api") / "orders"
+        ficha = "---\nid: {i}\nstatus: activa\nmethod: get\npath: /orders\nauth: bearer\n---\n# GET /orders\n"
+        self.escribir(rutas / "uno.md", ficha.format(i="uno"))
+        self.assertEqual(correr(self.s("mapa-rutas-api", "verificar-rutas.py"), cwd=self.app).returncode, 0)
+        self.escribir(rutas / "dos.md", ficha.format(i="dos").replace("get", "GET"))
+        r = correr(self.s("mapa-rutas-api", "verificar-rutas.py"), cwd=self.app)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("GET /orders", r.stderr)
+        (rutas / "dos.md").unlink()
+
+    def test_auditoria_severidad(self):
+        r = correr(self.s("auditorias", "fichas.py"), "nueva", "auditoria", "--slug", "rendimiento", cwd=self.app)
+        ruta = Path(r.stdout.strip())
+        texto = ruta.read_text(encoding="utf-8").replace("|---|-----------|----------|-----------|",
+                                                         "|---|-----------|----------|-----------|\n| 1 | grave | lento | `src/a.ts:1` |")
+        ruta.write_text(texto, encoding="utf-8")
+        r = correr(self.s("auditorias", "verificar-auditorias.py"), cwd=self.app)
+        self.assertEqual(r.returncode, 1)
+        ruta.write_text(texto.replace("| grave |", "| alta |"), encoding="utf-8")
+        self.assertEqual(correr(self.s("auditorias", "verificar-auditorias.py"), cwd=self.app).returncode, 0)
+
+    def test_autorizadas_solo_persona(self):
+        fichas = self.s("herramientas-autorizadas", "fichas.py")
+        r = correr(fichas, "nueva", "autorizada", "--slug", "deploy", cwd=self.app)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("solo las crea una persona", r.stderr)
+        self.assertEqual(correr(fichas, "nueva", "propuesta", "--slug", "deploy", cwd=self.app).returncode, 0)
+        r = correr(self.s("decisiones-adr", "fichas.py"), "nueva", "adr", "--slug", "db", cwd=self.app)
+        fid = Path(r.stdout.strip()).stem
+        self.assertEqual(correr(self.s("decisiones-adr", "fichas.py"), "estado", fid, "aceptada", cwd=self.app).returncode, 1)
+        self.assertEqual(correr(self.s("decisiones-adr", "fichas.py"), "estado", fid, "en-evaluacion", cwd=self.app).returncode, 0)
+
+    def test_memoria_archivar_solo_persona(self):
+        doc = self.escribir(self.app / "NOTAS.md", "decision: usar postgres\n")
+        memoria = self.s("memoria-archivo", "memoria.py")
+        self.assertEqual(correr(memoria, "archivar", str(doc), cwd=self.app).returncode, 1)
+        self.assertEqual(correr(memoria, "archivar", str(doc), "--humano", cwd=self.app).returncode, 0)
+        self.assertIn("postgres", correr(memoria, "buscar", "POSTGRES", cwd=self.app).stdout)
+
+
+if __name__ == "__main__":
+    unittest.main()

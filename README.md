@@ -1,23 +1,15 @@
 # uxyngraphar
 
-Sistema documental de gobernanza humano–IA (packs backend/frontend en español).
+Catálogo de **paquetes de gobernanza** humano–IA (temáticos, portátiles e inmutables) y la herramienta que los instala en tus repos. Por ahora solo en español.
 
-## Empieza aquí
-
-Toda la documentación está en **[`español/documentacion/`](./español/documentacion/README.md)** (por ahora solo existe la versión en español).
-
-| Quién | Entrada |
-|-------|---------|
-| **Manual completo (humano + IA)** | [`español/documentacion/README.md`](./español/documentacion/README.md) |
-| **Agentes de IA** | [`español/documentacion/AGENTES.md`](./español/documentacion/AGENTES.md) |
-| Instalar la herramienta | [`español/documentacion/01-instalacion/herramienta.md`](./español/documentacion/01-instalacion/herramienta.md) |
+Todo está en **[`español/`](./español/README.md)**: el catálogo en `paquetes/`, el motor en `motor/` y el contrato en [`ESPECIFICACION.md`](./español/ESPECIFICACION.md).
 
 ```bash
 # Linux / macOS
 curl -fsSL https://github.com/uxlelmar-eaac/uxyngraphar-kit/releases/latest/download/instalar-uxyngraphar.py | python3 -
 ```
 
-Después, el único comando que necesitas es **`uxyngraphar`**: abre el panel en tu navegador y desde ahí se instala, configura y actualiza todo.
+Después, el único comando que necesitas es **`uxyngraphar`**: abre el panel en tu navegador, donde eliges paquetes y los instalas, actualizas o quitas en tus repos. Si tienes una instalación 1.x, `uxyngraphar migrar --repo RUTA` la lleva a 2.0 (primero simula).
 
 ## Licencia
 

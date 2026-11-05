@@ -1,0 +1,21 @@
+{
+  "manifiesto_formato": 1,
+  "id": "mapa-rutas-ui",
+  "version": "1.0.0",
+  "titulo": "Mapa de rutas de interfaz",
+  "descripcion": "Una ficha viva por página o ruta de la interfaz (acceso, datos que consume, estados de UI, componentes y archivos ancla) que se actualiza con cada cambio de navegación.",
+  "motor": ">=2.0",
+  "activacion": ["mapa-rutas-ui", "rutas ui", "paginas"],
+  "entrada": "ENTRADA.md",
+  "verificaciones": ["scripts/verificar.py", "scripts/verificar-rutas.py"],
+  "fichas": {
+    "ruta": {
+      "carpeta": ".",
+      "prefijo": "RUT",
+      "plantilla": "plantillas/ruta.md",
+      "inicial": "activa",
+      "status_validos": ["activa", "planificada", "deprecada", "retirada"]
+    }
+  },
+  "ajustes": {"campos_obligatorios": ["path", "tipo", "auth"], "clave_unica": ["path"]}
+}

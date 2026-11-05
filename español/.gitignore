@@ -1,4 +1,4 @@
-# Artefactos locales de herramientas del autor (no forman parte del pack)
+# Artefactos locales de herramientas del autor (no forman parte del kit)
 .atl/
 
 # Bytecode y sesiones locales
@@ -6,5 +6,5 @@ __pycache__/
 *.pyc
 .decisiones/
 
-# Archivos de release generados por _compartido/publicar.py
+# Archivos de release generados por distribucion/publicar.py
 dist/

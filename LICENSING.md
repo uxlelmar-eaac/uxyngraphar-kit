@@ -2,9 +2,9 @@
 
 **Copyright © 2026 uxleleaac / uxlelmar**
 
-## Este repositorio (documentación / herramienta de packs)
+## Este repositorio (paquetes de gobernanza y su herramienta)
 
-El contenido de este repositorio (packs documentales, guías, plantillas, scripts de instalación del kit) se publica bajo:
+El contenido de este repositorio (paquetes de gobernanza, guías, plantillas, motor y scripts de instalación del kit) se publica bajo:
 
 **Creative Commons Attribution 4.0 International (CC BY 4.0)**
 

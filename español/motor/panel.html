@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>uxyngraphar 2.0 — paquetes de gobernanza</title>
+<style>
+  :root { --fondo:#f6f7f9; --tarjeta:#fff; --texto:#1d2330; --tenue:#667085; --borde:#e3e6ea; --acento:#3b5bdb; --mal:#c92a2a; --bien:#2b8a3e; }
+  @media (prefers-color-scheme: dark) { :root { --fondo:#14161b; --tarjeta:#1d2028; --texto:#e7e9ee; --tenue:#98a2b3; --borde:#2c313c; } }
+  * { box-sizing: border-box; }
+  body { margin:0; font:15px/1.5 system-ui, sans-serif; background:var(--fondo); color:var(--texto); }
+  header { padding:16px 24px; border-bottom:1px solid var(--borde); display:flex; gap:16px; align-items:center; }
+  header h1 { font-size:18px; margin:0; flex:1; }
+  nav button { margin-left:4px; }
+  main { padding:24px; max-width:1100px; margin:auto; }
+  section { background:var(--tarjeta); border:1px solid var(--borde); border-radius:10px; padding:16px 20px; margin-bottom:16px; }
+  h2 { font-size:16px; margin:0 0 12px; }
+  table { width:100%; border-collapse:collapse; }
+  td, th { text-align:left; padding:6px 8px; border-bottom:1px solid var(--borde); vertical-align:top; }
+  th { color:var(--tenue); font-weight:500; font-size:13px; }
+  button { font:inherit; padding:5px 12px; border-radius:6px; border:1px solid var(--borde); background:var(--tarjeta); color:var(--texto); cursor:pointer; }
+  button.primario, nav button.activo { background:var(--acento); color:#fff; border-color:var(--acento); }
+  input, select, textarea { font:inherit; padding:5px 8px; border-radius:6px; border:1px solid var(--borde); background:var(--fondo); color:var(--texto); }
+  textarea { width:100%; min-height:360px; font-family:ui-monospace, monospace; font-size:13px; }
+  .fila { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:8px; }
+  .tenue { color:var(--tenue); font-size:13px; }
+  .mal { color:var(--mal); } .bien { color:var(--bien); }
+  pre { white-space:pre-wrap; background:var(--fondo); padding:10px; border-radius:6px; font-size:12px; max-height:340px; overflow:auto; }
+  #aviso { position:fixed; bottom:16px; right:16px; padding:10px 14px; border-radius:8px; background:var(--texto); color:var(--fondo); display:none; max-width:480px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>uxyngraphar 2.0 · paquetes de gobernanza</h1>
+  <nav><button id="tab-repo" class="activo" onclick="pestana('repo')">Repo</button><button id="tab-catalogo" onclick="pestana('catalogo')">Catálogo</button></nav>
+</header>
+<main>
+  <div id="vista-repo">
+    <section>
+      <h2>Repo</h2>
+      <div class="fila"><input id="repo" size="70" placeholder="/ruta/a/la/raiz/de/la/app"><button class="primario" onclick="cargarRepo()">Abrir</button></div>
+      <div id="antigua"></div>
+    </section>
+    <section><h2>Paquetes instalados</h2><div id="instalados" class="tenue">Abre un repo.</div>
+      <div class="fila" style="margin-top:10px"><button onclick="actualizar()">Actualizar todos</button><button onclick="verificar()">Verificar todos</button></div>
+      <pre id="salida-verificar" hidden></pre></section>
+    <section><h2>Instalar desde el catálogo</h2><div id="disponibles" class="tenue">Abre un repo.</div></section>
+    <section><h2>Flujo del agente (FLUJO.json)</h2>
+      <p class="tenue">Solo una persona decide esto. El agente lo lee en cada pedido y nunca lo edita.</p>
+      <div class="fila"><label>Modo <select id="modo"><option value="manual">manual: solo paquetes nombrados</option><option value="leer_por_defecto">leer_por_defecto</option><option value="trabajar_con">trabajar_con</option><option value="secuencia">secuencia</option></select></label></div>
+      <div class="fila"><label>Leer por defecto <input id="leer" size="50" placeholder="id1, id2"></label></div>
+      <div class="fila"><label>Trabajar con <input id="trabajar" size="30" placeholder="id"></label></div>
+      <div class="fila"><label>Secuencia <input id="secuencia" size="60" placeholder="id1, id2, id3 (en orden)"></label></div>
+      <button class="primario" onclick="guardarFlujo()">Guardar flujo</button>
+    </section>
+  </div>
+  <div id="vista-catalogo" hidden>
+    <section><h2>Catálogo</h2><div id="catalogo"></div></section>
+    <section><h2>Crear paquete</h2>
+      <div class="fila"><input id="nuevo-id" placeholder="id-en-kebab-case"><input id="nuevo-titulo" size="40" placeholder="Título"><input id="nuevo-desc" size="50" placeholder="Qué gobierna"><button class="primario" onclick="crearPaquete()">Crear</button></div>
+    </section>
+    <section id="editor" hidden><h2 id="editor-titulo"></h2>
+      <div class="fila"><select id="archivos" onchange="abrirArchivo()"></select><input id="nuevo-archivo" placeholder="nueva/ruta.md"><button onclick="nuevoArchivo()">Nuevo archivo</button>
+        <span style="flex:1"></span><button onclick="versionar('parche')">+ parche</button><button onclick="versionar('menor')">+ menor</button><button onclick="versionar('mayor')">+ mayor</button></div>
+      <textarea id="contenido"></textarea>
+      <div class="fila"><button class="primario" onclick="guardarArchivo()">Guardar en el catálogo</button><span id="errores-editor" class="mal"></span></div>
+    </section>
+  </div>
+</main>
+<div id="aviso"></div>
+<script>
+const TOKEN = new URLSearchParams(location.hash.slice(1)).get("t") || "";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const lista = (s) => s.split(",").map((x) => x.trim()).filter(Boolean);
+let editando = null;
+
+function aviso(texto, mal) { const a = $("aviso"); a.textContent = texto; a.style.background = mal ? "var(--mal)" : ""; a.style.display = "block"; setTimeout(() => a.style.display = "none", 4500); }
+async function api(ruta, datos, metodo) {
+  const opciones = { method: metodo || (datos ? "POST" : "GET"), headers: { "X-Uxyn-Token": TOKEN, "Content-Type": "application/json" } };
+  if (opciones.method === "POST") opciones.body = JSON.stringify(datos || {});
+  else if (datos) ruta += "?" + new URLSearchParams(datos);
+  const r = await fetch(ruta, opciones); const j = await r.json();
+  if (!r.ok) { aviso(j.error || "error", true); throw new Error(j.error); }
+  return j.ok;
+}
+function pestana(nombre) { for (const n of ["repo", "catalogo"]) { $("vista-" + n).hidden = n !== nombre; $("tab-" + n).classList.toggle("activo", n === nombre); } if (nombre === "catalogo") cargarCatalogo(); }
+const repoActual = () => ({ repo: $("repo").value.trim() });
+
+async function cargarRepo() {
+  localStorage.setItem("uxyn-repo", $("repo").value.trim());
+  const [estado, cat] = await Promise.all([api("/api/repo/estado", repoActual(), "GET"), api("/api/catalogo")]);
+  $("antigua").innerHTML = estado.antigua ? `<p class="mal">Instalación 1.x en <code>${esc(estado.antigua)}</code>. Migra antes de instalar paquetes. <button onclick="simularMigracion()">Simular migración</button> <button onclick="aplicarMigracion()">Migrar (con respaldo)</button></p><pre id="informe-migracion" hidden></pre>` : "";
+  const ids = new Set(estado.paquetes.map((p) => p.id));
+  $("instalados").innerHTML = estado.paquetes.length ? `<table><tr><th>Paquete</th><th>Versión</th><th>Integridad</th><th></th></tr>${estado.paquetes.map((p) => `<tr><td><b>${esc(p.titulo)}</b><br><span class="tenue">${esc(p.id)}</span></td><td>${esc(p.version)}${p.actualizable ? ` → <b>${esc(p.catalogo)}</b>` : ""}</td><td class="${p.integro ? "bien" : "mal"}">${p.integro ? "íntegro" : "ALTERADO"}</td><td><button onclick="actualizar('${esc(p.id)}')">${p.integro ? "Actualizar" : "Reparar"}</button> <button onclick="quitar('${esc(p.id)}')">Quitar</button></td></tr>`).join("")}</table>` : "<span class='tenue'>Sin paquetes instalados.</span>";
+  const libres = cat.filter((m) => !ids.has(m.id));
+  $("disponibles").innerHTML = libres.length ? `<table>${libres.map((m) => `<tr><td><label><input type="checkbox" value="${esc(m.id)}" class="instalar"> <b>${esc(m.titulo)}</b> <span class="tenue">${esc(m.id)} ${esc(m.version)}</span></label><br><span class="tenue">${esc(m.descripcion)}</span></td></tr>`).join("")}</table><button class="primario" onclick="instalar()">Instalar seleccionados</button>` : "<span class='tenue'>Todo el catálogo está instalado.</span>";
+  if (!estado.antigua) {
+    const f = await api("/api/repo/flujo", repoActual(), "GET");
+    $("modo").value = f.modo; $("leer").value = f.leer_por_defecto.join(", "); $("trabajar").value = f.trabajar_con || ""; $("secuencia").value = f.secuencia.join(", ");
+  }
+}
+async function instalar() { const ids = [...document.querySelectorAll(".instalar:checked")].map((c) => c.value); if (!ids.length) return aviso("Elige al menos un paquete", true); await api("/api/repo/instalar", { ...repoActual(), ids }); aviso("Instalados: " + ids.join(", ")); cargarRepo(); }
+async function actualizar(id) { const hechos = await api("/api/repo/actualizar", { ...repoActual(), ids: id ? [id] : [] }); aviso(hechos.length ? "Actualizados: " + hechos.join(", ") : "Nada que actualizar"); cargarRepo(); }
+async function quitar(id) { if (!confirm(`¿Quitar ${id}? Su trabajo en uxyngraphar-work/${id}/ se conserva.`)) return; await api("/api/repo/quitar", { ...repoActual(), id }); aviso("Quitado " + id); cargarRepo(); }
+async function verificar() { const r = await api("/api/repo/verificar", repoActual()); const s = $("salida-verificar"); s.hidden = false; s.textContent = r.map((x) => `[${x.codigo ? "FALLA" : "ok"}] ${x.paquete} · ${x.verificacion}\n${x.salida}`).join("\n\n") || "Sin verificaciones."; }
+async function guardarFlujo() {
+  const flujo = { formato: 1, modo: $("modo").value, leer_por_defecto: lista($("leer").value), trabajar_con: $("trabajar").value.trim() || null, secuencia: lista($("secuencia").value), conflictos: "preguntar" };
+  const r = await api("/api/repo/flujo", { ...repoActual(), flujo }); r.errores.length ? aviso(r.errores.join("; "), true) : aviso("Flujo guardado");
+}
+async function simularMigracion() { const r = await api("/api/repo/migrar", repoActual(), "GET"); const p = $("informe-migracion"); p.hidden = false; p.textContent = JSON.stringify(r, null, 2); }
+async function aplicarMigracion() { if (!confirm("Se hará un respaldo completo y se migrará a 2.0. ¿Seguir?")) return; const r = await api("/api/repo/migrar", repoActual()); const p = $("informe-migracion"); p.hidden = false; p.textContent = JSON.stringify(r, null, 2); if (r.aplicada) { aviso("Migración completada"); cargarRepo(); } }
+
+async function cargarCatalogo() {
+  const cat = await api("/api/catalogo");
+  $("catalogo").innerHTML = `<table><tr><th>Paquete</th><th>Versión</th><th>Estado</th><th></th></tr>${cat.map((m) => `<tr><td><b>${esc(m.titulo)}</b> <span class="tenue">${esc(m.id)}</span><br><span class="tenue">${esc(m.descripcion)}</span></td><td>${esc(m.version)}</td><td class="${m.errores.length ? "mal" : "bien"}">${m.errores.length ? esc(m.errores.join("; ")) : "válido"}</td><td><button onclick="editar('${esc(m.id)}')">Editar</button></td></tr>`).join("")}</table>`;
+}
+async function crearPaquete() { await api("/api/catalogo/crear", { id: $("nuevo-id").value.trim(), titulo: $("nuevo-titulo").value.trim(), descripcion: $("nuevo-desc").value.trim() }); aviso("Paquete creado"); await cargarCatalogo(); editar($("nuevo-id").value.trim()); }
+async function editar(id) {
+  editando = id; const archivos = await api("/api/catalogo/archivos", { id }, "GET");
+  $("editor").hidden = false; $("editor-titulo").textContent = "Editar " + id + " (catálogo)";
+  $("archivos").innerHTML = archivos.map((a) => `<option>${esc(a)}</option>`).join(""); abrirArchivo();
+}
+async function abrirArchivo() { const r = await api("/api/catalogo/archivo", { id: editando, rel: $("archivos").value }, "GET"); $("contenido").value = r.contenido; $("errores-editor").textContent = ""; }
+function nuevoArchivo() { const rel = $("nuevo-archivo").value.trim(); if (!rel) return; $("archivos").insertAdjacentHTML("beforeend", `<option selected>${esc(rel)}</option>`); $("contenido").value = ""; }
+async function guardarArchivo() { const r = await api("/api/catalogo/archivo", { id: editando, rel: $("archivos").value, contenido: $("contenido").value }); $("errores-editor").textContent = r.errores.join("; "); aviso(r.errores.length ? "Guardado con errores de validación" : "Guardado", r.errores.length > 0); }
+async function versionar(nivel) { const v = await api("/api/catalogo/version", { id: editando, nivel }); aviso(`${editando} → ${v}. Actualiza los repos para recibirla.`); cargarCatalogo(); }
+
+$("repo").value = localStorage.getItem("uxyn-repo") || "";
+</script>
+</body>
+</html>

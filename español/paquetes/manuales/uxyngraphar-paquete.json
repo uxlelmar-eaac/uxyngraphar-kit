@@ -1,0 +1,20 @@
+{
+  "manifiesto_formato": 1,
+  "id": "manuales",
+  "version": "1.0.0",
+  "titulo": "Manuales operativos",
+  "descripcion": "Manuales vivos para operar el sistema (despliegue, incidentes, configuración): pasos verificables que se actualizan con cada cambio que los afecta.",
+  "motor": ">=2.0",
+  "activacion": ["manuales", "manual", "runbook"],
+  "entrada": "ENTRADA.md",
+  "verificaciones": ["scripts/verificar.py"],
+  "fichas": {
+    "manual": {
+      "carpeta": ".",
+      "prefijo": "MAN",
+      "plantilla": "plantillas/manual.md",
+      "inicial": "borrador",
+      "status_validos": ["borrador", "vigente", "obsoleto"]
+    }
+  }
+}
