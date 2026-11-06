@@ -5,16 +5,25 @@
   "titulo": "Memoria y archivo",
   "descripcion": "Memoria del proyecto (notas y conocimiento que conviene conservar) y archivo histórico; el agente no los lee salvo que el pedido lo pida expresamente.",
   "motor": ">=2.0",
-  "activacion": ["memoria-archivo", "memoria", "archivo"],
-  "entrada": "ENTRADA.md",
-  "verificaciones": ["scripts/verificar.py"],
+  "activacion": [
+    "memoria-archivo",
+    "memoria",
+    "archivo"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py"
+  ],
   "fichas": {
     "nota": {
       "carpeta": "memoria",
       "prefijo": "MEM",
       "plantilla": "plantillas/nota.md",
       "inicial": "vigente",
-      "status_validos": ["vigente", "archivada"]
+      "status_validos": [
+        "vigente",
+        "archivada"
+      ]
     }
   }
 }

@@ -1,6 +1,6 @@
 """Catálogo de paquetes (fuente en `paquetes/<id>/`): listar, crear, editar, versionar y construir.
 
-Editar un paquete solo ocurre aquí. Un paquete construido = fuente + fragmentos en `scripts/` + INTEGRIDAD.json.
+Editar un paquete solo ocurre aquí. Un paquete construido = fuente + scripts comunes en `scripts/comun/` + INTEGRIDAD.json.
 """
 
 from __future__ import annotations
@@ -47,17 +47,18 @@ def crear(pid: str, titulo: str, descripcion: str = "", raiz: Path | None = None
     if c.exists():
         raise FileExistsError(f"ya existe {c}")
     m = {"manifiesto_formato": 1, "id": pid, "version": "0.1.0", "titulo": titulo, "descripcion": descripcion or titulo,
-         "motor": ">=2.0", "activacion": [pid], "entrada": "ENTRADA.md", "verificaciones": ["scripts/verificar.py"],
+         "motor": ">=2.0", "activacion": [pid], "entrada": base.ENTRADA, "verificaciones": [f"{esp.DESTINO_COMUN}/verificar.py"],
          "fichas": {"ficha": {"carpeta": ".", "prefijo": "FIC", "plantilla": "plantillas/ficha.md", "inicial": "abierta",
                               "estados": {"abierta": "pendientes", "en-curso": "en-progreso", "cerrada": "completadas"}}},
          "ajustes": {}}
     (c / "plantillas").mkdir(parents=True)
     (c / base.MANIFIESTO).write_text(json.dumps(m, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    (c / "ENTRADA.md").write_text(
-        f"# {titulo} — entrada\n\nAntes de actuar: `python3 uxyngraphar/{pid}/scripts/verificar-integridad.py`.\n\n"
-        f"1. Lee `REGLAS.md`.\n2. Trabaja solo en `uxyngraphar-work/{pid}/` (`python3 uxyngraphar/{pid}/scripts/fichas.py …`).\n"
-        f"3. Antes de terminar: `python3 uxyngraphar/{pid}/scripts/verificar.py`.\n", encoding="utf-8")
-    (c / "REGLAS.md").write_text(f"# {titulo} — reglas\n\n1. …\n", encoding="utf-8")
+    s = f"{base.CARPETA_PAQUETES}/{pid}/{esp.DESTINO_COMUN}"
+    (c / base.ENTRADA).write_text(
+        f"# {titulo}\n\nAntes de actuar: `python3 {s}/verificar-integridad.py`.\n\n"
+        f"1. Lee las **Reglas** (al final de este archivo).\n"
+        f"2. Trabaja solo en `{base.CARPETA_TRABAJO}/{pid}/` (`python3 {s}/fichas.py …`).\n"
+        f"3. Antes de terminar: `python3 {s}/verificar.py`.\n\n## Reglas\n\n1. …\n", encoding="utf-8")
     (c / "plantillas" / "ficha.md").write_text("---\nid: {{id}}\nstatus: {{status}}\nfecha: {{fecha}}\n---\n\n# {{titulo}}\n\n…\n",
                                                encoding="utf-8")
     return c
@@ -122,12 +123,10 @@ def construir(pid: str, destino: Path, raiz: Path | None = None) -> Path:
     if salida.exists():
         shutil.rmtree(salida)
     shutil.copytree(fuente, salida, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
-    (salida / "scripts").mkdir(exist_ok=True)
-    for frag in sorted(p for p in esp.FRAGMENTOS.glob("*.py") if not p.name.startswith("test_")):
-        objetivo = salida / "scripts" / frag.name
-        if objetivo.exists():
-            raise ValueError(f"{pid}: scripts/{frag.name} choca con un fragmento compartido")
-        shutil.copy2(frag, objetivo)
+    comun = salida / esp.DESTINO_COMUN
+    comun.mkdir(parents=True)
+    for script in sorted(p for p in esp.COMUN.glob("*.py") if not p.name.startswith("test_")):
+        shutil.copy2(script, comun / script.name)
     (salida / base.INTEGRIDAD).write_text(json.dumps(base.calcular_integridad(salida), ensure_ascii=False, indent=2) + "\n",
                                           encoding="utf-8")
     errores = esp.validar_paquete(salida, construido=True)

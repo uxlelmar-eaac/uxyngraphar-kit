@@ -1,7 +1,7 @@
 """Contratos de uxyngraphar 2.0 del lado del motor: paquete (fuente o construido) y FLUJO.json.
 
 El manifiesto y la integridad se validan con el mismo código que viaja dentro de cada paquete
-(`paquetes/_fragmentos/scripts/uxyn_base.py`), para que haya una sola regla.
+(`comun/uxyn_base.py`), para que haya una sola regla.
 """
 
 from __future__ import annotations
@@ -12,17 +12,19 @@ from pathlib import Path
 
 KIT = Path(__file__).resolve().parent.parent
 CATALOGO = KIT / "paquetes"
-FRAGMENTOS = CATALOGO / "_fragmentos" / "scripts"
-sys.path.insert(0, str(FRAGMENTOS))
+COMUN = KIT / "comun"
+DESTINO_COMUN = "scripts/comun"
+sys.path.insert(0, str(COMUN))
 
 import uxyn_base as base  # noqa: E402
 
 VERSION_MOTOR = "2.0.0"
 FLUJO = "FLUJO.json"
+INDICE = "INDICE.md"
 FORMATO_FLUJO = 1
 MODOS = ("manual", "leer_por_defecto", "trabajar_con", "secuencia")
 CONFLICTOS = ("preguntar",)
-OBLIGATORIOS = ("ENTRADA.md", "REGLAS.md")
+OBLIGATORIOS = (base.ENTRADA,)
 FLUJO_INICIAL = {"formato": FORMATO_FLUJO, "modo": "manual", "leer_por_defecto": [], "trabajar_con": None,
                  "secuencia": [], "conflictos": "preguntar"}
 
@@ -54,9 +56,9 @@ def validar_paquete(carpeta: Path, construido: bool = False) -> list[str]:
     for nombre in OBLIGATORIOS:
         if not (carpeta / nombre).is_file():
             errores.append(f"falta {nombre}")
-    fragmentos = {p.name for p in FRAGMENTOS.glob("*.py")}
+    comunes = {f"{DESTINO_COMUN}/{p.name}" for p in COMUN.glob("*.py")}
     for v in m["verificaciones"]:
-        if not (carpeta / v).is_file() and not (not construido and Path(v).name in fragmentos):
+        if not (carpeta / v).is_file() and not (not construido and v in comunes):
             errores.append(f"verificación inexistente: {v}")
     for tipo, d in m.get("fichas", {}).items():
         if not (carpeta / d["plantilla"]).is_file():
@@ -68,8 +70,11 @@ def validar_paquete(carpeta: Path, construido: bool = False) -> list[str]:
         informe = base.comprobar_integridad(carpeta)
         if not base.integro(informe):
             errores.append(f"integridad: {json.dumps(informe, ensure_ascii=False)}")
-    elif (carpeta / base.INTEGRIDAD).exists():
-        errores.append(f"{base.INTEGRIDAD} no va en el catálogo: lo genera la construcción")
+    else:
+        if (carpeta / base.INTEGRIDAD).exists():
+            errores.append(f"{base.INTEGRIDAD} no va en el catálogo: lo genera la construcción")
+        if (carpeta / DESTINO_COMUN).exists():
+            errores.append(f"{DESTINO_COMUN}/ no va en el catálogo: la construcción copia ahí los scripts comunes")
     return errores
 
 

@@ -92,7 +92,7 @@ def cmd_desinstalar(args: list[str]) -> int:
     if registro.get("path_windows"):
         ar._path_windows(registro["path_windows"], False)
     shutil.rmtree(h, ignore_errors=True)
-    print("uxyngraphar se desinstaló de este equipo. Los repos conservan uxyngraphar/ y uxyngraphar-work/.")
+    print("uxyngraphar se desinstaló de este equipo. Los repos conservan su carpeta uxyngraphar/.")
     return 0
 
 

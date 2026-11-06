@@ -6,4 +6,4 @@
 - **Términos del dominio:** si el negocio usa una palabra propia (p. ej. «folio»), se usa solo si la persona la registró en un glosario del proyecto; si no, se traduce.
 - **Excepciones:** código generado, migraciones históricas y archivos de traducción.
 
-Ramas: `tipo/descripcion-corta` (`feat/checkout-coupons`). Commits: ver regla 4 de `REGLAS.md`.
+Ramas: `tipo/descripcion-corta` (`feat/checkout-coupons`). Commits: ver la regla 4 en `README.md`.

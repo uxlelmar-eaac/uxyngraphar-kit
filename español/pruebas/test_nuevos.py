@@ -35,19 +35,20 @@ class TestNuevos(unittest.TestCase):
         cls.tmp.cleanup()
 
     def s(self, pid: str, script: str) -> Path:
-        return self.app / "uxyngraphar" / pid / "scripts" / script
+        scripts = self.app / "uxyngraphar" / "paquetes" / pid / "scripts"
+        return scripts / "comun" / script if (scripts / "comun" / script).is_file() else scripts / script
 
     def nueva(self, pid: str, tipo: str, slug: str) -> Path:
         r = correr(self.s(pid, "fichas.py"), "nueva", tipo, "--slug", slug, "--titulo", slug, cwd=self.app)
         self.assertEqual(r.returncode, 0, r.stderr)
-        (ruta,) = (self.app / "uxyngraphar-work" / pid).rglob(f"*{slug}*.md")
+        (ruta,) = (self.app / "uxyngraphar" / "trabajo" / pid).rglob(f"*{slug}*.md")
         return ruta
 
     def estado(self, pid: str, ruta: Path, nuevo: str, humano: bool = False) -> Path:
         fid = ruta.stem
         r = correr(self.s(pid, "fichas.py"), "estado", fid, nuevo, *(["--humano"] if humano else []), cwd=self.app)
         self.assertEqual(r.returncode, 0, r.stderr + r.stdout)
-        (ruta,) = (self.app / "uxyngraphar-work" / pid).rglob(f"{fid}.md")
+        (ruta,) = (self.app / "uxyngraphar" / "trabajo" / pid).rglob(f"{fid}.md")
         return ruta
 
     @staticmethod

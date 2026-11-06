@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Espejo del sistema.
 
-  python3 uxyngraphar/espejo-sistema/scripts/espejo.py mapa [--faltantes]
-  python3 uxyngraphar/espejo-sistema/scripts/espejo.py ver <ruta-del-codigo>
-  python3 uxyngraphar/espejo-sistema/scripts/espejo.py nuevo <ruta-del-codigo>
-  python3 uxyngraphar/espejo-sistema/scripts/espejo.py huerfanos
+  python3 uxyngraphar/paquetes/espejo-sistema/scripts/espejo.py mapa [--faltantes]
+  python3 uxyngraphar/paquetes/espejo-sistema/scripts/espejo.py ver <ruta-del-codigo>
+  python3 uxyngraphar/paquetes/espejo-sistema/scripts/espejo.py nuevo <ruta-del-codigo>
+  python3 uxyngraphar/paquetes/espejo-sistema/scripts/espejo.py huerfanos
 """
 
 from __future__ import annotations
@@ -15,7 +15,8 @@ from datetime import date
 from pathlib import Path
 
 sys.dont_write_bytecode = True   # el paquete es inmutable: ni cachés dentro
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+AQUI = Path(__file__).resolve().parent
+sys.path[:0] = [str(AQUI), str(AQUI / "comun")]
 
 import espejo_mapa as mapa  # noqa: E402
 import uxyn_base as base  # noqa: E402

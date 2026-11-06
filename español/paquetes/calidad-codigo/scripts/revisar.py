@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Revisa calidad de código: límite de líneas, nombres de archivo ASCII y (con --commits) mensajes de commit.
 
-  python3 uxyngraphar/calidad-codigo/scripts/revisar.py [ARCHIVO…] [--commits [N]]
+  python3 uxyngraphar/paquetes/calidad-codigo/scripts/revisar.py [ARCHIVO…] [--commits [N]]
 
 Sin archivos revisa las «raices» de los ajustes. Código 0 = sin problemas; 1 = hay problemas.
 """
@@ -17,7 +17,8 @@ import sys
 from pathlib import Path
 
 sys.dont_write_bytecode = True   # el paquete es inmutable: ni cachés dentro
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+AQUI = Path(__file__).resolve().parent
+sys.path[:0] = [str(AQUI), str(AQUI / "comun")]
 
 import uxyn_base as base  # noqa: E402
 
@@ -57,7 +58,7 @@ def revisar_archivos(raiz: Path, ajustes: dict, rels: list[str]) -> list[str]:
         except OSError:
             continue
         if lineas > limite and not coincide(rel, exentos):
-            problemas.append(f"{rel}: {lineas} líneas (límite {limite}); divide por responsabilidad (guias/limite-lineas.md)")
+            problemas.append(f"{rel}: {lineas} líneas (límite {limite}); divide por responsabilidad (docs/limite-lineas.md)")
     return problemas
 
 

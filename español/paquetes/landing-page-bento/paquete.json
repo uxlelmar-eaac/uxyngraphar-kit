@@ -5,9 +5,16 @@
   "titulo": "Landing page bento",
   "descripcion": "Diseño y construcción de landing pages con mosaico bento: brief, jerarquía de celdas, textos breves, un solo CTA principal, orden móvil y checklist de accesibilidad y rendimiento antes de publicar.",
   "motor": ">=2.0",
-  "activacion": ["landing-page-bento", "landing bento", "bento"],
-  "entrada": "ENTRADA.md",
-  "verificaciones": ["scripts/verificar.py", "scripts/verificar-bento.py"],
+  "activacion": [
+    "landing-page-bento",
+    "landing bento",
+    "bento"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py",
+    "scripts/verificar-bento.py"
+  ],
   "fichas": {
     "landing": {
       "carpeta": ".",
@@ -22,12 +29,20 @@
         "archivada": "archivadas",
         "cancelada": "canceladas"
       },
-      "solo_humano": ["publicada"]
+      "solo_humano": [
+        "publicada"
+      ]
     }
   },
   "ajustes": {
     "columnas": 4,
-    "tamanos": ["1x1", "2x1", "1x2", "2x2", "4x1"],
+    "tamanos": [
+      "1x1",
+      "2x1",
+      "1x2",
+      "2x2",
+      "4x1"
+    ],
     "celdas_min": 5,
     "celdas_max": 9,
     "max_2x2": 1,

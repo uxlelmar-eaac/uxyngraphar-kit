@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Fichas del paquete (trabajo en uxyngraphar-work/<id>/).
+"""Fichas del paquete (trabajo en uxyngraphar/trabajo/<id>/).
 
-  python3 scripts/fichas.py tipos
-  python3 scripts/fichas.py nueva <tipo> --slug <slug> [--titulo "…"] [--en <subcarpeta>] [--humano]
-  python3 scripts/fichas.py listar [<tipo>] [--status <status>]
-  python3 scripts/fichas.py ver <id>
-  python3 scripts/fichas.py estado <id> <status> [--humano]
+  python3 scripts/comun/fichas.py tipos
+  python3 scripts/comun/fichas.py nueva <tipo> --slug <slug> [--titulo "…"] [--en <subcarpeta>] [--humano]
+  python3 scripts/comun/fichas.py listar [<tipo>] [--status <status>]
+  python3 scripts/comun/fichas.py ver <id>
+  python3 scripts/comun/fichas.py estado <id> <status> [--humano]
 """
 
 from __future__ import annotations

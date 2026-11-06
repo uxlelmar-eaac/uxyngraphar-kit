@@ -5,13 +5,46 @@
   "titulo": "Espejo del sistema",
   "descripcion": "Documentación espejo del código: una ficha por archivo o carpeta relevante (rol, responsabilidades, interacciones), con cobertura medible y detección de espejos huérfanos.",
   "motor": ">=2.0",
-  "activacion": ["espejo-sistema", "espejo", "sistema integral"],
-  "entrada": "ENTRADA.md",
-  "verificaciones": ["scripts/verificar.py", "scripts/verificar-espejo.py"],
+  "activacion": [
+    "espejo-sistema",
+    "espejo",
+    "sistema integral"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py",
+    "scripts/verificar-espejo.py"
+  ],
   "ajustes": {
-    "raices": ["src"],
-    "extensiones": [".ts", ".tsx", ".js", ".jsx", ".mjs", ".vue", ".svelte", ".py", ".go", ".rs", ".java", ".kt", ".rb", ".php", ".cs"],
-    "excluir": ["**/node_modules/**", "**/dist/**", "**/build/**", "**/*.spec.*", "**/*.test.*", "**/__tests__/**", "**/generated/**"],
+    "raices": [
+      "src"
+    ],
+    "extensiones": [
+      ".ts",
+      ".tsx",
+      ".js",
+      ".jsx",
+      ".mjs",
+      ".vue",
+      ".svelte",
+      ".py",
+      ".go",
+      ".rs",
+      ".java",
+      ".kt",
+      ".rb",
+      ".php",
+      ".cs"
+    ],
+    "excluir": [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/*.spec.*",
+      "**/*.test.*",
+      "**/__tests__/**",
+      "**/generated/**"
+    ],
     "cobertura_minima": 0
   }
 }

@@ -11,7 +11,8 @@ import sys
 from pathlib import Path
 
 sys.dont_write_bytecode = True   # el paquete es inmutable: ni cachés dentro
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+AQUI = Path(__file__).resolve().parent
+sys.path[:0] = [str(AQUI), str(AQUI / "comun")]
 
 import uxyn_base as base  # noqa: E402
 import uxyn_fichas as fichas  # noqa: E402

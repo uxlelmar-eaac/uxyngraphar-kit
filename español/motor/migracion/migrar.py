@@ -1,7 +1,8 @@
-"""Migración 1.x → 2.0: del pack numerado (00–97) a paquetes en `uxyngraphar/` + trabajo en `uxyngraphar-work/`.
+"""Migración 1.x → 2.0: del pack numerado (00–97) a `uxyngraphar/paquetes/` + `uxyngraphar/trabajo/`.
 
-Por defecto solo simula. Al aplicar: respaldo completo → copia del contenido del proyecto → verificación sha256 →
-retirada del pack y de sus protecciones → instalación de los paquetes equivalentes. Ante cualquier fallo, reversión.
+Por defecto solo simula. Al aplicar: respaldo completo → copia del contenido del proyecto a una carpeta provisional →
+verificación sha256 → retirada del pack y de sus protecciones → el trabajo pasa a `uxyngraphar/trabajo/` →
+instalación de los paquetes equivalentes. Ante cualquier fallo, reversión.
 """
 
 from __future__ import annotations
@@ -28,7 +29,8 @@ base = esp.base
 TRABAJO = base.CARPETA_TRABAJO
 LEGADO = "_legado-1x"
 RESPALDOS = ".uxyngraphar-respaldos"
-SALTAR = {"node_modules", ".git", TRABAJO, RESPALDOS, "dist", "build", ".next", "vendor", ".venv", "venv", "coverage"}
+PROVISIONAL = ".uxyngraphar-migrando"
+SALTAR = {"node_modules", ".git", RESPALDOS, PROVISIONAL, "dist", "build", ".next", "vendor", ".venv", "venv", "coverage"}
 DESTINOS = (
     ("03-preguntas/", "ciclo-instrucciones", "preguntas/"),
     ("05-instrucciones/", "ciclo-instrucciones", "instrucciones/"),
@@ -58,7 +60,7 @@ class Plan:
     app: Path
     carpeta: Path
     pack: str
-    copias: list[tuple[Path, Path, str]] = field(default_factory=list)
+    copias: list[tuple[Path, str, str]] = field(default_factory=list)   # (origen, ruta dentro de trabajo/, sha256)
     omitidos: list[str] = field(default_factory=list)
     bloqueos: list[str] = field(default_factory=list)
     avisos: list[str] = field(default_factory=list)
@@ -67,11 +69,10 @@ class Plan:
     borrar_raiz: list[Path] = field(default_factory=list)
 
     def resumen(self) -> dict:
-        trabajo = self.app / TRABAJO
         return {"app": str(self.app), "carpeta": self.carpeta.name, "pack": self.pack, "paquetes": self.paquetes,
-                "migrar": len(self.copias), "legado": sum(1 for _, d, _ in self.copias if LEGADO in d.relative_to(trabajo).parts[:1]),
+                "migrar": len(self.copias), "legado": sum(1 for _, d, _ in self.copias if d.split("/")[0] == LEGADO),
                 "omitidos_nucleo": len(self.omitidos), "bloqueos": self.bloqueos, "avisos": self.avisos,
-                "destinos": sorted({d.relative_to(trabajo).parts[0] for _, d, _ in self.copias})}
+                "destinos": sorted({d.split("/")[0] for _, d, _ in self.copias})}
 
 
 def detectar(raiz: Path) -> list[tuple[Path, Path]]:
@@ -83,7 +84,7 @@ def detectar(raiz: Path) -> list[tuple[Path, Path]]:
         dirs[:] = [d for d in dirs if d not in SALTAR and profundidad < 4]
         for d in list(dirs):
             c = Path(actual) / d
-            if d in ("docs", base.CARPETA_PAQUETES) and ((c / ".uxyngraphar.lock").is_file()
+            if d in ("docs", base.CARPETA_RAIZ) and ((c / ".uxyngraphar.lock").is_file()
                                                         or ((c / "00-nucleo").is_dir() and (c / "05-instrucciones").is_dir())):
                 hallazgos.append((Path(actual), Path(actual) / d))
                 dirs.remove(d)
@@ -111,15 +112,16 @@ def _destino(rel: str, pack: str) -> tuple[str, str, str]:
 
 def _sin_choques(plan: Plan, fechas: dict[Path, str]) -> None:
     """Si dos fichas 1.x de fechas distintas acaban con el mismo nombre, se les antepone su fecha."""
-    cuenta: dict[Path, int] = {}
+    cuenta: dict[str, int] = {}
     for _, d, _ in plan.copias:
         cuenta[d] = cuenta.get(d, 0) + 1
     for i, (o, d, h) in enumerate(plan.copias):
         if cuenta[d] > 1 and fechas.get(o):
-            plan.copias[i] = (o, d.with_name(f"{fechas[o]}-{d.name}"), h)
+            carpeta, _, nombre = d.rpartition("/")
+            plan.copias[i] = (o, f"{carpeta}/{fechas[o]}-{nombre}" if carpeta else f"{fechas[o]}-{nombre}", h)
     destinos = [d for _, d, _ in plan.copias]
     for d in sorted({d for d in destinos if destinos.count(d) > 1}):
-        plan.bloqueos.append(f"dos archivos irían a {d.relative_to(plan.app / TRABAJO)}: renombra uno antes de migrar")
+        plan.bloqueos.append(f"dos archivos irían a {d}: renombra uno antes de migrar")
 
 
 def _ajustes(cfg: dict) -> dict[str, dict]:
@@ -141,11 +143,10 @@ def planificar(app: Path, carpeta: Path) -> Plan:
     if not lock:
         plan.bloqueos.append(f"{carpeta.name}/ tiene numeración 1.x pero no .uxyngraphar.lock: no puedo comprobar si el núcleo "
                              "fue editado; reinstala el lock con el kit 1.x o mueve tú el contenido propio")
-    trabajo = app / TRABAJO
-    if trabajo.exists() and any(trabajo.iterdir()):
-        plan.bloqueos.append(f"{TRABAJO}/ ya existe y no está vacío: muévelo o vacíalo antes de migrar")
-    if (app / base.CARPETA_PAQUETES).exists() and carpeta.name != base.CARPETA_PAQUETES:
-        plan.bloqueos.append(f"existe {base.CARPETA_PAQUETES}/ además de {carpeta.name}/: resuélvelo a mano antes de migrar")
+    if (app / base.CARPETA_RAIZ).exists() and carpeta.name != base.CARPETA_RAIZ:
+        plan.bloqueos.append(f"existe {base.CARPETA_RAIZ}/ además de {carpeta.name}/: resuélvelo a mano antes de migrar")
+    if (app / PROVISIONAL).exists():
+        plan.bloqueos.append(f"existe {PROVISIONAL}/ de una migración interrumpida: revísalo y bórralo antes de migrar")
     usados, fechas = set(), {}
     for p in sorted(carpeta.rglob("*")):
         rel = p.relative_to(carpeta).as_posix()
@@ -155,7 +156,7 @@ def planificar(app: Path, carpeta: Path) -> Plan:
         if clase is None:
             plan.bloqueos.append(f"sin clasificar (no sé dónde va): {rel}")
         elif clase == "X":
-            plan.copias.append((p, trabajo / LEGADO / rel, sha256(p)))
+            plan.copias.append((p, f"{LEGADO}/{rel}", sha256(p)))
         elif clase == "N":
             esperado = registrados.get(rel, {}).get("sha256")
             if esperado and esperado != sha256(p):
@@ -164,14 +165,14 @@ def planificar(app: Path, carpeta: Path) -> Plan:
         else:
             pid, sub, fechas[p] = _destino(rel, plan.pack)
             usados.add(pid)
-            plan.copias.append((p, trabajo / pid / sub, sha256(p)))
+            plan.copias.append((p, f"{pid}/{sub}", sha256(p)))
     _sin_choques(plan, fechas)
     for nombre in cl1x.EN_RAIZ:
         f = app / nombre
         if f.is_file() and not f.is_symlink():
             esperado = registrados.get(nombre, {}).get("sha256")
             if esperado and esperado != sha256(f):
-                plan.copias.append((f, trabajo / LEGADO / "raiz" / nombre, sha256(f)))
+                plan.copias.append((f, f"{LEGADO}/raiz/{nombre}", sha256(f)))
                 plan.avisos.append(f"{nombre} tenía cambios propios: se conserva en {TRABAJO}/{LEGADO}/raiz/{nombre}")
             plan.borrar_raiz.append(f)
     for nombre in (".gitignore", ".gitattributes"):
@@ -206,7 +207,7 @@ def _respaldar(plan: Plan, destino: Path) -> dict:
 
 
 def _revertir(plan: Plan, respaldo: Path, extras: dict) -> None:
-    for creada in (plan.app / base.CARPETA_PAQUETES, plan.app / TRABAJO, plan.carpeta):
+    for creada in (plan.app / base.CARPETA_RAIZ, plan.app / PROVISIONAL, plan.carpeta):
         limpieza.escribible(creada)
         repo.borrar_arbol(creada)
     shutil.copytree(respaldo / plan.carpeta.name, plan.carpeta, symlinks=True)
@@ -225,16 +226,23 @@ def aplicar_plan(plan: Plan) -> dict:
     respaldo.mkdir(parents=True)
     extras = _respaldar(plan, respaldo)
     hechos = []
+    provisional, trabajo = plan.app / PROVISIONAL, plan.app / TRABAJO
+
+    def comprobar(raiz: Path, momento: str) -> None:
+        malos = [d for _, d, h in plan.copias if not (raiz / d).is_file() or sha256(raiz / d) != h]
+        if malos:
+            raise RuntimeError(f"verificación sha256 {momento} fallida: {malos[:5]}")
+
     try:
-        for origen, destino, _ in plan.copias:
+        provisional.mkdir()
+        for origen, rel, _ in plan.copias:
+            destino = provisional / rel
             destino.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(origen, destino)
             limpieza.escribible(destino)
-        malos = [str(d) for _, d, h in plan.copias if not d.is_file() or sha256(d) != h]
-        if malos:
-            raise RuntimeError(f"verificación sha256 fallida: {malos[:5]}")
+        comprobar(provisional, "de la copia")
         for pid, valores in plan.ajustes.items():
-            ajustes = plan.app / TRABAJO / pid / "ajustes.json"
+            ajustes = provisional / pid / "ajustes.json"
             ajustes.parent.mkdir(parents=True, exist_ok=True)
             ajustes.write_text(json.dumps(valores, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         limpieza.escribible(plan.carpeta)
@@ -243,10 +251,10 @@ def aplicar_plan(plan: Plan) -> dict:
             limpieza.escribible(f)
             f.unlink()
         hechos += limpieza.limpiar(plan.app, plan.carpeta.name)
+        trabajo.parent.mkdir(parents=True, exist_ok=True)
+        provisional.rename(trabajo)
         repo.instalar(plan.app, plan.paquetes)
-        malos = [str(d) for _, d, h in plan.copias if not d.is_file() or sha256(d) != h]
-        if malos:
-            raise RuntimeError(f"verificación final sha256 fallida: {malos[:5]}")
+        comprobar(trabajo, "final")
     except Exception:
         _revertir(plan, respaldo, extras)
         raise

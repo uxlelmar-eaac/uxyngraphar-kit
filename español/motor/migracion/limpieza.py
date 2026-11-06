@@ -18,8 +18,8 @@ HOOKS_JSON = ".cursor/hooks.json"
 GUARDIA = "uxyngraphar-guardia-nucleo"
 CLAUDE_1X = "Este proyecto usa uxyngraphar. Lee **solo** [AGENTES.md](AGENTES.md)"
 CLAUDE_2X = ("# CLAUDE.md\n\nEste proyecto usa paquetes de gobernanza uxyngraphar 2.0. Lee [AGENTES.md](AGENTES.md) al empezar "
-             "y sigue su bloque «uxyngraphar»: ningún paquete se aplica si el pedido no lo nombra o `uxyngraphar-work/FLUJO.json` no lo indica.\n")
-DENY_2X = ("Edit(uxyngraphar/**)", "Write(uxyngraphar/**)", "Edit(uxyngraphar-work/FLUJO.json)", "Write(uxyngraphar-work/FLUJO.json)")
+             "y sigue su bloque «uxyngraphar»: ningún paquete se aplica si el pedido no lo nombra o `uxyngraphar/FLUJO.json` no lo indica.\n")
+DENY_2X = tuple(f"{accion}(uxyngraphar/{ruta})" for ruta in ("paquetes/**", "FLUJO.json", "INDICE.md") for accion in ("Edit", "Write"))
 
 
 def escribible(ruta: Path) -> None:
@@ -79,7 +79,7 @@ def _deny(app: Path, carpeta_rel: str) -> str | None:
     cfg["permissions"]["deny"] = filtrado + [r for r in DENY_2X if r not in filtrado]
     escribible(f)
     f.write_text(json.dumps(cfg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    return f".claude/settings.json: {retiradas} reglas del 1.x retiradas; protegidos uxyngraphar/** y FLUJO.json"
+    return f".claude/settings.json: {retiradas} reglas del 1.x retiradas; protegidos uxyngraphar/paquetes/**, FLUJO.json e INDICE.md"
 
 
 def _cursor(app: Path) -> list[str]:

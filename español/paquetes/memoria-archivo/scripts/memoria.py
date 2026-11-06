@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Memoria y archivo.
 
-  python3 uxyngraphar/memoria-archivo/scripts/memoria.py buscar <texto>          (solo si el pedido lo pide)
-  python3 uxyngraphar/memoria-archivo/scripts/memoria.py archivar <ruta> --humano   (copia al archivo histórico)
+  python3 uxyngraphar/paquetes/memoria-archivo/scripts/memoria.py buscar <texto>          (solo si el pedido lo pide)
+  python3 uxyngraphar/paquetes/memoria-archivo/scripts/memoria.py archivar <ruta> --humano   (copia al archivo histórico)
 """
 
 from __future__ import annotations
@@ -14,7 +14,8 @@ from datetime import date
 from pathlib import Path
 
 sys.dont_write_bytecode = True   # el paquete es inmutable: ni cachés dentro
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+AQUI = Path(__file__).resolve().parent
+sys.path[:0] = [str(AQUI), str(AQUI / "comun")]
 
 import uxyn_base as base  # noqa: E402
 
@@ -38,7 +39,7 @@ def archivar(ruta: str) -> Path:
     origen = Path(ruta).resolve()
     if not origen.is_file():
         raise FileNotFoundError(f"no existe {ruta}")
-    if raiz in origen.parents and origen.relative_to(raiz).parts[0] == base.CARPETA_PAQUETES:
+    if raiz in origen.parents and origen.relative_to(raiz).as_posix().startswith(base.CARPETA_PAQUETES + "/"):
         raise ValueError("no se archivan archivos de paquetes")
     destino = base.carpeta_trabajo(PAQUETE) / "archivo" / date.today().isoformat() / origen.name
     if destino.exists():

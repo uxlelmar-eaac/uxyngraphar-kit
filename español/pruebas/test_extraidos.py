@@ -28,10 +28,11 @@ class TestExtraidos(unittest.TestCase):
         cls.tmp.cleanup()
 
     def s(self, pid: str, script: str) -> Path:
-        return self.app / "uxyngraphar" / pid / "scripts" / script
+        scripts = self.app / "uxyngraphar" / "paquetes" / pid / "scripts"
+        return scripts / "comun" / script if (scripts / "comun" / script).is_file() else scripts / script
 
     def trabajo(self, pid: str) -> Path:
-        return self.app / "uxyngraphar-work" / pid
+        return self.app / "uxyngraphar" / "trabajo" / pid
 
     def escribir(self, ruta: Path, texto: str) -> Path:
         ruta.parent.mkdir(parents=True, exist_ok=True)

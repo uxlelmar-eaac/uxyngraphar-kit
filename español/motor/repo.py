@@ -1,4 +1,4 @@
-"""Paquetes en un repo: instalar, actualizar, quitar y verificar. Nunca toca el trabajo de `uxyngraphar-work/<id>/`
+"""Paquetes en un repo: instalar, actualizar, quitar y verificar. Nunca toca el trabajo de `uxyngraphar/trabajo/<id>/`
 salvo que se pida quitarlo explícitamente."""
 
 from __future__ import annotations
@@ -43,7 +43,7 @@ def solo_lectura(carpeta: Path) -> None:
 
 def instalacion_1x(raiz_app: Path) -> Path | None:
     """Carpeta de un pack 1.x en la raíz de la app (`uxyngraphar/` o `docs/` con lock o numeración 00–97)."""
-    for nombre in (base.CARPETA_PAQUETES, "docs"):
+    for nombre in (base.CARPETA_RAIZ, "docs"):
         c = Path(raiz_app) / nombre
         if (c / ".uxyngraphar.lock").is_file() or ((c / "00-nucleo").is_dir() and (c / "05-instrucciones").is_dir()):
             return c
@@ -61,7 +61,7 @@ def carpeta_instalada(raiz_app: Path, pid: str) -> Path:
 
 
 def _colocar(raiz_app: Path, pid: str, cat: Path | None) -> Path:
-    """Construye desde el catálogo y reemplaza `uxyngraphar/<id>/` de forma atómica (con vuelta atrás)."""
+    """Construye desde el catálogo y reemplaza `uxyngraphar/paquetes/<id>/` de forma atómica (con vuelta atrás)."""
     paquetes = Path(raiz_app) / base.CARPETA_PAQUETES
     paquetes.mkdir(parents=True, exist_ok=True)
     destino = paquetes / pid

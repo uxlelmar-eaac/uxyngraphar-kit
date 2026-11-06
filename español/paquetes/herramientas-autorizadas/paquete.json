@@ -5,25 +5,45 @@
   "titulo": "Herramientas autorizadas",
   "descripcion": "Procedimientos y scripts que una persona autorizó para ejecutarse sin instrucción nueva cuando el pedido encaja en su alcance; el agente solo puede proponer.",
   "motor": ">=2.0",
-  "activacion": ["herramientas-autorizadas", "herramientas", "autorizadas"],
-  "entrada": "ENTRADA.md",
-  "verificaciones": ["scripts/verificar.py", "scripts/verificar-herramientas.py"],
+  "activacion": [
+    "herramientas-autorizadas",
+    "herramientas",
+    "autorizadas"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py",
+    "scripts/verificar-herramientas.py"
+  ],
   "fichas": {
     "propuesta": {
       "carpeta": "propuestas",
       "prefijo": "PRO",
       "plantilla": "plantillas/propuesta.md",
       "inicial": "pending",
-      "estados": {"pending": "pendientes", "promovida": "completadas", "rejected": "canceladas"},
-      "solo_humano": ["promovida", "rejected"]
+      "estados": {
+        "pending": "pendientes",
+        "promovida": "completadas",
+        "rejected": "canceladas"
+      },
+      "solo_humano": [
+        "promovida",
+        "rejected"
+      ]
     },
     "autorizada": {
       "carpeta": "autorizadas",
       "prefijo": "HER",
       "plantilla": "plantillas/autorizada.md",
       "inicial": "authorized",
-      "status_validos": ["authorized", "revoked"],
-      "solo_humano": ["authorized", "revoked"]
+      "status_validos": [
+        "authorized",
+        "revoked"
+      ],
+      "solo_humano": [
+        "authorized",
+        "revoked"
+      ]
     }
   }
 }

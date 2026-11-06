@@ -1,7 +1,7 @@
 """Base de un paquete de gobernanza uxyngraphar 2.0: rutas, frontmatter, manifiesto e integridad.
 
-Fragmento del catálogo: se copia dentro de `scripts/` de cada paquete al construirlo. Solo librería estándar.
-El paquete vive en `<raiz-app>/uxyngraphar/<id>/` y escribe su trabajo en `<raiz-app>/uxyngraphar-work/<id>/`.
+Script común del kit: se copia en `scripts/comun/` de cada paquete al construirlo. Solo librería estándar.
+El paquete vive en `<raiz-app>/uxyngraphar/paquetes/<id>/` y escribe su trabajo en `<raiz-app>/uxyngraphar/trabajo/<id>/`.
 """
 
 from __future__ import annotations
@@ -11,10 +11,12 @@ import json
 import re
 from pathlib import Path
 
-MANIFIESTO = "uxyngraphar-paquete.json"
+MANIFIESTO = "paquete.json"
 INTEGRIDAD = "INTEGRIDAD.json"
-CARPETA_PAQUETES = "uxyngraphar"
-CARPETA_TRABAJO = "uxyngraphar-work"
+ENTRADA = "README.md"
+CARPETA_RAIZ = "uxyngraphar"
+CARPETA_PAQUETES = "uxyngraphar/paquetes"
+CARPETA_TRABAJO = "uxyngraphar/trabajo"
 FORMATO_MANIFIESTO = 1
 FORMATO_INTEGRIDAD = 1
 
@@ -38,12 +40,12 @@ def carpeta_paquete(desde: str | Path) -> Path:
 
 
 def raiz_app(paquete: Path) -> Path:
-    """Raíz de la app: el padre de la carpeta que contiene los paquetes (`uxyngraphar/`)."""
-    return paquete.resolve().parent.parent
+    """Raíz de la app: `<raiz-app>/uxyngraphar/paquetes/<id>/` → `<raiz-app>`."""
+    return paquete.resolve().parents[2]
 
 
 def carpeta_trabajo(paquete: Path, crear: bool = True) -> Path:
-    """`<raiz-app>/uxyngraphar-work/<id>/` (se crea si falta)."""
+    """`<raiz-app>/uxyngraphar/trabajo/<id>/` (se crea si falta)."""
     destino = raiz_app(paquete) / CARPETA_TRABAJO / leer_manifiesto(paquete)["id"]
     if crear:
         destino.mkdir(parents=True, exist_ok=True)
@@ -55,7 +57,7 @@ def leer_manifiesto(paquete: Path) -> dict:
 
 
 def leer_ajustes(paquete: Path) -> dict:
-    """Ajustes efectivos: valores por defecto del manifiesto + `uxyngraphar-work/<id>/ajustes.json` del proyecto."""
+    """Ajustes efectivos: valores por defecto del manifiesto + `uxyngraphar/trabajo/<id>/ajustes.json` del proyecto."""
     efectivos = dict(leer_manifiesto(paquete).get("ajustes", {}))
     archivo = carpeta_trabajo(paquete, crear=False) / "ajustes.json"
     if archivo.is_file():
@@ -174,8 +176,8 @@ def validar_manifiesto(m) -> list[str]:
         errores.append("activacion: lista no vacía de frases")
     elif m.get("id") not in m["activacion"]:
         errores.append("activacion: debe incluir el id del paquete")
-    if m.get("entrada") != "ENTRADA.md":
-        errores.append("entrada: debe ser «ENTRADA.md»")
+    if m.get("entrada") != ENTRADA:
+        errores.append(f"entrada: debe ser «{ENTRADA}»")
     verif = m.get("verificaciones")
     if not isinstance(verif, list) or not all(isinstance(v, str) and v.startswith("scripts/") and v.endswith(".py") for v in verif):
         errores.append("verificaciones: lista de «scripts/*.py»")

@@ -8,7 +8,8 @@ español/
   VERSION               versión de la herramienta
   ESPECIFICACION.md     contrato de paquetes, FLUJO.json y migración desde 1.x
   CHANGELOG.md
-  paquetes/             el catálogo: un paquete por carpeta (+ _fragmentos/, scripts comunes que se copian al construir)
+  paquetes/             el catálogo: un paquete por carpeta
+  comun/                scripts comunes que se copian en scripts/comun/ de cada paquete al construirlo
   motor/                construir, instalar, generar INDICE/AGENTES/FLUJO, CLI y panel
     migracion/          migración de instalaciones 1.x
   distribucion/         instalador de una línea y publicación de releases
@@ -20,11 +21,14 @@ español/
 ```
 mi-repo/
   AGENTES.md                       bloque generado: cuándo mirar los paquetes
-  uxyngraphar/                     paquetes instalados (inmutables) + INDICE.md
-  uxyngraphar-work/                el trabajo del proyecto
+  uxyngraphar/
+    INDICE.md                      paquetes instalados y sus frases de activación (generado)
     FLUJO.json                     cómo trabaja el agente (lo decide una persona)
-    decisiones-adr/completadas/ADR-20261105-orm.md
-    ciclo-instrucciones/instrucciones/pendientes/INS-20261105-landing.md
+    paquetes/                      paquetes instalados (inmutables)
+      secretos/  README.md  paquete.json  docs/  scripts/  scripts/comun/
+    trabajo/                       el trabajo del proyecto
+      decisiones-adr/completadas/ADR-20261105-orm.md
+      ciclo-instrucciones/instrucciones/pendientes/INS-20261105-landing.md
 ```
 
 Ningún paquete actúa solo: el agente los usa cuando el pedido dice «usa el paquete X» / «sigue el protocolo X» o cuando `FLUJO.json` lo indica.

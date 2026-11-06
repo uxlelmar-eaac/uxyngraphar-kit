@@ -102,7 +102,7 @@ async function cargarRepo() {
 }
 async function instalar() { const ids = [...document.querySelectorAll(".instalar:checked")].map((c) => c.value); if (!ids.length) return aviso("Elige al menos un paquete", true); await api("/api/repo/instalar", { ...repoActual(), ids }); aviso("Instalados: " + ids.join(", ")); cargarRepo(); }
 async function actualizar(id) { const hechos = await api("/api/repo/actualizar", { ...repoActual(), ids: id ? [id] : [] }); aviso(hechos.length ? "Actualizados: " + hechos.join(", ") : "Nada que actualizar"); cargarRepo(); }
-async function quitar(id) { if (!confirm(`¿Quitar ${id}? Su trabajo en uxyngraphar-work/${id}/ se conserva.`)) return; await api("/api/repo/quitar", { ...repoActual(), id }); aviso("Quitado " + id); cargarRepo(); }
+async function quitar(id) { if (!confirm(`¿Quitar ${id}? Su trabajo en uxyngraphar/trabajo/${id}/ se conserva.`)) return; await api("/api/repo/quitar", { ...repoActual(), id }); aviso("Quitado " + id); cargarRepo(); }
 async function verificar() { const r = await api("/api/repo/verificar", repoActual()); const s = $("salida-verificar"); s.hidden = false; s.textContent = r.map((x) => `[${x.codigo ? "FALLA" : "ok"}] ${x.paquete} · ${x.verificacion}\n${x.salida}`).join("\n\n") || "Sin verificaciones."; }
 async function guardarFlujo() {
   const flujo = { formato: 1, modo: $("modo").value, leer_por_defecto: lista($("leer").value), trabajar_con: $("trabajar").value.trim() || null, secuencia: lista($("secuencia").value), conflictos: "preguntar" };

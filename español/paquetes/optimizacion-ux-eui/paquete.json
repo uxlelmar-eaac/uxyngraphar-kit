@@ -5,9 +5,17 @@
   "titulo": "Optimización UX/UI",
   "descripcion": "Evaluación y mejora de experiencia e interfaz: heurísticas con severidad y evidencia, consistencia visual, accesibilidad y métricas antes/después; nada se implementa sin validación humana de la propuesta.",
   "motor": ">=2.0",
-  "activacion": ["optimizacion-ux-eui", "optimizacion ux", "optimizacion ui", "ux/ui"],
-  "entrada": "ENTRADA.md",
-  "verificaciones": ["scripts/verificar.py", "scripts/verificar-ux.py"],
+  "activacion": [
+    "optimizacion-ux-eui",
+    "optimizacion ux",
+    "optimizacion ui",
+    "ux/ui"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py",
+    "scripts/verificar-ux.py"
+  ],
   "fichas": {
     "evaluacion": {
       "carpeta": ".",
@@ -24,11 +32,28 @@
         "archivada": "archivadas",
         "cancelada": "canceladas"
       },
-      "solo_humano": ["aprobada", "validada"]
+      "solo_humano": [
+        "aprobada",
+        "validada"
+      ]
     }
   },
   "ajustes": {
-    "heuristicas": ["H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10", "A11Y", "UI", "RENDIMIENTO"],
+    "heuristicas": [
+      "H1",
+      "H2",
+      "H3",
+      "H4",
+      "H5",
+      "H6",
+      "H7",
+      "H8",
+      "H9",
+      "H10",
+      "A11Y",
+      "UI",
+      "RENDIMIENTO"
+    ],
     "severidad_max": 4,
     "severidad_propuesta_obligatoria": 3
   }

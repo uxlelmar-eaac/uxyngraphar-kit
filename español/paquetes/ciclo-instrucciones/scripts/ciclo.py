@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Ciclo de una instrucción.
 
-  python3 uxyngraphar/ciclo-instrucciones/scripts/ciclo.py aprobar <id> --humano   (solo una persona)
-  python3 uxyngraphar/ciclo-instrucciones/scripts/ciclo.py contexto <id> [--max-tokens N]
-  python3 uxyngraphar/ciclo-instrucciones/scripts/ciclo.py cerrar <id>
-  python3 uxyngraphar/ciclo-instrucciones/scripts/ciclo.py pendientes
+  python3 uxyngraphar/paquetes/ciclo-instrucciones/scripts/ciclo.py aprobar <id> --humano   (solo una persona)
+  python3 uxyngraphar/paquetes/ciclo-instrucciones/scripts/ciclo.py contexto <id> [--max-tokens N]
+  python3 uxyngraphar/paquetes/ciclo-instrucciones/scripts/ciclo.py cerrar <id>
+  python3 uxyngraphar/paquetes/ciclo-instrucciones/scripts/ciclo.py pendientes
 
 Códigos: 0 ok · 1 error de uso · 2 no encontrada · 3 la instrucción no está aprobada o incumple el alcance.
 """
@@ -16,7 +16,8 @@ import sys
 from pathlib import Path
 
 sys.dont_write_bytecode = True   # el paquete es inmutable: ni cachés dentro
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+AQUI = Path(__file__).resolve().parent
+sys.path[:0] = [str(AQUI), str(AQUI / "comun")]
 
 import ciclo_reglas as reglas  # noqa: E402
 import uxyn_base as base  # noqa: E402

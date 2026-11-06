@@ -132,7 +132,8 @@ class TestMigracion(unittest.TestCase):
         self.assertEqual((self.app / ".github/CODEOWNERS").read_text(encoding="utf-8"), "* @equipo\n")
         deny = json.loads((self.app / ".claude/settings.json").read_text())["permissions"]["deny"]
         self.assertIn("Read(.env)", deny)
-        self.assertIn("Edit(uxyngraphar/**)", deny)
+        self.assertIn("Edit(uxyngraphar/paquetes/**)", deny)
+        self.assertNotIn("Edit(uxyngraphar/trabajo/**)", deny)
         self.assertFalse(any("docs/" in r for r in deny))
         respaldo = Path(i["respaldo"])
         self.assertEqual(origen, huella(respaldo / "docs"))
@@ -164,10 +165,21 @@ class TestMigracion(unittest.TestCase):
         self.assertTrue(any(".uxyngraphar.lock" in b for b in i["bloqueos"]))
         self.assertTrue((self.app / "docs").is_dir())
 
-    def test_trabajo_previo_bloquea(self):
+    def test_carpeta_uxyngraphar_previa_bloquea(self):
         escribir(self.app, f"{migrar.TRABAJO}/algo.md", "x\n")
         (i,) = migrar.ejecutar(self.raiz)["instalaciones"]
-        self.assertTrue(any(migrar.TRABAJO in b for b in i["bloqueos"]))
+        self.assertTrue(any("uxyngraphar/ además de docs/" in b for b in i["bloqueos"]))
+
+    def test_pack_1x_en_uxyngraphar_se_reemplaza_en_su_sitio(self):
+        (self.app / "docs").rename(self.app / "uxyngraphar")
+        origen = huella(self.app / "uxyngraphar")
+        (i,) = migrar.ejecutar(self.raiz, aplicar=True)["instalaciones"]
+        self.assertTrue(i["aplicada"], i)
+        trabajo = self.app / migrar.TRABAJO
+        self.assertEqual(origen["95-memoria/nota.md"], migrar.sha256(trabajo / "memoria-archivo/memoria/nota.md"))
+        self.assertEqual(sorted(p.name for p in (self.app / "uxyngraphar").iterdir()), ["FLUJO.json", "INDICE.md", "paquetes", "trabajo"])
+        self.assertFalse((self.app / migrar.PROVISIONAL).exists())
+        self.assertTrue(all(e["integro"] for e in repo.estado(self.app)))
 
 
 @unittest.skipUnless((REALES / "uxyngraphar-frontend/docs/.uxyngraphar.lock").is_file(), "sin repos reales al lado del kit")

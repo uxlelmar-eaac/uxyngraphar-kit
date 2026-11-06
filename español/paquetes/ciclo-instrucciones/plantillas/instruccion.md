@@ -37,5 +37,5 @@ Una frase: qué quedará verdadero al terminar.
 - (deuda o bugs detectados que no se implementan aquí)
 
 ## Decisión (persona)
-- Aprobar: `python3 uxyngraphar/ciclo-instrucciones/scripts/ciclo.py aprobar {{id}} --humano`
-- Cancelar: `python3 uxyngraphar/ciclo-instrucciones/scripts/fichas.py estado {{id}} cancelled`
+- Aprobar: `python3 uxyngraphar/paquetes/ciclo-instrucciones/scripts/ciclo.py aprobar {{id}} --humano`
+- Cancelar: `python3 uxyngraphar/paquetes/ciclo-instrucciones/scripts/comun/fichas.py estado {{id}} cancelled`

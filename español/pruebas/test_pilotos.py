@@ -31,7 +31,8 @@ class BaseApp(unittest.TestCase):
         self.tmp.cleanup()
 
     def s(self, pid: str, script: str) -> Path:
-        return self.app / "uxyngraphar" / pid / "scripts" / script
+        scripts = self.app / "uxyngraphar" / "paquetes" / pid / "scripts"
+        return scripts / "comun" / script if (scripts / "comun" / script).is_file() else scripts / script
 
 
 class TestSecretos(BaseApp):
@@ -49,11 +50,11 @@ class TestSecretos(BaseApp):
         self.assertIn("src/aws.ts:1: clave AWS", r.stdout)
         self.assertIn(".env: archivo de secretos", r.stdout)
         self.assertNotIn(clave, r.stdout)
-        self.assertTrue(list((self.app / "uxyngraphar-work" / "secretos" / "informes").glob("escaneo-*.md")))
+        self.assertTrue(list((self.app / "uxyngraphar" / "trabajo" / "secretos" / "informes").glob("escaneo-*.md")))
 
     def test_ajustes_del_proyecto(self):
         (self.app / "src" / "aws.ts").write_text("const k = '" + "AKIA" + "ABCDEFGHIJKLMNOP';\n", encoding="utf-8")
-        (self.app / "uxyngraphar-work" / "secretos" / "ajustes.json").write_text(json.dumps({"permitir": ["src/aws.ts"]}), encoding="utf-8")
+        (self.app / "uxyngraphar" / "trabajo" / "secretos" / "ajustes.json").write_text(json.dumps({"permitir": ["src/aws.ts"]}), encoding="utf-8")
         self.assertEqual(correr(self.s("secretos", "escanear.py"), cwd=self.app).returncode, 0)
 
 
@@ -82,7 +83,7 @@ class TestCiclo(BaseApp):
         self.assertIn("   10| line10", r.stdout)
         self.assertNotIn("line13", r.stdout)
         self.assertEqual(correr(ciclo, "cerrar", fid, cwd=self.app).returncode, 0)
-        hechas = list((self.app / "uxyngraphar-work/ciclo-instrucciones/instrucciones/completadas").rglob(f"{fid}.md"))
+        hechas = list((self.app / "uxyngraphar/trabajo/ciclo-instrucciones/instrucciones/completadas").rglob(f"{fid}.md"))
         self.assertEqual(len(hechas), 1)
         texto = hechas[0].read_text(encoding="utf-8")
         self.assertIn("status: done", texto)

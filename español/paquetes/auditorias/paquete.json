@@ -5,9 +5,16 @@
   "titulo": "Auditorías",
   "descripcion": "Investigaciones con evidencia: alcance, preguntas, hallazgos con severidad y promoción de resultados a ADR, instrucciones o documentación.",
   "motor": ">=2.0",
-  "activacion": ["auditorias", "auditoria", "investigar"],
-  "entrada": "ENTRADA.md",
-  "verificaciones": ["scripts/verificar.py", "scripts/verificar-auditorias.py"],
+  "activacion": [
+    "auditorias",
+    "auditoria",
+    "investigar"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py",
+    "scripts/verificar-auditorias.py"
+  ],
   "fichas": {
     "auditoria": {
       "carpeta": ".",
@@ -23,5 +30,13 @@
       }
     }
   },
-  "ajustes": {"severidades": ["critica", "alta", "media", "baja", "info"]}
+  "ajustes": {
+    "severidades": [
+      "critica",
+      "alta",
+      "media",
+      "baja",
+      "info"
+    ]
+  }
 }

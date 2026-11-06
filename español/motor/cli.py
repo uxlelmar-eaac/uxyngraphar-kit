@@ -9,8 +9,8 @@ Catálogo (aquí se crean y editan los paquetes):
   construir <id>…|--todos --destino DIR      construye paquetes portátiles (con INTEGRIDAD.json)
 
 Repo (RUTA = raíz de la app; por defecto, el directorio actual):
-  instalar <id>… [--repo RUTA]               instala en RUTA/uxyngraphar/<id>/
-  actualizar [<id>…] [--repo RUTA] [--forzar] actualiza o repara; nunca toca uxyngraphar-work/
+  instalar <id>… [--repo RUTA]               instala en RUTA/uxyngraphar/paquetes/<id>/
+  actualizar [<id>…] [--repo RUTA] [--forzar] actualiza o repara; nunca toca uxyngraphar/trabajo/
   quitar <id> [--repo RUTA] [--con-trabajo]  quita el paquete (y su trabajo solo si se pide)
   estado [--repo RUTA]                       instalados, versiones, integridad, actualizaciones
   verificar [--repo RUTA]                    ejecuta las verificaciones de cada paquete
@@ -151,7 +151,7 @@ def main(argv: list[str] | None = None) -> int:
             print("actualizados: " + (", ".join(hechos) or "(nada que actualizar)"))
         elif a.cmd == "quitar":
             repo.quitar(Path(a.repo), a.id, a.con_trabajo)
-            print(f"quitado: {a.id}" + (" (con su trabajo)" if a.con_trabajo else " (su trabajo sigue en uxyngraphar-work/)"))
+            print(f"quitado: {a.id}" + (" (con su trabajo)" if a.con_trabajo else " (su trabajo sigue en uxyngraphar/trabajo/)"))
         elif a.cmd == "indice":
             generar.regenerar(Path(a.repo).resolve())
             print(generar.indice(Path(a.repo).resolve()))

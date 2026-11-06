@@ -1,7 +1,7 @@
 """Prueba obligatoria del catálogo: cada paquete, copiado SOLO a una app vacía, funciona igual.
 
 Por paquete: construir → copiar a <app>/uxyngraphar/<id>/ (sin motor, sin AGENTES, sin otros paquetes) → integridad,
-fichas de cada tipo y verificaciones → nada escrito fuera de <app>/uxyngraphar-work/<id>/ → solo imports locales o stdlib.
+fichas de cada tipo y verificaciones → nada escrito fuera de <app>/uxyngraphar/trabajo/<id>/ → solo imports locales o stdlib.
 """
 
 from __future__ import annotations
@@ -57,28 +57,28 @@ class TestPortabilidad(unittest.TestCase):
         app = Path(self.tmp.name) / f"app-{pid}"
         (app / "src").mkdir(parents=True)
         (app / "src" / "index.ts").write_text("export const greeting = 'hello';\n", encoding="utf-8")
-        paquete = app / "uxyngraphar" / pid
+        paquete = app / "uxyngraphar" / "paquetes" / pid
         shutil.copytree(construido, paquete)
         repo.solo_lectura(paquete)
         ajeno = Path(self.tmp.name) / "otro-cwd"
         ajeno.mkdir(exist_ok=True)
-        trabajo = app / "uxyngraphar-work" / pid
+        trabajo = app / "uxyngraphar" / "trabajo" / pid
         antes = foto(app, trabajo)
 
-        r = correr(paquete / "scripts" / "verificar-integridad.py", cwd=ajeno)
+        r = correr(paquete / "scripts" / "comun" / "verificar-integridad.py", cwd=ajeno)
         self.assertEqual(r.returncode, 0, r.stderr)
         for v in base.leer_manifiesto(paquete)["verificaciones"]:
             r = correr(paquete / v, cwd=ajeno)
             self.assertEqual(r.returncode, 0, f"{v}: {r.stdout}\n{r.stderr}")
         for tipo, d in base.leer_manifiesto(paquete).get("fichas", {}).items():
             humano = ["--humano"] if d["inicial"] in d.get("solo_humano", []) else []
-            r = correr(paquete / "scripts" / "fichas.py", "nueva", tipo, "--slug", "prueba-portabilidad", *humano, cwd=ajeno)
+            r = correr(paquete / "scripts" / "comun" / "fichas.py", "nueva", tipo, "--slug", "prueba-portabilidad", *humano, cwd=ajeno)
             self.assertEqual(r.returncode, 0, f"{tipo}: {r.stderr}")
             self.assertTrue(Path(r.stdout.strip()).resolve().is_relative_to(trabajo.resolve()), r.stdout)
-        r = correr(paquete / "scripts" / "verificar.py", cwd=ajeno)
+        r = correr(paquete / "scripts" / "comun" / "verificar.py", cwd=ajeno)
         self.assertEqual(r.returncode, 0, f"fichas recién creadas: {r.stdout}\n{r.stderr}")
 
-        self.assertEqual(foto(app, trabajo), antes, "el paquete escribió fuera de uxyngraphar-work/<id>/")
+        self.assertEqual(foto(app, trabajo), antes, "el paquete escribió fuera de uxyngraphar/trabajo/<id>/")
         self.assertTrue(base.integro(base.comprobar_integridad(paquete)), "el paquete se modificó a sí mismo")
         self.assertEqual([p for p in paquete.rglob("__pycache__")], [], "el paquete dejó cachés dentro de sí")
         self._imports_locales(paquete)

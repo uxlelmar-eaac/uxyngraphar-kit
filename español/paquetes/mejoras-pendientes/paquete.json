@@ -5,9 +5,15 @@
   "titulo": "Mejoras pendientes",
   "descripcion": "Cola de deuda técnica y bugs detectados fuera de alcance: se registran con evidencia y no se implementan hasta que una persona los apruebe.",
   "motor": ">=2.0",
-  "activacion": ["mejoras-pendientes", "mejoras", "deuda tecnica"],
-  "entrada": "ENTRADA.md",
-  "verificaciones": ["scripts/verificar.py"],
+  "activacion": [
+    "mejoras-pendientes",
+    "mejoras",
+    "deuda tecnica"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py"
+  ],
   "fichas": {
     "mejora": {
       "carpeta": ".",
@@ -22,8 +28,13 @@
         "rejected": "canceladas",
         "para-eliminar": "para-eliminar"
       },
-      "solo_humano": ["approved", "rejected"]
+      "solo_humano": [
+        "approved",
+        "rejected"
+      ]
     }
   },
-  "ajustes": {"max_por_tarea": 3}
+  "ajustes": {
+    "max_por_tarea": 3
+  }
 }

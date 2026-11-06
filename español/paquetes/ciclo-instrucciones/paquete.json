@@ -5,9 +5,18 @@
   "titulo": "Ciclo de instrucciones",
   "descripcion": "Ningún cambio sin instrucción aprobada por una persona: preguntas, instrucción con alcance y anclas de código, contexto mínimo, implementación acotada y cierre.",
   "motor": ">=2.0",
-  "activacion": ["ciclo-instrucciones", "instrucciones", "uxyngraphar", "uxyn", "uxynar"],
-  "entrada": "ENTRADA.md",
-  "verificaciones": ["scripts/verificar.py", "scripts/verificar-ciclo.py"],
+  "activacion": [
+    "ciclo-instrucciones",
+    "instrucciones",
+    "uxyngraphar",
+    "uxyn",
+    "uxynar"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py",
+    "scripts/verificar-ciclo.py"
+  ],
   "fichas": {
     "instruccion": {
       "carpeta": "instrucciones",
@@ -22,14 +31,20 @@
         "cancelled": "canceladas",
         "para-eliminar": "para-eliminar"
       },
-      "solo_humano": ["approved"]
+      "solo_humano": [
+        "approved"
+      ]
     },
     "pregunta": {
       "carpeta": "preguntas",
       "prefijo": "PRE",
       "plantilla": "plantillas/pregunta.md",
       "inicial": "en-curso",
-      "estados": {"en-curso": "en-curso", "completada": "completadas", "cancelada": "canceladas"}
+      "estados": {
+        "en-curso": "en-curso",
+        "completada": "completadas",
+        "cancelada": "canceladas"
+      }
     }
   },
   "ajustes": {

@@ -48,21 +48,22 @@ class TestCatalogo(Base):
 
     def test_construir_es_portatil_e_integro(self):
         salida = catalogo.construir("demo", Path(self.tmp.name) / "dist", self.cat)
-        self.assertTrue((salida / "scripts" / "uxyn_base.py").is_file())
+        self.assertTrue((salida / "scripts" / "comun" / "uxyn_base.py").is_file())
+        self.assertFalse((salida / "scripts" / "uxyn_base.py").exists())
         self.assertTrue(base.integro(base.comprobar_integridad(salida)))
 
     def test_editar_y_versionar(self):
-        self.assertEqual(catalogo.guardar_archivo("demo", "guias/nueva.md", "# Guía\n", self.cat), [])
-        self.assertIn("guias/nueva.md", catalogo.archivos("demo", self.cat))
+        self.assertEqual(catalogo.guardar_archivo("demo", "docs/nueva.md", "# Guía\n", self.cat), [])
+        self.assertIn("docs/nueva.md", catalogo.archivos("demo", self.cat))
         self.assertEqual(catalogo.versionar("demo", "menor", self.cat), "0.2.0")
         with self.assertRaises(ValueError):
-            catalogo.leer_archivo("demo", "../otro/REGLAS.md", self.cat)
+            catalogo.leer_archivo("demo", "../otro/README.md", self.cat)
         malo = json.dumps({"id": "demo"})
         self.assertTrue(catalogo.guardar_archivo("demo", base.MANIFIESTO, malo, self.cat)[0].startswith("no guardado"))
         self.assertEqual(base.leer_manifiesto(self.cat / "demo")["version"], "0.2.0")
 
-    def test_fragmento_no_puede_sobrescribirse(self):
-        catalogo.guardar_archivo("demo", "scripts/uxyn_base.py", "x = 1\n", self.cat)
+    def test_scripts_comunes_no_van_en_el_catalogo(self):
+        catalogo.guardar_archivo("demo", "scripts/comun/uxyn_base.py", "x = 1\n", self.cat)
         with self.assertRaises(ValueError):
             catalogo.construir("demo", Path(self.tmp.name) / "dist", self.cat)
 
@@ -71,10 +72,10 @@ class TestRepo(Base):
     def test_instalar_genera_indice_agentes_y_flujo(self):
         (self.repo / "AGENTES.md").write_text("# Mis reglas\n\nNo tocar.\n", encoding="utf-8")
         repo.instalar(self.repo, ["demo"], self.cat)
-        paquete = self.repo / "uxyngraphar" / "demo"
+        paquete = self.repo / "uxyngraphar" / "paquetes" / "demo"
         self.assertTrue((paquete / base.INTEGRIDAD).is_file())
-        self.assertFalse(os.access(paquete / "REGLAS.md", os.W_OK))
-        self.assertTrue((self.repo / "uxyngraphar-work" / "demo").is_dir())
+        self.assertFalse(os.access(paquete / "README.md", os.W_OK))
+        self.assertTrue((self.repo / "uxyngraphar" / "trabajo" / "demo").is_dir())
         self.assertIn("`demo`", (self.repo / "uxyngraphar" / "INDICE.md").read_text(encoding="utf-8"))
         agentes = (self.repo / "AGENTES.md").read_text(encoding="utf-8")
         self.assertTrue(agentes.startswith("# Mis reglas\n\nNo tocar.\n"))
@@ -86,22 +87,22 @@ class TestRepo(Base):
 
     def test_actualizar_no_toca_el_trabajo(self):
         repo.instalar(self.repo, ["demo"], self.cat)
-        trabajo = self.repo / "uxyngraphar-work" / "demo"
+        trabajo = self.repo / "uxyngraphar" / "trabajo" / "demo"
         (trabajo / "fichas").mkdir()
         (trabajo / "fichas" / "mia.md").write_text("---\nid: x\nstatus: abierta\n---\n", encoding="utf-8")
         (trabajo / "ajustes.json").write_text('{"limite": 3}', encoding="utf-8")
-        antes = huella(self.repo / "uxyngraphar-work")
+        antes = huella(self.repo / "uxyngraphar" / "trabajo")
         self.assertEqual(repo.actualizar(self.repo, None, self.cat), [])
-        catalogo.guardar_archivo("demo", "REGLAS.md", "# Reglas v2\n", self.cat)
+        catalogo.guardar_archivo("demo", "README.md", "# Demo v2\n", self.cat)
         catalogo.versionar("demo", "menor", self.cat)
         self.assertTrue(repo.estado(self.repo, self.cat)[0]["actualizable"])
         self.assertEqual(repo.actualizar(self.repo, None, self.cat), ["demo"])
-        self.assertEqual(base.leer_manifiesto(self.repo / "uxyngraphar" / "demo")["version"], "0.2.0")
-        self.assertEqual(huella(self.repo / "uxyngraphar-work"), antes)
+        self.assertEqual(base.leer_manifiesto(self.repo / "uxyngraphar" / "paquetes" / "demo")["version"], "0.2.0")
+        self.assertEqual(huella(self.repo / "uxyngraphar" / "trabajo"), antes)
 
     def test_alterado_se_detecta_y_se_repara(self):
         repo.instalar(self.repo, ["demo"], self.cat)
-        reglas = self.repo / "uxyngraphar" / "demo" / "REGLAS.md"
+        reglas = self.repo / "uxyngraphar" / "paquetes" / "demo" / "README.md"
         reglas.chmod(0o644)
         reglas.write_text("# hackeado\n", encoding="utf-8")
         self.assertFalse(repo.estado(self.repo, self.cat)[0]["integro"])
@@ -112,12 +113,12 @@ class TestRepo(Base):
         repo.instalar(self.repo, ["demo", "otro"], self.cat)
         self.assertEqual(generar.guardar_flujo(self.repo, {**generar.leer_flujo(self.repo), "modo": "trabajar_con", "trabajar_con": "demo"}), [])
         repo.quitar(self.repo, "demo")
-        self.assertFalse((self.repo / "uxyngraphar" / "demo").exists())
-        self.assertTrue((self.repo / "uxyngraphar-work" / "demo").is_dir())
+        self.assertFalse((self.repo / "uxyngraphar" / "paquetes" / "demo").exists())
+        self.assertTrue((self.repo / "uxyngraphar" / "trabajo" / "demo").is_dir())
         flujo = generar.leer_flujo(self.repo)
         self.assertEqual((flujo["modo"], flujo["trabajar_con"]), ("manual", None))
         repo.quitar(self.repo, "otro", con_trabajo=True)
-        self.assertFalse((self.repo / "uxyngraphar-work" / "otro").exists())
+        self.assertFalse((self.repo / "uxyngraphar" / "trabajo" / "otro").exists())
 
     def test_flujo_humano_no_se_sobrescribe(self):
         repo.instalar(self.repo, ["demo"], self.cat)

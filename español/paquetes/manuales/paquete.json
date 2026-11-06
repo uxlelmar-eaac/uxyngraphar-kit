@@ -5,16 +5,26 @@
   "titulo": "Manuales operativos",
   "descripcion": "Manuales vivos para operar el sistema (despliegue, incidentes, configuración): pasos verificables que se actualizan con cada cambio que los afecta.",
   "motor": ">=2.0",
-  "activacion": ["manuales", "manual", "runbook"],
-  "entrada": "ENTRADA.md",
-  "verificaciones": ["scripts/verificar.py"],
+  "activacion": [
+    "manuales",
+    "manual",
+    "runbook"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py"
+  ],
   "fichas": {
     "manual": {
       "carpeta": ".",
       "prefijo": "MAN",
       "plantilla": "plantillas/manual.md",
       "inicial": "borrador",
-      "status_validos": ["borrador", "vigente", "obsoleto"]
+      "status_validos": [
+        "borrador",
+        "vigente",
+        "obsoleto"
+      ]
     }
   }
 }

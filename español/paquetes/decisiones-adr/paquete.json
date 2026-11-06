@@ -5,9 +5,15 @@
   "titulo": "Decisiones de arquitectura (ADR)",
   "descripcion": "Registra las decisiones técnicas que condicionan el sistema: contexto, opciones, decisión y consecuencias; las acepta o rechaza una persona.",
   "motor": ">=2.0",
-  "activacion": ["decisiones-adr", "adr", "decisiones"],
-  "entrada": "ENTRADA.md",
-  "verificaciones": ["scripts/verificar.py"],
+  "activacion": [
+    "decisiones-adr",
+    "adr",
+    "decisiones"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py"
+  ],
   "fichas": {
     "adr": {
       "carpeta": ".",
@@ -22,7 +28,10 @@
         "obsoleta": "archivadas",
         "rechazada": "canceladas"
       },
-      "solo_humano": ["aceptada", "rechazada"]
+      "solo_humano": [
+        "aceptada",
+        "rechazada"
+      ]
     }
   }
 }

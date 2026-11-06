@@ -15,22 +15,22 @@ ARCHIVOS_AGENTE = ("AGENTES.md", "AGENTS.md")
 BLOQUE = f"""{INICIO}
 ## uxyngraphar — paquetes de gobernanza
 
-Este proyecto tiene paquetes de gobernanza en `uxyngraphar/` (índice: `uxyngraphar/INDICE.md`). La persona decide cómo trabajas en `uxyngraphar-work/FLUJO.json`. Rutas relativas a la carpeta de este archivo.
+Este proyecto tiene paquetes de gobernanza en `uxyngraphar/` (índice: `uxyngraphar/INDICE.md`). La persona decide cómo trabajas en `uxyngraphar/FLUJO.json`. Rutas relativas a la carpeta de este archivo.
 
 1. **No leas ni apliques ningún paquete** salvo que el pedido diga «usa el paquete <frase>» o «sigue el protocolo <frase>» (frases en `INDICE.md`) o que `FLUJO.json` lo indique. Lee `FLUJO.json` al empezar cada pedido:
    - `manual`: solo paquetes nombrados en el pedido.
-   - `leer_por_defecto`: lee el `ENTRADA.md` de esos paquetes en cada pedido; aplica solo los nombrados.
+   - `leer_por_defecto`: lee el `README.md` de esos paquetes en cada pedido; aplica solo los nombrados.
    - `trabajar_con`: aplica ese paquete si el pedido no nombra otro.
    - `secuencia`: recorre esos paquetes en orden.
-2. **Al activar un paquete `<id>`:** ejecuta `python3 uxyngraphar/<id>/scripts/verificar-integridad.py`; si falla, detente y avisa. Luego lee `uxyngraphar/<id>/ENTRADA.md` y `REGLAS.md`, trabaja y ejecuta sus `verificaciones` antes de terminar.
-3. **Escribe solo en `uxyngraphar-work/<id>/`** de los paquetes activos. Nunca crees, edites ni borres nada en `uxyngraphar/` ni en `uxyngraphar-work/FLUJO.json`: son de la persona y del panel.
+2. **Al activar un paquete `<id>`:** ejecuta `python3 uxyngraphar/paquetes/<id>/scripts/comun/verificar-integridad.py`; si falla, detente y avisa. Luego lee `uxyngraphar/paquetes/<id>/README.md` (pasos y reglas), trabaja y ejecuta sus `verificaciones` antes de terminar.
+3. **Escribe solo en `uxyngraphar/trabajo/<id>/`** de los paquetes activos. Nunca crees, edites ni borres nada en `uxyngraphar/paquetes/`, `uxyngraphar/FLUJO.json` ni `uxyngraphar/INDICE.md`: son de la persona y del panel.
 4. **Si dos paquetes activos se contradicen, detente y pregunta.**
 {FIN}
 """
 
 
 def instalados(raiz_app: Path) -> list[dict]:
-    """Manifiestos de los paquetes presentes en `<raiz>/uxyngraphar/` (ignora carpetas temporales y no-paquetes)."""
+    """Manifiestos de los paquetes presentes en `<raiz>/uxyngraphar/paquetes/` (ignora carpetas temporales y no-paquetes)."""
     carpeta = Path(raiz_app) / base.CARPETA_PAQUETES
     if not carpeta.is_dir():
         return []
@@ -48,7 +48,7 @@ def indice(raiz_app: Path) -> Path:
     paquetes = instalados(raiz_app)
     lineas = ["# uxyngraphar — paquetes instalados", "",
               "Generado por el motor; no editar. Cada paquete se activa con «usa el paquete <frase>» o «sigue el protocolo <frase>».",
-              "Trabajo de cada paquete: `uxyngraphar-work/<id>/`. Flujo del agente: `uxyngraphar-work/FLUJO.json`.", ""]
+              "Paquetes: `paquetes/<id>/`. Trabajo de cada paquete: `trabajo/<id>/`. Flujo del agente: `FLUJO.json`.", ""]
     if not paquetes:
         lineas.append("(sin paquetes instalados)")
     else:
@@ -56,8 +56,8 @@ def indice(raiz_app: Path) -> Path:
         for m in paquetes:
             frases = ", ".join(f"«{f}»" for f in m.get("activacion", []))
             lineas.append(f"| {m.get('titulo', m['id'])} (`{m['id']}`) | {m.get('version', '?')} | {frases} | "
-                          f"{m.get('descripcion', '')} | `uxyngraphar/{m['id']}/ENTRADA.md` |")
-    destino = Path(raiz_app) / base.CARPETA_PAQUETES / "INDICE.md"
+                          f"{m.get('descripcion', '')} | `paquetes/{m['id']}/{base.ENTRADA}` |")
+    destino = Path(raiz_app) / base.CARPETA_RAIZ / esp.INDICE
     destino.parent.mkdir(parents=True, exist_ok=True)
     destino.write_text("\n".join(lineas) + "\n", encoding="utf-8")
     return destino
@@ -97,7 +97,7 @@ def agentes(raiz_app: Path) -> list[Path]:
 
 
 def ruta_flujo(raiz_app: Path) -> Path:
-    return Path(raiz_app) / base.CARPETA_TRABAJO / esp.FLUJO
+    return Path(raiz_app) / base.CARPETA_RAIZ / esp.FLUJO
 
 
 def flujo_inicial(raiz_app: Path) -> Path:

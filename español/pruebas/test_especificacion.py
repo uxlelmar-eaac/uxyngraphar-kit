@@ -15,7 +15,7 @@ base = esp.base
 
 MANIFIESTO_VALIDO = {
     "manifiesto_formato": 1, "id": "demo", "version": "1.0.0", "titulo": "Demo", "descripcion": "Paquete de prueba",
-    "motor": ">=2.0", "activacion": ["demo"], "entrada": "ENTRADA.md", "verificaciones": ["scripts/verificar.py"],
+    "motor": ">=2.0", "activacion": ["demo"], "entrada": "README.md", "verificaciones": ["scripts/verificar.py"],
     "fichas": {"nota": {"carpeta": "notas", "prefijo": "NOT", "plantilla": "plantillas/nota.md", "inicial": "abierta",
                         "estados": {"abierta": "pendientes", "cerrada": "completadas"}, "solo_humano": ["cerrada"]}},
 }
@@ -27,8 +27,9 @@ def crear_paquete(raiz: Path, manifiesto: dict | None = None) -> Path:
     (p / "plantillas").mkdir(parents=True)
     (p / "scripts").mkdir()
     (p / base.MANIFIESTO).write_text(json.dumps(m), encoding="utf-8")
-    (p / "ENTRADA.md").write_text("# Entrada\n", encoding="utf-8")
-    (p / "REGLAS.md").write_text("# Reglas\n", encoding="utf-8")
+    (p / "docs").mkdir()
+    (p / "README.md").write_text("# Demo\n\n## Reglas\n", encoding="utf-8")
+    (p / "docs" / "guia.md").write_text("# Guía\n", encoding="utf-8")
     (p / "plantillas" / "nota.md").write_text("---\nid: {{id}}\nstatus: {{status}}\n---\n# {{titulo}}\n", encoding="utf-8")
     (p / "scripts" / "verificar.py").write_text("print('ok')\n", encoding="utf-8")
     return p
@@ -82,12 +83,12 @@ class TestPaqueteEIntegridad(unittest.TestCase):
         (p / base.INTEGRIDAD).write_text(json.dumps(base.calcular_integridad(p)), encoding="utf-8")
         self.assertTrue(base.integro(base.comprobar_integridad(p)))
         self.assertEqual(esp.validar_paquete(p, construido=True), [])
-        (p / "REGLAS.md").write_text("# Reglas cambiadas\n", encoding="utf-8")
-        (p / "ENTRADA.md").unlink()
+        (p / "docs" / "guia.md").write_text("# Guía cambiada\n", encoding="utf-8")
+        (p / "README.md").unlink()
         (p / "extra.md").write_text("x", encoding="utf-8")
         informe = base.comprobar_integridad(p)
-        self.assertEqual(informe["alterados"], ["REGLAS.md"])
-        self.assertEqual(informe["faltantes"], ["ENTRADA.md"])
+        self.assertEqual(informe["alterados"], ["docs/guia.md"])
+        self.assertEqual(informe["faltantes"], ["README.md"])
         self.assertEqual(informe["añadidos"], ["extra.md"])
 
     def test_integridad_en_catalogo_es_error(self):
