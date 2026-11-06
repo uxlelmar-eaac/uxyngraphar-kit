@@ -1,0 +1,54 @@
+{
+  "manifiesto_formato": 1,
+  "id": "evolucion-del-sistema",
+  "version": "1.0.0",
+  "titulo": "Evolución del sistema de gobernanza",
+  "descripcion": "Buzón de mejoras del propio sistema (paquetes, plantillas, procesos), no del producto: fichas EVO con evidencia, matriz de cobertura y exportación para llevarlas al catálogo.",
+  "motor": ">=2.0",
+  "activacion": [
+    "evolucion-del-sistema",
+    "evolucion",
+    "mejorar el sistema",
+    "cobertura del sistema"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py",
+    "scripts/verificar-evolucion.py"
+  ],
+  "fichas": {
+    "evo": {
+      "carpeta": ".",
+      "prefijo": "EVO",
+      "plantilla": "plantillas/evo.md",
+      "inicial": "pending",
+      "estados": {
+        "pending": "pendientes",
+        "approved": "en-progreso",
+        "done": "completadas",
+        "archivada": "archivadas",
+        "rejected": "canceladas",
+        "para-eliminar": "para-eliminar"
+      },
+      "solo_humano": [
+        "approved",
+        "rejected",
+        "done"
+      ],
+      "espera_humano": [
+        "pending",
+        "approved"
+      ]
+    }
+  },
+  "ajustes": {
+    "max_por_tarea": 2,
+    "tipos": [
+      "cobertura",
+      "proceso",
+      "plantilla",
+      "paquete-nuevo",
+      "herramienta"
+    ]
+  }
+}

@@ -1,4 +1,4 @@
-"""Pruebas funcionales de los paquetes nuevos (no extraídos del 1.x): landing-page-bento y optimizacion-ux-eui."""
+"""Pruebas funcionales de los paquetes nuevos (no extraídos del 1.x): landing-bento y experiencia-de-usuario."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ class TestNuevos(unittest.TestCase):
         cls.tmp = tempfile.TemporaryDirectory()
         cls.app = Path(cls.tmp.name) / "app"
         cls.app.mkdir()
-        repo.instalar(cls.app, ["landing-page-bento", "optimizacion-ux-eui"])
+        repo.instalar(cls.app, ["landing-bento", "experiencia-de-usuario"])
 
     @classmethod
     def tearDownClass(cls):
@@ -59,7 +59,7 @@ class TestNuevos(unittest.TestCase):
         ruta.write_text(f"{cabecera}## {titulo_tabla}\n{bloque}\n{filas}\n{despues}", encoding="utf-8")
 
     def test_bento_mosaico_y_checklist(self):
-        pid = "landing-page-bento"
+        pid = "landing-bento"
         ficha = self.nueva(pid, "landing", "inicio")
         r = correr(self.s(pid, "verificar-bento.py"), cwd=self.app)
         self.assertEqual(r.returncode, 0, r.stderr)
@@ -90,7 +90,7 @@ class TestNuevos(unittest.TestCase):
         self.assertEqual(correr(self.s(pid, "verificar.py"), cwd=self.app).returncode, 0)
 
     def test_ux_aprobacion_y_metricas(self):
-        pid = "optimizacion-ux-eui"
+        pid = "experiencia-de-usuario"
         ficha = self.nueva(pid, "evaluacion", "alta-usuario")
         self.assertEqual(correr(self.s(pid, "verificar-ux.py"), cwd=self.app).returncode, 0)
         self.rellenar(ficha, "Problemas", PROBLEMAS)
@@ -115,7 +115,7 @@ class TestNuevos(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
 
     def test_ux_severidad_alta_sin_propuesta(self):
-        pid = "optimizacion-ux-eui"
+        pid = "experiencia-de-usuario"
         ficha = self.nueva(pid, "evaluacion", "checkout")
         self.rellenar(ficha, "Problemas", "| 1 | H5 | 4 | Se puede pagar dos veces | `src/pay.ts:12` | - | |\n| 2 | H99 | 9 | x | - | - | |\n")
         r = correr(self.s(pid, "verificar-ux.py"), cwd=self.app)

@@ -1,0 +1,50 @@
+{
+  "manifiesto_formato": 1,
+  "id": "documentacion-espejo",
+  "version": "1.0.0",
+  "titulo": "Espejo del sistema",
+  "descripcion": "Documentación espejo del código: una ficha por archivo o carpeta relevante (rol, responsabilidades, interacciones), con cobertura medible y detección de espejos huérfanos.",
+  "motor": ">=2.0",
+  "activacion": [
+    "documentacion-espejo",
+    "espejo",
+    "sistema integral"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py",
+    "scripts/verificar-espejo.py"
+  ],
+  "ajustes": {
+    "raices": [
+      "src"
+    ],
+    "extensiones": [
+      ".ts",
+      ".tsx",
+      ".js",
+      ".jsx",
+      ".mjs",
+      ".vue",
+      ".svelte",
+      ".py",
+      ".go",
+      ".rs",
+      ".java",
+      ".kt",
+      ".rb",
+      ".php",
+      ".cs"
+    ],
+    "excluir": [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/*.spec.*",
+      "**/*.test.*",
+      "**/__tests__/**",
+      "**/generated/**"
+    ],
+    "cobertura_minima": 0
+  }
+}

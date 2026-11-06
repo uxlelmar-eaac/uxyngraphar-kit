@@ -62,8 +62,9 @@ def validar_paquete(carpeta: Path, construido: bool = False) -> list[str]:
         if not (carpeta / v).is_file():
             errores.append(f"verificación inexistente: {v}")
     for tipo, d in m.get("fichas", {}).items():
-        if not (carpeta / d["plantilla"]).is_file():
-            errores.append(f"fichas.{tipo}.plantilla inexistente: {d['plantilla']}")
+        for donde, plantilla in [("plantilla", d["plantilla"]), *((f"variantes.{k}", v) for k, v in d.get("variantes", {}).items())]:
+            if not (carpeta / plantilla).is_file():
+                errores.append(f"fichas.{tipo}.{donde} inexistente: {plantilla}")
     for rel in base.archivos_del_paquete(carpeta):
         if not rel.isascii() or " " in rel:
             errores.append(f"nombre de archivo no ASCII o con espacios: {rel}")

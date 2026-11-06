@@ -1,0 +1,25 @@
+{
+  "manifiesto_formato": 1,
+  "id": "revision-humana",
+  "version": "1.0.0",
+  "titulo": "Revisión humana de pendientes",
+  "descripcion": "Reúne en una sola tabla las fichas de todos los paquetes instalados que esperan una decisión de una persona (aprobar, rechazar, activar…), con su antigüedad, y aplica de una vez lo que la persona decida.",
+  "motor": ">=2.0",
+  "activacion": [
+    "revision-humana",
+    "revision de pendientes",
+    "decisiones pendientes",
+    "revisar pendientes"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py",
+    "scripts/verificar-revision.py"
+  ],
+  "protegidos": [
+    "REVISION.md"
+  ],
+  "ajustes": {
+    "dias_aviso": 14
+  }
+}

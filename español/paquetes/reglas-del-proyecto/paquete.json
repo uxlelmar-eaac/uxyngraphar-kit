@@ -1,0 +1,87 @@
+{
+  "manifiesto_formato": 1,
+  "id": "reglas-del-proyecto",
+  "version": "1.0.0",
+  "titulo": "Reglas del proyecto y ajustes locales",
+  "descripcion": "Reglas propias del equipo para su código (comprobables sin IA con expresiones regulares), sus excepciones aprobadas por una persona y los ajustes locales que adaptan un paquete inmutable a este proyecto.",
+  "motor": ">=2.0",
+  "activacion": [
+    "reglas-del-proyecto",
+    "reglas del proyecto",
+    "reglas propias",
+    "ajustes locales"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py",
+    "scripts/verificar-reglas.py"
+  ],
+  "al_activar_paquete": "scripts/reglas.py ajustes {id}",
+  "fichas": {
+    "regla": {
+      "carpeta": "reglas",
+      "prefijo": "RP",
+      "plantilla": "plantillas/regla.md",
+      "inicial": "propuesta",
+      "status_validos": [
+        "propuesta",
+        "activa",
+        "retirada"
+      ],
+      "solo_humano": [
+        "activa",
+        "retirada"
+      ]
+    },
+    "excepcion": {
+      "carpeta": "excepciones",
+      "prefijo": "EX",
+      "plantilla": "plantillas/excepcion.md",
+      "inicial": "pendiente",
+      "status_validos": [
+        "pendiente",
+        "aprobada",
+        "rechazada"
+      ],
+      "solo_humano": [
+        "aprobada",
+        "rechazada"
+      ]
+    },
+    "ajuste": {
+      "carpeta": "ajustes-locales",
+      "prefijo": "AJ",
+      "plantilla": "plantillas/ajuste.md",
+      "inicial": "propuesto",
+      "status_validos": [
+        "propuesto",
+        "activo",
+        "retirado"
+      ],
+      "solo_humano": [
+        "activo",
+        "retirado"
+      ],
+      "comandos": {
+        "activo": "scripts/reglas.py aprobar-ajuste {id} --humano"
+      }
+    }
+  },
+  "ajustes": {
+    "raices": [
+      "."
+    ],
+    "excluir": [
+      ".git",
+      "node_modules",
+      "dist",
+      "build",
+      ".next",
+      "coverage",
+      "vendor",
+      ".venv",
+      "uxyngraphar"
+    ],
+    "max_kb": 512
+  }
+}

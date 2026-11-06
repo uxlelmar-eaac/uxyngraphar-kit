@@ -1,0 +1,57 @@
+{
+  "manifiesto_formato": 1,
+  "id": "calidad-de-codigo",
+  "version": "1.0.0",
+  "titulo": "Calidad de código",
+  "descripcion": "Archivos de máximo 350 líneas con división relacional, nombres autoexplicativos, código y commits en inglés ASCII con Conventional Commits.",
+  "motor": ">=2.0",
+  "activacion": [
+    "calidad-de-codigo",
+    "calidad",
+    "limite de lineas"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py",
+    "scripts/revisar.py"
+  ],
+  "protegidos": [
+    "GLOSARIO.md"
+  ],
+  "ajustes": {
+    "raices": [
+      "src"
+    ],
+    "extensiones": [
+      ".ts",
+      ".tsx",
+      ".js",
+      ".jsx",
+      ".mjs",
+      ".cjs",
+      ".vue",
+      ".svelte",
+      ".py",
+      ".go",
+      ".rs",
+      ".java",
+      ".kt",
+      ".rb",
+      ".php",
+      ".cs"
+    ],
+    "excluir": [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/generated/**",
+      "**/__generated__/**",
+      "*.generated.*",
+      "*.min.js",
+      "**/migrations/**"
+    ],
+    "limite_lineas": 350,
+    "exenciones_lineas": [],
+    "commits_revisar": 20
+  }
+}

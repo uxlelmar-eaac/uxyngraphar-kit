@@ -1,0 +1,40 @@
+{
+  "manifiesto_formato": 1,
+  "id": "deuda-y-mejoras",
+  "version": "1.0.0",
+  "titulo": "Mejoras pendientes",
+  "descripcion": "Cola de deuda técnica y bugs detectados fuera de alcance: se registran con evidencia y no se implementan hasta que una persona los apruebe.",
+  "motor": ">=2.0",
+  "activacion": [
+    "deuda-y-mejoras",
+    "mejoras",
+    "deuda tecnica"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py"
+  ],
+  "fichas": {
+    "mejora": {
+      "carpeta": ".",
+      "prefijo": "MEJ",
+      "plantilla": "plantillas/mejora.md",
+      "inicial": "pending",
+      "estados": {
+        "pending": "pendientes",
+        "approved": "en-progreso",
+        "done": "completadas",
+        "archived": "archivadas",
+        "rejected": "canceladas",
+        "para-eliminar": "para-eliminar"
+      },
+      "solo_humano": [
+        "approved",
+        "rejected"
+      ]
+    }
+  },
+  "ajustes": {
+    "max_por_tarea": 3
+  }
+}

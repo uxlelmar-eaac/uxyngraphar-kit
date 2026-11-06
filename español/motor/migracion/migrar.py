@@ -32,23 +32,48 @@ RESPALDOS = ".uxyngraphar-respaldos"
 PROVISIONAL = ".uxyngraphar-migrando"
 SALTAR = {"node_modules", ".git", RESPALDOS, PROVISIONAL, "dist", "build", ".next", "vendor", ".venv", "venv", "coverage"}
 DESTINOS = (
-    ("03-preguntas/", "ciclo-instrucciones", "preguntas/"),
-    ("05-instrucciones/", "ciclo-instrucciones", "instrucciones/"),
+    ("03-preguntas/", "instrucciones-aprobadas", "preguntas/"),
+    ("05-instrucciones/", "instrucciones-aprobadas", "instrucciones/"),
     ("15-rutas/", "<rutas>", ""),
-    ("20-decisiones/", "decisiones-adr", ""),
-    ("25-areas/", "areas-modulos", ""),
-    ("30-manuales/", "manuales", ""),
+    ("20-decisiones/", "decisiones-de-arquitectura", ""),
+    ("25-areas/", "mapa-de-modulos", ""),
+    ("30-manuales/", "manuales-operativos", ""),
     ("35-herramientas/autorizadas/", "herramientas-autorizadas", "autorizadas/"),
     ("35-herramientas/propuestas/", "herramientas-autorizadas", "propuestas/"),
-    ("40-auditorias/", "auditorias", ""),
-    ("45-mejoras-propuestas/", "mejoras-pendientes", ""),
-    ("50-sistema-integral/", "espejo-sistema", ""),
-    ("90-archivo/", "memoria-archivo", "archivo/"),
-    ("95-memoria/", "memoria-archivo", "memoria/"),
+    ("40-auditorias/", "auditorias-tecnicas", ""),
+    ("45-mejoras-propuestas/", "deuda-y-mejoras", ""),
+    ("50-sistema-integral/", "documentacion-espejo", ""),
+    ("46-evolucion-documentacion/matriz-cobertura-proyectos.md", "evolucion-del-sistema", "MATRIZ-COBERTURA.md"),
+    ("46-evolucion-documentacion/", "evolucion-del-sistema", ""),
+    ("90-archivo/", "memoria-e-historial", "archivo/"),
+    ("95-memoria/", "memoria-e-historial", "memoria/"),
+    ("96-reglas-proyecto/", "reglas-del-proyecto", "reglas/"),
+    ("97-ajustes-locales/", "reglas-del-proyecto", "ajustes-locales/"),
+    ("00-nucleo/arquitectura.md", "arquitectura-por-capas", "ARQUITECTURA.md"),
+    ("00-nucleo/restricciones.md", "arquitectura-por-capas", "RESTRICCIONES.md"),
+    ("00-nucleo/registro-ids-compartidos.md", "contratos-entre-repos", "REGISTRO-1X.md"),
+    ("00-nucleo/glosario-dominio.md", "calidad-de-codigo", "GLOSARIO.md"),
+    ("ESTADO.md", "instrucciones-aprobadas", "ESTADO.md"),
 )
 ESTADO_1X = re.compile(r"^0[1-9]-(?:listas-)?([a-z-]+)/(\d{4}-\d{2}-\d{2})/(.+)$")
-COMUNES = ["ciclo-instrucciones", "calidad-codigo", "secretos", "decisiones-adr", "areas-modulos", "espejo-sistema",
-           "herramientas-autorizadas", "auditorias", "mejoras-pendientes", "manuales", "memoria-archivo"]
+# Núcleo 1.x que el proyecto rellenaba: si difiere del lock es contenido propio y va a su paquete; si no, se omite.
+NUCLEO_PROPIO = {
+    "50-sistema-integral/mapa-capas.md": "documentacion-espejo/mapa-capas.md",
+    "50-sistema-integral/vision-espejo.md": "documentacion-espejo/vision-espejo.md",
+    "00-nucleo/plantilla-modulo.md": "arquitectura-por-capas/PLANTILLA-MODULO.md",
+}
+# status 1.x → status 2.0 por paquete; se aplica tras copiar (el respaldo guarda el original).
+EQUIVALENCIAS_1X = {
+    "instrucciones-aprobadas": {"draft": "awaiting_approval", "executing": "approved", "archivada": "archived"},
+    "deuda-y-mejoras": {"archivada": "archived"},
+}
+# En 1.x la aprobación vivía en .decisiones/ (tokens), no en la ficha: se deja constancia sin inventar fecha.
+CAMPOS_1X = {"approved": {"approved_at": "aprobada-en-1x"}}
+PAQUETE_BASE = "instrucciones-aprobadas"   # en 1.x el ciclo era obligatorio en cada pedido
+COMUNES = ["instrucciones-aprobadas", "calidad-de-codigo", "secretos-y-credenciales", "decisiones-de-arquitectura", "mapa-de-modulos", "documentacion-espejo",
+           "herramientas-autorizadas", "auditorias-tecnicas", "deuda-y-mejoras", "manuales-operativos", "memoria-e-historial",
+           "evolucion-del-sistema", "reglas-del-proyecto", "revision-humana", "contratos-entre-repos", "arquitectura-por-capas",
+           "verificaciones-vivas"]
 
 
 def sha256(ruta: Path) -> str:
@@ -103,7 +128,7 @@ def _destino(rel: str, pack: str) -> tuple[str, str, str]:
     """(paquete, ruta dentro de su trabajo, fecha 1.x). `0N-estado/<fecha>/x.md` pasa a `estado/x.md`."""
     for prefijo, pid, sub in DESTINOS:
         if rel.startswith(prefijo):
-            pid = ("mapa-rutas-ui" if pack == "cliente" else "mapa-rutas-api") if pid == "<rutas>" else pid
+            pid = ("paginas-de-interfaz" if pack == "cliente" else "rutas-de-api") if pid == "<rutas>" else pid
             resto = rel[len(prefijo):]
             m = ESTADO_1X.match(resto)
             return (pid, f"{sub}{m[1]}/{m[3]}", m[2]) if m else (pid, sub + resto, "")
@@ -129,9 +154,9 @@ def _ajustes(cfg: dict) -> dict[str, dict]:
     calidad = {k: v for k, v in {"raices": codigo.get("raices"), "extensiones": codigo.get("extensiones"),
                                  "excluir": codigo.get("excluir"), "limite_lineas": cfg.get("limite_lineas"),
                                  "exenciones_lineas": cfg.get("exenciones_lineas")}.items() if v is not None}
-    salida = {"calidad-codigo": calidad, "espejo-sistema": {k: calidad[k] for k in ("raices", "extensiones") if k in calidad}}
+    salida = {"calidad-de-codigo": calidad, "documentacion-espejo": {k: calidad[k] for k in ("raices", "extensiones") if k in calidad}}
     if cfg.get("secretos_permitir"):
-        salida["secretos"] = {"permitir": cfg["secretos_permitir"]}
+        salida["secretos-y-credenciales"] = {"permitir": cfg["secretos_permitir"]}
     return {k: v for k, v in salida.items() if v}
 
 
@@ -159,7 +184,12 @@ def planificar(app: Path, carpeta: Path) -> Plan:
             plan.copias.append((p, f"{LEGADO}/{rel}", sha256(p)))
         elif clase == "N":
             esperado = registrados.get(rel, {}).get("sha256")
-            if esperado and esperado != sha256(p):
+            editado = bool(esperado) and esperado != sha256(p)
+            if editado and rel in NUCLEO_PROPIO:
+                usados.add(NUCLEO_PROPIO[rel].split("/")[0])
+                plan.copias.append((p, NUCLEO_PROPIO[rel], sha256(p)))
+                continue
+            if editado:
                 plan.bloqueos.append(f"núcleo editado localmente (difiere del lock): {rel}")
             plan.omitidos.append(rel)
         else:
@@ -179,11 +209,12 @@ def planificar(app: Path, carpeta: Path) -> Plan:
         f = app / nombre
         if f.is_file() and any(l.strip().startswith(carpeta.name + "/") for l in f.read_text(encoding="utf-8").splitlines()):
             plan.avisos.append(f"{nombre} tiene líneas con «{carpeta.name}/» del 1.x: revísalas a mano (no se tocan)")
-    rutas = "mapa-rutas-ui" if plan.pack == "cliente" else "mapa-rutas-api"
+    rutas = "paginas-de-interfaz" if plan.pack == "cliente" else "rutas-de-api"
     plan.paquetes = COMUNES[:4] + [rutas] + COMUNES[4:]
     config = carpeta / "uxyngraphar.config.json"
     if config.is_file():
         plan.ajustes = _ajustes(json.loads(config.read_text(encoding="utf-8")))
+    plan.ajustes["arquitectura-por-capas"] = {"perfil": plan.pack}
     if usados - set(plan.paquetes) - {LEGADO}:
         plan.bloqueos.append(f"destinos sin paquete: {sorted(usados - set(plan.paquetes) - {LEGADO})}")
     return plan
@@ -217,6 +248,27 @@ def _revertir(plan: Plan, respaldo: Path, extras: dict) -> None:
         if Path(original).exists():
             limpieza.escribible(Path(original))
         shutil.copy2(origen, original)
+
+
+def _normalizar_estados(plan: Plan, trabajo: Path) -> list[str]:
+    hechos = []
+    for _, rel, _ in plan.copias:
+        equivalencias = EQUIVALENCIAS_1X.get(rel.split("/")[0])
+        ruta = trabajo / rel
+        if not equivalencias or ruta.suffix != ".md":
+            continue
+        texto = ruta.read_text(encoding="utf-8")
+        fm = base.leer_frontmatter(texto)[0]
+        anterior = fm.get("status")
+        if anterior in equivalencias:
+            nuevo = equivalencias[anterior]
+            texto = base.escribir_campo(texto, "status", nuevo)
+            for clave, valor in CAMPOS_1X.get(nuevo, {}).items():
+                if fm.get(clave) in (None, "", "null"):
+                    texto = base.escribir_campo(texto, clave, valor)
+            ruta.write_text(texto, encoding="utf-8")
+            hechos.append(f"{rel}: status «{anterior}» → «{nuevo}»")
+    return hechos
 
 
 def aplicar_plan(plan: Plan) -> dict:
@@ -253,12 +305,13 @@ def aplicar_plan(plan: Plan) -> dict:
         hechos += limpieza.limpiar(plan.app, plan.carpeta.name)
         trabajo.parent.mkdir(parents=True, exist_ok=True)
         provisional.rename(trabajo)
-        repo.instalar(plan.app, plan.paquetes)
+        repo.instalar(plan.app, plan.paquetes, paquete_base=PAQUETE_BASE)
         comprobar(trabajo, "final")
+        normalizadas = _normalizar_estados(plan, trabajo)
     except Exception:
         _revertir(plan, respaldo, extras)
         raise
-    return {**plan.resumen(), "aplicada": True, "respaldo": str(respaldo), "limpieza": hechos}
+    return {**plan.resumen(), "aplicada": True, "respaldo": str(respaldo), "limpieza": hechos, "normalizadas": normalizadas}
 
 
 def ejecutar(raiz: Path, aplicar: bool = False) -> dict:
@@ -291,6 +344,8 @@ def main(raiz: str, aplicar: bool = False) -> int:
             print(f"  aviso: {a}")
         for h in i.get("limpieza", []):
             print(f"  limpieza: {h}")
+        for h in i.get("normalizadas", []):
+            print(f"  estado 1.x adaptado: {h}")
         if i.get("respaldo"):
             print(f"  respaldo: {i['respaldo']}")
     if not aplicar:

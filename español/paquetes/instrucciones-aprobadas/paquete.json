@@ -1,0 +1,65 @@
+{
+  "manifiesto_formato": 1,
+  "id": "instrucciones-aprobadas",
+  "version": "1.0.0",
+  "titulo": "Ciclo de instrucciones",
+  "descripcion": "Ningún cambio sin instrucción aprobada por una persona: preguntas, instrucción con alcance y anclas de código, contexto mínimo, implementación acotada y cierre.",
+  "motor": ">=2.0",
+  "activacion": [
+    "instrucciones-aprobadas",
+    "instrucciones",
+    "uxyngraphar",
+    "uxyn",
+    "uxynar"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py",
+    "scripts/verificar-ciclo.py"
+  ],
+  "fichas": {
+    "instruccion": {
+      "carpeta": "instrucciones",
+      "prefijo": "INS",
+      "plantilla": "plantillas/instruccion.md",
+      "variantes": {
+        "compacta": "plantillas/instruccion-compacta.md",
+        "solo-docs": "plantillas/instruccion-solo-docs.md",
+        "adopcion": "plantillas/instruccion-adopcion.md"
+      },
+      "inicial": "awaiting_approval",
+      "estados": {
+        "awaiting_approval": "pendientes",
+        "approved": "en-progreso",
+        "done": "completadas",
+        "archived": "archivadas",
+        "cancelled": "canceladas",
+        "para-eliminar": "para-eliminar"
+      },
+      "solo_humano": [
+        "approved"
+      ],
+      "comandos": {
+        "approved": "scripts/ciclo.py aprobar {id} --humano"
+      }
+    },
+    "pregunta": {
+      "carpeta": "preguntas",
+      "prefijo": "PRE",
+      "plantilla": "plantillas/pregunta.md",
+      "inicial": "en-curso",
+      "estados": {
+        "en-curso": "en-curso",
+        "completada": "completadas",
+        "cancelada": "canceladas"
+      }
+    }
+  },
+  "ajustes": {
+    "max_archivos_codigo": 5,
+    "max_docs": 8,
+    "ampliacion_factor_max": 2.0,
+    "max_tokens_contexto": 12000,
+    "preguntas": true
+  }
+}

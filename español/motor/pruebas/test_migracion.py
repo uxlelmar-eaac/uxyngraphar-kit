@@ -50,6 +50,16 @@ def app_1x(raiz: Path) -> Path:
         "20-decisiones/03-completadas/2026-01-01/ADR-001-orm.md": "---\nid: ADR-001\nstatus: aceptada\n---\n# ORM\n",
         "25-areas/auth/RESUMEN.md": "---\nstatus: active\n---\n# auth\n",
         "95-memoria/nota.md": "# nota\n",
+        "05-instrucciones/02-en-progreso/2026-01-02/api.md": "---\nid: INS-20260102-api\nstatus: executing\n---\n# API\n",
+        "45-mejoras-propuestas/04-archivadas/2026-01-01/MEJ-001.md": "---\nid: MEJ-001\nstatus: archivada\n---\n# vieja\n",
+        "40-auditorias/02-en-progreso/2026-01-01/AUD-001.md": ("---\nid: AUD-001\nstatus: activa\nfindings_count: 2\n---\n# Rendimiento\n\n"
+                                                              "## Hallazgos\n1. Lento en `src/main.ts:1`\n2. Sin caché\n"),
+        "50-sistema-integral/mapa-capas.md": "# Capas de este proyecto\n",
+        "00-nucleo/restricciones.md": "# Restricciones propias\n",
+        "46-evolucion-documentacion/matriz-cobertura-proyectos.md": "# Matriz\n",
+        "46-evolucion-documentacion/01-pendientes/2026-01-03/EVO-20260103-cobertura.md": "---\nid: EVO-20260103-cobertura\nstatus: pending\ntipo: cobertura\n---\n# Cobertura\n\n## Evidencia\nx\n\n## Propuesta\ny\n",
+        "96-reglas-proyecto/RP-001.md": "---\nid: RP-001\nstatus: propuesta\n---\n# Regla\n",
+        "ESTADO.md": "# Estado del proyecto\n",
         ".decisiones/tokens/t1.json": '{"aprobado_por": "humano"}\n',
         "uxyngraphar.config.json": json.dumps({"codigo": {"raices": ["src"], "extensiones": [".ts"]}, "limite_lineas": 300,
                                                "secretos_permitir": ["src/fixtures/**"]}),
@@ -61,10 +71,12 @@ def app_1x(raiz: Path) -> Path:
     nucleo = {rel: {"clase": migrar.cl1x.clasificar(rel), "sha256": migrar.sha256(app / "docs" / rel)}
               for rel in ("00-nucleo/INDICE.md", "scripts/contexto.py")}
     nucleo["AGENTES.md"] = {"clase": "N", "sha256": migrar.sha256(app / "AGENTES.md")}
+    nucleo["50-sistema-integral/mapa-capas.md"] = {"clase": "N", "sha256": hashlib.sha256(b"# plantilla\n").hexdigest()}
     escribir(app / "docs", ".uxyngraphar.lock", json.dumps({"pack": "servidor", "version": "1.0.0", "archivos": nucleo}))
     escribir(app, ".claude/settings.json", json.dumps({"permissions": {"deny": ["Edit(docs/00-nucleo/**)", "Read(.env)"]}}))
     escribir(app, ".github/CODEOWNERS", "* @equipo\n# >>> uxyngraphar núcleo [docs]\n/docs/00-nucleo/ @dueno\n# <<< uxyngraphar núcleo [docs]\n")
     escribir(app, ".cursorignore", "# >>> uxyngraphar: fuera del alcance de la IA\ndocs/90-archivo/\n# <<< uxyngraphar\n")
+    escribir(app, ".github/workflows/uxyngraphar.yml", "name: uxyngraphar\njobs:\n  x:\n    steps:\n      - run: python3 docs/scripts/validar-documentacion.py docs\n")
     escribir(app, ".git/hooks/pre-commit", f"#!/bin/sh\n{limpieza.MARCA_GANCHO}\npython3 docs/scripts/x.py\n")
     for rel in ("00-nucleo/INDICE.md", "scripts/contexto.py"):
         os.chmod(app / "docs" / rel, stat.S_IREAD)
@@ -89,7 +101,7 @@ class TestMigracion(unittest.TestCase):
         (i,) = informe["instalaciones"]
         self.assertFalse(informe["aplicada"])
         self.assertEqual((i["pack"], i["bloqueos"]), ("servidor", []))
-        self.assertIn("mapa-rutas-api", i["paquetes"])
+        self.assertIn("rutas-de-api", i["paquetes"])
 
     def test_bloquea_lo_no_clasificable_y_el_nucleo_editado(self):
         escribir(self.app / "docs", "raro/zzz.md", "?\n")
@@ -108,31 +120,49 @@ class TestMigracion(unittest.TestCase):
         self.assertTrue(i["aplicada"], i)
         trabajo = self.app / migrar.TRABAJO
         esperados = {
-            "00-nucleo/arquitectura.md": "_legado-1x/00-nucleo/arquitectura.md",
-            "05-instrucciones/03-completadas/2026-01-01/landing.md": "ciclo-instrucciones/instrucciones/completadas/landing.md",
-            "20-decisiones/03-completadas/2026-01-01/ADR-001-orm.md": "decisiones-adr/completadas/ADR-001-orm.md",
-            "25-areas/auth/RESUMEN.md": "areas-modulos/auth/RESUMEN.md",
-            "95-memoria/nota.md": "memoria-archivo/memoria/nota.md",
+            "00-nucleo/arquitectura.md": "arquitectura-por-capas/ARQUITECTURA.md",
+            "00-nucleo/restricciones.md": "arquitectura-por-capas/RESTRICCIONES.md",
+            "46-evolucion-documentacion/matriz-cobertura-proyectos.md": "evolucion-del-sistema/MATRIZ-COBERTURA.md",
+            "46-evolucion-documentacion/01-pendientes/2026-01-03/EVO-20260103-cobertura.md": "evolucion-del-sistema/pendientes/EVO-20260103-cobertura.md",
+            "96-reglas-proyecto/RP-001.md": "reglas-del-proyecto/reglas/RP-001.md",
+            "ESTADO.md": "instrucciones-aprobadas/ESTADO.md",
+            "05-instrucciones/03-completadas/2026-01-01/landing.md": "instrucciones-aprobadas/instrucciones/completadas/landing.md",
+            "20-decisiones/03-completadas/2026-01-01/ADR-001-orm.md": "decisiones-de-arquitectura/completadas/ADR-001-orm.md",
+            "25-areas/auth/RESUMEN.md": "mapa-de-modulos/auth/RESUMEN.md",
+            "95-memoria/nota.md": "memoria-e-historial/memoria/nota.md",
+            "50-sistema-integral/mapa-capas.md": "documentacion-espejo/mapa-capas.md",
             ".decisiones/tokens/t1.json": "_legado-1x/.decisiones/tokens/t1.json",
         }
         for viejo, nuevo in esperados.items():
             self.assertEqual(origen[viejo], migrar.sha256(trabajo / nuevo), nuevo)
         self.assertFalse((self.app / "docs").exists())
         self.assertTrue(all(e["integro"] for e in repo.estado(self.app)))
-        self.assertEqual(len(repo.estado(self.app)), 12)
-        self.assertEqual(json.loads((trabajo / "calidad-codigo/ajustes.json").read_text())["limite_lineas"], 300)
-        self.assertEqual(json.loads((trabajo / "secretos/ajustes.json").read_text())["permitir"], ["src/fixtures/**"])
-        self.assertEqual(generar.leer_flujo(self.app)["modo"], "manual")
+        self.assertEqual(len(repo.estado(self.app)), 18)
+        self.assertEqual(json.loads((trabajo / "arquitectura-por-capas/ajustes.json").read_text())["perfil"], "servidor")
+        self.assertEqual(json.loads((trabajo / "calidad-de-codigo/ajustes.json").read_text())["limite_lineas"], 300)
+        self.assertEqual(json.loads((trabajo / "secretos-y-credenciales/ajustes.json").read_text())["permitir"], ["src/fixtures/**"])
+        flujo = generar.leer_flujo(self.app)
+        self.assertEqual((flujo["modo"], flujo["trabajar_con"]), ("trabajar_con", migrar.PAQUETE_BASE))
+        self.assertFalse((self.app / ".github/workflows/uxyngraphar.yml").exists())
+        self.assertTrue((Path(i["respaldo"]) / "raiz/.github/workflows/uxyngraphar.yml").is_file())
+        estados = {"instrucciones-aprobadas/instrucciones/en-progreso/api.md": "approved",
+                   "deuda-y-mejoras/archivadas/MEJ-001.md": "archived", "auditorias-tecnicas/en-progreso/AUD-001.md": "activa"}
+        for rel, status in estados.items():
+            self.assertIn(f"status: {status}\n", (trabajo / rel).read_text(encoding="utf-8"), rel)
+        self.assertEqual(len(i["normalizadas"]), 2)
         agentes = (self.app / "AGENTES.md").read_text(encoding="utf-8")
         self.assertIn(generar.INICIO, agentes)
         self.assertNotIn("pack servidor", agentes)
         self.assertNotIn("contexto.py", (self.app / "CLAUDE.md").read_text(encoding="utf-8"))
         self.assertFalse((self.app / ".git/hooks/pre-commit").exists())
-        self.assertFalse((self.app / ".cursorignore").exists())
+        ignorados = (self.app / ".cursorignore").read_text(encoding="utf-8")
+        self.assertIn("uxyngraphar/trabajo/memoria-e-historial/archivo/**", ignorados)
+        self.assertNotIn("docs/90-archivo", ignorados)
         self.assertEqual((self.app / ".github/CODEOWNERS").read_text(encoding="utf-8"), "* @equipo\n")
         deny = json.loads((self.app / ".claude/settings.json").read_text())["permissions"]["deny"]
         self.assertIn("Read(.env)", deny)
         self.assertIn("Edit(uxyngraphar/paquetes/**)", deny)
+        self.assertIn("Edit(uxyngraphar/trabajo/*/ajustes.json)", deny)
         self.assertNotIn("Edit(uxyngraphar/trabajo/**)", deny)
         self.assertFalse(any("docs/" in r for r in deny))
         respaldo = Path(i["respaldo"])
@@ -155,7 +185,7 @@ class TestMigracion(unittest.TestCase):
         escribir(self.app / "docs", "05-instrucciones/03-completadas/2026-02-02/landing.md", "---\nid: INS-2\nstatus: done\n---\n# 2\n")
         (i,) = migrar.ejecutar(self.raiz, aplicar=True)["instalaciones"]
         self.assertTrue(i["aplicada"], i["bloqueos"])
-        completadas = self.app / migrar.TRABAJO / "ciclo-instrucciones/instrucciones/completadas"
+        completadas = self.app / migrar.TRABAJO / "instrucciones-aprobadas/instrucciones/completadas"
         self.assertEqual(sorted(p.name for p in completadas.iterdir()), ["2026-01-01-landing.md", "2026-02-02-landing.md"])
 
     def test_sin_lock_se_detecta_y_bloquea(self):
@@ -176,7 +206,7 @@ class TestMigracion(unittest.TestCase):
         (i,) = migrar.ejecutar(self.raiz, aplicar=True)["instalaciones"]
         self.assertTrue(i["aplicada"], i)
         trabajo = self.app / migrar.TRABAJO
-        self.assertEqual(origen["95-memoria/nota.md"], migrar.sha256(trabajo / "memoria-archivo/memoria/nota.md"))
+        self.assertEqual(origen["95-memoria/nota.md"], migrar.sha256(trabajo / "memoria-e-historial/memoria/nota.md"))
         self.assertEqual(sorted(p.name for p in (self.app / "uxyngraphar").iterdir()), ["FLUJO.json", "INDICE.md", "paquetes", "trabajo"])
         self.assertFalse((self.app / migrar.PROVISIONAL).exists())
         self.assertTrue(all(e["integro"] for e in repo.estado(self.app)))

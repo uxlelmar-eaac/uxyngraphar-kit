@@ -1,0 +1,44 @@
+{
+  "manifiesto_formato": 1,
+  "id": "secretos-y-credenciales",
+  "version": "1.0.0",
+  "titulo": "Secretos y credenciales",
+  "descripcion": "Evita que credenciales, llaves y archivos de secretos entren al código o a la documentación: solo placeholders, escaneo por contenido y por nombre de archivo.",
+  "motor": ">=2.0",
+  "activacion": [
+    "secretos-y-credenciales",
+    "credenciales",
+    "escanear secretos"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py",
+    "scripts/escanear.py"
+  ],
+  "ajustes": {
+    "raices": [
+      "."
+    ],
+    "excluir": [
+      ".git/**",
+      "node_modules/**",
+      "uxyngraphar/paquetes/**",
+      ".uxyngraphar-respaldos/**",
+      "dist/**",
+      "build/**",
+      ".next/**",
+      "coverage/**",
+      "vendor/**",
+      ".venv/**",
+      "venv/**",
+      "**/__pycache__/**",
+      "*.min.js",
+      "*.lock",
+      "pnpm-lock.yaml",
+      "package-lock.json",
+      "yarn.lock"
+    ],
+    "permitir": [],
+    "max_kb": 512
+  }
+}

@@ -13,8 +13,8 @@ Validadores: [`especificacion.py`](especificacion.py) (paquete y flujo) y [`paqu
     paquetes/<id>/                un paquete (inmutable; lo escribe solo el motor)
     trabajo/<id>/                 trabajo de cada paquete (editable)
       ajustes.json                opcional: sobrescribe «ajustes» del manifiesto
-      <estado>/<ficha>.md         paquete con un solo tipo de ficha (p. ej. decisiones-adr/completadas/ADR-…md)
-      <tipo>/<estado>/<ficha>.md  paquete con varios tipos (p. ej. ciclo-instrucciones/instrucciones/pendientes/INS-…md)
+      <estado>/<ficha>.md         paquete con un solo tipo de ficha (p. ej. decisiones-de-arquitectura/completadas/ADR-…md)
+      <tipo>/<estado>/<ficha>.md  paquete con varios tipos (p. ej. instrucciones-aprobadas/instrucciones/pendientes/INS-…md)
 ```
 
 Sin números delante de las carpetas ni carpetas por fecha: la fecha va en el id de la ficha.
@@ -59,6 +59,9 @@ Requisitos de portabilidad:
 | `verificaciones` | lista | `scripts/*.py` que el agente ejecuta antes de cerrar (la genérica: `scripts/comun/verificar.py`) |
 | `fichas` | objeto | opcional; tipos de ficha (§3.1) |
 | `ajustes` | objeto | opcional; valores por defecto que el proyecto puede sobrescribir en `ajustes.json` |
+| `protegidos` | lista | opcional; globs relativos a `trabajo/<id>/` que la IA no edita (reglas `deny` de Claude) |
+| `fuera_de_ia` | lista | opcional; globs relativos a `trabajo/<id>/` que la IA no lee (`.cursorignore` y equivalentes) |
+| `al_activar_paquete` | texto | opcional; `scripts/… {id}` que el agente ejecuta al activar cualquier paquete (`{id}`: el activado); p. ej. ajustes locales |
 
 ### 3.1 Tipos de ficha
 
@@ -101,8 +104,12 @@ Un tipo plano usa `status_validos` en lugar de `estados`:
 - `carpeta`: `.` (raíz del trabajo del paquete; solo si hay un único tipo) o un nombre kebab-case.
 - Con `estados`: la ficha vive en `uxyngraphar/trabajo/<id>/<carpeta>/<carpeta-de-estado>/<ficha>.md`; las carpetas de estado son kebab-case sin números (`pendientes`, `en-progreso`, `completadas`, `archivadas`, `canceladas`, `para-eliminar`) y el `status` debe corresponder a la carpeta.
 - Con `status_validos` (plana): vive en cualquier subruta de `<carpeta>/`.
-- `solo_humano`: status que solo una persona puede poner (el agente nunca los asigna).
+- `solo_humano`: status que solo una persona puede poner (el agente nunca los asigna). Los scripts lo exigen: `--humano` y además una terminal interactiva o `UXYNGRAPHAR_HUMANO=1` (nunca con `CI`); el agente no tiene ninguna de las dos.
+- `espera_humano`: status en los que la ficha espera una decisión de una persona (los recoge `revision-humana`); por defecto, `inicial` si no está en `solo_humano`.
+- `comandos`: `{status: "scripts/… {id} …"}` para los status que no se ponen con `fichas.py estado` (p. ej. `approved` → `scripts/ciclo.py aprobar {id} --humano`).
+- `variantes`: `{nombre: "plantillas/….md"}` plantillas alternativas del tipo (`fichas.py nueva <tipo> --variante <nombre>`).
 - Id de ficha nueva: `<PREFIJO>-<AAAAMMDD>-<slug>`.
+- No son fichas: `INDICE.md`, `README.md`, `RESUMEN.md`, `ESTADO.md`, lo que empieza por `_` y los `.md` con nombre en MAYÚSCULAS sin `id` en el frontmatter (índices, registros, matrices, informes). `CONTEXTO.md` con `id` sí lo es.
 - Las plantillas usan `{{id}}`, `{{fecha}}`, `{{titulo}}`, `{{status}}`.
 
 ## 4. `INTEGRIDAD.json`
@@ -123,7 +130,7 @@ Cubre todos los archivos del paquete salvo el propio `INTEGRIDAD.json`, `__pycac
 |------|---------------------------|
 | `manual` | Solo usa paquetes nombrados en el pedido. |
 | `leer_por_defecto` | En cada pedido lee el `README.md` de `leer_por_defecto`; aplica solo los nombrados. |
-| `trabajar_con` | Aplica `trabajar_con` cuando el pedido no nombra otro paquete; también lee `leer_por_defecto`. |
+| `trabajar_con` | Paquete base: aplica `trabajar_con` en cada pedido aunque no lo nombre, y además los que el pedido nombre; también lee `leer_por_defecto`. Se fija al instalar con `--base <id>` (la migración desde 1.x deja `instrucciones-aprobadas`, que en 1.x era obligatorio). |
 | `secuencia` | Recorre `secuencia` en orden (cada paquete con su `README.md` y sus verificaciones); también lee `leer_por_defecto`. |
 
 - Un paquete nombrado en el pedido siempre se aplica, sea cual sea el modo.
@@ -139,6 +146,15 @@ El agente activa un paquete cuando el pedido contiene «usa el paquete <frase>»
 3. Trabajar; escribir solo en `uxyngraphar/trabajo/<id>/`.
 4. Ejecutar las `verificaciones` del manifiesto antes de terminar.
 
+### 6.1 Protecciones
+
+Cada instalación, actualización o desinstalación regenera, a partir de los paquetes instalados (`motor/protecciones.py`):
+
+- `.claude/settings.json` → `permissions.deny`: `Edit`/`Write` sobre `uxyngraphar/paquetes/**`, `FLUJO.json`, `INDICE.md`, `trabajo/*/ajustes.json` y los `protegidos` de cada paquete; y `Bash` con `UXYNGRAPHAR_HUMANO`. Las reglas del proyecto se conservan.
+- `.cursorignore` (y `.geminiignore`, `.aiexclude` si existen) → bloque entre marcas con los `fuera_de_ia`; el archivo se borra si queda vacío.
+
+Sin paquetes instalados no queda ninguna regla propia.
+
 ## 7. Versionado
 
 - Cada paquete tiene su semver: MAYOR si cambia la forma del trabajo (`fichas`, carpetas), MENOR si añade reglas o guías, PARCHE si corrige.
@@ -150,6 +166,6 @@ El agente activa un paquete cuando el pedido contiene «usa el paquete <frase>»
 `uxyngraphar migrar --repo RUTA` busca instalaciones 1.x (`.uxyngraphar.lock` o numeración `00-nucleo`/`05-instrucciones`) en `docs/` o `uxyngraphar/` (hasta 4 niveles) y **solo simula**; `--aplicar` migra.
 
 - Se bloquea (sin tocar nada) si no hay lock, si hay un archivo que la clasificación 1.x no cubre, un archivo de núcleo distinto del lock, `uxyngraphar/` junto a `docs/` o una carpeta `.uxyngraphar-migrando/` de una migración interrumpida.
-- Contenido del proyecto (clases P/M/C) → `uxyngraphar/trabajo/<paquete>/` según la tabla de `migrar.DESTINOS` (`05-instrucciones/` → `ciclo-instrucciones/instrucciones/`, `20-decisiones/` → `decisiones-adr/`, `15-rutas/` → `mapa-rutas-api|ui/`, …); `0N-estado/<fecha>/x.md` pasa a `estado/x.md` (con la fecha delante solo si dos archivos chocan); lo que no tiene paquete y los artefactos locales (X: tokens de aprobación, lock) → `uxyngraphar/trabajo/_legado-1x/`. `uxyngraphar.config.json` se reparte en `ajustes.json`.
-- Al aplicar: respaldo en `.uxyngraphar-respaldos/migracion-<fecha>/` (pack, AGENTES/AGENTS/CLAUDE, `.claude/settings.json`, CODEOWNERS, guardia de Cursor, exclusiones de IA, ganchos git) → copia a `.uxyngraphar-migrando/` → verificación sha256 → retirada del pack 1.x y de sus protecciones → el trabajo pasa a `uxyngraphar/trabajo/` (también cuando el pack 1.x vivía en `uxyngraphar/`) → instalación de los 12 paquetes equivalentes con `FLUJO.json` en `manual`. Cualquier fallo restaura el estado anterior desde el respaldo.
+- Contenido del proyecto (clases P/M/C) → `uxyngraphar/trabajo/<paquete>/` según la tabla de `migrar.DESTINOS` (`05-instrucciones/` → `instrucciones-aprobadas/instrucciones/`, `20-decisiones/` → `decisiones-de-arquitectura/`, `15-rutas/` → `rutas-de-api/` o `paginas-de-interfaz/`, `46-…` → `evolucion-del-sistema/`, `96-…`/`97-…` → `reglas-del-proyecto/`, `00-nucleo/arquitectura.md` y `restricciones.md` → `arquitectura-por-capas/`, `registro-ids-compartidos.md` → `contratos-entre-repos/REGISTRO-1X.md`, `glosario-dominio.md` → `calidad-de-codigo/GLOSARIO.md`, `ESTADO.md` → `instrucciones-aprobadas/`, …); los status 1.x se adaptan a los 2.0 (`executing` → `approved`, `archivada` → `archived`…); `mapa-capas.md`, `vision-espejo.md` y `plantilla-modulo.md` editados van a su paquete en vez de bloquear; `0N-estado/<fecha>/x.md` pasa a `estado/x.md` (con la fecha delante solo si dos archivos chocan); lo que no tiene paquete y los artefactos locales (X: tokens de aprobación, lock) → `uxyngraphar/trabajo/_legado-1x/`. `uxyngraphar.config.json` se reparte en `ajustes.json`.
+- Al aplicar: respaldo en `.uxyngraphar-respaldos/migracion-<fecha>/` (pack, AGENTES/AGENTS/CLAUDE, `.claude/settings.json`, CODEOWNERS, guardia de Cursor, exclusiones de IA, ganchos git, workflow `uxyngraphar.yml`) → copia a `.uxyngraphar-migrando/` → verificación sha256 → retirada del pack 1.x y de sus protecciones → el trabajo pasa a `uxyngraphar/trabajo/` (también cuando el pack 1.x vivía en `uxyngraphar/`) → instalación de los 18 paquetes equivalentes (`arquitectura-por-capas` con el perfil del pack) con `FLUJO.json` en `trabajar_con` = `instrucciones-aprobadas`. Cualquier fallo restaura el estado anterior desde el respaldo.
 - `.gitignore`/`.gitattributes` con líneas del pack 1.x solo se avisan.

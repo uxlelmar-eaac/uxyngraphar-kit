@@ -9,7 +9,7 @@ Catálogo (aquí se crean y editan los paquetes):
   construir <id>…|--todos --destino DIR      construye paquetes portátiles (con INTEGRIDAD.json)
 
 Repo (RUTA = raíz de la app; por defecto, el directorio actual):
-  instalar <id>… [--repo RUTA]               instala en RUTA/uxyngraphar/paquetes/<id>/
+  instalar <id>… [--repo RUTA] [--base id]   instala en RUTA/uxyngraphar/paquetes/<id>/ (--base: se aplica en cada pedido)
   actualizar [<id>…] [--repo RUTA] [--forzar] actualiza o repara; nunca toca uxyngraphar/trabajo/
   quitar <id> [--repo RUTA] [--con-trabajo]  quita el paquete (y su trabajo solo si se pide)
   estado [--repo RUTA]                       instalados, versiones, integridad, actualizaciones
@@ -108,6 +108,7 @@ def analizador() -> argparse.ArgumentParser:
         s.add_argument("--repo", default=".")
         if nombre == "instalar":
             s.add_argument("ids", nargs="+")
+            s.add_argument("--base", help="paquete base: FLUJO.json en trabajar_con con ese id")
         elif nombre == "actualizar":
             s.add_argument("ids", nargs="*")
             s.add_argument("--forzar", action="store_true")
@@ -146,7 +147,8 @@ def main(argv: list[str] | None = None) -> int:
             for pid in ids:
                 print(catalogo.construir(pid, Path(a.destino)))
         elif a.cmd == "instalar":
-            print("instalados: " + ", ".join(repo.instalar(Path(a.repo), a.ids)))
+            print("instalados: " + ", ".join(repo.instalar(Path(a.repo), a.ids, paquete_base=a.base))
+                  + (f" · paquete base: {a.base}" if a.base else ""))
         elif a.cmd == "actualizar":
             hechos = repo.actualizar(Path(a.repo), a.ids or None, forzar=a.forzar)
             print("actualizados: " + (", ".join(hechos) or "(nada que actualizar)"))

@@ -139,6 +139,33 @@ class TestRepo(Base):
         self.assertEqual(generar.leer_flujo(self.repo)["modo"], "secuencia")
         self.assertTrue(generar.guardar_flujo(self.repo, {**generar.leer_flujo(self.repo), "secuencia": ["noexiste"]}))
 
+    def test_paquete_base_al_instalar(self):
+        with self.assertRaises(ValueError):
+            repo.instalar(self.repo, ["demo"], self.cat, paquete_base="otro")
+        repo.instalar(self.repo, ["otro"], self.cat, paquete_base="otro")
+        flujo = generar.leer_flujo(self.repo)
+        self.assertEqual((flujo["modo"], flujo["trabajar_con"]), ("trabajar_con", "otro"))
+        self.assertIn("aplícalo en **cada** pedido", (self.repo / "AGENTES.md").read_text(encoding="utf-8"))
+
+    def test_protecciones_siguen_a_los_paquetes(self):
+        ajustes = self.repo / ".claude" / "settings.json"
+        ajustes.parent.mkdir()
+        ajustes.write_text(json.dumps({"permissions": {"deny": ["Read(.env)"]}}), encoding="utf-8")
+        catalogo.guardar_archivo("demo", "paquete.json", json.dumps(
+            {**base.leer_manifiesto(self.cat / "demo"), "protegidos": ["reglas/**"], "fuera_de_ia": ["archivo/"]}), self.cat)
+        repo.instalar(self.repo, ["demo"], self.cat)
+        deny = json.loads(ajustes.read_text(encoding="utf-8"))["permissions"]["deny"]
+        for regla in ("Read(.env)", "Edit(uxyngraphar/paquetes/**)", "Write(uxyngraphar/FLUJO.json)",
+                      "Edit(uxyngraphar/trabajo/*/ajustes.json)", "Edit(uxyngraphar/trabajo/demo/reglas/**)", "Bash(UXYNGRAPHAR_HUMANO=1:*)"):
+            self.assertIn(regla, deny)
+        self.assertIn("uxyngraphar/trabajo/demo/archivo/", (self.repo / ".cursorignore").read_text(encoding="utf-8"))
+        repo.instalar(self.repo, ["otro"], self.cat)
+        self.assertEqual(json.loads(ajustes.read_text(encoding="utf-8"))["permissions"]["deny"], deny)
+        repo.quitar(self.repo, "demo")
+        repo.quitar(self.repo, "otro")
+        self.assertEqual(json.loads(ajustes.read_text(encoding="utf-8"))["permissions"]["deny"], ["Read(.env)"])
+        self.assertFalse((self.repo / ".cursorignore").exists())
+
     def test_rechaza_instalacion_1x(self):
         (self.repo / "docs").mkdir()
         (self.repo / "docs" / ".uxyngraphar.lock").write_text("{}", encoding="utf-8")

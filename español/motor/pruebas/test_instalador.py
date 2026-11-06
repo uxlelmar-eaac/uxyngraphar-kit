@@ -108,8 +108,8 @@ class TestPublicado(Entorno):
         self.assertEqual(za.read_bytes(), (b / za.name).read_bytes())
         nombres = zipfile.ZipFile(za).namelist()
         self.assertFalse([n for n in nombres if "/pruebas/" in n or "__pycache__" in n])
-        for rel in ("motor/uxyngraphar.py", "motor/VERSION", "motor/cli.py", "paquetes/secretos/paquete.json",
-                    "paquetes/secretos/scripts/comun/fichas.py"):
+        for rel in ("motor/uxyngraphar.py", "motor/VERSION", "motor/cli.py", "paquetes/secretos-y-credenciales/paquete.json",
+                    "paquetes/secretos-y-credenciales/scripts/comun/fichas.py"):
             self.assertIn(f"uxyngraphar-{VERSION}/{rel}", nombres)
 
 

@@ -15,12 +15,11 @@ EXC_INI, EXC_FIN = "# >>> uxyngraphar: fuera del alcance de la IA", "# <<< uxyng
 EXCLUSIONES = (".cursorignore", ".geminiignore", ".aiexclude")
 CURSOR_1X = (".cursor/hooks/uxyngraphar-guardia-nucleo.py", ".cursor/uxyngraphar-protegido.json", ".cursor/rules/uxyngraphar-nucleo.mdc")
 HOOKS_JSON = ".cursor/hooks.json"
+WORKFLOW_1X = ".github/workflows/uxyngraphar.yml"
 GUARDIA = "uxyngraphar-guardia-nucleo"
 CLAUDE_1X = "Este proyecto usa uxyngraphar. Lee **solo** [AGENTES.md](AGENTES.md)"
 CLAUDE_2X = ("# CLAUDE.md\n\nEste proyecto usa paquetes de gobernanza uxyngraphar 2.0. Lee [AGENTES.md](AGENTES.md) al empezar "
              "y sigue su bloque «uxyngraphar»: ningún paquete se aplica si el pedido no lo nombra o `uxyngraphar/FLUJO.json` no lo indica.\n")
-DENY_2X = tuple(f"{accion}(uxyngraphar/{ruta})" for ruta in ("paquetes/**", "FLUJO.json", "INDICE.md") for accion in ("Edit", "Write"))
-
 
 def escribible(ruta: Path) -> None:
     """Quita el congelamiento del 1.x (solo lectura) de un archivo o de un árbol completo."""
@@ -51,7 +50,8 @@ def ganchos_1x(app: Path) -> list[Path]:
 
 def extras_a_respaldar(app: Path) -> list[Path]:
     """Archivos fuera del pack que la migración puede modificar o borrar."""
-    nombres = ["AGENTES.md", "AGENTS.md", "CLAUDE.md", ".claude/settings.json", ".github/CODEOWNERS", HOOKS_JSON, *CURSOR_1X, *EXCLUSIONES]
+    nombres = ["AGENTES.md", "AGENTS.md", "CLAUDE.md", ".claude/settings.json", ".github/CODEOWNERS", WORKFLOW_1X, HOOKS_JSON,
+               *CURSOR_1X, *EXCLUSIONES]
     return [app / n for n in nombres if (app / n).is_file()]
 
 
@@ -76,10 +76,10 @@ def _deny(app: Path, carpeta_rel: str) -> str | None:
     retiradas = len(deny) - len(filtrado)
     if not retiradas:
         return None
-    cfg["permissions"]["deny"] = filtrado + [r for r in DENY_2X if r not in filtrado]
+    cfg["permissions"]["deny"] = filtrado
     escribible(f)
     f.write_text(json.dumps(cfg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    return f".claude/settings.json: {retiradas} reglas del 1.x retiradas; protegidos uxyngraphar/paquetes/**, FLUJO.json e INDICE.md"
+    return f".claude/settings.json: {retiradas} reglas del 1.x retiradas (las de 2.0 las pone la instalación)"
 
 
 def _cursor(app: Path) -> list[str]:
@@ -127,6 +127,11 @@ def limpiar(app: Path, carpeta_rel: str) -> list[str]:
             f.unlink() if not nuevo.strip() else f.write_text(nuevo, encoding="utf-8")
             hechos.append(f"{nombre}: bloque del 1.x retirado")
     hechos += _cursor(app)
+    workflow = app / WORKFLOW_1X
+    if workflow.is_file() and f"{carpeta_rel.strip('/')}/scripts/" in workflow.read_text(encoding="utf-8", errors="replace"):
+        escribible(workflow)
+        workflow.unlink()
+        hechos.append(f"{WORKFLOW_1X}: retirado (ejecutaba scripts del 1.x que ya no existen)")
     for g in ganchos_1x(app):
         escribible(g)
         g.unlink()

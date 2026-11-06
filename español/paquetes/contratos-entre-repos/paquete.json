@@ -1,0 +1,41 @@
+{
+  "manifiesto_formato": 1,
+  "id": "contratos-entre-repos",
+  "version": "1.0.0",
+  "titulo": "Contratos entre repositorios",
+  "descripcion": "Contratos entre el repo que provee una API y los que la consumen: ids compartidos estables, registro, comparación con los repos hermanos y orden de merge (proveedor primero), sin duplicar las fichas del proveedor.",
+  "motor": ">=2.0",
+  "activacion": [
+    "contratos-entre-repos",
+    "contratos",
+    "multi-repo",
+    "ids compartidos"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py",
+    "scripts/verificar-contratos.py"
+  ],
+  "fichas": {
+    "contrato": {
+      "carpeta": ".",
+      "prefijo": "CON",
+      "plantilla": "plantillas/contrato.md",
+      "inicial": "propuesto",
+      "status_validos": [
+        "propuesto",
+        "vigente",
+        "deprecado",
+        "retirado"
+      ],
+      "solo_humano": [
+        "vigente",
+        "retirado"
+      ]
+    }
+  },
+  "ajustes": {
+    "repo": "",
+    "otros_repos": []
+  }
+}

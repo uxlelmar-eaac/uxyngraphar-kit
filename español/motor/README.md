@@ -28,10 +28,10 @@ mi-repo/
     INDICE.md                      paquetes instalados y sus frases de activación (generado)
     FLUJO.json                     cómo trabaja el agente (lo decide una persona)
     paquetes/                      paquetes instalados (inmutables)
-      secretos/  README.md  paquete.json  INTEGRIDAD.json  docs/  scripts/  scripts/comun/
+      secretos-y-credenciales/  README.md  paquete.json  INTEGRIDAD.json  docs/  scripts/  scripts/comun/
     trabajo/                       el trabajo del proyecto
-      decisiones-adr/completadas/ADR-20261105-orm.md
-      ciclo-instrucciones/instrucciones/pendientes/INS-20261105-landing.md
+      decisiones-de-arquitectura/completadas/ADR-20261105-orm.md
+      instrucciones-aprobadas/instrucciones/pendientes/INS-20261105-landing.md
 ```
 
 Ningún paquete actúa solo: el agente los usa cuando el pedido dice «usa el paquete X» / «sigue el protocolo X» o cuando `FLUJO.json` lo indica.
@@ -43,8 +43,8 @@ Desde `español/` (instalado, basta `uxyngraphar …`):
 ```bash
 python3 motor/uxyngraphar.py                         # panel en el navegador
 python3 motor/uxyngraphar.py catalogo                # paquetes disponibles (con avisos)
-python3 motor/uxyngraphar.py instalar secretos ciclo-instrucciones --repo ../mi-app
-python3 motor/uxyngraphar.py flujo --repo ../mi-app --modo trabajar_con --trabajar-con ciclo-instrucciones
+python3 motor/uxyngraphar.py instalar secretos-y-credenciales instrucciones-aprobadas --repo ../mi-app --base instrucciones-aprobadas
+python3 motor/uxyngraphar.py flujo --repo ../mi-app --modo leer_por_defecto --leer secretos-y-credenciales
 python3 motor/uxyngraphar.py migrar --repo ../mi-app # instalación 1.x: simula; --aplicar migra con respaldo
 python3 -m unittest discover -s motor/pruebas -t motor/pruebas
 ```

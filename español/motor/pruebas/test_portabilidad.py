@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import ast
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -23,8 +24,13 @@ import repo
 base = catalogo.base
 
 
-def correr(script: Path, *args: str, cwd: Path) -> subprocess.CompletedProcess:
-    return subprocess.run([sys.executable, "-X", "utf8", str(script), *args], cwd=cwd, capture_output=True, text=True)
+def correr(script: Path, *args: str, cwd: Path, persona: bool | None = None) -> subprocess.CompletedProcess:
+    """Sin terminal, como un agente. `persona` (por defecto: si pasa --humano) acredita a una persona con UXYNGRAPHAR_HUMANO=1."""
+    entorno = {k: v for k, v in os.environ.items() if k not in ("UXYNGRAPHAR_HUMANO", "CI")}
+    if persona if persona is not None else "--humano" in args:
+        entorno["UXYNGRAPHAR_HUMANO"] = "1"
+    return subprocess.run([sys.executable, "-X", "utf8", str(script), *args], cwd=cwd, capture_output=True, text=True,
+                          stdin=subprocess.DEVNULL, env=entorno)
 
 
 def foto(carpeta: Path, excluir: Path) -> dict[str, bytes]:

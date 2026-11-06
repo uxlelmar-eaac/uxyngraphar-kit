@@ -2,10 +2,12 @@
 """Fichas del paquete (trabajo en uxyngraphar/trabajo/<id>/).
 
   python3 scripts/comun/fichas.py tipos
-  python3 scripts/comun/fichas.py nueva <tipo> --slug <slug> [--titulo "…"] [--en <subcarpeta>] [--humano]
+  python3 scripts/comun/fichas.py nueva <tipo> --slug <slug> [--titulo "…"] [--variante <nombre>] [--en <subcarpeta>] [--humano]
   python3 scripts/comun/fichas.py listar [<tipo>] [--status <status>]
   python3 scripts/comun/fichas.py ver <id>
   python3 scripts/comun/fichas.py estado <id> <status> [--humano]
+
+--humano solo vale para una persona: terminal interactiva o UXYNGRAPHAR_HUMANO=1 (un agente no puede usarlo).
 """
 
 from __future__ import annotations
@@ -31,6 +33,7 @@ def main(argv: list[str] | None = None) -> int:
     n.add_argument("tipo")
     n.add_argument("--slug", required=True)
     n.add_argument("--titulo", default="")
+    n.add_argument("--variante", default="", help="plantilla alternativa del tipo (ver «tipos»)")
     n.add_argument("--en", default="", help="subcarpeta (solo tipos planos)")
     n.add_argument("--humano", action="store_true", help="lo ejecuta una persona (tipos que nacen con status «solo_humano»)")
     ls = sub.add_parser("listar")
@@ -47,9 +50,10 @@ def main(argv: list[str] | None = None) -> int:
         if a.cmd == "tipos":
             for nombre, d in fichas.tipos(PAQUETE).items():
                 estados = ", ".join(d.get("estados") or d["status_validos"])
-                print(f"{nombre}: carpeta {d['carpeta']}/ · status {estados}")
+                variantes = f" · variantes {', '.join(d['variantes'])}" if d.get("variantes") else ""
+                print(f"{nombre}: carpeta {d['carpeta']}/ · status {estados}{variantes}")
         elif a.cmd == "nueva":
-            print(fichas.crear(PAQUETE, a.tipo, a.slug, a.titulo, a.en, por_humano=a.humano))
+            print(fichas.crear(PAQUETE, a.tipo, a.slug, a.titulo, a.en, por_humano=a.humano, variante=a.variante))
         elif a.cmd == "listar":
             for f in fichas.listar(PAQUETE, a.tipo):
                 if not a.status or f.status == a.status:

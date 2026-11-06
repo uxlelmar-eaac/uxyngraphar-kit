@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
+import sys
 from pathlib import Path
 
 MANIFIESTO = "paquete.json"
@@ -26,6 +28,24 @@ REQUISITO_MOTOR = re.compile(r"^>=\d+\.\d+(?:\.\d+)?$")
 CARPETA_ESTADO = re.compile(r"^[a-z]+(?:-[a-z]+)*$")
 CARPETA_FICHAS = re.compile(r"^(?:\.|[a-z0-9]+(?:-[a-z0-9]+)*)$")
 IGNORAR = re.compile(r"(?:^|/)__pycache__(?:/|$)|\.pyc$|(?:^|/)\.DS_Store$")
+VARIABLE_HUMANO = "UXYNGRAPHAR_HUMANO"
+
+
+# ---------- quién ejecuta ----------
+
+def es_humano() -> bool:
+    """Una persona: `UXYNGRAPHAR_HUMANO=1` o terminal interactiva fuera de CI. Los agentes ejecutan sin terminal."""
+    if os.environ.get(VARIABLE_HUMANO) == "1":
+        return True
+    if os.environ.get("CI", "").lower() in ("1", "true", "yes"):
+        return False
+    return sys.stdin is not None and sys.stdin.isatty()
+
+
+def exigir_humano(accion: str) -> None:
+    if not es_humano():
+        raise PermissionError(f"{accion}: solo una persona (terminal interactiva o {VARIABLE_HUMANO}=1). "
+                              "Si eres un agente, pide a la persona que lo ejecute")
 
 
 # ---------- rutas ----------
@@ -153,7 +173,25 @@ def _validar_fichas(fichas) -> list[str]:
             errores.append(f"{donde}.status_validos: lista de textos que incluya «inicial»")
         if "solo_humano" in d and not _lista_de_textos(d["solo_humano"]) and d["solo_humano"] != []:
             errores.append(f"{donde}.solo_humano: lista de status")
+        todos = set(estados or {}) | set(validos or [])
+        if "espera_humano" in d and (not _lista_de_textos(d["espera_humano"]) or not set(d["espera_humano"]) <= todos):
+            errores.append(f"{donde}.espera_humano: lista de status del tipo (los que esperan una decisión de una persona)")
+        comandos = d.get("comandos", {})
+        if not isinstance(comandos, dict) or not all(
+                k in todos and isinstance(v, str) and v.startswith("scripts/") and "{id}" in v for k, v in comandos.items()):
+            errores.append(f"{donde}.comandos: {{status: «scripts/… {{id}} …»}} para decidir ese status")
+        variantes = d.get("variantes", {})
+        if not isinstance(variantes, dict) or not all(
+                ID_VALIDO.match(k) and isinstance(v, str) and v.startswith("plantillas/") for k, v in variantes.items()):
+            errores.append(f"{donde}.variantes: {{nombre-kebab: «plantillas/….md»}}")
     return errores
+
+
+def status_que_esperan(d: dict) -> list[str]:
+    """Status de un tipo de ficha que esperan una decisión de una persona («espera_humano» o, si no, el inicial)."""
+    if "espera_humano" in d:
+        return list(d["espera_humano"])
+    return [d["inicial"]] if d.get("solo_humano") and d["inicial"] not in d["solo_humano"] else []
 
 
 def validar_manifiesto(m) -> list[str]:
@@ -185,6 +223,13 @@ def validar_manifiesto(m) -> list[str]:
         errores += _validar_fichas(m["fichas"])
     if "ajustes" in m and not isinstance(m["ajustes"], dict):
         errores.append("ajustes: objeto con valores por defecto")
+    for campo in ("protegidos", "fuera_de_ia"):
+        if campo in m and (not isinstance(m[campo], list) or not all(
+                isinstance(r, str) and r.strip() and not r.startswith("/") and ".." not in r.split("/") for r in m[campo])):
+            errores.append(f"{campo}: lista de rutas (globs) relativas a uxyngraphar/trabajo/<id>/")
+    activar = m.get("al_activar_paquete")
+    if activar is not None and not (isinstance(activar, str) and activar.startswith("scripts/") and "{id}" in activar):
+        errores.append("al_activar_paquete: «scripts/… {id}» (se ejecuta al activar cualquier paquete)")
     return errores
 
 

@@ -1,0 +1,51 @@
+{
+  "manifiesto_formato": 1,
+  "id": "verificaciones-vivas",
+  "version": "1.0.0",
+  "titulo": "Verificaciones vivas",
+  "descripcion": "Contrasta la documentación con el código bajo pedido: rutas y páginas sin ficha, anclas rotas, decisiones aceptadas que el código incumple, manuales sin verificar, ids colgantes y pruebas de humo; el resultado sale como auditoría.",
+  "motor": ">=2.0",
+  "activacion": [
+    "verificaciones-vivas",
+    "verificaciones vivas",
+    "contrastar documentacion",
+    "anclas rotas",
+    "humo"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py"
+  ],
+  "ajustes": {
+    "raices": [
+      "."
+    ],
+    "excluir": [
+      ".git",
+      "node_modules",
+      "dist",
+      "build",
+      ".next",
+      "coverage",
+      "vendor",
+      ".venv",
+      "uxyngraphar"
+    ],
+    "extensiones": [
+      ".ts",
+      ".tsx",
+      ".js",
+      ".jsx",
+      ".mjs",
+      ".py"
+    ],
+    "prefijo_global": "",
+    "campos_ancla": [
+      "ancla",
+      "anclas",
+      "anclas_codigo"
+    ],
+    "dias_manual": 90,
+    "humo": []
+  }
+}

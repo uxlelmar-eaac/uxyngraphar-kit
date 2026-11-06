@@ -23,12 +23,19 @@
       "inicial": "pending",
       "estados": {
         "pending": "pendientes",
+        "en-evaluacion": "en-progreso",
         "promovida": "completadas",
-        "rejected": "canceladas"
+        "archivada": "archivadas",
+        "rejected": "canceladas",
+        "para-eliminar": "para-eliminar"
       },
       "solo_humano": [
         "promovida",
         "rejected"
+      ],
+      "espera_humano": [
+        "pending",
+        "en-evaluacion"
       ]
     },
     "autorizada": {

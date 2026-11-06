@@ -13,7 +13,7 @@ from pathlib import Path
 import uxyn_base as base
 
 SLUG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
-NO_FICHAS = {"INDICE.md", "README.md", "ajustes.json"}
+NO_FICHAS = {"INDICE.md", "README.md", "RESUMEN.md", "ESTADO.md", "ajustes.json"}
 
 
 @dataclass
@@ -44,13 +44,18 @@ def _titulo(cuerpo: str, defecto: str) -> str:
 
 
 def crear(paquete: Path, tipo: str, slug: str, titulo: str = "", subcarpeta: str = "", hoy: date | None = None,
-          por_humano: bool = False) -> Path:
-    """Crea una ficha nueva con el status inicial del tipo y devuelve su ruta."""
+          por_humano: bool = False, variante: str = "") -> Path:
+    """Crea una ficha nueva con el status inicial del tipo (y la plantilla de `variante`, si se da) y devuelve su ruta."""
     if not SLUG.match(slug):
         raise ValueError("slug: kebab-case ASCII (a-z, 0-9, guiones)")
     d = definicion(paquete, tipo)
-    if d["inicial"] in d.get("solo_humano", []) and not por_humano:
-        raise PermissionError(f"las fichas «{tipo}» nacen «{d['inicial']}»: solo las crea una persona (--humano)")
+    variantes = d.get("variantes", {})
+    if variante and variante not in variantes:
+        raise ValueError(f"variante desconocida «{variante}»; variantes de «{tipo}»: {', '.join(variantes) or '(ninguna)'}")
+    if d["inicial"] in d.get("solo_humano", []):
+        if not por_humano:
+            raise PermissionError(f"las fichas «{tipo}» nacen «{d['inicial']}»: solo las crea una persona (--humano)")
+        base.exigir_humano(f"crear una ficha «{tipo}»")
     hoy = hoy or date.today()
     fid = f"{d['prefijo']}-{hoy.strftime('%Y%m%d')}-{slug}"
     raiz = base.carpeta_trabajo(paquete) / d["carpeta"]
@@ -62,7 +67,7 @@ def crear(paquete: Path, tipo: str, slug: str, titulo: str = "", subcarpeta: str
         destino = raiz / subcarpeta / f"{fid}.md"
     if destino.exists() or any(f.id == fid for f in listar(paquete, tipo)):
         raise FileExistsError(f"ya existe la ficha {fid}")
-    plantilla = (Path(paquete) / d["plantilla"]).read_text(encoding="utf-8")
+    plantilla = (Path(paquete) / (variantes[variante] if variante else d["plantilla"])).read_text(encoding="utf-8")
     texto = (plantilla.replace("{{id}}", fid).replace("{{fecha}}", hoy.isoformat())
              .replace("{{titulo}}", titulo or slug.replace("-", " ")).replace("{{status}}", d["inicial"]))
     destino.parent.mkdir(parents=True, exist_ok=True)
@@ -83,6 +88,8 @@ def listar(paquete: Path, tipo: str | None = None) -> list[Ficha]:
             if p.name in NO_FICHAS or p.name.startswith("_"):
                 continue
             fm, cuerpo = base.leer_frontmatter(p.read_text(encoding="utf-8"))
+            if p.stem.isupper() and not fm.get("id"):   # MAYÚSCULAS sin id: índices, registros, informes
+                continue
             salida.append(Ficha(nombre, p, str(fm.get("id") or p.stem), fm.get("status"), _titulo(cuerpo, p.stem)))
     return salida
 
@@ -100,8 +107,10 @@ def cambiar_estado(paquete: Path, fid: str, nuevo: str, por_humano: bool = False
     """Pone `status: nuevo` y, en tipos con estados, mueve la ficha a la carpeta de ese estado."""
     f = buscar(paquete, fid)
     d = definicion(paquete, f.tipo)
-    if nuevo in d.get("solo_humano", []) and not por_humano:
-        raise PermissionError(f"«{nuevo}» solo lo asigna una persona (usa --humano si eres tú)")
+    if nuevo in d.get("solo_humano", []):
+        if not por_humano:
+            raise PermissionError(f"«{nuevo}» solo lo asigna una persona (usa --humano si eres tú)")
+        base.exigir_humano(f"poner «{nuevo}»")
     validos = d.get("estados") or {s: None for s in d["status_validos"]}
     if nuevo not in validos:
         raise ValueError(f"status inválido «{nuevo}»; válidos: {', '.join(validos)}")

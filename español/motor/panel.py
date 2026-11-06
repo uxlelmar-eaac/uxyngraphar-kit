@@ -43,7 +43,7 @@ RUTAS_POST = {
     "/api/catalogo/crear": lambda d: str(catalogo.crear(d["id"], d["titulo"], d.get("descripcion", ""))),
     "/api/catalogo/archivo": lambda d: {"errores": catalogo.guardar_archivo(d["id"], d["rel"], d["contenido"])},
     "/api/catalogo/version": lambda d: catalogo.versionar(d["id"], d["nivel"]),
-    "/api/repo/instalar": lambda d: repo.instalar(_raiz(d), list(d["ids"])),
+    "/api/repo/instalar": lambda d: repo.instalar(_raiz(d), list(d["ids"]), paquete_base=d.get("base") or None),
     "/api/repo/actualizar": lambda d: repo.actualizar(_raiz(d), list(d.get("ids") or []) or None, forzar=bool(d.get("forzar"))),
     "/api/repo/quitar": lambda d: repo.quitar(_raiz(d), d["id"], bool(d.get("con_trabajo"))),
     "/api/repo/verificar": lambda d: repo.verificar(_raiz(d)),

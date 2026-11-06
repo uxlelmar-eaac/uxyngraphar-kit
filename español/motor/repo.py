@@ -82,9 +82,12 @@ def _colocar(raiz_app: Path, pid: str, cat: Path | None) -> Path:
     return destino
 
 
-def instalar(raiz_app: Path, ids: list[str], cat: Path | None = None) -> list[str]:
+def instalar(raiz_app: Path, ids: list[str], cat: Path | None = None, paquete_base: str | None = None) -> list[str]:
+    """Instala `ids`. Con `paquete_base`, FLUJO.json pasa a `trabajar_con` ese paquete (se aplica en cada pedido)."""
     raiz_app = Path(raiz_app).resolve()
     _exigir_2x(raiz_app)
+    if paquete_base and paquete_base not in ids and not carpeta_instalada(raiz_app, paquete_base).exists():
+        raise ValueError(f"--base {paquete_base}: instálalo en la misma orden o antes")
     hechos = []
     for pid in ids:
         if carpeta_instalada(raiz_app, pid).exists():
@@ -93,6 +96,10 @@ def instalar(raiz_app: Path, ids: list[str], cat: Path | None = None) -> list[st
         base.carpeta_trabajo(carpeta_instalada(raiz_app, pid))
         hechos.append(pid)
     generar.regenerar(raiz_app)
+    if paquete_base:
+        errores = generar.guardar_flujo(raiz_app, {**generar.leer_flujo(raiz_app), "modo": "trabajar_con", "trabajar_con": paquete_base})
+        if errores:
+            raise ValueError("FLUJO.json no cambió: " + "; ".join(errores))
     return hechos
 
 
