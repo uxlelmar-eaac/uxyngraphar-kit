@@ -10,7 +10,7 @@
    - `user_service.py` → `user_service_queries.py`, `user_service_validation.py`
 3. El archivo original queda como fachada: compone y reexporta; no duplica lógica.
 4. Mueve las pruebas junto a la parte que prueban.
-5. Ejecuta `revisar.py` y las pruebas del proyecto.
+5. Ejecuta `calidad.py` y las pruebas del proyecto.
 
 ## Qué no hacer
 

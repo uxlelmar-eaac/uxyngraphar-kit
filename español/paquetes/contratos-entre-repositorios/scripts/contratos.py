@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Contratos entre repositorios.
 
-  python3 uxyngraphar/paquetes/contratos-entre-repos/scripts/contratos.py registro           regenera trabajo/…/REGISTRO.md
-  python3 uxyngraphar/paquetes/contratos-entre-repos/scripts/contratos.py comparar [RUTA…]   compara con los repos hermanos
+  python3 uxyngraphar/paquetes/contratos-entre-repositorios/scripts/contratos.py registro           regenera trabajo/…/REGISTRO.md
+  python3 uxyngraphar/paquetes/contratos-entre-repositorios/scripts/contratos.py comparar [RUTA…]   compara con los repos hermanos
       (por defecto, «otros_repos» de ajustes.json; rutas relativas a la raíz de esta app)
 """
 

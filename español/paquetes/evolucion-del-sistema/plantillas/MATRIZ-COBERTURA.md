@@ -8,6 +8,6 @@ Leyenda: **C** cubierto · **P** parcial · **F** falta · **EVO** ficha que lo 
 |-----------|---------|--------------|------------|------------|--------|-----------|
 | Cambios con instrucción aprobada | instrucciones-aprobadas | C | C | P | — | — |
 | Reglas propias del equipo | reglas-del-proyecto | C | C | — | — | — |
-| Arquitectura por capas | arquitectura-por-capas | C | C | — | — | — |
-| Contratos entre repos | contratos-entre-repos | C | C | C | — | — |
+| Arquitectura por capas | arquitectura-monolitica-por-capas | C | C | — | — | — |
+| Contratos entre repos | contratos-entre-repositorios | C | C | C | — | — |
 | … | | | | | | |

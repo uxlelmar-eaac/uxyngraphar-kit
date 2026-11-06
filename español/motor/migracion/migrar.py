@@ -49,9 +49,9 @@ DESTINOS = (
     ("95-memoria/", "memoria-e-historial", "memoria/"),
     ("96-reglas-proyecto/", "reglas-del-proyecto", "reglas/"),
     ("97-ajustes-locales/", "reglas-del-proyecto", "ajustes-locales/"),
-    ("00-nucleo/arquitectura.md", "arquitectura-por-capas", "ARQUITECTURA.md"),
-    ("00-nucleo/restricciones.md", "arquitectura-por-capas", "RESTRICCIONES.md"),
-    ("00-nucleo/registro-ids-compartidos.md", "contratos-entre-repos", "REGISTRO-1X.md"),
+    ("00-nucleo/arquitectura.md", "arquitectura-monolitica-por-capas", "ARQUITECTURA.md"),
+    ("00-nucleo/restricciones.md", "arquitectura-monolitica-por-capas", "RESTRICCIONES.md"),
+    ("00-nucleo/registro-ids-compartidos.md", "contratos-entre-repositorios", "REGISTRO-1X.md"),
     ("00-nucleo/glosario-dominio.md", "calidad-de-codigo", "GLOSARIO.md"),
     ("ESTADO.md", "instrucciones-aprobadas", "ESTADO.md"),
 )
@@ -60,7 +60,7 @@ ESTADO_1X = re.compile(r"^0[1-9]-(?:listas-)?([a-z-]+)/(\d{4}-\d{2}-\d{2})/(.+)$
 NUCLEO_PROPIO = {
     "50-sistema-integral/mapa-capas.md": "documentacion-espejo/mapa-capas.md",
     "50-sistema-integral/vision-espejo.md": "documentacion-espejo/vision-espejo.md",
-    "00-nucleo/plantilla-modulo.md": "arquitectura-por-capas/PLANTILLA-MODULO.md",
+    "00-nucleo/plantilla-modulo.md": "arquitectura-monolitica-por-capas/PLANTILLA-MODULO.md",
 }
 # status 1.x → status 2.0 por paquete; se aplica tras copiar (el respaldo guarda el original).
 EQUIVALENCIAS_1X = {
@@ -72,7 +72,7 @@ CAMPOS_1X = {"approved": {"approved_at": "aprobada-en-1x"}}
 PAQUETE_BASE = "instrucciones-aprobadas"   # en 1.x el ciclo era obligatorio en cada pedido
 COMUNES = ["instrucciones-aprobadas", "calidad-de-codigo", "secretos-y-credenciales", "decisiones-de-arquitectura", "mapa-de-modulos", "documentacion-espejo",
            "herramientas-autorizadas", "auditorias-tecnicas", "deuda-y-mejoras", "manuales-operativos", "memoria-e-historial",
-           "evolucion-del-sistema", "reglas-del-proyecto", "revision-humana", "contratos-entre-repos", "arquitectura-por-capas",
+           "evolucion-del-sistema", "reglas-del-proyecto", "revision-humana", "contratos-entre-repositorios", "arquitectura-monolitica-por-capas",
            "verificaciones-vivas"]
 
 
@@ -214,7 +214,7 @@ def planificar(app: Path, carpeta: Path) -> Plan:
     config = carpeta / "uxyngraphar.config.json"
     if config.is_file():
         plan.ajustes = _ajustes(json.loads(config.read_text(encoding="utf-8")))
-    plan.ajustes["arquitectura-por-capas"] = {"perfil": plan.pack}
+    plan.ajustes["arquitectura-monolitica-por-capas"] = {"perfil": plan.pack}
     if usados - set(plan.paquetes) - {LEGADO}:
         plan.bloqueos.append(f"destinos sin paquete: {sorted(usados - set(plan.paquetes) - {LEGADO})}")
     return plan

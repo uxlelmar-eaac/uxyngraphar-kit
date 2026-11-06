@@ -2,12 +2,13 @@
   "manifiesto_formato": 1,
   "id": "evolucion-del-sistema",
   "version": "1.0.0",
-  "titulo": "Evolución del sistema de gobernanza",
+  "titulo": "Evolución del sistema",
   "descripcion": "Buzón de mejoras del propio sistema (paquetes, plantillas, procesos), no del producto: fichas EVO con evidencia, matriz de cobertura y exportación para llevarlas al catálogo.",
+  "familia": "sistema",
   "motor": ">=2.0",
   "activacion": [
     "evolucion-del-sistema",
-    "evolucion",
+    "evolucion del sistema",
     "mejorar el sistema",
     "cobertura del sistema"
   ],

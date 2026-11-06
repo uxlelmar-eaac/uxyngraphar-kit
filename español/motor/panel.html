@@ -57,7 +57,7 @@
   <div id="vista-catalogo" hidden>
     <section><h2>Catálogo</h2><div id="catalogo"></div></section>
     <section><h2>Crear paquete</h2>
-      <div class="fila"><input id="nuevo-id" placeholder="id-en-kebab-case"><input id="nuevo-titulo" size="40" placeholder="Título"><input id="nuevo-desc" size="50" placeholder="Qué gobierna"><button class="primario" onclick="crearPaquete()">Crear</button></div>
+      <div class="fila"><input id="nuevo-id" placeholder="objeto-de-gobierno (NOMENCLATURA.md)"><input id="nuevo-titulo" size="40" placeholder="Título"><input id="nuevo-desc" size="50" placeholder="Qué gobierna"><select id="nuevo-familia" title="familia"><option>proceso</option><option>codigo</option><option>arquitectura</option><option>documentacion</option><option>seguridad</option><option>producto</option><option>sistema</option></select><button class="primario" onclick="crearPaquete()">Crear</button></div>
     </section>
     <section id="editor" hidden><h2 id="editor-titulo"></h2>
       <div class="fila"><select id="archivos" onchange="abrirArchivo()"></select><input id="nuevo-archivo" placeholder="nueva/ruta.md"><button onclick="nuevoArchivo()">Nuevo archivo</button>
@@ -115,7 +115,7 @@ async function cargarCatalogo() {
   const cat = await api("/api/catalogo");
   $("catalogo").innerHTML = `<table><tr><th>Paquete</th><th>Versión</th><th>Estado</th><th></th></tr>${cat.map((m) => `<tr><td><b>${esc(m.titulo)}</b> <span class="tenue">${esc(m.id)}</span><br><span class="tenue">${esc(m.descripcion)}</span></td><td>${esc(m.version)}</td><td class="${m.errores.length ? "mal" : "bien"}">${m.errores.length ? esc(m.errores.join("; ")) : "válido"}${(m.avisos || []).length ? `<br><span class="tenue">aviso: ${esc(m.avisos.join("; "))}</span>` : ""}</td><td><button onclick="editar('${esc(m.id)}')">Editar</button></td></tr>`).join("")}</table>`;
 }
-async function crearPaquete() { await api("/api/catalogo/crear", { id: $("nuevo-id").value.trim(), titulo: $("nuevo-titulo").value.trim(), descripcion: $("nuevo-desc").value.trim() }); aviso("Paquete creado"); await cargarCatalogo(); editar($("nuevo-id").value.trim()); }
+async function crearPaquete() { await api("/api/catalogo/crear", { id: $("nuevo-id").value.trim(), titulo: $("nuevo-titulo").value.trim(), descripcion: $("nuevo-desc").value.trim(), familia: $("nuevo-familia").value }); aviso("Paquete creado"); await cargarCatalogo(); editar($("nuevo-id").value.trim()); }
 async function editar(id) {
   editando = id; const archivos = await api("/api/catalogo/archivos", { id }, "GET");
   $("editor").hidden = false; $("editor-titulo").textContent = "Editar " + id + " (catálogo)";

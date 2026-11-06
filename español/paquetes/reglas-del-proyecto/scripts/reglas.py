@@ -5,7 +5,7 @@
   python3 uxyngraphar/paquetes/reglas-del-proyecto/scripts/reglas.py para <ruta|ancla>…     reglas que tocan esas rutas (anclas de una instrucción)
   python3 uxyngraphar/paquetes/reglas-del-proyecto/scripts/reglas.py comprobar [RUTA…] [--git]   evalúa sin IA las reglas con comprobación
   python3 uxyngraphar/paquetes/reglas-del-proyecto/scripts/reglas.py ajustes <id-paquete>   ajustes locales activos de ese paquete
-  python3 uxyngraphar/paquetes/reglas-del-proyecto/scripts/reglas.py aprobar-ajuste <AJ-…> --humano   activa o revisa un ajuste (persona)
+  python3 uxyngraphar/paquetes/reglas-del-proyecto/scripts/reglas.py aprobar-ajuste <AJL-…> --humano   activa o revisa un ajuste (persona)
 """
 
 from __future__ import annotations

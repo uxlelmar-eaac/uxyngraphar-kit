@@ -2,12 +2,13 @@
   "manifiesto_formato": 1,
   "id": "documentacion-espejo",
   "version": "1.0.0",
-  "titulo": "Espejo del sistema",
+  "titulo": "Documentación espejo",
   "descripcion": "Documentación espejo del código: una ficha por archivo o carpeta relevante (rol, responsabilidades, interacciones), con cobertura medible y detección de espejos huérfanos.",
+  "familia": "documentacion",
   "motor": ">=2.0",
   "activacion": [
     "documentacion-espejo",
-    "espejo",
+    "documentacion espejo",
     "sistema integral"
   ],
   "entrada": "README.md",

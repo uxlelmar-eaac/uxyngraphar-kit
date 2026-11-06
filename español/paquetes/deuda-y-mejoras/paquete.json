@@ -2,13 +2,15 @@
   "manifiesto_formato": 1,
   "id": "deuda-y-mejoras",
   "version": "1.0.0",
-  "titulo": "Mejoras pendientes",
+  "titulo": "Deuda y mejoras",
   "descripcion": "Cola de deuda técnica y bugs detectados fuera de alcance: se registran con evidencia y no se implementan hasta que una persona los apruebe.",
+  "familia": "proceso",
   "motor": ">=2.0",
   "activacion": [
     "deuda-y-mejoras",
-    "mejoras",
-    "deuda tecnica"
+    "deuda y mejoras",
+    "deuda tecnica",
+    "mejoras pendientes"
   ],
   "entrada": "README.md",
   "verificaciones": [

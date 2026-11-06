@@ -2,7 +2,7 @@
 id: {{id}}
 status: {{status}}
 fecha: {{fecha}}
-regla: RP-…
+regla: REG-…
 archivos: []
 instruccion: null
 hasta: null

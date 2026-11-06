@@ -1,6 +1,6 @@
-# Espejo del sistema
+# Documentación espejo
 
-Activado con «usa el paquete documentacion-espejo» / «sigue el protocolo espejo» o por `uxyngraphar/FLUJO.json`. `S=uxyngraphar/paquetes/documentacion-espejo/scripts`.
+Activado con «usa el paquete documentacion-espejo» / «sigue el protocolo documentacion espejo» o por `uxyngraphar/FLUJO.json`. `S=uxyngraphar/paquetes/documentacion-espejo/scripts`.
 
 1. Integridad: `python3 $S/comun/verificar-integridad.py`. Si falla, **detente y avisa**.
 2. Lee las **Reglas** (al final de este archivo).

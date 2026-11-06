@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Arquitectura por capas.
 
-  python3 uxyngraphar/paquetes/arquitectura-por-capas/scripts/capas.py mapa                 módulos y capas encontrados
-  python3 uxyngraphar/paquetes/arquitectura-por-capas/scripts/capas.py revisar [RUTA…]      imports que rompen las capas
-  python3 uxyngraphar/paquetes/arquitectura-por-capas/scripts/capas.py iniciar             crea ARQUITECTURA.md del proyecto si falta
+  python3 uxyngraphar/paquetes/arquitectura-monolitica-por-capas/scripts/capas.py mapa                 módulos y capas encontrados
+  python3 uxyngraphar/paquetes/arquitectura-monolitica-por-capas/scripts/capas.py revisar [RUTA…]      imports que rompen las capas
+  python3 uxyngraphar/paquetes/arquitectura-monolitica-por-capas/scripts/capas.py iniciar             crea ARQUITECTURA.md del proyecto si falta
 """
 
 from __future__ import annotations

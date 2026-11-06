@@ -4,16 +4,17 @@
   "version": "1.0.0",
   "titulo": "Calidad de código",
   "descripcion": "Archivos de máximo 350 líneas con división relacional, nombres autoexplicativos, código y commits en inglés ASCII con Conventional Commits.",
+  "familia": "codigo",
   "motor": ">=2.0",
   "activacion": [
     "calidad-de-codigo",
-    "calidad",
+    "calidad de codigo",
     "limite de lineas"
   ],
   "entrada": "README.md",
   "verificaciones": [
     "scripts/comun/verificar.py",
-    "scripts/revisar.py"
+    "scripts/calidad.py"
   ],
   "protegidos": [
     "GLOSARIO.md"

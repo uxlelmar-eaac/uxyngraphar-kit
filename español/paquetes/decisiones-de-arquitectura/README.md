@@ -1,4 +1,4 @@
-# Decisiones de arquitectura (ADR)
+# Decisiones de arquitectura
 
 Activado con «usa el paquete decisiones-de-arquitectura» / «sigue el protocolo adr» o por `uxyngraphar/FLUJO.json`. `S=uxyngraphar/paquetes/decisiones-de-arquitectura/scripts`.
 

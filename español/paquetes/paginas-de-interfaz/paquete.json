@@ -2,24 +2,25 @@
   "manifiesto_formato": 1,
   "id": "paginas-de-interfaz",
   "version": "1.0.0",
-  "titulo": "Mapa de rutas de interfaz",
+  "titulo": "Páginas de interfaz",
   "descripcion": "Una ficha viva por página o ruta de la interfaz (acceso, datos que consume, estados de UI, componentes y archivos ancla) que se actualiza con cada cambio de navegación.",
+  "familia": "documentacion",
   "motor": ">=2.0",
   "activacion": [
     "paginas-de-interfaz",
-    "rutas ui",
-    "paginas"
+    "paginas de interfaz",
+    "rutas ui"
   ],
   "entrada": "README.md",
   "verificaciones": [
     "scripts/comun/verificar.py",
-    "scripts/verificar-rutas.py"
+    "scripts/verificar-paginas.py"
   ],
   "fichas": {
-    "ruta": {
+    "pagina": {
       "carpeta": ".",
-      "prefijo": "RUT",
-      "plantilla": "plantillas/ruta.md",
+      "prefijo": "PAG",
+      "plantilla": "plantillas/pagina.md",
       "inicial": "activa",
       "status_validos": [
         "activa",

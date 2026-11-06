@@ -1,6 +1,6 @@
-# Auditorías
+# Auditorías técnicas
 
-Activado con «usa el paquete auditorias-tecnicas» / «sigue el protocolo auditoria» o por `uxyngraphar/FLUJO.json`. `S=uxyngraphar/paquetes/auditorias-tecnicas/scripts`.
+Activado con «usa el paquete auditorias-tecnicas» / «sigue el protocolo auditoria tecnica» o por `uxyngraphar/FLUJO.json`. `S=uxyngraphar/paquetes/auditorias-tecnicas/scripts`.
 
 1. Integridad: `python3 $S/comun/verificar-integridad.py`. Si falla, **detente y avisa**.
 2. Lee las **Reglas** (al final de este archivo).

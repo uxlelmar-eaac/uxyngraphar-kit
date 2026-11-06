@@ -1,6 +1,6 @@
 # Herramientas autorizadas
 
-Activado con «usa el paquete herramientas-autorizadas» / «sigue el protocolo herramientas» o por `uxyngraphar/FLUJO.json`. `S=uxyngraphar/paquetes/herramientas-autorizadas/scripts`.
+Activado con «usa el paquete herramientas-autorizadas» / «sigue el protocolo herramientas autorizadas» o por `uxyngraphar/FLUJO.json`. `S=uxyngraphar/paquetes/herramientas-autorizadas/scripts`.
 
 1. Integridad: `python3 $S/comun/verificar-integridad.py`. Si falla, **detente y avisa**.
 2. Lee las **Reglas** (al final de este archivo).

@@ -4,13 +4,14 @@
   "version": "1.0.0",
   "titulo": "Verificaciones vivas",
   "descripcion": "Contrasta la documentación con el código bajo pedido: rutas y páginas sin ficha, anclas rotas, decisiones aceptadas que el código incumple, manuales sin verificar, ids colgantes y pruebas de humo; el resultado sale como auditoría.",
+  "familia": "codigo",
   "motor": ">=2.0",
   "activacion": [
     "verificaciones-vivas",
     "verificaciones vivas",
     "contrastar documentacion",
     "anclas rotas",
-    "humo"
+    "pruebas de humo"
   ],
   "entrada": "README.md",
   "verificaciones": [

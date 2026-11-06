@@ -120,8 +120,8 @@ class TestMigracion(unittest.TestCase):
         self.assertTrue(i["aplicada"], i)
         trabajo = self.app / migrar.TRABAJO
         esperados = {
-            "00-nucleo/arquitectura.md": "arquitectura-por-capas/ARQUITECTURA.md",
-            "00-nucleo/restricciones.md": "arquitectura-por-capas/RESTRICCIONES.md",
+            "00-nucleo/arquitectura.md": "arquitectura-monolitica-por-capas/ARQUITECTURA.md",
+            "00-nucleo/restricciones.md": "arquitectura-monolitica-por-capas/RESTRICCIONES.md",
             "46-evolucion-documentacion/matriz-cobertura-proyectos.md": "evolucion-del-sistema/MATRIZ-COBERTURA.md",
             "46-evolucion-documentacion/01-pendientes/2026-01-03/EVO-20260103-cobertura.md": "evolucion-del-sistema/pendientes/EVO-20260103-cobertura.md",
             "96-reglas-proyecto/RP-001.md": "reglas-del-proyecto/reglas/RP-001.md",
@@ -138,7 +138,7 @@ class TestMigracion(unittest.TestCase):
         self.assertFalse((self.app / "docs").exists())
         self.assertTrue(all(e["integro"] for e in repo.estado(self.app)))
         self.assertEqual(len(repo.estado(self.app)), 18)
-        self.assertEqual(json.loads((trabajo / "arquitectura-por-capas/ajustes.json").read_text())["perfil"], "servidor")
+        self.assertEqual(json.loads((trabajo / "arquitectura-monolitica-por-capas/ajustes.json").read_text())["perfil"], "servidor")
         self.assertEqual(json.loads((trabajo / "calidad-de-codigo/ajustes.json").read_text())["limite_lineas"], 300)
         self.assertEqual(json.loads((trabajo / "secretos-y-credenciales/ajustes.json").read_text())["permitir"], ["src/fixtures/**"])
         flujo = generar.leer_flujo(self.app)

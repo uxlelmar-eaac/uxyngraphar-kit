@@ -1,4 +1,4 @@
-"""Pruebas funcionales de los paquetes nuevos (no extraídos del 1.x): landing-bento y experiencia-de-usuario."""
+"""Pruebas funcionales de los paquetes nuevos (no extraídos del 1.x): paginas-de-aterrizaje-bento y experiencia-de-usuario."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ class TestNuevos(unittest.TestCase):
         cls.tmp = tempfile.TemporaryDirectory()
         cls.app = Path(cls.tmp.name) / "app"
         cls.app.mkdir()
-        repo.instalar(cls.app, ["landing-bento", "experiencia-de-usuario"])
+        repo.instalar(cls.app, ["paginas-de-aterrizaje-bento", "experiencia-de-usuario"])
 
     @classmethod
     def tearDownClass(cls):
@@ -59,7 +59,7 @@ class TestNuevos(unittest.TestCase):
         ruta.write_text(f"{cabecera}## {titulo_tabla}\n{bloque}\n{filas}\n{despues}", encoding="utf-8")
 
     def test_bento_mosaico_y_checklist(self):
-        pid = "landing-bento"
+        pid = "paginas-de-aterrizaje-bento"
         ficha = self.nueva(pid, "landing", "inicio")
         r = correr(self.s(pid, "verificar-bento.py"), cwd=self.app)
         self.assertEqual(r.returncode, 0, r.stderr)

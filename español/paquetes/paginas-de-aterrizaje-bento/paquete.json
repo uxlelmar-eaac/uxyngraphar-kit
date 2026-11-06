@@ -1,14 +1,16 @@
 {
   "manifiesto_formato": 1,
-  "id": "landing-bento",
+  "id": "paginas-de-aterrizaje-bento",
   "version": "1.0.0",
-  "titulo": "Landing page bento",
+  "titulo": "Páginas de aterrizaje bento",
   "descripcion": "Diseño y construcción de landing pages con mosaico bento: brief, jerarquía de celdas, textos breves, un solo CTA principal, orden móvil y checklist de accesibilidad y rendimiento antes de publicar.",
+  "familia": "producto",
   "motor": ">=2.0",
   "activacion": [
-    "landing-bento",
+    "paginas-de-aterrizaje-bento",
+    "paginas de aterrizaje bento",
     "landing bento",
-    "bento"
+    "pagina de aterrizaje"
   ],
   "entrada": "README.md",
   "verificaciones": [

@@ -1,14 +1,15 @@
 {
   "manifiesto_formato": 1,
-  "id": "contratos-entre-repos",
+  "id": "contratos-entre-repositorios",
   "version": "1.0.0",
   "titulo": "Contratos entre repositorios",
   "descripcion": "Contratos entre el repo que provee una API y los que la consumen: ids compartidos estables, registro, comparación con los repos hermanos y orden de merge (proveedor primero), sin duplicar las fichas del proveedor.",
+  "familia": "arquitectura",
   "motor": ">=2.0",
   "activacion": [
-    "contratos-entre-repos",
-    "contratos",
-    "multi-repo",
+    "contratos-entre-repositorios",
+    "contratos entre repositorios",
+    "contratos de api",
     "ids compartidos"
   ],
   "entrada": "README.md",

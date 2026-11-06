@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "titulo": "Plantilla",
   "descripcion": "Plantilla",
+  "familia": "proceso",
   "motor": ">=2.0",
   "activacion": [
     "plantilla"
@@ -17,9 +18,9 @@
       "carpeta": ".",
       "prefijo": "FIC",
       "plantilla": "plantillas/ficha.md",
-      "inicial": "abierta",
+      "inicial": "propuesta",
       "estados": {
-        "abierta": "pendientes",
+        "propuesta": "pendientes",
         "en-curso": "en-progreso",
         "cerrada": "completadas"
       }

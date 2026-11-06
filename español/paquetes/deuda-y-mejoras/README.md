@@ -1,6 +1,6 @@
-# Mejoras pendientes
+# Deuda y mejoras
 
-Activado con «usa el paquete deuda-y-mejoras» / «sigue el protocolo mejoras» o por `uxyngraphar/FLUJO.json`. `S=uxyngraphar/paquetes/deuda-y-mejoras/scripts`.
+Activado con «usa el paquete deuda-y-mejoras» / «sigue el protocolo deuda tecnica» o por `uxyngraphar/FLUJO.json`. `S=uxyngraphar/paquetes/deuda-y-mejoras/scripts`.
 
 1. Integridad: `python3 $S/comun/verificar-integridad.py`. Si falla, **detente y avisa**.
 2. Lee las **Reglas** (al final de este archivo).

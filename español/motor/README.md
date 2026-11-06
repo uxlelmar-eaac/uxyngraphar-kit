@@ -7,8 +7,8 @@ español/
   motor/                  todo lo que instala, actualiza, configura y desinstala uxyngraphar
     uxyngraphar.py        el único comando: panel, catálogo, instalar/actualizar/quitar, flujo, migrar…
     VERSION               versión de la herramienta
-    README.md  ESPECIFICACION.md  CHANGELOG.md
-    cli.py catalogo.py especificacion.py repo.py generar.py panel.py panel.html
+    README.md  ESPECIFICACION.md  NOMENCLATURA.md  CHANGELOG.md
+    cli.py catalogo.py especificacion.py nomenclatura.py nomenclatura.json repo.py generar.py panel.py panel.html
     migracion/            migración de instalaciones 1.x
     distribucion/         instalador de una línea y publicación de releases
     pruebas/              pruebas de todo lo anterior
@@ -18,6 +18,7 @@ español/
 
 Cada paquete lleva todo lo que necesita para funcionar y verificarse (también `scripts/comun/`): copiar su carpeta a otro
 `uxyngraphar/paquetes/` basta. `validar` avisa, sin fallar, si su `scripts/comun/` difiere de `paquetes/!base/`.
+Los nombres de los paquetes siguen `motor/NOMENCLATURA.md`; `validar` y `crear` la comprueban.
 
 ## En un repo
 

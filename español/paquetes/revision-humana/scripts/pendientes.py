@@ -1,4 +1,4 @@
-"""Fichas que esperan una decisión de una persona en los paquetes instalados; compartido por revisar.py y su verificación."""
+"""Fichas que esperan una decisión de una persona en los paquetes instalados; compartido por revision.py y su verificación."""
 
 from __future__ import annotations
 

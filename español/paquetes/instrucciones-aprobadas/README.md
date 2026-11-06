@@ -1,6 +1,6 @@
-# Ciclo de instrucciones
+# Instrucciones aprobadas
 
-Activado con «usa el paquete instrucciones-aprobadas» / «sigue el protocolo uxyngraphar» (frases en el manifiesto) o por `uxyngraphar/FLUJO.json`. Rutas relativas a la raíz de la app. `S=uxyngraphar/paquetes/instrucciones-aprobadas/scripts`.
+Activado con «usa el paquete instrucciones-aprobadas» / «sigue el protocolo uxyngraphar» o por `uxyngraphar/FLUJO.json`. Rutas relativas a la raíz de la app. `S=uxyngraphar/paquetes/instrucciones-aprobadas/scripts`.
 
 1. Integridad: `python3 $S/comun/verificar-integridad.py`. Si falla, **detente y avisa**.
 2. Lee las **Reglas** (al final de este archivo). Para orientarte, si existe, `uxyngraphar/trabajo/instrucciones-aprobadas/ESTADO.md` (nada más del historial).

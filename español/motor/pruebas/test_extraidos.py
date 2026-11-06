@@ -41,11 +41,11 @@ class TestExtraidos(unittest.TestCase):
 
     def test_calidad_limite_de_lineas(self):
         largo = self.escribir(self.app / "src" / "orders" / "big-service.ts", "export const x = 1;\n" * 351)
-        r = correr(self.s("calidad-de-codigo", "revisar.py"), str(largo), cwd=self.app)
+        r = correr(self.s("calidad-de-codigo", "calidad.py"), str(largo), cwd=self.app)
         self.assertEqual(r.returncode, 1)
         self.assertIn("351 líneas", r.stdout)
         largo.write_text("export const x = 1;\n" * 10, encoding="utf-8")
-        self.assertEqual(correr(self.s("calidad-de-codigo", "revisar.py"), str(largo), cwd=self.app).returncode, 0)
+        self.assertEqual(correr(self.s("calidad-de-codigo", "calidad.py"), str(largo), cwd=self.app).returncode, 0)
 
     def test_espejo_cobertura_y_huerfanos(self):
         self.escribir(self.app / "src" / "orders" / "service.ts", "export {};\n")

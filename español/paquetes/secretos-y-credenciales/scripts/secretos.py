@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Escanea la app en busca de secretos (por contenido y por nombre de archivo). Código 0 = limpio; 1 = hallazgos.
 
-  python3 uxyngraphar/paquetes/secretos-y-credenciales/scripts/escanear.py [--git] [--informe] [RUTA…]
+  python3 uxyngraphar/paquetes/secretos-y-credenciales/scripts/secretos.py [--git] [--informe] [RUTA…]
 
 Sin RUTA usa «raices» de los ajustes. --git: solo archivos versionados o preparados. Los valores siempre salen enmascarados.
 """
@@ -20,7 +20,7 @@ sys.dont_write_bytecode = True   # el paquete es inmutable: ni cachés dentro
 AQUI = Path(__file__).resolve().parent
 sys.path[:0] = [str(AQUI), str(AQUI / "comun")]
 
-import patrones_secretos as pat  # noqa: E402
+import secretos_patrones as pat  # noqa: E402
 import uxyn_base as base  # noqa: E402
 
 PAQUETE = base.carpeta_paquete(Path(__file__).resolve().parent)

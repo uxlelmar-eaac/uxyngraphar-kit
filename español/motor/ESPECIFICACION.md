@@ -50,11 +50,12 @@ Requisitos de portabilidad:
 | Campo | Tipo | Regla |
 |-------|------|-------|
 | `manifiesto_formato` | entero | `1` |
-| `id` | texto | kebab-case ASCII; igual al nombre de la carpeta |
+| `id` | texto | kebab-case ASCII; igual al nombre de la carpeta; cumple `NOMENCLATURA.md` |
 | `version` | texto | semver `X.Y.Z` |
-| `titulo`, `descripcion` | texto | no vacíos |
+| `titulo`, `descripcion` | texto | no vacíos; título = id en lenguaje natural (`NOMENCLATURA.md`) |
+| `familia` | texto | `proceso`, `codigo`, `arquitectura`, `documentacion`, `seguridad`, `producto` o `sistema` |
 | `motor` | texto | `>=X.Y`; versión mínima del motor |
-| `activacion` | lista | frases que activan el paquete; incluye el `id` |
+| `activacion` | lista | frases que activan el paquete: el `id`, el id con espacios y otras sin repetir ni contener las de otro paquete |
 | `entrada` | texto | `README.md` |
 | `verificaciones` | lista | `scripts/*.py` que el agente ejecuta antes de cerrar (la genérica: `scripts/comun/verificar.py`) |
 | `fichas` | objeto | opcional; tipos de ficha (§3.1) |
@@ -155,17 +156,21 @@ Cada instalación, actualización o desinstalación regenera, a partir de los pa
 
 Sin paquetes instalados no queda ninguna regla propia.
 
-## 7. Versionado
+## 7. Nomenclatura
+
+Los nombres de los paquetes del kit (ids, títulos, familia, tipos, prefijos de 3 letras únicos, status, frases de activación, scripts y archivos) siguen `motor/NOMENCLATURA.md`, con vocabulario y excepciones en `motor/nomenclatura.json`. `validar` y `crear` la comprueban; `uxyngraphar nomenclatura` lista los status heredados pendientes de migrar. La norma es del kit: no se aplica a los proyectos donde se instalan los paquetes.
+
+## 8. Versionado
 
 - Cada paquete tiene su semver: MAYOR si cambia la forma del trabajo (`fichas`, carpetas), MENOR si añade reglas o guías, PARCHE si corrige.
 - Actualizar reemplaza `uxyngraphar/paquetes/<id>/` completo; nunca toca `uxyngraphar/trabajo/`.
 - Un cambio MAYOR que exija mover trabajo lo hace el motor con respaldo, nunca el paquete.
 
-## 8. Migración desde 1.x
+## 9. Migración desde 1.x
 
 `uxyngraphar migrar --repo RUTA` busca instalaciones 1.x (`.uxyngraphar.lock` o numeración `00-nucleo`/`05-instrucciones`) en `docs/` o `uxyngraphar/` (hasta 4 niveles) y **solo simula**; `--aplicar` migra.
 
 - Se bloquea (sin tocar nada) si no hay lock, si hay un archivo que la clasificación 1.x no cubre, un archivo de núcleo distinto del lock, `uxyngraphar/` junto a `docs/` o una carpeta `.uxyngraphar-migrando/` de una migración interrumpida.
-- Contenido del proyecto (clases P/M/C) → `uxyngraphar/trabajo/<paquete>/` según la tabla de `migrar.DESTINOS` (`05-instrucciones/` → `instrucciones-aprobadas/instrucciones/`, `20-decisiones/` → `decisiones-de-arquitectura/`, `15-rutas/` → `rutas-de-api/` o `paginas-de-interfaz/`, `46-…` → `evolucion-del-sistema/`, `96-…`/`97-…` → `reglas-del-proyecto/`, `00-nucleo/arquitectura.md` y `restricciones.md` → `arquitectura-por-capas/`, `registro-ids-compartidos.md` → `contratos-entre-repos/REGISTRO-1X.md`, `glosario-dominio.md` → `calidad-de-codigo/GLOSARIO.md`, `ESTADO.md` → `instrucciones-aprobadas/`, …); los status 1.x se adaptan a los 2.0 (`executing` → `approved`, `archivada` → `archived`…); `mapa-capas.md`, `vision-espejo.md` y `plantilla-modulo.md` editados van a su paquete en vez de bloquear; `0N-estado/<fecha>/x.md` pasa a `estado/x.md` (con la fecha delante solo si dos archivos chocan); lo que no tiene paquete y los artefactos locales (X: tokens de aprobación, lock) → `uxyngraphar/trabajo/_legado-1x/`. `uxyngraphar.config.json` se reparte en `ajustes.json`.
-- Al aplicar: respaldo en `.uxyngraphar-respaldos/migracion-<fecha>/` (pack, AGENTES/AGENTS/CLAUDE, `.claude/settings.json`, CODEOWNERS, guardia de Cursor, exclusiones de IA, ganchos git, workflow `uxyngraphar.yml`) → copia a `.uxyngraphar-migrando/` → verificación sha256 → retirada del pack 1.x y de sus protecciones → el trabajo pasa a `uxyngraphar/trabajo/` (también cuando el pack 1.x vivía en `uxyngraphar/`) → instalación de los 18 paquetes equivalentes (`arquitectura-por-capas` con el perfil del pack) con `FLUJO.json` en `trabajar_con` = `instrucciones-aprobadas`. Cualquier fallo restaura el estado anterior desde el respaldo.
+- Contenido del proyecto (clases P/M/C) → `uxyngraphar/trabajo/<paquete>/` según la tabla de `migrar.DESTINOS` (`05-instrucciones/` → `instrucciones-aprobadas/instrucciones/`, `20-decisiones/` → `decisiones-de-arquitectura/`, `15-rutas/` → `rutas-de-api/` o `paginas-de-interfaz/`, `46-…` → `evolucion-del-sistema/`, `96-…`/`97-…` → `reglas-del-proyecto/`, `00-nucleo/arquitectura.md` y `restricciones.md` → `arquitectura-monolitica-por-capas/`, `registro-ids-compartidos.md` → `contratos-entre-repositorios/REGISTRO-1X.md`, `glosario-dominio.md` → `calidad-de-codigo/GLOSARIO.md`, `ESTADO.md` → `instrucciones-aprobadas/`, …); los status 1.x se adaptan a los 2.0 (`executing` → `approved`, `archivada` → `archived`…); `mapa-capas.md`, `vision-espejo.md` y `plantilla-modulo.md` editados van a su paquete en vez de bloquear; `0N-estado/<fecha>/x.md` pasa a `estado/x.md` (con la fecha delante solo si dos archivos chocan); lo que no tiene paquete y los artefactos locales (X: tokens de aprobación, lock) → `uxyngraphar/trabajo/_legado-1x/`. `uxyngraphar.config.json` se reparte en `ajustes.json`.
+- Al aplicar: respaldo en `.uxyngraphar-respaldos/migracion-<fecha>/` (pack, AGENTES/AGENTS/CLAUDE, `.claude/settings.json`, CODEOWNERS, guardia de Cursor, exclusiones de IA, ganchos git, workflow `uxyngraphar.yml`) → copia a `.uxyngraphar-migrando/` → verificación sha256 → retirada del pack 1.x y de sus protecciones → el trabajo pasa a `uxyngraphar/trabajo/` (también cuando el pack 1.x vivía en `uxyngraphar/`) → instalación de los 18 paquetes equivalentes (`arquitectura-monolitica-por-capas` con el perfil del pack) con `FLUJO.json` en `trabajar_con` = `instrucciones-aprobadas`. Cualquier fallo restaura el estado anterior desde el respaldo.
 - `.gitignore`/`.gitattributes` con líneas del pack 1.x solo se avisan.

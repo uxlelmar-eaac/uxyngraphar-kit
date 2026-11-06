@@ -145,7 +145,7 @@ def paginas(a: dict) -> list[Hallazgo]:
     if not en_codigo:
         return [Hallazgo("info", "no se detectaron páginas (carpetas app/**/page.*)", "—")]
     salida, documentadas = [], set()
-    for f, fm, _ in _con_frontmatter("paginas-de-interfaz", "ruta"):
+    for f, fm, _ in _con_frontmatter("paginas-de-interfaz", "pagina"):
         path = normalizar(str(fm.get("path", "")))
         documentadas.add(path)
         if fm.get("status") == "activa" and path not in en_codigo:

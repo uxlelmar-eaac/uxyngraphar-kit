@@ -1,6 +1,6 @@
-# Memoria y archivo
+# Memoria e historial
 
-Activado con «usa el paquete memoria-e-historial» / «sigue el protocolo memoria» o por `uxyngraphar/FLUJO.json`. `S=uxyngraphar/paquetes/memoria-e-historial/scripts`.
+Activado con «usa el paquete memoria-e-historial» / «sigue el protocolo memoria del proyecto» o por `uxyngraphar/FLUJO.json`. `S=uxyngraphar/paquetes/memoria-e-historial/scripts`.
 
 1. Integridad: `python3 $S/comun/verificar-integridad.py`. Si falla, **detente y avisa**.
 2. Lee las **Reglas** (al final de este archivo).

@@ -22,7 +22,7 @@ def main() -> int:
         print(f"aviso: {a}")
     for e in errores:
         print(f"error: {e}", file=sys.stderr)
-    print(f"contratos-entre-repos: {len(errores)} errores, {len(avisos)} avisos")
+    print(f"contratos-entre-repositorios: {len(errores)} errores, {len(avisos)} avisos")
     return 1 if errores else 0
 
 

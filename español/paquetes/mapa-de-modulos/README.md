@@ -1,6 +1,6 @@
-# Áreas y módulos
+# Mapa de módulos
 
-Activado con «usa el paquete mapa-de-modulos» / «sigue el protocolo areas» o por `uxyngraphar/FLUJO.json`. `S=uxyngraphar/paquetes/mapa-de-modulos/scripts`.
+Activado con «usa el paquete mapa-de-modulos» / «sigue el protocolo mapa de modulos» o por `uxyngraphar/FLUJO.json`. `S=uxyngraphar/paquetes/mapa-de-modulos/scripts`.
 
 1. Integridad: `python3 $S/comun/verificar-integridad.py`. Si falla, **detente y avisa**.
 2. Lee las **Reglas** (al final de este archivo).

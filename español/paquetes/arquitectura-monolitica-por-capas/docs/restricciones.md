@@ -16,7 +16,7 @@ Ninguna se rompe sin una ADR aceptada por una persona.
 2. **Sin acoplar dominios:** no importar hooks ni componentes de otro módulo salvo lo compartido (`common/`, layouts, props).
 3. **Estilos acotados** a la funcionalidad; los globales en lo común.
 4. **Solo variables públicas en el cliente** (p. ej. `NEXT_PUBLIC_*`), validadas; nunca claves del servidor.
-5. **No duplicar el catálogo HTTP del servidor:** el cliente cita sus ids (ver `contratos-entre-repos` si está instalado).
+5. **No duplicar el catálogo HTTP del servidor:** el cliente cita sus ids (ver `contratos-entre-repositorios` si está instalado).
 
 ## Proyecto existente
 

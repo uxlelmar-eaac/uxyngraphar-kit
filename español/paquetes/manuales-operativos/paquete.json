@@ -4,10 +4,12 @@
   "version": "1.0.0",
   "titulo": "Manuales operativos",
   "descripcion": "Manuales vivos para operar el sistema (despliegue, incidentes, configuración): pasos verificables que se actualizan con cada cambio que los afecta.",
+  "familia": "documentacion",
   "motor": ">=2.0",
   "activacion": [
     "manuales-operativos",
-    "manual",
+    "manuales operativos",
+    "manual operativo",
     "runbook"
   ],
   "entrada": "README.md",

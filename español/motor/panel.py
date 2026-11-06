@@ -40,7 +40,7 @@ RUTAS_GET = {
     "/api/repo/migrar": lambda d: _migrar(d, aplicar=False),
 }
 RUTAS_POST = {
-    "/api/catalogo/crear": lambda d: str(catalogo.crear(d["id"], d["titulo"], d.get("descripcion", ""))),
+    "/api/catalogo/crear": lambda d: str(catalogo.crear(d["id"], d["titulo"], d.get("descripcion", ""), familia=d.get("familia", "proceso"))),
     "/api/catalogo/archivo": lambda d: {"errores": catalogo.guardar_archivo(d["id"], d["rel"], d["contenido"])},
     "/api/catalogo/version": lambda d: catalogo.versionar(d["id"], d["nivel"]),
     "/api/repo/instalar": lambda d: repo.instalar(_raiz(d), list(d["ids"]), paquete_base=d.get("base") or None),

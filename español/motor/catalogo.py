@@ -10,6 +10,7 @@ import shutil
 from pathlib import Path
 
 import especificacion as esp
+import nomenclatura
 
 base = esp.base
 NIVELES = ("mayor", "menor", "parche")
@@ -19,15 +20,22 @@ def catalogo(raiz: Path | None = None) -> Path:
     return Path(raiz) if raiz else esp.CATALOGO
 
 
+def _paquetes(raiz: Path | None) -> dict[str, tuple[Path, dict]]:
+    return {c.name: (c, base.leer_manifiesto(c)) for c in sorted(catalogo(raiz).iterdir())
+            if c.is_dir() and not c.name.startswith(("_", ".", "!")) and (c / base.MANIFIESTO).is_file()}
+
+
 def listar(raiz: Path | None = None) -> list[dict]:
-    """Manifiestos del catálogo (con «errores» de validación y «avisos» de cada paquete)."""
+    """Manifiestos del catálogo (con «errores» de validación y nomenclatura, «avisos» y status «heredados»)."""
+    paquetes = _paquetes(raiz)
+    nombres = nomenclatura.revisar_catalogo(paquetes)
     salida = []
-    for carpeta in sorted(catalogo(raiz).iterdir()):
-        if carpeta.is_dir() and not carpeta.name.startswith(("_", ".", "!")) and (carpeta / base.MANIFIESTO).is_file():
-            m = base.leer_manifiesto(carpeta)
-            m["errores"] = esp.validar_paquete(carpeta)
-            m["avisos"] = esp.avisos_paquete(carpeta)
-            salida.append(m)
+    for pid, (carpeta, m) in paquetes.items():
+        errores, heredados = nombres[pid]
+        m["errores"] = esp.validar_paquete(carpeta) + [f"nomenclatura: {e}" for e in errores]
+        m["avisos"] = esp.avisos_paquete(carpeta)
+        m["heredados"] = heredados
+        salida.append(m)
     return salida
 
 
@@ -40,16 +48,30 @@ def carpeta(pid: str, raiz: Path | None = None) -> Path:
     return c
 
 
-def crear(pid: str, titulo: str, descripcion: str = "", raiz: Path | None = None) -> Path:
-    """Esqueleto mínimo de un paquete nuevo (versión 0.1.0)."""
-    if not base.ID_VALIDO.match(pid):
-        raise ValueError("id: kebab-case ASCII (a-z, 0-9, guiones)")
+def crear(pid: str, titulo: str, descripcion: str = "", raiz: Path | None = None, familia: str = "proceso") -> Path:
+    """Esqueleto mínimo de un paquete nuevo (versión 0.1.0) con nombres según NOMENCLATURA.md."""
+    errores = nomenclatura.problemas_id(pid) + nomenclatura.problemas_titulo(pid, titulo)
+    if familia not in nomenclatura.NORMA["familias"]:
+        errores.append(f"familia «{familia}»: una de {', '.join(nomenclatura.NORMA['familias'])}")
+    paquetes = _paquetes(raiz)
+    errores += [f"id «{pid}»: choca con «{otro}» (uno es prefijo del otro)" for otro in paquetes
+                if otro != pid and (otro.startswith(pid + "-") or pid.startswith(otro + "-"))]
+    if errores:
+        raise ValueError("; ".join(errores))
     c = catalogo(raiz) / pid
     if c.exists():
         raise FileExistsError(f"ya existe {c}")
+    usados = {d.get("prefijo") for _, m in paquetes.values() for d in m.get("fichas", {}).values()}
+    tipo = nomenclatura.singular(pid.split("-")[0])
     shutil.copytree(esp.PLANTILLA, c, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     m = base.leer_manifiesto(c)
-    m.update(id=pid, titulo=titulo, descripcion=descripcion or titulo, activacion=[pid])
+    (ficha,) = m["fichas"].values()
+    ficha.update(prefijo=nomenclatura.proponer_prefijo(pid, usados), plantilla=f"plantillas/{tipo}.md")
+    (c / "plantillas" / "ficha.md").rename(c / "plantillas" / f"{tipo}.md")
+    resto = {k: v for k, v in m.items() if k not in ("id", "titulo", "descripcion", "familia", "activacion", "fichas")}
+    m = {"manifiesto_formato": m["manifiesto_formato"], "id": pid, "version": m["version"], "titulo": titulo,
+         "descripcion": descripcion or titulo, "familia": familia, **resto,
+         "activacion": [pid, pid.replace("-", " ")], "fichas": {tipo: ficha}}
     (c / base.MANIFIESTO).write_text(json.dumps(m, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     entrada = c / base.ENTRADA
     entrada.write_text(entrada.read_text(encoding="utf-8").replace("{{titulo}}", titulo).replace("{{id}}", pid), encoding="utf-8")

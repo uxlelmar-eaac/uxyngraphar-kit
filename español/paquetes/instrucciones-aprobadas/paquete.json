@@ -2,12 +2,14 @@
   "manifiesto_formato": 1,
   "id": "instrucciones-aprobadas",
   "version": "1.0.0",
-  "titulo": "Ciclo de instrucciones",
+  "titulo": "Instrucciones aprobadas",
   "descripcion": "Ningún cambio sin instrucción aprobada por una persona: preguntas, instrucción con alcance y anclas de código, contexto mínimo, implementación acotada y cierre.",
+  "familia": "proceso",
   "motor": ">=2.0",
   "activacion": [
     "instrucciones-aprobadas",
-    "instrucciones",
+    "instrucciones aprobadas",
+    "ciclo de instrucciones",
     "uxyngraphar",
     "uxyn",
     "uxynar"

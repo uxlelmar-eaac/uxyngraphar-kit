@@ -45,7 +45,7 @@ class TestSecretos(BaseApp):
     PAQUETES = ["secretos-y-credenciales"]
 
     def test_detecta_y_respeta_placeholders(self):
-        escanear = self.s("secretos-y-credenciales", "escanear.py")
+        escanear = self.s("secretos-y-credenciales", "secretos.py")
         (self.app / "src" / "config.ts").write_text("export const key = '<PLACEHOLDER>';\n", encoding="utf-8")
         self.assertEqual(correr(escanear, cwd=self.app).returncode, 0)
         clave = "AKIA" + "ABCDEFGHIJKLMNOP"
@@ -61,7 +61,7 @@ class TestSecretos(BaseApp):
     def test_ajustes_del_proyecto(self):
         (self.app / "src" / "aws.ts").write_text("const k = '" + "AKIA" + "ABCDEFGHIJKLMNOP';\n", encoding="utf-8")
         (self.app / "uxyngraphar" / "trabajo" / "secretos-y-credenciales" / "ajustes.json").write_text(json.dumps({"permitir": ["src/aws.ts"]}), encoding="utf-8")
-        self.assertEqual(correr(self.s("secretos-y-credenciales", "escanear.py"), cwd=self.app).returncode, 0)
+        self.assertEqual(correr(self.s("secretos-y-credenciales", "secretos.py"), cwd=self.app).returncode, 0)
 
 
 class TestCiclo(BaseApp):

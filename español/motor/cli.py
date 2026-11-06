@@ -3,8 +3,9 @@
 
 Catálogo (aquí se crean y editan los paquetes):
   catalogo                                   lista los paquetes del catálogo y si validan
-  crear <id> --titulo "…" [--descripcion "…"] esqueleto de un paquete nuevo
-  validar [<id>…]                            valida paquetes del catálogo
+  crear <id> --titulo "…" --familia <f> [--descripcion "…"]  esqueleto de un paquete nuevo (NOMENCLATURA.md)
+  validar [<id>…]                            valida paquetes del catálogo (incluida la nomenclatura)
+  nomenclatura                               status heredados pendientes de pasar al vocabulario
   version <id> mayor|menor|parche            sube la versión en el catálogo
   construir <id>…|--todos --destino DIR      construye paquetes portátiles (con INTEGRIDAD.json)
 
@@ -30,6 +31,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import catalogo  # noqa: E402
+import nomenclatura  # noqa: E402
 import especificacion as esp  # noqa: E402
 import generar  # noqa: E402
 import repo  # noqa: E402
@@ -94,6 +96,8 @@ def analizador() -> argparse.ArgumentParser:
     c.add_argument("id")
     c.add_argument("--titulo", required=True)
     c.add_argument("--descripcion", default="")
+    c.add_argument("--familia", required=True, choices=nomenclatura.NORMA["familias"])
+    sub.add_parser("nomenclatura")
     v = sub.add_parser("validar")
     v.add_argument("ids", nargs="*")
     ve = sub.add_parser("version")
@@ -139,7 +143,11 @@ def main(argv: list[str] | None = None) -> int:
                       + "".join(f"\n  aviso: {a}" for a in m.get("avisos", [])))
             return 1 if any(m["errores"] for m in filas) else 0
         if a.cmd == "crear":
-            print(catalogo.crear(a.id, a.titulo, a.descripcion))
+            print(catalogo.crear(a.id, a.titulo, a.descripcion, familia=a.familia))
+        elif a.cmd == "nomenclatura":
+            for m in catalogo.listar():
+                for h in m["heredados"]:
+                    print(f"{m['id']}: {h}")
         elif a.cmd == "version":
             print(catalogo.versionar(a.id, a.nivel))
         elif a.cmd == "construir":

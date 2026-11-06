@@ -39,7 +39,7 @@ def main() -> int:
     raiz = base.raiz_app(PAQUETE)
     trabajo = base.carpeta_trabajo(PAQUETE, crear=False)
     errores, avisos, vistas = [], [], {}
-    for f in fichas.listar(PAQUETE, "ruta"):
+    for f in fichas.listar(PAQUETE, "pagina"):
         fm, cuerpo = base.leer_frontmatter(f.ruta.read_text(encoding="utf-8"))
         rel = f.ruta.relative_to(trabajo).as_posix()
         if not fm:

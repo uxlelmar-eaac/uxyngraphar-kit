@@ -1,5 +1,5 @@
 """Pruebas de los paquetes que recuperan piezas del 1.x sin paquete propio: reglas-del-proyecto (96+97),
-evolucion-del-sistema (46), revision-humana, contratos-entre-repos, arquitectura-por-capas y verificaciones-vivas (55)."""
+evolucion-del-sistema (46), revision-humana, contratos-entre-repositorios, arquitectura-monolitica-por-capas y verificaciones-vivas (55)."""
 
 from __future__ import annotations
 
@@ -111,7 +111,7 @@ class TestRevisionHumana(Base):
 
     def test_preparar_y_aplicar(self):
         adr = self.nueva("decisiones-de-arquitectura", "adr", "usar-postgres")
-        s = self.s("revision-humana", "revisar.py")
+        s = self.s("revision-humana", "revision.py")
         self.assertIn(adr.stem, correr(s, "pendientes", cwd=self.app).stdout)
         self.assertEqual(correr(s, "preparar", cwd=self.app).returncode, 0)
         revision = self.trabajo("revision-humana") / "REVISION.md"
@@ -128,7 +128,7 @@ class TestRevisionHumana(Base):
 
 
 class TestContratos(Base):
-    PAQUETES = ["contratos-entre-repos"]
+    PAQUETES = ["contratos-entre-repositorios"]
 
     def test_compara_con_el_repo_proveedor(self):
         proveedor = self.app.parent / "proveedor"
@@ -136,25 +136,25 @@ class TestContratos(Base):
         repo.instalar(proveedor, ["rutas-de-api"])
         ruta = self.nueva("rutas-de-api", "ruta", "listar-pedidos", app=proveedor)
         campo(ruta, "path", "/orders")
-        self.ajustes("contratos-entre-repos", {"repo": "app", "otros_repos": ["../proveedor"]})
-        contrato = self.nueva("contratos-entre-repos", "contrato", "pedidos")
+        self.ajustes("contratos-entre-repositorios", {"repo": "app", "otros_repos": ["../proveedor"]})
+        contrato = self.nueva("contratos-entre-repositorios", "contrato", "pedidos")
         for clave, valor in {"id_compartido": "orders.list", "path": "/orders", "proveedor": "proveedor", "ficha_proveedor": ruta.stem}.items():
             campo(contrato, clave, valor)
-        self.assertEqual(self.estado("contratos-entre-repos", contrato, "vigente").returncode, 0)
-        verificar = self.s("contratos-entre-repos", "verificar-contratos.py")
+        self.assertEqual(self.estado("contratos-entre-repositorios", contrato, "vigente").returncode, 0)
+        verificar = self.s("contratos-entre-repositorios", "verificar-contratos.py")
         r = correr(verificar, cwd=self.app)
         self.assertEqual(r.returncode, 0, r.stderr)
-        (vigente,) = self.trabajo("contratos-entre-repos").rglob(f"{contrato.stem}.md")
+        (vigente,) = self.trabajo("contratos-entre-repositorios").rglob(f"{contrato.stem}.md")
         campo(vigente, "path", "/pedidos")
         r = correr(verificar, cwd=self.app)
         self.assertEqual(r.returncode, 1)
         self.assertIn("no documenta", r.stderr)
-        self.assertEqual(correr(self.s("contratos-entre-repos", "contratos.py"), "registro", cwd=self.app).returncode, 0)
-        self.assertIn("orders.list", (self.trabajo("contratos-entre-repos") / "REGISTRO.md").read_text(encoding="utf-8"))
+        self.assertEqual(correr(self.s("contratos-entre-repositorios", "contratos.py"), "registro", cwd=self.app).returncode, 0)
+        self.assertIn("orders.list", (self.trabajo("contratos-entre-repositorios") / "REGISTRO.md").read_text(encoding="utf-8"))
 
 
 class TestCapas(Base):
-    PAQUETES = ["arquitectura-por-capas"]
+    PAQUETES = ["arquitectura-monolitica-por-capas"]
 
     def test_imports_entre_capas_y_modulos(self):
         m = "src/modules"
@@ -165,18 +165,18 @@ class TestCapas(Base):
         self.escribir(f"{m}/orders/orders.module.ts", "import { PaymentsModule } from '../payments/payments.module';\n")
         self.escribir("src/common/log.ts", "import { Pedido } from '@/modules/orders/domain/pedido';\nimport x from 'lodash';\n")
         self.escribir(f"{m}/orders/domain/reglas.py", "from ..infrastructure import db\nimport os\n")
-        r = correr(self.s("arquitectura-por-capas", "capas.py"), "revisar", cwd=self.app)
+        r = correr(self.s("arquitectura-monolitica-por-capas", "capas.py"), "revisar", cwd=self.app)
         self.assertEqual(r.returncode, 1)
         self.assertIn("4 imports fuera de las reglas", r.stdout)
         self.assertIn("domain/pedido.ts:1: «domain» no puede importar «infrastructure»", r.stdout)
         self.assertIn("cruce de módulo orders → payments", r.stdout)
         self.assertIn("src/common/log.ts:1: el código común", r.stdout)
         self.assertIn("reglas.py:1", r.stdout)
-        verificar = self.s("arquitectura-por-capas", "verificar-capas.py")
+        verificar = self.s("arquitectura-monolitica-por-capas", "verificar-capas.py")
         self.assertEqual(correr(verificar, cwd=self.app).returncode, 0)
-        self.ajustes("arquitectura-por-capas", {"nivel": "bloqueante"})
+        self.ajustes("arquitectura-monolitica-por-capas", {"nivel": "bloqueante"})
         self.assertEqual(correr(verificar, cwd=self.app).returncode, 1)
-        self.assertIn("orders: application, domain, integrations", correr(self.s("arquitectura-por-capas", "capas.py"), "mapa", cwd=self.app).stdout)
+        self.assertIn("orders: application, domain, integrations", correr(self.s("arquitectura-monolitica-por-capas", "capas.py"), "mapa", cwd=self.app).stdout)
 
 
 class TestVivas(Base):

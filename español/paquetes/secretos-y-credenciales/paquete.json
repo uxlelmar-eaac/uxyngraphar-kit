@@ -4,16 +4,17 @@
   "version": "1.0.0",
   "titulo": "Secretos y credenciales",
   "descripcion": "Evita que credenciales, llaves y archivos de secretos entren al código o a la documentación: solo placeholders, escaneo por contenido y por nombre de archivo.",
+  "familia": "seguridad",
   "motor": ">=2.0",
   "activacion": [
     "secretos-y-credenciales",
-    "credenciales",
+    "secretos y credenciales",
     "escanear secretos"
   ],
   "entrada": "README.md",
   "verificaciones": [
     "scripts/comun/verificar.py",
-    "scripts/escanear.py"
+    "scripts/secretos.py"
   ],
   "ajustes": {
     "raices": [

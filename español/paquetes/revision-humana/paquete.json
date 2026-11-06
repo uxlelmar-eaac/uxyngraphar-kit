@@ -2,14 +2,15 @@
   "manifiesto_formato": 1,
   "id": "revision-humana",
   "version": "1.0.0",
-  "titulo": "Revisión humana de pendientes",
+  "titulo": "Revisión humana",
   "descripcion": "Reúne en una sola tabla las fichas de todos los paquetes instalados que esperan una decisión de una persona (aprobar, rechazar, activar…), con su antigüedad, y aplica de una vez lo que la persona decida.",
+  "familia": "proceso",
   "motor": ">=2.0",
   "activacion": [
     "revision-humana",
+    "revision humana",
     "revision de pendientes",
-    "decisiones pendientes",
-    "revisar pendientes"
+    "decisiones pendientes"
   ],
   "entrada": "README.md",
   "verificaciones": [

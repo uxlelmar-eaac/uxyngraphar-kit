@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Revisa calidad de código: límite de líneas, nombres de archivo ASCII y (con --commits) mensajes de commit.
 
-  python3 uxyngraphar/paquetes/calidad-de-codigo/scripts/revisar.py [ARCHIVO…] [--commits [N]]
+  python3 uxyngraphar/paquetes/calidad-de-codigo/scripts/calidad.py [ARCHIVO…] [--commits [N]]
 
 Sin archivos revisa las «raices» de los ajustes. Código 0 = sin problemas; 1 = hay problemas.
 """

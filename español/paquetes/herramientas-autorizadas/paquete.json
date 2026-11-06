@@ -4,11 +4,12 @@
   "version": "1.0.0",
   "titulo": "Herramientas autorizadas",
   "descripcion": "Procedimientos y scripts que una persona autorizó para ejecutarse sin instrucción nueva cuando el pedido encaja en su alcance; el agente solo puede proponer.",
+  "familia": "proceso",
   "motor": ">=2.0",
   "activacion": [
     "herramientas-autorizadas",
-    "herramientas",
-    "autorizadas"
+    "herramientas autorizadas",
+    "herramienta autorizada"
   ],
   "entrada": "README.md",
   "verificaciones": [

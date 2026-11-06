@@ -2,13 +2,14 @@
   "manifiesto_formato": 1,
   "id": "mapa-de-modulos",
   "version": "1.0.0",
-  "titulo": "Áreas y módulos",
+  "titulo": "Mapa de módulos",
   "descripcion": "Un contexto por área funcional: propósito, fronteras, dependencias, mapa de lectura y código ancla, para que cualquier cambio empiece por el área correcta.",
+  "familia": "arquitectura",
   "motor": ">=2.0",
   "activacion": [
     "mapa-de-modulos",
-    "areas",
-    "modulos"
+    "mapa de modulos",
+    "areas y modulos"
   ],
   "entrada": "README.md",
   "verificaciones": [

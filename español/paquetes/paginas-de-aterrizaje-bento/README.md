@@ -1,6 +1,6 @@
-# Landing page bento
+# Páginas de aterrizaje bento
 
-Activado con «usa el paquete landing-bento» / «sigue el protocolo bento» o por `uxyngraphar/FLUJO.json`. `S=uxyngraphar/paquetes/landing-bento/scripts`.
+Activado con «usa el paquete paginas-de-aterrizaje-bento» / «sigue el protocolo landing bento» o por `uxyngraphar/FLUJO.json`. `S=uxyngraphar/paquetes/paginas-de-aterrizaje-bento/scripts`.
 
 1. Integridad: `python3 $S/comun/verificar-integridad.py`. Si falla, **detente y avisa**.
 2. Lee las **Reglas** (al final de este archivo) y, para diseñar, `docs/patrones-bento.md`.
@@ -11,7 +11,7 @@ Activado con «usa el paquete landing-bento» / «sigue el protocolo bento» o p
 
 ## Reglas
 
-Paquete inmutable: ni la IA ni la persona lo editan dentro del repo. Cambios: catálogo del panel. Valores ajustables (columnas, límites) en `uxyngraphar/trabajo/landing-bento/ajustes.json`.
+Paquete inmutable: ni la IA ni la persona lo editan dentro del repo. Cambios: catálogo del panel. Valores ajustables (columnas, límites) en `uxyngraphar/trabajo/paginas-de-aterrizaje-bento/ajustes.json`.
 
 1. **Ficha primero.** Ninguna landing se construye sin ficha con Objetivo, Audiencia y Mosaico. La ficha manda: si el código y la ficha difieren, se corrige uno de los dos antes de terminar.
 2. **Una página, un objetivo, un CTA principal.** Exactamente una celda lleva el CTA `primario`; las demás, `secundario` o `-`.

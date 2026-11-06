@@ -1,4 +1,4 @@
-# Mapa de rutas de API
+# Rutas de API
 
 Activado con «usa el paquete rutas-de-api» / «sigue el protocolo endpoints» o por `uxyngraphar/FLUJO.json`. `S=uxyngraphar/paquetes/rutas-de-api/scripts`.
 

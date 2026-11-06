@@ -25,7 +25,7 @@ def main() -> int:
     for e in errores + (infracciones if bloquea else []):
         print(f"error: {e}", file=sys.stderr)
     total = len(errores) + (len(infracciones) if bloquea else 0)
-    print(f"arquitectura-por-capas: {total} errores, {0 if bloquea else len(infracciones)} avisos")
+    print(f"arquitectura-monolitica-por-capas: {total} errores, {0 if bloquea else len(infracciones)} avisos")
     return 1 if total else 0
 
 

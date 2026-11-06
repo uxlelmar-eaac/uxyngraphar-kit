@@ -1,0 +1,32 @@
+{
+  "formato": 1,
+  "familias": ["proceso", "codigo", "arquitectura", "documentacion", "seguridad", "producto", "sistema"],
+  "enlaces": ["de", "del", "y", "e", "entre", "por", "con"],
+  "palabras_funcion": ["a", "al", "de", "del", "e", "el", "en", "entre", "la", "las", "lo", "los", "o", "para", "por", "con", "sin", "u", "un", "una", "y"],
+  "siglas": ["adr", "api", "ci", "ux"],
+  "abreviaturas": ["app", "apps", "cfg", "conf", "config", "doc", "docs", "info", "mgmt", "repo", "repos", "tmp", "ui", "util", "utils"],
+  "verbos": ["aplicar", "buscar", "comprobar", "crear", "ejecutar", "escanear", "generar", "gestionar", "revisar", "validar", "verificar"],
+  "prefijos_reservados": ["FIC", "TMP", "UXY", "XXX"],
+  "frases_de_una_palabra": ["adr", "endpoints", "runbook", "uxyn", "uxynar", "uxyngraphar"],
+  "status": {
+    "canonicos": ["propuesta", "propuesto", "en-evaluacion", "aprobada", "aprobado", "activa", "activo", "vigente", "hecha", "hecho",
+                  "cerrada", "cerrado", "reemplazada", "reemplazado", "retirada", "retirado", "archivada", "archivado",
+                  "rechazada", "rechazado", "para-eliminar"],
+    "complementarios": ["pendiente", "en-curso", "planificada", "planificado", "publicada", "publicado", "implementada",
+                        "implementado", "validada", "validado", "cancelada", "cancelado", "promovida", "promovido"],
+    "dominio": {
+      "decisiones-de-arquitectura": ["aceptada"],
+      "manuales-operativos": ["borrador"],
+      "paginas-de-aterrizaje-bento": ["borrador"]
+    },
+    "heredados": {
+      "decisiones-de-arquitectura": ["obsoleta"],
+      "deuda-y-mejoras": ["pending", "approved", "done", "archived", "rejected"],
+      "evolucion-del-sistema": ["pending", "approved", "done", "rejected"],
+      "experiencia-de-usuario": ["abierta"],
+      "herramientas-autorizadas": ["pending", "rejected"],
+      "instrucciones-aprobadas": ["awaiting_approval", "approved", "done", "archived", "cancelled", "completada"],
+      "paginas-de-aterrizaje-bento": ["revision"]
+    }
+  }
+}

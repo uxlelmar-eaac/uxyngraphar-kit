@@ -1,6 +1,6 @@
-# Evolución del sistema de gobernanza
+# Evolución del sistema
 
-Activado con «usa el paquete evolucion-del-sistema» / «sigue el protocolo evolucion» o por `uxyngraphar/FLUJO.json`. Rutas relativas a la raíz de la app. `S=uxyngraphar/paquetes/evolucion-del-sistema/scripts`.
+Activado con «usa el paquete evolucion-del-sistema» / «sigue el protocolo evolucion del sistema» o por `uxyngraphar/FLUJO.json`. Rutas relativas a la raíz de la app. `S=uxyngraphar/paquetes/evolucion-del-sistema/scripts`.
 
 Los paquetes son inmutables: este es el canal para mejorarlos. Una EVO describe lo que le falta **al sistema** (un paquete, una plantilla, un proceso), nunca al producto.
 

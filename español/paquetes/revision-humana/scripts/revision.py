@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Revisión humana de pendientes de todos los paquetes instalados.
 
-  python3 uxyngraphar/paquetes/revision-humana/scripts/revisar.py pendientes          lista, de la más antigua a la más nueva
-  python3 uxyngraphar/paquetes/revision-humana/scripts/revisar.py preparar            escribe trabajo/revision-humana/REVISION.md
-  python3 uxyngraphar/paquetes/revision-humana/scripts/revisar.py aplicar --humano    aplica las decisiones escritas en REVISION.md
+  python3 uxyngraphar/paquetes/revision-humana/scripts/revision.py pendientes          lista, de la más antigua a la más nueva
+  python3 uxyngraphar/paquetes/revision-humana/scripts/revision.py preparar            escribe trabajo/revision-humana/REVISION.md
+  python3 uxyngraphar/paquetes/revision-humana/scripts/revision.py aplicar --humano    aplica las decisiones escritas en REVISION.md
 
 En REVISION.md la persona escribe en «Decisión» uno de los status de «Opciones» (o «posponer», o lo deja vacío).
 """
@@ -45,8 +45,8 @@ def preparar() -> Path:
     filas = [f"| {p.paquete} | {p.id} | {p.status} | {p.dias} | {p.titulo} | {', '.join(p.opciones)} |  |" for p in pend.recoger()]
     texto = "\n".join([
         "# Revisión humana de pendientes", "",
-        "Generado por `revisar.py preparar`. Una persona escribe en «Decisión» uno de los status de «Opciones» o «posponer»,",
-        "y luego ejecuta `python3 uxyngraphar/paquetes/revision-humana/scripts/revisar.py aplicar --humano`.", "",
+        "Generado por `revision.py preparar`. Una persona escribe en «Decisión» uno de los status de «Opciones» o «posponer»,",
+        "y luego ejecuta `python3 uxyngraphar/paquetes/revision-humana/scripts/revision.py aplicar --humano`.", "",
         CABECERA, "|---|---|---|---|---|---|---|", *(filas or ["| — | — | — | — | (nada espera una decisión) | — |  |"]), ""])
     destino = ruta_revision()
     destino.write_text(texto, encoding="utf-8")
@@ -56,7 +56,7 @@ def preparar() -> Path:
 def decisiones() -> dict[tuple[str, str], str]:
     ruta = ruta_revision()
     if not ruta.is_file():
-        raise FileNotFoundError(f"no hay {REVISION}: ejecuta antes «revisar.py preparar»")
+        raise FileNotFoundError(f"no hay {REVISION}: ejecuta antes «revision.py preparar»")
     salida = {}
     for linea in ruta.read_text(encoding="utf-8").splitlines():
         celdas = [c.strip() for c in linea.strip().strip("|").split("|")]

@@ -2,13 +2,15 @@
   "manifiesto_formato": 1,
   "id": "memoria-e-historial",
   "version": "1.0.0",
-  "titulo": "Memoria y archivo",
+  "titulo": "Memoria e historial",
   "descripcion": "Memoria del proyecto (notas y conocimiento que conviene conservar) y archivo histórico; el agente no los lee salvo que el pedido lo pida expresamente.",
+  "familia": "documentacion",
   "motor": ">=2.0",
   "activacion": [
     "memoria-e-historial",
-    "memoria",
-    "archivo"
+    "memoria e historial",
+    "memoria del proyecto",
+    "archivo historico"
   ],
   "entrada": "README.md",
   "verificaciones": [

@@ -10,5 +10,6 @@ Activado con «usa el paquete {{id}}» o por `uxyngraphar/FLUJO.json`. Rutas rel
 ## Reglas
 
 Paquete inmutable: ni la IA ni la persona lo editan dentro del repo. Cambios: catálogo del panel.
+<!-- Al crear: nombres según motor/NOMENCLATURA.md (título = id, prefijo de 3 letras único, status del vocabulario, frases de activación de 2+ palabras). Borra este comentario. -->
 
 1. …

@@ -2,13 +2,14 @@
   "manifiesto_formato": 1,
   "id": "decisiones-de-arquitectura",
   "version": "1.0.0",
-  "titulo": "Decisiones de arquitectura (ADR)",
+  "titulo": "Decisiones de arquitectura",
   "descripcion": "Registra las decisiones técnicas que condicionan el sistema: contexto, opciones, decisión y consecuencias; las acepta o rechaza una persona.",
+  "familia": "arquitectura",
   "motor": ">=2.0",
   "activacion": [
     "decisiones-de-arquitectura",
-    "adr",
-    "decisiones"
+    "decisiones de arquitectura",
+    "adr"
   ],
   "entrada": "README.md",
   "verificaciones": [

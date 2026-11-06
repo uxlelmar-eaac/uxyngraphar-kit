@@ -1,4 +1,4 @@
-# Optimización UX/UI
+# Experiencia de usuario
 
 Activado con «usa el paquete experiencia-de-usuario» / «sigue el protocolo optimizacion ux» o por `uxyngraphar/FLUJO.json`. `S=uxyngraphar/paquetes/experiencia-de-usuario/scripts`.
 

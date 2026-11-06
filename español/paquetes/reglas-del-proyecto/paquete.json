@@ -2,8 +2,9 @@
   "manifiesto_formato": 1,
   "id": "reglas-del-proyecto",
   "version": "1.0.0",
-  "titulo": "Reglas del proyecto y ajustes locales",
+  "titulo": "Reglas del proyecto",
   "descripcion": "Reglas propias del equipo para su código (comprobables sin IA con expresiones regulares), sus excepciones aprobadas por una persona y los ajustes locales que adaptan un paquete inmutable a este proyecto.",
+  "familia": "codigo",
   "motor": ">=2.0",
   "activacion": [
     "reglas-del-proyecto",
@@ -20,7 +21,7 @@
   "fichas": {
     "regla": {
       "carpeta": "reglas",
-      "prefijo": "RP",
+      "prefijo": "REG",
       "plantilla": "plantillas/regla.md",
       "inicial": "propuesta",
       "status_validos": [
@@ -35,7 +36,7 @@
     },
     "excepcion": {
       "carpeta": "excepciones",
-      "prefijo": "EX",
+      "prefijo": "EXC",
       "plantilla": "plantillas/excepcion.md",
       "inicial": "pendiente",
       "status_validos": [
@@ -50,7 +51,7 @@
     },
     "ajuste": {
       "carpeta": "ajustes-locales",
-      "prefijo": "AJ",
+      "prefijo": "AJL",
       "plantilla": "plantillas/ajuste.md",
       "inicial": "propuesto",
       "status_validos": [
