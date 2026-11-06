@@ -1,6 +1,6 @@
 """Fichas de un paquete: crear desde plantilla, listar, cambiar de estado y validar.
 
-Fragmento del catálogo (se copia en cada paquete). Los tipos de ficha se declaran en «fichas» del manifiesto.
+Parte del propio paquete (`scripts/comun/`). Los tipos de ficha se declaran en «fichas» del manifiesto.
 """
 
 from __future__ import annotations

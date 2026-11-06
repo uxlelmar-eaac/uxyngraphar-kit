@@ -1,0 +1,29 @@
+{
+  "manifiesto_formato": 1,
+  "id": "plantilla",
+  "version": "0.1.0",
+  "titulo": "Plantilla",
+  "descripcion": "Plantilla",
+  "motor": ">=2.0",
+  "activacion": [
+    "plantilla"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py"
+  ],
+  "fichas": {
+    "ficha": {
+      "carpeta": ".",
+      "prefijo": "FIC",
+      "plantilla": "plantillas/ficha.md",
+      "inicial": "abierta",
+      "estados": {
+        "abierta": "pendientes",
+        "en-curso": "en-progreso",
+        "cerrada": "completadas"
+      }
+    }
+  },
+  "ajustes": {}
+}
