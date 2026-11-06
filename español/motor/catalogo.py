@@ -23,7 +23,7 @@ def listar(raiz: Path | None = None) -> list[dict]:
     """Manifiestos del catálogo (con «errores» de validación y «avisos» de cada paquete)."""
     salida = []
     for carpeta in sorted(catalogo(raiz).iterdir()):
-        if carpeta.is_dir() and not carpeta.name.startswith(("_", ".")) and (carpeta / base.MANIFIESTO).is_file():
+        if carpeta.is_dir() and not carpeta.name.startswith(("_", ".", "!")) and (carpeta / base.MANIFIESTO).is_file():
             m = base.leer_manifiesto(carpeta)
             m["errores"] = esp.validar_paquete(carpeta)
             m["avisos"] = esp.avisos_paquete(carpeta)

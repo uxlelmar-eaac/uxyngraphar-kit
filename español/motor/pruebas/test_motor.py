@@ -76,7 +76,7 @@ class TestCatalogo(Base):
         self.assertEqual(catalogo.guardar_archivo("demo", fichas, texto, self.cat), [])
         (demo,) = [m for m in catalogo.listar(self.cat) if m["id"] == "demo"]
         self.assertEqual(demo["errores"], [])
-        self.assertEqual(demo["avisos"], [f"{fichas}: difiere de la plantilla del motor"])
+        self.assertEqual(demo["avisos"], [f"{fichas}: difiere de paquetes/!base"])
         catalogo.construir("demo", Path(self.tmp.name) / "dist", self.cat)
 
 

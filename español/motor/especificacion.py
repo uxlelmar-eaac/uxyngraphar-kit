@@ -1,7 +1,7 @@
 """Contratos de uxyngraphar 2.0 del lado del motor: paquete (fuente o construido) y FLUJO.json.
 
-El manifiesto y la integridad se validan con la copia de `scripts/comun/uxyn_base.py` de la plantilla del motor
-(`motor/plantilla/`), la misma de la que nacen los paquetes nuevos.
+El manifiesto y la integridad se validan con la copia de `scripts/comun/uxyn_base.py` de `paquetes/!base/`, la base de
+la que nacen los paquetes nuevos (no es un paquete: no se lista, no se construye ni se instala).
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ from pathlib import Path
 MOTOR = Path(__file__).resolve().parent
 KIT = MOTOR.parent
 CATALOGO = KIT / "paquetes"
-PLANTILLA = MOTOR / "plantilla"
+PLANTILLA = CATALOGO / "!base"
 DESTINO_COMUN = "scripts/comun"
 COMUN = PLANTILLA / DESTINO_COMUN
 sys.path.insert(0, str(COMUN))
@@ -77,14 +77,14 @@ def validar_paquete(carpeta: Path, construido: bool = False) -> list[str]:
 
 
 def avisos_paquete(carpeta: Path) -> list[str]:
-    """Avisos (no impiden validar): scripts de `scripts/comun/` que faltan o difieren de la plantilla del motor."""
+    """Avisos (no impiden validar): scripts de `scripts/comun/` que faltan o difieren de `paquetes/!base/`."""
     avisos = []
     for script in sorted(COMUN.glob("*.py")):
         propio = Path(carpeta) / DESTINO_COMUN / script.name
         if not propio.is_file():
-            avisos.append(f"{DESTINO_COMUN}/{script.name}: no está (la plantilla del motor lo trae)")
+            avisos.append(f"{DESTINO_COMUN}/{script.name}: no está (paquetes/!base lo trae)")
         elif base.sha256(propio) != base.sha256(script):
-            avisos.append(f"{DESTINO_COMUN}/{script.name}: difiere de la plantilla del motor")
+            avisos.append(f"{DESTINO_COMUN}/{script.name}: difiere de paquetes/!base")
     return avisos
 
 

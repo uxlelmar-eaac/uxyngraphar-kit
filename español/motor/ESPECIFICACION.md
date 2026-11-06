@@ -1,6 +1,6 @@
 # Especificación — paquetes de gobernanza uxyngraphar 2.0
 
-Validadores: [`especificacion.py`](especificacion.py) (paquete y flujo) y [`plantilla/scripts/comun/uxyn_base.py`](plantilla/scripts/comun/uxyn_base.py) (manifiesto e integridad; cada paquete lleva su propia copia en `scripts/comun/`).
+Validadores: [`especificacion.py`](especificacion.py) (paquete y flujo) y [`paquetes/!base/scripts/comun/uxyn_base.py`](../paquetes/!base/scripts/comun/uxyn_base.py) (manifiesto e integridad; cada paquete lleva su propia copia en `scripts/comun/`).
 
 ## 1. Estructura en un repo
 
@@ -30,11 +30,13 @@ Un paquete resuelve su trabajo como `<carpeta-del-paquete>/../../trabajo/<id>/`.
   INTEGRIDAD.json                 solo en paquetes construidos/instalados (§4)
   docs/  plantillas/              opcionales: guías y plantillas de fichas
   scripts/                        Python, solo librería estándar: los scripts propios del paquete
-    comun/                        parte del paquete (también en el catálogo); nacen de `motor/plantilla/`
+    comun/                        parte del paquete (también en el catálogo); nacen de `paquetes/!base/`
       uxyn_base.py  uxyn_fichas.py  fichas.py  verificar.py  verificar-integridad.py
 ```
 
-El paquete fuente (`paquetes/<id>/`) ya es completo: construir solo copia la carpeta y añade `INTEGRIDAD.json`. Los scripts de `scripts/comun/` son del paquete; `validar` avisa (sin fallar) si difieren de `motor/plantilla/scripts/comun/`.
+El paquete fuente (`paquetes/<id>/`) ya es completo: construir solo copia la carpeta y añade `INTEGRIDAD.json`. Los scripts de `scripts/comun/` son del paquete; `validar` avisa (sin fallar) si difieren de `paquetes/!base/scripts/comun/`.
+
+`paquetes/!base/` guarda lo que se repite en todos los paquetes (`README.md` y `paquete.json` de partida, `plantillas/ficha.md` y `scripts/comun/`). No es un paquete: el catálogo lo ignora, no se construye ni se instala; `crear` lo copia y ajusta id y título.
 
 Requisitos de portabilidad:
 

@@ -1,6 +1,6 @@
 """Base de un paquete de gobernanza uxyngraphar 2.0: rutas, frontmatter, manifiesto e integridad.
 
-Parte del propio paquete (`scripts/comun/`); los paquetes nuevos lo reciben de la plantilla del motor. Solo librería estándar.
+Parte del propio paquete (`scripts/comun/`); los paquetes nuevos lo reciben de `paquetes/!base/`. Solo librería estándar.
 El paquete vive en `<raiz-app>/uxyngraphar/paquetes/<id>/` y escribe su trabajo en `<raiz-app>/uxyngraphar/trabajo/<id>/`.
 """
 
