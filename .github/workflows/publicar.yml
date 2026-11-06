@@ -44,9 +44,9 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - name: Catálogo de paquetes válido
-        run: python uxyngraphar.py validar
+        run: python motor/uxyngraphar.py validar
       - name: Pruebas del kit (motor, paquetes, migración, instalador)
-        run: python -m unittest discover -s pruebas -t pruebas
+        run: python -m unittest discover -s motor/pruebas -t motor/pruebas
 
   publicar:
     if: startsWith(github.ref, 'refs/tags/v')
@@ -63,7 +63,7 @@ jobs:
         with:
           python-version: "3.13"
       - name: Generar los archivos de la release
-        run: python3 distribucion/publicar.py --salida dist --etiqueta "$GITHUB_REF_NAME"
+        run: python3 motor/distribucion/publicar.py --salida dist --etiqueta "$GITHUB_REF_NAME"
       - name: Crear la release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -74,5 +74,5 @@ jobs:
             dist/instalar-uxyngraphar.py \
             dist/SHA256SUMS \
             --title "uxyngraphar ${version}" \
-            --notes "Instalar en una línea: https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/instalar-uxyngraphar.py (ver README). Cambios: español/CHANGELOG.md." \
+            --notes "Instalar en una línea: https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/instalar-uxyngraphar.py (ver README). Cambios: español/motor/CHANGELOG.md." \
             --verify-tag

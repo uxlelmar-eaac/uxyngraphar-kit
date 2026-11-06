@@ -113,7 +113,7 @@ async function aplicarMigracion() { if (!confirm("Se hará un respaldo completo 
 
 async function cargarCatalogo() {
   const cat = await api("/api/catalogo");
-  $("catalogo").innerHTML = `<table><tr><th>Paquete</th><th>Versión</th><th>Estado</th><th></th></tr>${cat.map((m) => `<tr><td><b>${esc(m.titulo)}</b> <span class="tenue">${esc(m.id)}</span><br><span class="tenue">${esc(m.descripcion)}</span></td><td>${esc(m.version)}</td><td class="${m.errores.length ? "mal" : "bien"}">${m.errores.length ? esc(m.errores.join("; ")) : "válido"}</td><td><button onclick="editar('${esc(m.id)}')">Editar</button></td></tr>`).join("")}</table>`;
+  $("catalogo").innerHTML = `<table><tr><th>Paquete</th><th>Versión</th><th>Estado</th><th></th></tr>${cat.map((m) => `<tr><td><b>${esc(m.titulo)}</b> <span class="tenue">${esc(m.id)}</span><br><span class="tenue">${esc(m.descripcion)}</span></td><td>${esc(m.version)}</td><td class="${m.errores.length ? "mal" : "bien"}">${m.errores.length ? esc(m.errores.join("; ")) : "válido"}${(m.avisos || []).length ? `<br><span class="tenue">aviso: ${esc(m.avisos.join("; "))}</span>` : ""}</td><td><button onclick="editar('${esc(m.id)}')">Editar</button></td></tr>`).join("")}</table>`;
 }
 async function crearPaquete() { await api("/api/catalogo/crear", { id: $("nuevo-id").value.trim(), titulo: $("nuevo-titulo").value.trim(), descripcion: $("nuevo-desc").value.trim() }); aviso("Paquete creado"); await cargarCatalogo(); editar($("nuevo-id").value.trim()); }
 async function editar(id) {

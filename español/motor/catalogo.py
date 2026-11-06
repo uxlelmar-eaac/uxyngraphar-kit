@@ -1,6 +1,6 @@
 """Catálogo de paquetes (fuente en `paquetes/<id>/`): listar, crear, editar, versionar y construir.
 
-Editar un paquete solo ocurre aquí. Un paquete construido = fuente + scripts comunes en `scripts/comun/` + INTEGRIDAD.json.
+Editar un paquete solo ocurre aquí. Cada paquete fuente es completo; construido = fuente + INTEGRIDAD.json.
 """
 
 from __future__ import annotations
@@ -20,12 +20,13 @@ def catalogo(raiz: Path | None = None) -> Path:
 
 
 def listar(raiz: Path | None = None) -> list[dict]:
-    """Manifiestos del catálogo (con «errores» de validación de cada paquete)."""
+    """Manifiestos del catálogo (con «errores» de validación y «avisos» de cada paquete)."""
     salida = []
     for carpeta in sorted(catalogo(raiz).iterdir()):
         if carpeta.is_dir() and not carpeta.name.startswith(("_", ".")) and (carpeta / base.MANIFIESTO).is_file():
             m = base.leer_manifiesto(carpeta)
             m["errores"] = esp.validar_paquete(carpeta)
+            m["avisos"] = esp.avisos_paquete(carpeta)
             salida.append(m)
     return salida
 
@@ -46,21 +47,12 @@ def crear(pid: str, titulo: str, descripcion: str = "", raiz: Path | None = None
     c = catalogo(raiz) / pid
     if c.exists():
         raise FileExistsError(f"ya existe {c}")
-    m = {"manifiesto_formato": 1, "id": pid, "version": "0.1.0", "titulo": titulo, "descripcion": descripcion or titulo,
-         "motor": ">=2.0", "activacion": [pid], "entrada": base.ENTRADA, "verificaciones": [f"{esp.DESTINO_COMUN}/verificar.py"],
-         "fichas": {"ficha": {"carpeta": ".", "prefijo": "FIC", "plantilla": "plantillas/ficha.md", "inicial": "abierta",
-                              "estados": {"abierta": "pendientes", "en-curso": "en-progreso", "cerrada": "completadas"}}},
-         "ajustes": {}}
-    (c / "plantillas").mkdir(parents=True)
+    shutil.copytree(esp.PLANTILLA, c, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+    m = base.leer_manifiesto(c)
+    m.update(id=pid, titulo=titulo, descripcion=descripcion or titulo, activacion=[pid])
     (c / base.MANIFIESTO).write_text(json.dumps(m, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    s = f"{base.CARPETA_PAQUETES}/{pid}/{esp.DESTINO_COMUN}"
-    (c / base.ENTRADA).write_text(
-        f"# {titulo}\n\nAntes de actuar: `python3 {s}/verificar-integridad.py`.\n\n"
-        f"1. Lee las **Reglas** (al final de este archivo).\n"
-        f"2. Trabaja solo en `{base.CARPETA_TRABAJO}/{pid}/` (`python3 {s}/fichas.py …`).\n"
-        f"3. Antes de terminar: `python3 {s}/verificar.py`.\n\n## Reglas\n\n1. …\n", encoding="utf-8")
-    (c / "plantillas" / "ficha.md").write_text("---\nid: {{id}}\nstatus: {{status}}\nfecha: {{fecha}}\n---\n\n# {{titulo}}\n\n…\n",
-                                               encoding="utf-8")
+    entrada = c / base.ENTRADA
+    entrada.write_text(entrada.read_text(encoding="utf-8").replace("{{titulo}}", titulo).replace("{{id}}", pid), encoding="utf-8")
     return c
 
 
@@ -123,10 +115,6 @@ def construir(pid: str, destino: Path, raiz: Path | None = None) -> Path:
     if salida.exists():
         shutil.rmtree(salida)
     shutil.copytree(fuente, salida, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
-    comun = salida / esp.DESTINO_COMUN
-    comun.mkdir(parents=True)
-    for script in sorted(p for p in esp.COMUN.glob("*.py") if not p.name.startswith("test_")):
-        shutil.copy2(script, comun / script.name)
     (salida / base.INTEGRIDAD).write_text(json.dumps(base.calcular_integridad(salida), ensure_ascii=False, indent=2) + "\n",
                                           encoding="utf-8")
     errores = esp.validar_paquete(salida, construido=True)

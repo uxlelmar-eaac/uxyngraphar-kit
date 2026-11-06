@@ -1,7 +1,7 @@
 """Contratos de uxyngraphar 2.0 del lado del motor: paquete (fuente o construido) y FLUJO.json.
 
-El manifiesto y la integridad se validan con el mismo código que viaja dentro de cada paquete
-(`comun/uxyn_base.py`), para que haya una sola regla.
+El manifiesto y la integridad se validan con la copia de `scripts/comun/uxyn_base.py` de la plantilla del motor
+(`motor/plantilla/`), la misma de la que nacen los paquetes nuevos.
 """
 
 from __future__ import annotations
@@ -10,10 +10,12 @@ import json
 import sys
 from pathlib import Path
 
-KIT = Path(__file__).resolve().parent.parent
+MOTOR = Path(__file__).resolve().parent
+KIT = MOTOR.parent
 CATALOGO = KIT / "paquetes"
-COMUN = KIT / "comun"
+PLANTILLA = MOTOR / "plantilla"
 DESTINO_COMUN = "scripts/comun"
+COMUN = PLANTILLA / DESTINO_COMUN
 sys.path.insert(0, str(COMUN))
 
 import uxyn_base as base  # noqa: E402
@@ -56,9 +58,8 @@ def validar_paquete(carpeta: Path, construido: bool = False) -> list[str]:
     for nombre in OBLIGATORIOS:
         if not (carpeta / nombre).is_file():
             errores.append(f"falta {nombre}")
-    comunes = {f"{DESTINO_COMUN}/{p.name}" for p in COMUN.glob("*.py")}
     for v in m["verificaciones"]:
-        if not (carpeta / v).is_file() and not (not construido and v in comunes):
+        if not (carpeta / v).is_file():
             errores.append(f"verificación inexistente: {v}")
     for tipo, d in m.get("fichas", {}).items():
         if not (carpeta / d["plantilla"]).is_file():
@@ -70,12 +71,21 @@ def validar_paquete(carpeta: Path, construido: bool = False) -> list[str]:
         informe = base.comprobar_integridad(carpeta)
         if not base.integro(informe):
             errores.append(f"integridad: {json.dumps(informe, ensure_ascii=False)}")
-    else:
-        if (carpeta / base.INTEGRIDAD).exists():
-            errores.append(f"{base.INTEGRIDAD} no va en el catálogo: lo genera la construcción")
-        if (carpeta / DESTINO_COMUN).exists():
-            errores.append(f"{DESTINO_COMUN}/ no va en el catálogo: la construcción copia ahí los scripts comunes")
+    elif (carpeta / base.INTEGRIDAD).exists():
+        errores.append(f"{base.INTEGRIDAD} no va en el catálogo: lo genera la construcción")
     return errores
+
+
+def avisos_paquete(carpeta: Path) -> list[str]:
+    """Avisos (no impiden validar): scripts de `scripts/comun/` que faltan o difieren de la plantilla del motor."""
+    avisos = []
+    for script in sorted(COMUN.glob("*.py")):
+        propio = Path(carpeta) / DESTINO_COMUN / script.name
+        if not propio.is_file():
+            avisos.append(f"{DESTINO_COMUN}/{script.name}: no está (la plantilla del motor lo trae)")
+        elif base.sha256(propio) != base.sha256(script):
+            avisos.append(f"{DESTINO_COMUN}/{script.name}: difiere de la plantilla del motor")
+    return avisos
 
 
 def validar_flujo(flujo, instalados: set[str] | None = None) -> list[str]:

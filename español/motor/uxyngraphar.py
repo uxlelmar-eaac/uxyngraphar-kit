@@ -21,8 +21,8 @@ import sys
 import tempfile
 from pathlib import Path
 
-RAIZ = Path(__file__).resolve().parent   # versiones/X.Y.Z/ (instalada) o español/ (repositorio)
-sys.path[:0] = [str(RAIZ / "motor"), str(RAIZ / "distribucion")]
+RAIZ = Path(__file__).resolve().parent   # versiones/X.Y.Z/motor/ (instalada) o español/motor/ (repositorio)
+sys.path[:0] = [str(RAIZ), str(RAIZ / "distribucion")]
 
 import arranque as ar  # noqa: E402
 import cli  # noqa: E402

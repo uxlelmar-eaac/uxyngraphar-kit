@@ -134,7 +134,8 @@ def main(argv: list[str] | None = None) -> int:
         if a.cmd == "catalogo" or a.cmd == "validar":
             filas = [m for m in catalogo.listar() if a.cmd == "catalogo" or not a.ids or m["id"] in a.ids]
             for m in filas:
-                print(f"{m['id']}\t{m['version']}\t{m['titulo']}" + ("" if not m["errores"] else "\n  ERRORES: " + "; ".join(m["errores"])))
+                print(f"{m['id']}\t{m['version']}\t{m['titulo']}" + ("" if not m["errores"] else "\n  ERRORES: " + "; ".join(m["errores"]))
+                      + "".join(f"\n  aviso: {a}" for a in m.get("avisos", [])))
             return 1 if any(m["errores"] for m in filas) else 0
         if a.cmd == "crear":
             print(catalogo.crear(a.id, a.titulo, a.descripcion))

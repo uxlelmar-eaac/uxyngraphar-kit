@@ -20,7 +20,7 @@ import migrar  # noqa: E402
 import limpieza  # noqa: E402
 import repo  # noqa: E402
 
-REALES = Path(__file__).resolve().parents[3]
+REALES = Path(__file__).resolve().parents[4]
 AGENTES_1X = "# AGENTES — pack servidor\n\nLee docs/00-nucleo.\n"
 CLAUDE_1X = "# CLAUDE.md\n\nEste proyecto usa uxyngraphar. Lee **solo** [AGENTES.md](AGENTES.md) y ejecuta docs/scripts/contexto.py.\n"
 

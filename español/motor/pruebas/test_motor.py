@@ -44,12 +44,20 @@ class Base(unittest.TestCase):
 
 class TestCatalogo(Base):
     def test_listar_y_validar(self):
-        self.assertEqual([(m["id"], m["errores"]) for m in catalogo.listar(self.cat)], [("demo", []), ("otro", [])])
+        self.assertEqual([(m["id"], m["errores"], m["avisos"]) for m in catalogo.listar(self.cat)],
+                         [("demo", [], []), ("otro", [], [])])
+
+    def test_crear_parte_de_la_plantilla(self):
+        demo = self.cat / "demo"
+        self.assertEqual(base.leer_manifiesto(demo)["activacion"], ["demo"])
+        self.assertIn("# Demo", (demo / base.ENTRADA).read_text(encoding="utf-8"))
+        self.assertNotIn("{{", (demo / base.ENTRADA).read_text(encoding="utf-8"))
+        self.assertTrue((demo / "scripts" / "comun" / "fichas.py").is_file())
 
     def test_construir_es_portatil_e_integro(self):
         salida = catalogo.construir("demo", Path(self.tmp.name) / "dist", self.cat)
-        self.assertTrue((salida / "scripts" / "comun" / "uxyn_base.py").is_file())
-        self.assertFalse((salida / "scripts" / "uxyn_base.py").exists())
+        self.assertEqual(set(base.archivos_del_paquete(salida)), set(base.archivos_del_paquete(self.cat / "demo")))
+        self.assertTrue((salida / base.INTEGRIDAD).is_file())
         self.assertTrue(base.integro(base.comprobar_integridad(salida)))
 
     def test_editar_y_versionar(self):
@@ -62,10 +70,14 @@ class TestCatalogo(Base):
         self.assertTrue(catalogo.guardar_archivo("demo", base.MANIFIESTO, malo, self.cat)[0].startswith("no guardado"))
         self.assertEqual(base.leer_manifiesto(self.cat / "demo")["version"], "0.2.0")
 
-    def test_scripts_comunes_no_van_en_el_catalogo(self):
-        catalogo.guardar_archivo("demo", "scripts/comun/uxyn_base.py", "x = 1\n", self.cat)
-        with self.assertRaises(ValueError):
-            catalogo.construir("demo", Path(self.tmp.name) / "dist", self.cat)
+    def test_script_comun_cambiado_avisa_sin_fallar(self):
+        fichas = "scripts/comun/fichas.py"
+        texto = catalogo.leer_archivo("demo", fichas, self.cat) + "# cambio propio del paquete\n"
+        self.assertEqual(catalogo.guardar_archivo("demo", fichas, texto, self.cat), [])
+        (demo,) = [m for m in catalogo.listar(self.cat) if m["id"] == "demo"]
+        self.assertEqual(demo["errores"], [])
+        self.assertEqual(demo["avisos"], [f"{fichas}: difiere de la plantilla del motor"])
+        catalogo.construir("demo", Path(self.tmp.name) / "dist", self.cat)
 
 
 class TestRepo(Base):

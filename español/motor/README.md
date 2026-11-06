@@ -4,17 +4,20 @@ Catálogo de **paquetes de gobernanza** para repos trabajados por personas y age
 
 ```
 español/
-  uxyngraphar.py        el único comando: panel, catálogo, instalar/actualizar/quitar, flujo, migrar…
-  VERSION               versión de la herramienta
-  ESPECIFICACION.md     contrato de paquetes, FLUJO.json y migración desde 1.x
-  CHANGELOG.md
-  paquetes/             el catálogo: un paquete por carpeta
-  comun/                scripts comunes que se copian en scripts/comun/ de cada paquete al construirlo
-  motor/                construir, instalar, generar INDICE/AGENTES/FLUJO, CLI y panel
-    migracion/          migración de instalaciones 1.x
-  distribucion/         instalador de una línea y publicación de releases
-  pruebas/              pruebas de todo lo anterior
+  motor/                  todo lo que instala, actualiza, configura y desinstala uxyngraphar
+    uxyngraphar.py        el único comando: panel, catálogo, instalar/actualizar/quitar, flujo, migrar…
+    VERSION               versión de la herramienta
+    README.md  ESPECIFICACION.md  CHANGELOG.md
+    cli.py catalogo.py especificacion.py repo.py generar.py panel.py panel.html
+    migracion/            migración de instalaciones 1.x
+    distribucion/         instalador de una línea y publicación de releases
+    plantilla/            semilla de los paquetes nuevos («crear»)
+    pruebas/              pruebas de todo lo anterior
+  paquetes/               el catálogo: un paquete por carpeta, cada uno completo e independiente
 ```
+
+Cada paquete lleva todo lo que necesita para funcionar y verificarse (también `scripts/comun/`): copiar su carpeta a otro
+`uxyngraphar/paquetes/` basta. `validar` avisa, sin fallar, si su `scripts/comun/` difiere de `motor/plantilla/`.
 
 ## En un repo
 
@@ -25,7 +28,7 @@ mi-repo/
     INDICE.md                      paquetes instalados y sus frases de activación (generado)
     FLUJO.json                     cómo trabaja el agente (lo decide una persona)
     paquetes/                      paquetes instalados (inmutables)
-      secretos/  README.md  paquete.json  docs/  scripts/  scripts/comun/
+      secretos/  README.md  paquete.json  INTEGRIDAD.json  docs/  scripts/  scripts/comun/
     trabajo/                       el trabajo del proyecto
       decisiones-adr/completadas/ADR-20261105-orm.md
       ciclo-instrucciones/instrucciones/pendientes/INS-20261105-landing.md
@@ -35,13 +38,15 @@ Ningún paquete actúa solo: el agente los usa cuando el pedido dice «usa el pa
 
 ## Uso
 
+Desde `español/` (instalado, basta `uxyngraphar …`):
+
 ```bash
-python3 uxyngraphar.py                         # panel en el navegador
-python3 uxyngraphar.py catalogo                # paquetes disponibles
-python3 uxyngraphar.py instalar secretos ciclo-instrucciones --repo ../mi-app
-python3 uxyngraphar.py flujo --repo ../mi-app --modo trabajar_con --trabajar-con ciclo-instrucciones
-python3 uxyngraphar.py migrar --repo ../mi-app # instalación 1.x: simula; --aplicar migra con respaldo
-python3 -m unittest discover -s pruebas -t pruebas
+python3 motor/uxyngraphar.py                         # panel en el navegador
+python3 motor/uxyngraphar.py catalogo                # paquetes disponibles (con avisos)
+python3 motor/uxyngraphar.py instalar secretos ciclo-instrucciones --repo ../mi-app
+python3 motor/uxyngraphar.py flujo --repo ../mi-app --modo trabajar_con --trabajar-con ciclo-instrucciones
+python3 motor/uxyngraphar.py migrar --repo ../mi-app # instalación 1.x: simula; --aplicar migra con respaldo
+python3 -m unittest discover -s motor/pruebas -t motor/pruebas
 ```
 
 Crear o cambiar un paquete: en `paquetes/<id>/` (o desde la pestaña Catálogo del panel), subir su versión con `uxyngraphar.py version <id> menor` y actualizar los repos con `uxyngraphar.py actualizar --repo …`.

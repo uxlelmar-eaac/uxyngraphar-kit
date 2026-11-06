@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Genera los archivos de una release de uxyngraphar (los sube el workflow .github/workflows/publicar.yml).
 
-Uso:  python3 español/distribucion/publicar.py [--salida dist] [--etiqueta vX.Y.Z]
+Uso:  python3 español/motor/distribucion/publicar.py [--salida dist] [--etiqueta vX.Y.Z]
 Crea en --salida:
-  uxyngraphar-X.Y.Z.zip       el contenido de español/ (sin pruebas/ ni cachés), dentro de «uxyngraphar-X.Y.Z/»
+  uxyngraphar-X.Y.Z.zip       el contenido de español/ (motor/ y paquetes/, sin motor/pruebas/ ni cachés), dentro de «uxyngraphar-X.Y.Z/»
   instalar-uxyngraphar.py     el instalador de una línea: arranque_descarga.py + arranque.py, con la versión fija y solo ASCII
   SHA256SUMS                  huellas de los dos anteriores (el instalador las comprueba antes de instalar)
 Falla (2) si VERSION no coincide con la etiqueta o algún paquete del catálogo no valida.
@@ -21,8 +21,10 @@ import tokenize
 import zipfile
 from pathlib import Path
 
-ES = Path(__file__).resolve().parent.parent          # carpeta «español/»
-EXCLUIR_DIRS = {"pruebas", "__pycache__", ".decisiones", ".atl", "dist", ".git"}
+ES = Path(__file__).resolve().parents[2]            # carpeta «español/»
+MOTOR = ES / "motor"
+EXCLUIR_DIRS = {"__pycache__", ".decisiones", ".atl", "dist", ".git"}
+EXCLUIR_RUTAS = ("motor/pruebas/",)
 FECHA_FIJA = (1980, 1, 1, 0, 0, 0)                    # zip reproducible: mismo contenido, misma huella
 BLOQUE_REPO = re.compile(r"^# <solo-repositorio>.*?^# </solo-repositorio>[^\n]*\n", re.M | re.S)
 
@@ -32,7 +34,7 @@ class ErrorPublicacion(Exception):
 
 
 def comprobar_version(etiqueta: str) -> str:
-    version = (ES / "VERSION").read_text(encoding="utf-8").strip()
+    version = (MOTOR / "VERSION").read_text(encoding="utf-8").strip()
     if not re.match(r"^\d+\.\d+\.\d+$", version):
         raise ErrorPublicacion(f"Versión no válida en VERSION: {version}")
     if etiqueta and etiqueta != f"v{version}":
@@ -41,7 +43,7 @@ def comprobar_version(etiqueta: str) -> str:
 
 
 def comprobar_catalogo() -> None:
-    sys.path.insert(0, str(ES / "motor"))
+    sys.path.insert(0, str(MOTOR))
     import catalogo
     malos = {m["id"]: m["errores"] for m in catalogo.listar() if m["errores"]}
     if malos:
@@ -49,7 +51,8 @@ def comprobar_catalogo() -> None:
 
 
 def archivos_publicables() -> list[Path]:
-    return sorted(p for p in ES.rglob("*") if p.is_file() and not (set(p.relative_to(ES).parts) & EXCLUIR_DIRS) and p.suffix != ".pyc")
+    return sorted(p for p in ES.rglob("*") if p.is_file() and not (set(p.relative_to(ES).parts) & EXCLUIR_DIRS)
+                  and not p.relative_to(ES).as_posix().startswith(EXCLUIR_RUTAS) and p.suffix != ".pyc")
 
 
 def construir_zip(version: str, destino: Path) -> Path:
@@ -78,8 +81,8 @@ def a_ascii(codigo: str) -> str:
 
 
 def construir_instalador(version: str, destino: Path) -> Path:
-    parte1 = (ES / "distribucion" / "arranque_descarga.py").read_text(encoding="utf-8")
-    parte2 = (ES / "distribucion" / "arranque.py").read_text(encoding="utf-8")
+    parte1 = (MOTOR / "distribucion" / "arranque_descarga.py").read_text(encoding="utf-8")
+    parte2 = (MOTOR / "distribucion" / "arranque.py").read_text(encoding="utf-8")
     if parte1.count('VERSION = "__VERSION__"') != 1:
         raise ErrorPublicacion('arranque_descarga.py debe contener exactamente una vez: VERSION = "__VERSION__"')
     if len(BLOQUE_REPO.findall(parte2)) != 1:

@@ -27,7 +27,9 @@ def main():
             version = f.read().strip()
     except OSError:
         version = ""
-    cli = os.path.join(HOME, "versiones", version, "uxyngraphar.py")
+    cli = os.path.join(HOME, "versiones", version, "motor", "uxyngraphar.py")
+    if not os.path.isfile(cli):   # versiones 1.x guardadas: el comando estaba en la raiz
+        cli = os.path.join(HOME, "versiones", version, "uxyngraphar.py")
     if not version or not os.path.isfile(cli):
         sys.stderr.write("uxyngraphar no está bien instalado en " + HOME + ". Vuelve a ejecutar el comando de instalación de una línea.\\n")
         return 1

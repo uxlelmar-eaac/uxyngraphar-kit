@@ -2,7 +2,7 @@
 
 Catálogo de **paquetes de gobernanza** humano–IA (temáticos, portátiles e inmutables) y la herramienta que los instala en tus repos. Por ahora solo en español.
 
-Todo está en **[`español/`](./español/README.md)**: el catálogo en `paquetes/`, el motor en `motor/` y el contrato en [`ESPECIFICACION.md`](./español/ESPECIFICACION.md).
+Todo está en **`español/`**: el catálogo en `paquetes/` (cada paquete independiente) y todo lo demás en [`motor/`](./español/motor/README.md), con el contrato en [`ESPECIFICACION.md`](./español/motor/ESPECIFICACION.md).
 
 ```bash
 # Linux / macOS

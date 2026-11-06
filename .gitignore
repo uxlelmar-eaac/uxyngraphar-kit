@@ -6,5 +6,5 @@ __pycache__/
 *.pyc
 .decisiones/
 
-# Archivos de release generados por distribucion/publicar.py
+# Archivos de release generados por español/motor/distribucion/publicar.py
 dist/

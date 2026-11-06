@@ -17,9 +17,10 @@ import zipfile
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-ES = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ES / "distribucion"))
-_spec = importlib.util.spec_from_file_location("publicar_uxy", ES / "distribucion" / "publicar.py")
+MOTOR = Path(__file__).resolve().parents[1]
+ES = MOTOR.parent
+sys.path.insert(0, str(MOTOR / "distribucion"))
+_spec = importlib.util.spec_from_file_location("publicar_uxy", MOTOR / "distribucion" / "publicar.py")
 publicar = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(publicar)
 
@@ -36,8 +37,8 @@ def publicar_version(destino: Path, version: str = VERSION) -> Path:
         return destino
     copia = destino.parent / f"src-{version}"
     shutil.copytree(ES, copia / "español", ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".decisiones"))
-    (copia / "español" / "VERSION").write_text(version + "\n", encoding="utf-8")
-    r = subprocess.run([sys.executable, str(copia / "español" / "distribucion" / "publicar.py"), "--salida", str(destino)], capture_output=True, text=True)
+    (copia / "español" / "motor" / "VERSION").write_text(version + "\n", encoding="utf-8")
+    r = subprocess.run([sys.executable, str(copia / "español" / "motor" / "distribucion" / "publicar.py"), "--salida", str(destino)], capture_output=True, text=True)
     assert r.returncode == 0, r.stdout + r.stderr
     return destino
 
@@ -107,7 +108,8 @@ class TestPublicado(Entorno):
         self.assertEqual(za.read_bytes(), (b / za.name).read_bytes())
         nombres = zipfile.ZipFile(za).namelist()
         self.assertFalse([n for n in nombres if "/pruebas/" in n or "__pycache__" in n])
-        for rel in ("uxyngraphar.py", "VERSION", "motor/cli.py", "paquetes/secretos/paquete.json"):
+        for rel in ("motor/uxyngraphar.py", "motor/VERSION", "motor/cli.py", "paquetes/secretos/paquete.json",
+                    "paquetes/secretos/scripts/comun/fichas.py"):
             self.assertIn(f"uxyngraphar-{VERSION}/{rel}", nombres)
 
 

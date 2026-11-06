@@ -4,7 +4,7 @@
 #   Windows:      irm https://github.com/uxlelmar-eaac/uxyngraphar-kit/releases/latest/download/instalar-uxyngraphar.py | py -
 #   Opciones (detras de "python3 -"):  --version X.Y.Z   --sin-path   --consola   --help
 # El archivo publicado es este (descarga y verificacion) + arranque.py (lanzador, PATH y main), unidos por
-# distribucion/publicar.py. Reglas de ambos (las comprueban las pruebas de pruebas/test_instalador.py):
+# motor/distribucion/publicar.py. Reglas de ambos (las comprueban las pruebas de motor/pruebas/test_instalador.py):
 #   - Todo el codigo vive en funciones y solo se ejecuta en la ultima linea: si la descarga se corta, no hace nada.
 #   - El archivo publicado solo lleva ASCII (publicar.py escribe los acentos como \uXXXX): PowerShell 5.1
 #     estropea los acentos al pasar texto por tuberia. Aqui no se usan cadenas r"..." con acentos.
@@ -248,10 +248,10 @@ def extraer_seguro(ruta_zip, destino, prefijo):
 
 
 def comprobar_contenido(carpeta, version):
-    for rel in ("uxyngraphar.py", "VERSION", "motor/cli.py", "distribucion/arranque.py"):
+    for rel in ("motor/uxyngraphar.py", "motor/VERSION", "motor/cli.py", "motor/distribucion/arranque.py"):
         if not os.path.isfile(os.path.join(carpeta, *rel.split("/"))):
             raise ErrorInstalacion("Al paquete le falta {}; no lo instalo.".format(rel))
-    with open(os.path.join(carpeta, "VERSION"), encoding="utf-8") as f:
+    with open(os.path.join(carpeta, "motor", "VERSION"), encoding="utf-8") as f:
         dice = f.read().strip()
     if dice != version:
         raise ErrorInstalacion("El paquete dice ser la versión {} y se esperaba {}; no lo instalo.".format(dice or "?", version))

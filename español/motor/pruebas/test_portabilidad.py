@@ -1,12 +1,14 @@
-"""Prueba obligatoria del catálogo: cada paquete, copiado SOLO a una app vacía, funciona igual.
+"""Prueba obligatoria del catálogo: cada paquete fuente, copiado tal cual y SOLO a una app vacía, funciona igual.
 
-Por paquete: construir → copiar a <app>/uxyngraphar/<id>/ (sin motor, sin AGENTES, sin otros paquetes) → integridad,
+Por paquete: copiar paquetes/<id>/ a <app>/uxyngraphar/paquetes/<id>/ (sin motor, sin AGENTES, sin otros paquetes)
++ INTEGRIDAD.json → integridad,
 fichas de cada tipo y verificaciones → nada escrito fuera de <app>/uxyngraphar/trabajo/<id>/ → solo imports locales o stdlib.
 """
 
 from __future__ import annotations
 
 import ast
+import json
 import shutil
 import subprocess
 import sys
@@ -34,7 +36,6 @@ class TestPortabilidad(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.tmp = tempfile.TemporaryDirectory()
-        cls.dist = Path(cls.tmp.name) / "dist"
         cls.ids = [m["id"] for m in catalogo.listar()]
 
     @classmethod
@@ -46,6 +47,7 @@ class TestPortabilidad(unittest.TestCase):
         self.assertTrue(self.ids, "el catálogo está vacío")
         for m in catalogo.listar():
             self.assertEqual(m["errores"], [], m["id"])
+            self.assertEqual(m["avisos"], [], m["id"])
 
     def test_cada_paquete_aislado(self):
         for pid in self.ids:
@@ -53,12 +55,12 @@ class TestPortabilidad(unittest.TestCase):
                 self._probar(pid)
 
     def _probar(self, pid: str) -> None:
-        construido = catalogo.construir(pid, self.dist)
         app = Path(self.tmp.name) / f"app-{pid}"
         (app / "src").mkdir(parents=True)
         (app / "src" / "index.ts").write_text("export const greeting = 'hello';\n", encoding="utf-8")
         paquete = app / "uxyngraphar" / "paquetes" / pid
-        shutil.copytree(construido, paquete)
+        shutil.copytree(catalogo.carpeta(pid), paquete, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+        (paquete / base.INTEGRIDAD).write_text(json.dumps(base.calcular_integridad(paquete)), encoding="utf-8")
         repo.solo_lectura(paquete)
         ajeno = Path(self.tmp.name) / "otro-cwd"
         ajeno.mkdir(exist_ok=True)
