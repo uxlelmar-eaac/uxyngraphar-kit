@@ -48,7 +48,7 @@ class Base(BaseApp):
 
 
 class TestReglas(Base):
-    PAQUETES = ["reglas-del-proyecto", "instrucciones-aprobadas"]
+    PAQUETES = ["reglas-del-proyecto", "adaptaciones-de-paquetes", "instrucciones-aprobadas"]
 
     def test_regla_excepcion_y_persona(self):
         regla = self.nueva("reglas-del-proyecto", "regla", "sin-console")
@@ -73,15 +73,15 @@ class TestReglas(Base):
         self.assertEqual(r.returncode, 0, r.stderr)
 
     def test_ajuste_local_con_huella(self):
-        ajuste = self.nueva("reglas-del-proyecto", "ajuste", "paso-extra")
+        ajuste = self.nueva("adaptaciones-de-paquetes", "ajuste", "paso-extra")
         campo(ajuste, "paquete", "instrucciones-aprobadas")
-        reglas = self.s("reglas-del-proyecto", "reglas.py")
-        self.assertIn("0 ajustes locales activos", correr(reglas, "ajustes", "instrucciones-aprobadas", cwd=self.app).stdout)
-        self.assertNotEqual(correr(reglas, "aprobar-ajuste", ajuste.stem, cwd=self.app).returncode, 0)
-        r = correr(reglas, "aprobar-ajuste", ajuste.stem, "--humano", cwd=self.app)
+        adaptaciones = self.s("adaptaciones-de-paquetes", "adaptaciones.py")
+        self.assertIn("0 ajustes locales activos", correr(adaptaciones, "ajustes", "instrucciones-aprobadas", cwd=self.app).stdout)
+        self.assertNotEqual(correr(adaptaciones, "aprobar-ajuste", ajuste.stem, cwd=self.app).returncode, 0)
+        r = correr(adaptaciones, "aprobar-ajuste", ajuste.stem, "--humano", cwd=self.app)
         self.assertEqual(r.returncode, 0, r.stderr)
-        self.assertIn("1 ajustes locales activos", correr(reglas, "ajustes", "instrucciones-aprobadas", cwd=self.app).stdout)
-        (activo,) = self.trabajo("reglas-del-proyecto").rglob(f"{ajuste.stem}.md")
+        self.assertIn("1 ajustes locales activos", correr(adaptaciones, "ajustes", "instrucciones-aprobadas", cwd=self.app).stdout)
+        (activo,) = self.trabajo("adaptaciones-de-paquetes").rglob(f"{ajuste.stem}.md")
         self.assertRegex(activo.read_text(encoding="utf-8"), r"huella: [0-9a-f]{64}")
 
 
@@ -221,7 +221,7 @@ class TestVivas(Base):
 
 
 class TestRiqueza(Base):
-    PAQUETES = ["instrucciones-aprobadas", "calidad-de-codigo", "memoria-e-historial"]
+    PAQUETES = ["instrucciones-aprobadas", "idiomas-del-codigo", "notas-de-memoria", "documentos-archivados"]
 
     def test_variantes_estado_y_tokens(self):
         fichas = self.s("instrucciones-aprobadas", "fichas.py")
@@ -245,22 +245,22 @@ class TestRiqueza(Base):
         self.assertEqual(correr(self.s("instrucciones-aprobadas", "verificar-ciclo.py"), cwd=self.app).returncode, 0)
 
     def test_glosario_y_archivo_fuera_de_ia(self):
-        glosario = self.s("calidad-de-codigo", "glosario.py")
+        glosario = self.s("idiomas-del-codigo", "glosario.py")
         self.assertIn("vacío", correr(glosario, "terminos", cwd=self.app).stdout)
         ruta = Path(correr(glosario, "iniciar", cwd=self.app).stdout.strip())
         with ruta.open("a", encoding="utf-8") as f:
             f.write("| `expediente` | case file | Carpeta de un trámite | dominio | negocio | ana |\n")
         self.assertEqual(correr(glosario, "terminos", cwd=self.app).stdout.strip(), "expediente")
         deny = json.loads((self.app / ".claude/settings.json").read_text())["permissions"]["deny"]
-        self.assertIn("Edit(uxyngraphar/trabajo/calidad-de-codigo/GLOSARIO.md)", deny)
-        self.assertIn("uxyngraphar/trabajo/memoria-e-historial/archivo/**", (self.app / ".cursorignore").read_text(encoding="utf-8"))
+        self.assertIn("Edit(uxyngraphar/trabajo/idiomas-del-codigo/GLOSARIO.md)", deny)
+        self.assertIn("uxyngraphar/trabajo/documentos-archivados/archivo/**", (self.app / ".cursorignore").read_text(encoding="utf-8"))
         viejo = self.app / "viejo.md"
         viejo.write_text("decision antigua\n", encoding="utf-8")
-        memoria = self.s("memoria-e-historial", "memoria.py")
-        self.assertEqual(correr(memoria, "archivar", str(viejo), "--humano", cwd=self.app).returncode, 0)
-        self.assertEqual(correr(memoria, "buscar", "antigua", cwd=self.app).stdout, "")
-        self.assertNotEqual(correr(memoria, "buscar", "antigua", "--archivo", cwd=self.app).returncode, 0)
-        self.assertIn("decision antigua", correr(memoria, "buscar", "antigua", "--archivo", "--humano", cwd=self.app).stdout)
+        archivo = self.s("documentos-archivados", "archivo.py")
+        self.assertEqual(correr(archivo, "archivar", str(viejo), "--humano", cwd=self.app).returncode, 0)
+        self.assertEqual(correr(self.s("notas-de-memoria", "notas.py"), "buscar", "antigua", cwd=self.app).stdout, "")
+        self.assertNotEqual(correr(archivo, "buscar", "antigua", cwd=self.app).returncode, 0)
+        self.assertIn("decision antigua", correr(archivo, "buscar", "antigua", "--humano", cwd=self.app).stdout)
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 {
-  "manifiesto_formato": 1,
+  "manifiesto_formato": 2,
   "id": "auditorias-tecnicas",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "titulo": "Auditorías técnicas",
   "descripcion": "Investigaciones con evidencia: alcance, preguntas, hallazgos con severidad y promoción de resultados a ADR, instrucciones o documentación.",
   "familia": "proceso",
@@ -16,6 +16,76 @@
   "verificaciones": [
     "scripts/comun/verificar.py",
     "scripts/verificar-auditorias.py"
+  ],
+  "alcance": {
+    "problemas": [
+      {
+        "id": "investigaciones-sin-alcance",
+        "descripcion": "Investigaciones que empiezan sin alcance ni preguntas, se extienden sin fin y no se sabe cuándo están terminadas."
+      },
+      {
+        "id": "hallazgos-sin-evidencia",
+        "descripcion": "Hallazgos sin ruta:línea, comando reproducible ni medición, y sin severidad, que no se distinguen de opiniones ni se pueden priorizar."
+      },
+      {
+        "id": "auditorias-que-modifican-codigo",
+        "descripcion": "Auditorías que arreglan sobre la marcha lo que encuentran, mezclando diagnóstico y cambio sin que una persona lo haya decidido."
+      },
+      {
+        "id": "auditorias-abandonadas",
+        "descripcion": "Demasiadas auditorías activas a la vez, o activas que llevan semanas sin avanzar y nadie cierra ni pospone."
+      },
+      {
+        "id": "conclusiones-sin-seguimiento",
+        "descripcion": "Conclusiones y recomendaciones que no se convierten en una ADR, una instrucción, una mejora o una actualización de documentación y se pierden."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "Implementar las correcciones que recomienda una auditoría",
+        "derivar_a": "instrucciones-aprobadas"
+      },
+      {
+        "tema": "Registrar la decisión técnica que surge de una auditoría",
+        "derivar_a": "decisiones-de-arquitectura"
+      },
+      {
+        "tema": "Anotar deuda o bugs sueltos vistos durante otra tarea, sin investigación",
+        "derivar_a": "deuda-y-mejoras"
+      },
+      {
+        "tema": "Contrastar automáticamente la documentación con el código",
+        "derivar_a": "verificaciones-vivas"
+      },
+      {
+        "tema": "Evaluar la usabilidad de la interfaz",
+        "derivar_a": "evaluaciones-de-usabilidad"
+      },
+      {
+        "tema": "Revisar la accesibilidad de la interfaz",
+        "derivar_a": "pautas-de-accesibilidad"
+      },
+      {
+        "tema": "Escanear credenciales y secretos en el código",
+        "derivar_a": "secretos-y-credenciales"
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "herramientas",
+    "plantillas",
+    "ejemplos",
+    "pruebas",
+    "cambios"
+  ],
+  "proceso": [
+    "abrir-auditoria",
+    "investigar",
+    "concluir",
+    "promover"
   ],
   "fichas": {
     "auditoria": {

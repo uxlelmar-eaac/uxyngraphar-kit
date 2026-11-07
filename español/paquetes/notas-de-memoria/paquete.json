@@ -1,0 +1,83 @@
+{
+  "manifiesto_formato": 2,
+  "id": "notas-de-memoria",
+  "version": "1.0.0",
+  "titulo": "Notas de memoria",
+  "descripcion": "Notas breves, fechadas y con fuente con lo que la persona quiere conservar del proyecto; el agente no las lee salvo que el pedido lo pida expresamente.",
+  "familia": "documentacion",
+  "motor": ">=2.0",
+  "activacion": [
+    "notas-de-memoria",
+    "notas de memoria",
+    "memoria del proyecto"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py"
+  ],
+  "alcance": {
+    "problemas": [
+      {
+        "id": "conocimiento-del-proyecto-perdido",
+        "descripcion": "Aprendizajes, acuerdos informales y lecciones de incidentes que la persona quiere conservar y se pierden entre conversaciones."
+      },
+      {
+        "id": "memoria-leida-sin-pedido",
+        "descripcion": "El agente carga notas antiguas en su contexto sin que el pedido lo pida y trabaja con información caducada o ajena a la tarea."
+      },
+      {
+        "id": "notas-caducadas-tratadas-como-vigentes",
+        "descripcion": "Notas sin fuente ni fecha de validez que se siguen tomando como ciertas cuando ya no lo son."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "Archivo histórico de documentos retirados",
+        "derivar_a": "documentos-archivados"
+      },
+      {
+        "tema": "Decisiones técnicas que condicionan el sistema (contexto, opciones, consecuencias)",
+        "derivar_a": "decisiones-de-arquitectura"
+      },
+      {
+        "tema": "Reglas del equipo que el código debe cumplir",
+        "derivar_a": "reglas-del-proyecto"
+      },
+      {
+        "tema": "Procedimientos para operar el sistema",
+        "derivar_a": "manuales-operativos"
+      },
+      {
+        "tema": "Deuda técnica y bugs detectados fuera de alcance",
+        "derivar_a": "deuda-y-mejoras"
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "componentes",
+    "herramientas",
+    "plantillas",
+    "ejemplos",
+    "pruebas",
+    "cambios"
+  ],
+  "proceso": [
+    "buscar-en-memoria",
+    "guardar-nota"
+  ],
+  "fichas": {
+    "nota": {
+      "carpeta": "memoria",
+      "prefijo": "MEM",
+      "plantilla": "plantillas/nota.md",
+      "inicial": "vigente",
+      "status_validos": [
+        "vigente",
+        "archivada"
+      ]
+    }
+  }
+}

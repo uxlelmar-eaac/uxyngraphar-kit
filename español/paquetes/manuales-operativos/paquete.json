@@ -1,7 +1,7 @@
 {
-  "manifiesto_formato": 1,
+  "manifiesto_formato": 2,
   "id": "manuales-operativos",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "titulo": "Manuales operativos",
   "descripcion": "Manuales vivos para operar el sistema (despliegue, incidentes, configuración): pasos verificables que se actualizan con cada cambio que los afecta.",
   "familia": "documentacion",
@@ -15,6 +15,61 @@
   "entrada": "README.md",
   "verificaciones": [
     "scripts/comun/verificar.py"
+  ],
+  "alcance": {
+    "problemas": [
+      {
+        "id": "procedimientos-sin-manual",
+        "descripcion": "Despliegues, respuestas a incidentes o cambios de configuración que solo sabe hacer una persona y no están escritos."
+      },
+      {
+        "id": "manuales-desfasados",
+        "descripcion": "Manuales que no se actualizaron tras un cambio que altera el procedimiento, o sin fecha de última verificación."
+      },
+      {
+        "id": "pasos-no-ejecutables",
+        "descripcion": "Pasos vagos, sin comando exacto ni resultado esperado, que no se pueden seguir bajo presión."
+      },
+      {
+        "id": "procedimientos-sin-reversion",
+        "descripcion": "Procedimientos que cambian el sistema sin explicar cómo deshacerlos si algo sale mal."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "Detectar manuales sin verificar o desfasados contrastándolos con el código",
+        "derivar_a": "verificaciones-vivas"
+      },
+      {
+        "tema": "Escanear el repositorio en busca de secretos y credenciales",
+        "derivar_a": "secretos-y-credenciales"
+      },
+      {
+        "tema": "Autorizar scripts o procedimientos para que el agente los ejecute sin instrucción nueva",
+        "derivar_a": "herramientas-autorizadas"
+      },
+      {
+        "tema": "Decidir la infraestructura o la estrategia de despliegue",
+        "derivar_a": "decisiones-de-arquitectura"
+      },
+      {
+        "tema": "Ejecutar el procedimiento en producción",
+        "derivar_a": null
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "plantillas",
+    "ejemplos",
+    "cambios"
+  ],
+  "proceso": [
+    "localizar-manual",
+    "redactar-pasos",
+    "entregar-para-verificacion"
   ],
   "fichas": {
     "manual": {

@@ -1,7 +1,7 @@
 {
-  "manifiesto_formato": 1,
+  "manifiesto_formato": 2,
   "id": "mapa-de-modulos",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "titulo": "Mapa de módulos",
   "descripcion": "Un contexto por área funcional: propósito, fronteras, dependencias, mapa de lectura y código ancla, para que cualquier cambio empiece por el área correcta.",
   "familia": "arquitectura",
@@ -15,6 +15,67 @@
   "verificaciones": [
     "scripts/comun/verificar.py",
     "scripts/verificar-areas.py"
+  ],
+  "alcance": {
+    "problemas": [
+      {
+        "id": "cambios-sin-area-identificada",
+        "descripcion": "Cambios que empiezan sin saber a qué área funcional pertenecen ni qué hay que leer antes de tocarla."
+      },
+      {
+        "id": "fronteras-de-area-difusas",
+        "descripcion": "Áreas sin declarar qué poseen, qué no poseen, dónde escriben datos y con qué sistemas externos hablan."
+      },
+      {
+        "id": "dependencias-entre-areas-circulares",
+        "descripcion": "Áreas que dependen unas de otras en ciclo, de modo que ninguna se puede cambiar o entender por separado."
+      },
+      {
+        "id": "dependencias-hacia-areas-sin-documentar",
+        "descripcion": "Áreas que declaran depender de otras que no tienen contexto, y el mapa queda con huecos."
+      },
+      {
+        "id": "contextos-de-area-desfasados",
+        "descripcion": "Contextos cuyas fronteras, dependencias o código ancla ya no corresponden al código."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "Imports entre módulos y entre capas de un módulo",
+        "derivar_a": "arquitectura-monolitica-por-capas"
+      },
+      {
+        "tema": "Documentar cada archivo o carpeta del código",
+        "derivar_a": "documentacion-espejo"
+      },
+      {
+        "tema": "Decidir partir, fusionar o crear un área cuando condiciona el sistema (la ADR)",
+        "derivar_a": "decisiones-de-arquitectura"
+      },
+      {
+        "tema": "Contratos HTTP entre repositorios",
+        "derivar_a": "contratos-entre-repositorios"
+      },
+      {
+        "tema": "Organigrama del equipo y responsables fuera del código",
+        "derivar_a": null
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "componentes",
+    "herramientas",
+    "plantillas",
+    "ejemplos",
+    "cambios"
+  ],
+  "proceso": [
+    "identificar-area",
+    "actualizar-contexto",
+    "verificar"
   ],
   "fichas": {
     "area": {

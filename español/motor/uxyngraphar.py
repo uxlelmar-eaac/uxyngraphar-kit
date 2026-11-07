@@ -109,7 +109,7 @@ def main(argv: list[str] | None = None) -> int:
     if argv[0] in ("ayuda", "-h", "--help"):
         print(__doc__)
         return cli.main(["--help"]) if argv[0] != "ayuda" else 0
-    if argv[0] in HERRAMIENTA:
+    if argv[0] in HERRAMIENTA and not (argv[0] == "version" and len(argv) > 1):
         return globals()["cmd_" + argv[0]](argv[1:])
     return cli.main(argv)
 

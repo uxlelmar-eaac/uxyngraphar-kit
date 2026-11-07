@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verifica reglas, excepciones y ajustes locales, y evalúa las reglas activas sobre el código. Código 0 = sin errores."""
+"""Verifica reglas y excepciones, y evalúa las reglas activas sobre el código. Código 0 = sin errores."""
 
 from __future__ import annotations
 
@@ -24,15 +24,6 @@ def main() -> int:
             (errores if f.status == "aprobada" else avisos).append(f"{f.id}: cita la regla «{fm.get('regla')}», que no existe")
         if f.status == "aprobada" and fm.get("aprobada_por") in datos.VACIO:
             avisos.append(f"{f.id}: aprobada sin «aprobada_por»")
-    for f, fm, _ in datos.fichas_de("ajuste"):
-        if f.status != "activo":
-            continue
-        estado = datos.estado_ajuste(fm)
-        if estado == "sin paquete":
-            avisos.append(f"{f.id}: el paquete «{fm.get('paquete')}» o su archivo «{fm.get('aplica_a')}» no está instalado")
-        elif estado == "por revisar":
-            avisos.append(f"{f.id}: {fm.get('paquete')}/{fm.get('aplica_a')} cambió desde que se aprobó; una persona lo revisa "
-                          f"(reglas.py aprobar-ajuste {f.id} --humano) o lo retira")
     for h in datos.comprobar():
         texto = f"{h['archivo']}: {h['regla']} {h['motivo']}"
         if h["excusado"]:

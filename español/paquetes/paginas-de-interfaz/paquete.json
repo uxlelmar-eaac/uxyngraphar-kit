@@ -1,7 +1,7 @@
 {
-  "manifiesto_formato": 1,
+  "manifiesto_formato": 2,
   "id": "paginas-de-interfaz",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "titulo": "Páginas de interfaz",
   "descripcion": "Una ficha viva por página o ruta de la interfaz (acceso, datos que consume, estados de UI, componentes y archivos ancla) que se actualiza con cada cambio de navegación.",
   "familia": "documentacion",
@@ -15,6 +15,74 @@
   "verificaciones": [
     "scripts/comun/verificar.py",
     "scripts/verificar-paginas.py"
+  ],
+  "alcance": {
+    "problemas": [
+      {
+        "id": "paginas-sin-ficha",
+        "descripcion": "Páginas, layouts o rutas de la interfaz que existen en el código sin ficha que diga qué ve el usuario, quién entra y qué datos usa."
+      },
+      {
+        "id": "fichas-de-pagina-desfasadas",
+        "descripcion": "Fichas que ya no coinciden con la página: otra ruta, otros datos, otros componentes o archivos ancla que ya no existen."
+      },
+      {
+        "id": "estados-de-interfaz-sin-definir",
+        "descripcion": "Páginas sin decidir qué ve el usuario mientras carga, cuando no hay datos, cuando falla o cuando termina bien."
+      },
+      {
+        "id": "acceso-a-pagina-implicito",
+        "descripcion": "Requisitos de sesión, roles o redirecciones de una página que solo se conocen leyendo el código."
+      },
+      {
+        "id": "rutas-de-interfaz-documentadas-dos-veces",
+        "descripcion": "Dos fichas activas para la misma ruta de interfaz, o rutas eliminadas cuya ficha se borra o sigue activa."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "El contrato de los endpoints HTTP que la página consume",
+        "derivar_a": "rutas-de-api"
+      },
+      {
+        "tema": "Evaluar la usabilidad de la página",
+        "derivar_a": "evaluaciones-de-usabilidad"
+      },
+      {
+        "tema": "Revisar la consistencia visual de la página con los tokens y componentes compartidos",
+        "derivar_a": "componentes-de-interfaz"
+      },
+      {
+        "tema": "Revisar la accesibilidad de la página",
+        "derivar_a": "pautas-de-accesibilidad"
+      },
+      {
+        "tema": "Diseñar y construir páginas de aterrizaje",
+        "derivar_a": "paginas-de-aterrizaje-bento"
+      },
+      {
+        "tema": "Contrastar el código con las fichas para encontrar páginas sin documentar de forma automática",
+        "derivar_a": "verificaciones-vivas"
+      },
+      {
+        "tema": "Capas internas del módulo de cliente (componentes, hooks, api) y sus imports",
+        "derivar_a": "arquitectura-monolitica-por-capas"
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "herramientas",
+    "plantillas",
+    "ejemplos",
+    "cambios"
+  ],
+  "proceso": [
+    "consultar-ficha",
+    "documentar-cambio",
+    "verificar"
   ],
   "fichas": {
     "pagina": {

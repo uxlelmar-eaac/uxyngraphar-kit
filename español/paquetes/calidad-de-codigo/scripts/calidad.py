@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Revisa calidad de código: límite de líneas, nombres de archivo ASCII y (con --commits) mensajes de commit.
+"""Revisa calidad de código: límite de líneas y nombres de archivo sin espacios.
 
-  python3 uxyngraphar/paquetes/calidad-de-codigo/scripts/calidad.py [ARCHIVO…] [--commits [N]]
+  python3 uxyngraphar/paquetes/calidad-de-codigo/scripts/calidad.py [ARCHIVO…]
 
 Sin archivos revisa las «raices» de los ajustes. Código 0 = sin problemas; 1 = hay problemas.
 """
@@ -11,8 +11,6 @@ from __future__ import annotations
 import argparse
 import fnmatch
 import os
-import re
-import subprocess
 import sys
 from pathlib import Path
 
@@ -23,7 +21,6 @@ sys.path[:0] = [str(AQUI), str(AQUI / "comun")]
 import uxyn_base as base  # noqa: E402
 
 PAQUETE = base.carpeta_paquete(Path(__file__).resolve().parent)
-CONVENCIONAL = re.compile(r"^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9._/-]+\))?!?: \S.{0,70}$")
 
 
 def coincide(rel: str, patrones: list[str]) -> bool:
@@ -51,40 +48,25 @@ def revisar_archivos(raiz: Path, ajustes: dict, rels: list[str]) -> list[str]:
     exentos = ajustes.get("exenciones_lineas", [])
     problemas = []
     for rel in rels:
-        if not rel.isascii() or " " in rel:
-            problemas.append(f"{rel}: nombre de archivo no ASCII o con espacios")
+        if " " in rel:
+            problemas.append(f"{rel}: nombre de archivo con espacios")
         try:
             lineas = len((raiz / rel).read_text(encoding="utf-8", errors="replace").splitlines())
         except OSError:
             continue
         if lineas > limite and not coincide(rel, exentos):
-            problemas.append(f"{rel}: {lineas} líneas (límite {limite}); divide por responsabilidad (docs/limite-lineas.md)")
-    return problemas
-
-
-def revisar_commits(raiz: Path, cantidad: int) -> list[str]:
-    r = subprocess.run(["git", "log", f"-n{cantidad}", "--no-merges", "--format=%h %s"], cwd=raiz, capture_output=True, text=True)
-    if r.returncode != 0:
-        return []
-    problemas = []
-    for linea in r.stdout.splitlines():
-        sha, _, asunto = linea.partition(" ")
-        if not CONVENCIONAL.match(asunto) or not asunto.isascii():
-            problemas.append(f"commit {sha}: «{asunto}» no cumple Conventional Commits en inglés ASCII (≤72 caracteres)")
+            problemas.append(f"{rel}: {lineas} líneas (límite {limite}); divide por responsabilidad (referencia/limite-lineas.md)")
     return problemas
 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("archivos", nargs="*")
-    ap.add_argument("--commits", nargs="?", const=-1, type=int, default=None)
     a = ap.parse_args(argv)
     raiz = base.raiz_app(PAQUETE)
     ajustes = base.leer_ajustes(PAQUETE)
     rels = archivos_de_codigo(raiz, ajustes, a.archivos)
     problemas = revisar_archivos(raiz, ajustes, rels)
-    if a.commits is not None:
-        problemas += revisar_commits(raiz, a.commits if a.commits > 0 else int(ajustes.get("commits_revisar", 20)))
     for p in problemas:
         print(p)
     print(f"calidad-de-codigo: {len(rels)} archivos revisados, {len(problemas)} problemas")

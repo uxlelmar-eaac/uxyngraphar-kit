@@ -1,8 +1,10 @@
 # uxyngraphar
 
-Catálogo de **paquetes de gobernanza** humano–IA (temáticos, portátiles e inmutables) y la herramienta que los instala en tus repos. Por ahora solo en español.
+Catálogo de **paquetes especializados** humano–IA (portátiles e inmutables) y la herramienta que los instala en tus repos. Por ahora solo en español.
 
-Todo está en **`español/`**: el catálogo en `paquetes/` (cada paquete independiente) y todo lo demás en [`motor/`](./español/motor/README.md), con el contrato en [`ESPECIFICACION.md`](./español/motor/ESPECIFICACION.md).
+Cada paquete es un entorno de trabajo completo para un conjunto acotado de problemas: qué resuelve y qué no, límites, proceso por fases, skills, herramientas, andamiaje y ejemplos, todo en su carpeta. Una base común (`paquetes/!base/`) es el protocolo que rige la estructura de todos sin limitar su contenido.
+
+Todo está en **`español/`**: el catálogo en `paquetes/` (cada paquete independiente) y todo lo demás en [`motor/`](./español/motor/README.md), con el contrato en [`ESPECIFICACION.md`](./español/motor/ESPECIFICACION.md) y el criterio de diseño en [`GUIA-DE-PAQUETES.md`](./español/motor/GUIA-DE-PAQUETES.md).
 
 ```bash
 # Linux / macOS

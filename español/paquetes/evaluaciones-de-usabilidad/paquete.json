@@ -1,0 +1,131 @@
+{
+  "manifiesto_formato": 2,
+  "id": "evaluaciones-de-usabilidad",
+  "version": "1.0.0",
+  "titulo": "Evaluaciones de usabilidad",
+  "descripcion": "Evaluación de usabilidad de pantallas y flujos: problemas con heurística, severidad y evidencia, propuesta aprobada por una persona antes de tocar el código y métricas antes/después con la misma fuente.",
+  "familia": "producto",
+  "motor": ">=2.0",
+  "activacion": [
+    "evaluaciones-de-usabilidad",
+    "evaluaciones de usabilidad",
+    "evaluacion de usabilidad",
+    "experiencia de usuario",
+    "optimizacion ux"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py",
+    "scripts/verificar-evaluaciones.py"
+  ],
+  "alcance": {
+    "problemas": [
+      {
+        "id": "problemas-de-usabilidad-sin-evidencia",
+        "descripcion": "Problemas de interfaz que se discuten como opiniones: sin heurística, sin severidad y sin captura, ruta:línea o paso reproducible que los demuestre."
+      },
+      {
+        "id": "cambios-de-interfaz-sin-aprobacion",
+        "descripcion": "Cambios de interfaz que se implementan sin evaluación previa ni propuesta aprobada por una persona, o que van más allá de lo aprobado."
+      },
+      {
+        "id": "mejoras-sin-medicion",
+        "descripcion": "Mejoras de interfaz sin métrica antes y después con la misma fuente, de modo que no se sabe si mejoraron algo o introdujeron una regresión."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "Revisar a fondo una interfaz contra WCAG 2.2 AA (contraste, teclado, foco, etiquetas, texto alternativo)",
+        "derivar_a": "pautas-de-accesibilidad"
+      },
+      {
+        "tema": "Revisar que las pantallas reutilicen tokens y componentes y cubran todos sus estados",
+        "derivar_a": "componentes-de-interfaz"
+      },
+      {
+        "tema": "Diseñar y construir páginas de aterrizaje con mosaico bento",
+        "derivar_a": "paginas-de-aterrizaje-bento"
+      },
+      {
+        "tema": "Mantener la ficha viva de cada página o ruta de la interfaz (acceso, datos, estados, archivos ancla)",
+        "derivar_a": "paginas-de-interfaz"
+      },
+      {
+        "tema": "Bugs y deuda técnica detectados fuera del alcance de la evaluación",
+        "derivar_a": "deuda-y-mejoras"
+      },
+      {
+        "tema": "Investigar a fondo el rendimiento del servidor, la base de datos o la infraestructura",
+        "derivar_a": "auditorias-tecnicas"
+      },
+      {
+        "tema": "Investigación con usuarios: reclutamiento, entrevistas y pruebas moderadas",
+        "derivar_a": null
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "componentes",
+    "herramientas",
+    "plantillas",
+    "referencia",
+    "ejemplos",
+    "pruebas",
+    "cambios"
+  ],
+  "proceso": [
+    "definir-alcance",
+    "evaluar",
+    "proponer",
+    "implementar",
+    "medir-resultado"
+  ],
+  "fichas": {
+    "evaluacion": {
+      "carpeta": ".",
+      "prefijo": "UXE",
+      "plantilla": "plantillas/evaluacion.md",
+      "inicial": "abierta",
+      "estados": {
+        "abierta": "pendientes",
+        "en-curso": "en-progreso",
+        "propuesta": "en-progreso",
+        "aprobada": "en-progreso",
+        "implementada": "en-progreso",
+        "validada": "completadas",
+        "archivada": "archivadas",
+        "cancelada": "canceladas"
+      },
+      "solo_humano": [
+        "aprobada",
+        "validada"
+      ],
+      "espera_humano": [
+        "propuesta",
+        "implementada"
+      ]
+    }
+  },
+  "ajustes": {
+    "heuristicas": [
+      "H1",
+      "H2",
+      "H3",
+      "H4",
+      "H5",
+      "H6",
+      "H7",
+      "H8",
+      "H9",
+      "H10",
+      "A11Y",
+      "UI",
+      "RENDIMIENTO"
+    ],
+    "severidad_max": 4,
+    "severidad_propuesta_obligatoria": 3
+  }
+}

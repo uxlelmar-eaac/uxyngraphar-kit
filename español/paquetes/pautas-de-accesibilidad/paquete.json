@@ -1,0 +1,68 @@
+{
+  "manifiesto_formato": 2,
+  "id": "pautas-de-accesibilidad",
+  "version": "1.0.0",
+  "titulo": "Pautas de accesibilidad",
+  "descripcion": "Revisión de pantallas contra el mínimo WCAG 2.2 AA (contraste, teclado, foco, objetivos táctiles, semántica, formularios, medios, movimiento y zoom): cada barrera con criterio y evidencia, corrección aprobada por una persona y comprobación con la misma herramienta.",
+  "familia": "producto",
+  "motor": ">=2.0",
+  "activacion": [
+    "pautas-de-accesibilidad",
+    "pautas de accesibilidad",
+    "revision de accesibilidad",
+    "accesibilidad web"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py"
+  ],
+  "alcance": {
+    "problemas": [
+      {
+        "id": "barreras-de-accesibilidad",
+        "descripcion": "Interfaz que incumple WCAG 2.2 AA: contraste insuficiente, controles inalcanzables con teclado, foco invisible, campos sin etiqueta o imágenes sin texto alternativo."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "Evaluar la usabilidad de un flujo con heurísticas, propuesta aprobada y métricas antes/después",
+        "derivar_a": "evaluaciones-de-usabilidad"
+      },
+      {
+        "tema": "Revisar que las pantallas reutilicen tokens y componentes y cubran todos sus estados",
+        "derivar_a": "componentes-de-interfaz"
+      },
+      {
+        "tema": "Comprobar una página de aterrizaje bento antes de publicarla",
+        "derivar_a": "paginas-de-aterrizaje-bento"
+      },
+      {
+        "tema": "Mantener la ficha viva de cada página o ruta de la interfaz",
+        "derivar_a": "paginas-de-interfaz"
+      },
+      {
+        "tema": "Certificar la conformidad legal o formal (informes VPAT, declaraciones de accesibilidad, nivel AAA)",
+        "derivar_a": null
+      },
+      {
+        "tema": "Pruebas moderadas con personas con discapacidad",
+        "derivar_a": null
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "componentes",
+    "plantillas",
+    "referencia",
+    "ejemplos",
+    "cambios"
+  ],
+  "proceso": [
+    "revisar",
+    "corregir",
+    "comprobar"
+  ]
+}

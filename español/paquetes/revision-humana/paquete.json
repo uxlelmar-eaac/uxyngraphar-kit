@@ -1,7 +1,7 @@
 {
-  "manifiesto_formato": 1,
+  "manifiesto_formato": 2,
   "id": "revision-humana",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "titulo": "Revisión humana",
   "descripcion": "Reúne en una sola tabla las fichas de todos los paquetes instalados que esperan una decisión de una persona (aprobar, rechazar, activar…), con su antigüedad, y aplica de una vez lo que la persona decida.",
   "familia": "proceso",
@@ -16,6 +16,67 @@
   "verificaciones": [
     "scripts/comun/verificar.py",
     "scripts/verificar-revision.py"
+  ],
+  "alcance": {
+    "problemas": [
+      {
+        "id": "decisiones-dispersas",
+        "descripcion": "Las fichas que esperan a una persona están repartidas entre paquetes y carpetas, y nadie ve de un vistazo qué hay que decidir."
+      },
+      {
+        "id": "pendientes-envejecidos",
+        "descripcion": "Fichas que llevan semanas esperando una decisión sin que nadie las decida ni las cierre."
+      },
+      {
+        "id": "status-desfasado",
+        "descripcion": "Una ficha dice que espera una decisión, pero su efecto ya está aplicado en el código o en el proceso."
+      },
+      {
+        "id": "decisiones-aplicadas-a-mano",
+        "descripcion": "Las decisiones se aplican moviendo fichas o editando su status a mano, saltándose las comprobaciones del paquete dueño (por ejemplo, el alcance de una instrucción)."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "Redactar o corregir el contenido de una instrucción antes de aprobarla",
+        "derivar_a": "instrucciones-aprobadas"
+      },
+      {
+        "tema": "Preguntar a la persona lo que decide el resultado antes de redactar o cambiar nada",
+        "derivar_a": "preguntas-de-clarificacion"
+      },
+      {
+        "tema": "Redactar una ADR o decidir entre sus opciones",
+        "derivar_a": "decisiones-de-arquitectura"
+      },
+      {
+        "tema": "Priorizar y planificar la cola de deuda técnica y mejoras",
+        "derivar_a": "deuda-y-mejoras"
+      },
+      {
+        "tema": "Fichas de paquetes no instalados o de otros repositorios",
+        "derivar_a": null
+      },
+      {
+        "tema": "Avisos fuera del repositorio (correo, chat, calendario)",
+        "derivar_a": null
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "componentes",
+    "herramientas",
+    "ejemplos",
+    "pruebas",
+    "cambios"
+  ],
+  "proceso": [
+    "recoger-pendientes",
+    "preparar-revision",
+    "comprobar-decisiones"
   ],
   "protegidos": [
     "REVISION.md"

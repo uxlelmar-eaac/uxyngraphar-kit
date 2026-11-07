@@ -1,5 +1,5 @@
 {
-  "manifiesto_formato": 1,
+  "manifiesto_formato": 2,
   "id": "plantilla",
   "version": "0.1.0",
   "titulo": "Plantilla",
@@ -13,18 +13,20 @@
   "verificaciones": [
     "scripts/comun/verificar.py"
   ],
-  "fichas": {
-    "ficha": {
-      "carpeta": ".",
-      "prefijo": "FIC",
-      "plantilla": "plantillas/ficha.md",
-      "inicial": "propuesta",
-      "estados": {
-        "propuesta": "pendientes",
-        "en-curso": "en-progreso",
-        "cerrada": "completadas"
+  "alcance": {
+    "problemas": [
+      {
+        "id": "problema-principal",
+        "descripcion": "{{el problema concreto que resuelve, en una frase}}"
       }
-    }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "{{lo que este paquete no resuelve}}",
+        "derivar_a": null
+      }
+    ]
   },
+  "piezas": [],
   "ajustes": {}
 }

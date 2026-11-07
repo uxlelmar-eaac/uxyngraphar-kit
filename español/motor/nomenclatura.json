@@ -22,11 +22,12 @@
     "heredados": {
       "decisiones-de-arquitectura": ["obsoleta"],
       "deuda-y-mejoras": ["pending", "approved", "done", "archived", "rejected"],
+      "evaluaciones-de-usabilidad": ["abierta"],
       "evolucion-del-sistema": ["pending", "approved", "done", "rejected"],
-      "experiencia-de-usuario": ["abierta"],
       "herramientas-autorizadas": ["pending", "rejected"],
-      "instrucciones-aprobadas": ["awaiting_approval", "approved", "done", "archived", "cancelled", "completada"],
-      "paginas-de-aterrizaje-bento": ["revision"]
+      "instrucciones-aprobadas": ["awaiting_approval", "approved", "done", "archived", "cancelled"],
+      "paginas-de-aterrizaje-bento": ["revision"],
+      "preguntas-de-clarificacion": ["completada"]
     }
   }
 }

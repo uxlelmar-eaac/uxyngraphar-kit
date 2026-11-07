@@ -1,9 +1,9 @@
 {
-  "manifiesto_formato": 1,
+  "manifiesto_formato": 2,
   "id": "instrucciones-aprobadas",
-  "version": "1.0.0",
+  "version": "2.0.1",
   "titulo": "Instrucciones aprobadas",
-  "descripcion": "Ningún cambio sin instrucción aprobada por una persona: preguntas, instrucción con alcance y anclas de código, contexto mínimo, implementación acotada y cierre.",
+  "descripcion": "Ningún cambio sin instrucción aprobada por una persona: instrucción con alcance y anclas de código, contexto mínimo, implementación acotada y cierre con rastro.",
   "familia": "proceso",
   "motor": ">=2.0",
   "activacion": [
@@ -18,6 +18,75 @@
   "verificaciones": [
     "scripts/comun/verificar.py",
     "scripts/verificar-ciclo.py"
+  ],
+  "alcance": {
+    "problemas": [
+      {
+        "id": "cambios-sin-aprobacion",
+        "descripcion": "El agente edita código o documentación del producto sin que una persona haya aprobado antes qué se va a cambiar."
+      },
+      {
+        "id": "alcance-desbordado",
+        "descripcion": "Una tarea crece hasta tocar más archivos de los acordados o archivos que no estaban en sus anclas de código."
+      },
+      {
+        "id": "contexto-excesivo",
+        "descripcion": "Para una tarea acotada el agente explora el repositorio, reabre archivos y gasta contexto en lo que no necesita."
+      },
+      {
+        "id": "cierre-sin-rastro",
+        "descripcion": "Una tarea se da por terminada sin criterios marcados, sin fecha de cierre y sin estado para retomar en la sesión siguiente."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "Preguntar y registrar las decisiones de la persona (alcance, comportamiento, datos, compatibilidad) antes de redactar la instrucción",
+        "derivar_a": "preguntas-de-clarificacion"
+      },
+      {
+        "tema": "Decidir y registrar decisiones técnicas caras de revertir (framework, base de datos, patrón transversal)",
+        "derivar_a": "decisiones-de-arquitectura"
+      },
+      {
+        "tema": "Gestionar la cola de deuda técnica y bugs detectados fuera del alcance de una instrucción",
+        "derivar_a": "deuda-y-mejoras"
+      },
+      {
+        "tema": "Procedimientos repetibles que una persona autoriza para ejecutarse sin instrucción nueva",
+        "derivar_a": "herramientas-autorizadas"
+      },
+      {
+        "tema": "Revisar de una vez todas las fichas de todos los paquetes que esperan una decisión humana",
+        "derivar_a": "revision-humana"
+      },
+      {
+        "tema": "Conservar notas de memoria del proyecto más allá de ESTADO.md",
+        "derivar_a": "notas-de-memoria"
+      },
+      {
+        "tema": "Archivo histórico de los documentos retirados",
+        "derivar_a": "documentos-archivados"
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "componentes",
+    "herramientas",
+    "plantillas",
+    "referencia",
+    "ejemplos",
+    "pruebas",
+    "cambios"
+  ],
+  "proceso": [
+    "redactar-instruccion",
+    "esperar-aprobacion",
+    "cargar-contexto",
+    "implementar",
+    "cerrar"
   ],
   "fichas": {
     "instruccion": {
@@ -44,24 +113,12 @@
       "comandos": {
         "approved": "scripts/ciclo.py aprobar {id} --humano"
       }
-    },
-    "pregunta": {
-      "carpeta": "preguntas",
-      "prefijo": "PRE",
-      "plantilla": "plantillas/pregunta.md",
-      "inicial": "en-curso",
-      "estados": {
-        "en-curso": "en-curso",
-        "completada": "completadas",
-        "cancelada": "canceladas"
-      }
     }
   },
   "ajustes": {
     "max_archivos_codigo": 5,
     "max_docs": 8,
     "ampliacion_factor_max": 2.0,
-    "max_tokens_contexto": 12000,
-    "preguntas": true
+    "max_tokens_contexto": 12000
   }
 }

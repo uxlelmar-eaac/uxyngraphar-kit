@@ -9,13 +9,14 @@ import unittest
 from pathlib import Path
 
 import _rutas  # noqa: F401
+from _paquetes import completar
 import catalogo
 import nomenclatura as nom
 
 base = catalogo.base
 
 BUENO = {
-    "manifiesto_formato": 1, "id": "pruebas-de-nombres", "version": "1.0.0", "titulo": "Pruebas de nombres",
+    "manifiesto_formato": 2, "id": "pruebas-de-nombres", "version": "1.0.0", "titulo": "Pruebas de nombres",
     "descripcion": "Paquete de prueba", "familia": "proceso", "motor": ">=2.0",
     "activacion": ["pruebas-de-nombres", "pruebas de nombres"], "entrada": "README.md", "verificaciones": [],
     "fichas": {"prueba": {"carpeta": ".", "prefijo": "PRN", "plantilla": "plantillas/prueba.md", "inicial": "propuesta",
@@ -48,7 +49,7 @@ class TestNomenclatura(unittest.TestCase):
         for malo in ("calidad", "Calidad-de-codigo", "calidad_de_codigo", "rutas-v2", "a-b-c-d-e-f", "contratos-entre-repos",
                      "revisar-secretos", "uxyn-reglas", "de-reglas", "reglas-de", "reglas-para-todo"):
             self.assertTrue(nom.problemas_id(malo), malo)
-        for bueno in ("calidad-de-codigo", "paginas-de-aterrizaje-bento", "rutas-de-api", "memoria-e-historial"):
+        for bueno in ("calidad-de-codigo", "paginas-de-aterrizaje-bento", "rutas-de-api", "notas-de-memoria"):
             self.assertEqual(nom.problemas_id(bueno), [], bueno)
 
     def test_titulo_equivale_al_id(self):
@@ -163,8 +164,8 @@ class TestCrear(unittest.TestCase):
             catalogo.crear("contratos-de-pago-externo", "Contratos de pago externo", "", self.cat)
 
     def test_crear_deja_un_paquete_que_cumple(self):
-        catalogo.crear("contratos-de-pago", "Contratos de pago", "", self.cat, familia="arquitectura")
-        catalogo.crear("contratos-de-cobro", "Contratos de cobro", "", self.cat, familia="arquitectura")
+        completar(catalogo.crear("contratos-de-pago", "Contratos de pago", "", self.cat, familia="arquitectura"))
+        completar(catalogo.crear("contratos-de-cobro", "Contratos de cobro", "", self.cat, familia="arquitectura"))
         filas = {m["id"]: m for m in catalogo.listar(self.cat)}
         for m in filas.values():
             self.assertEqual(m["errores"], [], m["id"])

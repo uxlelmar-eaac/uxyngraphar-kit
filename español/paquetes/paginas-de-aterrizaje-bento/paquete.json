@@ -1,7 +1,7 @@
 {
-  "manifiesto_formato": 1,
+  "manifiesto_formato": 2,
   "id": "paginas-de-aterrizaje-bento",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "titulo": "Páginas de aterrizaje bento",
   "descripcion": "Diseño y construcción de landing pages con mosaico bento: brief, jerarquía de celdas, textos breves, un solo CTA principal, orden móvil y checklist de accesibilidad y rendimiento antes de publicar.",
   "familia": "producto",
@@ -16,6 +16,70 @@
   "verificaciones": [
     "scripts/comun/verificar.py",
     "scripts/verificar-bento.py"
+  ],
+  "alcance": {
+    "problemas": [
+      {
+        "id": "paginas-sin-objetivo-unico",
+        "descripcion": "Páginas de aterrizaje que persiguen varios objetivos a la vez, con más de un CTA principal compitiendo por la atención del visitante."
+      },
+      {
+        "id": "mosaico-sin-jerarquia",
+        "descripcion": "Mosaicos donde el tamaño de las celdas no refleja su importancia: prioridades repetidas, protagonista pequeña, tamaños fuera de la rejilla o huecos sin llenar."
+      },
+      {
+        "id": "celdas-sobrecargadas",
+        "descripcion": "Celdas que intentan decir varias cosas, con títulos o mensajes demasiado largos que rompen en móvil, o medios sin texto alternativo."
+      },
+      {
+        "id": "orden-movil-incorrecto",
+        "descripcion": "En móvil las celdas se apilan por su posición visual y la protagonista o el CTA principal quedan relegados."
+      },
+      {
+        "id": "publicacion-sin-comprobar",
+        "descripcion": "Páginas que se publican sin comprobar contraste, foco, carga de imágenes, saltos de diseño ni que el CTA principal lleve a su destino."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "Evaluar y mejorar la usabilidad de pantallas existentes de la aplicación",
+        "derivar_a": "evaluaciones-de-usabilidad"
+      },
+      {
+        "tema": "Mantener la ficha viva de cada página o ruta de la interfaz",
+        "derivar_a": "paginas-de-interfaz"
+      },
+      {
+        "tema": "Cambiar el sistema de diseño global u otras páginas del sitio",
+        "derivar_a": null
+      },
+      {
+        "tema": "Páginas de aterrizaje con otra composición (secciones largas, narrativa de una sola columna)",
+        "derivar_a": null
+      },
+      {
+        "tema": "Estrategia de campaña: SEO, analítica, pruebas A/B y redacción publicitaria de fondo",
+        "derivar_a": null
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "componentes",
+    "herramientas",
+    "plantillas",
+    "referencia",
+    "ejemplos",
+    "pruebas",
+    "cambios"
+  ],
+  "proceso": [
+    "redactar-brief",
+    "disenar-mosaico",
+    "construir",
+    "revisar-publicacion"
   ],
   "fichas": {
     "landing": {

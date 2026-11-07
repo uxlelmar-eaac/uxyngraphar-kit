@@ -9,6 +9,7 @@ import json
 import shutil
 from pathlib import Path
 
+import entrada
 import especificacion as esp
 import nomenclatura
 
@@ -48,11 +49,26 @@ def carpeta(pid: str, raiz: Path | None = None) -> Path:
     return c
 
 
-def crear(pid: str, titulo: str, descripcion: str = "", raiz: Path | None = None, familia: str = "proceso") -> Path:
-    """Esqueleto mínimo de un paquete nuevo (versión 0.1.0) con nombres según NOMENCLATURA.md."""
+PIEZAS_AL_CREAR = ("plantillas", "cambios")
+SEMILLAS = esp.PLANTILLA / "piezas"
+FRAGMENTO = "manifiesto.json"
+
+
+def _escribir_manifiesto(c: Path, m: dict) -> None:
+    (c / base.MANIFIESTO).write_text(json.dumps(m, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def crear(pid: str, titulo: str, descripcion: str = "", raiz: Path | None = None, familia: str = "proceso",
+          piezas: list[str] | tuple[str, ...] | None = None) -> Path:
+    """Paquete nuevo (versión 0.1.0): núcleo de `!base` más las `piezas` pedidas, con nombres según NOMENCLATURA.md.
+
+    Deja marcadores {{…}} en el núcleo (PAQUETE.md y alcance): el paquete no valida hasta que el autor los rellena.
+    """
+    piezas = list(PIEZAS_AL_CREAR if piezas is None else piezas)
     errores = nomenclatura.problemas_id(pid) + nomenclatura.problemas_titulo(pid, titulo)
     if familia not in nomenclatura.NORMA["familias"]:
         errores.append(f"familia «{familia}»: una de {', '.join(nomenclatura.NORMA['familias'])}")
+    errores += [f"pieza «{p}»: una de {', '.join(base.PIEZAS)}" for p in piezas if p not in base.PIEZAS]
     paquetes = _paquetes(raiz)
     errores += [f"id «{pid}»: choca con «{otro}» (uno es prefijo del otro)" for otro in paquetes
                 if otro != pid and (otro.startswith(pid + "-") or pid.startswith(otro + "-"))]
@@ -61,21 +77,89 @@ def crear(pid: str, titulo: str, descripcion: str = "", raiz: Path | None = None
     c = catalogo(raiz) / pid
     if c.exists():
         raise FileExistsError(f"ya existe {c}")
-    usados = {d.get("prefijo") for _, m in paquetes.values() for d in m.get("fichas", {}).values()}
-    tipo = nomenclatura.singular(pid.split("-")[0])
-    shutil.copytree(esp.PLANTILLA, c, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+    shutil.copytree(esp.PLANTILLA, c, ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "piezas"))
     m = base.leer_manifiesto(c)
-    (ficha,) = m["fichas"].values()
-    ficha.update(prefijo=nomenclatura.proponer_prefijo(pid, usados), plantilla=f"plantillas/{tipo}.md")
-    (c / "plantillas" / "ficha.md").rename(c / "plantillas" / f"{tipo}.md")
-    resto = {k: v for k, v in m.items() if k not in ("id", "titulo", "descripcion", "familia", "activacion", "fichas")}
-    m = {"manifiesto_formato": m["manifiesto_formato"], "id": pid, "version": m["version"], "titulo": titulo,
-         "descripcion": descripcion or titulo, "familia": familia, **resto,
-         "activacion": [pid, pid.replace("-", " ")], "fichas": {tipo: ficha}}
-    (c / base.MANIFIESTO).write_text(json.dumps(m, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    entrada = c / base.ENTRADA
-    entrada.write_text(entrada.read_text(encoding="utf-8").replace("{{titulo}}", titulo).replace("{{id}}", pid), encoding="utf-8")
+    resto = {k: v for k, v in m.items() if k not in ("id", "titulo", "descripcion", "familia", "activacion")}
+    _escribir_manifiesto(c, {"manifiesto_formato": m["manifiesto_formato"], "id": pid, "version": m["version"], "titulo": titulo,
+                             "descripcion": descripcion or titulo, "familia": familia, **resto,
+                             "activacion": [pid, pid.replace("-", " ")]})
+    for nombre in (base.ENTRADA, base.DESCRIPCION):
+        ruta = c / nombre
+        ruta.write_text(ruta.read_text(encoding="utf-8").replace("{{titulo}}", titulo).replace("{{id}}", pid), encoding="utf-8")
+    usados = {d.get("prefijo") for _, mm in paquetes.values() for d in mm.get("fichas", {}).values()}
+    for p in piezas:
+        _agregar_pieza(c, p, usados)
+    entrada.actualizar(c)
     return c
+
+
+def _agregar_pieza(c: Path, pieza: str, usados: set | None = None) -> None:
+    m = base.leer_manifiesto(c)
+    if pieza not in base.PIEZAS:
+        raise ValueError(f"pieza «{pieza}»: una de {', '.join(base.PIEZAS)}")
+    if pieza in (m.get("piezas") or []) or (c / base.PIEZAS[pieza]).exists():
+        raise FileExistsError(f"{m['id']}: ya tiene la pieza «{pieza}»")
+    semilla = SEMILLAS / pieza
+    for origen in sorted(semilla.rglob("*")):
+        rel = origen.relative_to(semilla)
+        if origen.is_file() and rel.as_posix() != FRAGMENTO and not base.IGNORAR.search(rel.as_posix()):
+            destino = c / rel
+            destino.parent.mkdir(parents=True, exist_ok=True)
+            texto = origen.read_text(encoding="utf-8")
+            destino.write_text(texto.replace("{{version}}", m["version"]) if pieza == "cambios" else texto, encoding="utf-8")
+    fragmento = json.loads((semilla / FRAGMENTO).read_text(encoding="utf-8")) if (semilla / FRAGMENTO).is_file() else {}
+    if pieza == "plantillas":
+        tipo = nomenclatura.singular(m["id"].split("-")[0])
+        (ficha,) = fragmento["fichas"].values()
+        ficha.update(prefijo=nomenclatura.proponer_prefijo(m["id"], usados or set()), plantilla=f"plantillas/{tipo}.md")
+        (c / "plantillas" / "ficha.md").rename(c / "plantillas" / f"{tipo}.md")
+        fragmento = {"fichas": {tipo: ficha}}
+    orden = list(base.PIEZAS)
+    m["piezas"] = sorted([*(m.get("piezas") or []), pieza], key=orden.index)
+    for clave, valor in fragmento.items():
+        m.setdefault(clave, valor)
+    _escribir_manifiesto(c, m)
+
+
+def agregar_pieza(pid: str, pieza: str, raiz: Path | None = None) -> list[str]:
+    """Añade una pieza estándar desde `!base` (con marcadores para rellenar); devuelve los errores del paquete después."""
+    c = carpeta(pid, raiz)
+    usados = {d.get("prefijo") for otro, (_, mm) in _paquetes(raiz).items() if otro != pid for d in mm.get("fichas", {}).values()}
+    _agregar_pieza(c, pieza, usados)
+    entrada.actualizar(c)
+    return esp.validar_paquete(c)
+
+
+def quitar_pieza(pid: str, pieza: str, raiz: Path | None = None) -> list[str]:
+    """Retira una pieza (su ruta y su entrada en el manifiesto); devuelve los errores del paquete después."""
+    c = carpeta(pid, raiz)
+    m = base.leer_manifiesto(c)
+    if pieza not in (m.get("piezas") or []):
+        raise ValueError(f"{pid}: no tiene la pieza «{pieza}»")
+    if pieza == "plantillas" and m.get("fichas"):
+        raise ValueError(f"{pid}: «fichas» usa plantillas/; quita los tipos de ficha del manifiesto antes")
+    ruta = c / base.PIEZAS[pieza]
+    if ruta.is_dir():
+        shutil.rmtree(ruta)
+    elif ruta.exists():
+        ruta.unlink()
+    m["piezas"] = [p for p in m["piezas"] if p != pieza]
+    if pieza in ("proceso", "andamiaje"):
+        m.pop(pieza, None)
+    _escribir_manifiesto(c, m)
+    entrada.actualizar(c)
+    return esp.validar_paquete(c)
+
+
+def indice_paquete(pid: str, raiz: Path | None = None) -> bool:
+    """Regenera el bloque de entrada del README del paquete a partir de su manifiesto."""
+    return entrada.actualizar(carpeta(pid, raiz))
+
+
+def completitud(pid: str, raiz: Path | None = None) -> dict:
+    import piezas
+    c = carpeta(pid, raiz)
+    return piezas.completitud(c, base.leer_manifiesto(c))
 
 
 def _ruta_segura(pid: str, rel: str, raiz: Path | None) -> Path:
@@ -105,6 +189,8 @@ def guardar_archivo(pid: str, rel: str, contenido: str, raiz: Path | None = None
             return [f"no guardado: {e}" for e in errores]
     destino.parent.mkdir(parents=True, exist_ok=True)
     destino.write_text(contenido, encoding="utf-8")
+    if destino.name == base.MANIFIESTO and destino.parent == carpeta(pid, raiz).resolve():
+        entrada.actualizar(carpeta(pid, raiz))
     return esp.validar_paquete(carpeta(pid, raiz))
 
 

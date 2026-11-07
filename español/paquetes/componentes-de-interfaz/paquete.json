@@ -1,0 +1,64 @@
+{
+  "manifiesto_formato": 2,
+  "id": "componentes-de-interfaz",
+  "version": "1.0.0",
+  "titulo": "Componentes de interfaz",
+  "descripcion": "Consistencia visual de las pantallas: se reutilizan los tokens y componentes compartidos del proyecto, cada componente interactivo cubre sus ocho estados y cada valor suelto o componente duplicado queda anotado con evidencia y se corrige solo con aprobación.",
+  "familia": "producto",
+  "motor": ">=2.0",
+  "activacion": [
+    "componentes-de-interfaz",
+    "componentes de interfaz",
+    "consistencia visual",
+    "optimizacion ui"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py"
+  ],
+  "alcance": {
+    "problemas": [
+      {
+        "id": "interfaz-inconsistente",
+        "descripcion": "Pantallas con colores, espaciados o componentes sueltos que no reutilizan los tokens y componentes existentes, o con estados (foco, carga, vacío, error) sin cubrir."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "Evaluar la usabilidad de un flujo con heurísticas, propuesta aprobada y métricas antes/después",
+        "derivar_a": "evaluaciones-de-usabilidad"
+      },
+      {
+        "tema": "Revisar la interfaz contra WCAG 2.2 AA (contraste, teclado, foco, etiquetas, texto alternativo)",
+        "derivar_a": "pautas-de-accesibilidad"
+      },
+      {
+        "tema": "Decidir y documentar qué ve el usuario en cada página cuando carga, está vacía o falla",
+        "derivar_a": "paginas-de-interfaz"
+      },
+      {
+        "tema": "Diseñar y construir páginas de aterrizaje con mosaico bento",
+        "derivar_a": "paginas-de-aterrizaje-bento"
+      },
+      {
+        "tema": "Crear o rediseñar el sistema de diseño global (paleta, escala tipográfica, librería de componentes)",
+        "derivar_a": null
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "componentes",
+    "plantillas",
+    "referencia",
+    "ejemplos",
+    "cambios"
+  ],
+  "proceso": [
+    "inventariar",
+    "revisar",
+    "corregir"
+  ]
+}

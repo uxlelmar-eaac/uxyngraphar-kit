@@ -1,22 +1,25 @@
 # Revisión humana
 
-Activado con «usa el paquete revision-humana» / «sigue el protocolo revision de pendientes» o por `uxyngraphar/FLUJO.json`. Rutas relativas a la raíz de la app. `S=uxyngraphar/paquetes/revision-humana/scripts`.
+<!-- uxyngraphar:entrada:inicio -->
+Activado con «usa el paquete revision-humana» / «sigue el protocolo revision humana» o por `uxyngraphar/FLUJO.json`. Rutas relativas a la raíz de la app. `P=uxyngraphar/paquetes/revision-humana`.
 
-Recorre los paquetes instalados y reúne las fichas que esperan una decisión de una persona: instrucciones por aprobar, ADR propuestas, mejoras y EVO pendientes, reglas y ajustes propuestos, manuales en borrador… Cada paquete declara qué status esperan (`espera_humano`, o el inicial si tiene `solo_humano`).
+1. Integridad: `python3 $P/scripts/comun/verificar-integridad.py`. Si falla, **detente y avisa**.
+2. Alcance: lee `$P/PAQUETE.md`. Si el pedido cae en «Fuera de alcance», dilo y propón el paquete indicado; no lo resuelvas aquí.
+3. Límites: lee `$P/LIMITES.md`; se cumplen en todo el trabajo.
+4. Proceso, en orden: `$P/proceso/recoger-pendientes.md` → `$P/proceso/preparar-revision.md` → `$P/proceso/comprobar-decisiones.md`. Cada fase dice qué skills usar y cuándo está terminada.
+5. Skills: en `$P/skills/<nombre>/SKILL.md`; léelas cuando una fase las cite o el pedido encaje con su descripción.
+6. Consulta cuando haga falta: `$P/COMPONENTES.md` (piezas que define), `$P/HERRAMIENTAS.md` (scripts), `$P/ejemplos/` (casos resueltos).
+7. Trabajo: escribe solo en `uxyngraphar/trabajo/revision-humana/` y, en el código del proyecto, solo lo que el pedido pida.
+8. Antes de terminar: `python3 $P/scripts/comun/verificar.py`, `python3 $P/scripts/verificar-revision.py`.
 
-1. Integridad: `python3 $S/comun/verificar-integridad.py`. Si falla, **detente y avisa**.
-2. Lee las **Reglas** (al final de este archivo).
-3. Lista lo pendiente: `python3 $S/revision.py pendientes` (de lo más antiguo a lo más nuevo, con el comando que debe ejecutar la persona).
-4. Prepara la hoja de decisiones: `python3 $S/revision.py preparar` → `uxyngraphar/trabajo/revision-humana/REVISION.md`. Resume a la persona qué decide en cada fila, sin decidir por ella.
-5. Antes de terminar: `python3 $S/comun/verificar.py` y `python3 $S/verificar-revision.py`.
+Paquete inmutable: ni la IA ni la persona lo editan dentro del repo; los cambios se hacen en el catálogo.
+<!-- uxyngraphar:entrada:fin -->
 
-Persona: escribe en la columna «Decisión» de `REVISION.md` un status de «Opciones» (o `posponer`) y ejecuta `python3 $S/revision.py aplicar --humano`. Cada decisión se aplica con el comando propio del paquete (por ejemplo, aprobar una instrucción comprueba su alcance).
+## En una frase
 
-## Reglas
+Recorre los paquetes instalados y reúne las fichas que esperan una decisión de una persona (instrucciones por aprobar, ADR propuestas, mejoras y EVO pendientes, reglas y ajustes propuestos…) en `REVISION.md`; cada paquete declara qué status esperan.
 
-Paquete inmutable: ni la IA ni la persona lo editan dentro del repo. Cambios: catálogo del panel.
+## Lo que decide la persona
 
-1. **El agente prepara, la persona decide.** Nunca escribas en la columna «Decisión» ni ejecutes `aplicar`.
-2. **Estado real:** una ficha que espera decisión afirma que su efecto no está aplicado. Si ya lo está, avisa: el status es incorrecto.
-3. **Contexto suficiente, no más:** para cada fila, una o dos líneas con qué se decide y qué pasa si se aprueba; enlaza la ficha en lugar de copiarla.
-4. **Lo antiguo primero:** las fichas con más de `dias_aviso` (14) días esperando se señalan; propón decidirlas o cerrarlas.
+- Escribe en la columna «Decisión» de `uxyngraphar/trabajo/revision-humana/REVISION.md` un status de «Opciones», `posponer` o nada, y ejecuta `python3 $P/scripts/revision.py aplicar --humano`. Cada decisión se aplica con el comando propio del paquete (aprobar una instrucción comprueba su alcance).
+- `dias_aviso` (14) en `uxyngraphar/trabajo/revision-humana/ajustes.json`: a partir de cuántos días un pendiente se señala como antiguo.

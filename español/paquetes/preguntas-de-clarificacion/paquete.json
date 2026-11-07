@@ -1,0 +1,82 @@
+{
+  "manifiesto_formato": 2,
+  "id": "preguntas-de-clarificacion",
+  "version": "1.0.0",
+  "titulo": "Preguntas de clarificación",
+  "descripcion": "Ninguna decisión que cambie el resultado queda a criterio del agente: antes de redactar o cambiar nada, pregunta lo que decide el resultado con opciones concretas y deja la respuesta de la persona registrada en una ficha.",
+  "familia": "proceso",
+  "motor": ">=2.0",
+  "activacion": [
+    "preguntas-de-clarificacion",
+    "preguntas de clarificacion",
+    "preguntas previas",
+    "clarificar el pedido"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py",
+    "scripts/verificar-preguntas.py"
+  ],
+  "alcance": {
+    "problemas": [
+      {
+        "id": "decisiones-supuestas",
+        "descripcion": "El trabajo nace con decisiones de alcance, comportamiento, datos o compatibilidad que el agente supuso en lugar de preguntarlas a la persona."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "Redactar la instrucción con alcance y anclas, esperar su aprobación, implementarla y cerrarla",
+        "derivar_a": "instrucciones-aprobadas"
+      },
+      {
+        "tema": "Decidir y registrar decisiones técnicas caras de revertir (framework, base de datos, patrón transversal)",
+        "derivar_a": "decisiones-de-arquitectura"
+      },
+      {
+        "tema": "Investigar el sistema para responder preguntas técnicas con hallazgos y evidencia",
+        "derivar_a": "auditorias-tecnicas"
+      },
+      {
+        "tema": "Revisar de una vez todas las fichas de todos los paquetes que esperan una decisión humana",
+        "derivar_a": "revision-humana"
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "componentes",
+    "herramientas",
+    "plantillas",
+    "referencia",
+    "ejemplos",
+    "pruebas",
+    "cambios"
+  ],
+  "proceso": [
+    "preguntar",
+    "cerrar-pregunta"
+  ],
+  "fichas": {
+    "pregunta": {
+      "carpeta": "preguntas",
+      "prefijo": "PRE",
+      "plantilla": "plantillas/pregunta.md",
+      "inicial": "en-curso",
+      "estados": {
+        "en-curso": "en-curso",
+        "completada": "completadas",
+        "cancelada": "canceladas"
+      },
+      "espera_humano": [
+        "en-curso"
+      ]
+    }
+  },
+  "ajustes": {
+    "preguntas": true,
+    "dias_en_curso": 7
+  }
+}

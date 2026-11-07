@@ -1,23 +1,74 @@
 {
-  "manifiesto_formato": 1,
+  "manifiesto_formato": 2,
   "id": "calidad-de-codigo",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "titulo": "Calidad de código",
-  "descripcion": "Archivos de máximo 350 líneas con división relacional, nombres autoexplicativos, código y commits en inglés ASCII con Conventional Commits.",
+  "descripcion": "Archivos de máximo 350 líneas con división relacional por responsabilidad y nombres autoexplicativos que dicen qué es cada cosa, para qué sirve y en qué unidad.",
   "familia": "codigo",
   "motor": ">=2.0",
   "activacion": [
     "calidad-de-codigo",
     "calidad de codigo",
-    "limite de lineas"
+    "limite de lineas",
+    "nombres autoexplicativos"
   ],
   "entrada": "README.md",
   "verificaciones": [
     "scripts/comun/verificar.py",
     "scripts/calidad.py"
   ],
-  "protegidos": [
-    "GLOSARIO.md"
+  "alcance": {
+    "problemas": [
+      {
+        "id": "archivos-demasiado-largos",
+        "descripcion": "Archivos de código que superan el límite de líneas y mezclan varias responsabilidades en un solo lugar."
+      },
+      {
+        "id": "nombres-poco-explicativos",
+        "descripcion": "Identificadores y archivos con nombres genéricos (data, tmp, utils, handle2) que no dicen qué son, para qué sirven ni en qué unidad."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "Idioma del código y de los nombres de archivo (inglés ASCII), glosario de términos de dominio y texto para el usuario por i18n",
+        "derivar_a": "idiomas-del-codigo"
+      },
+      {
+        "tema": "Formato de los mensajes de commit y de los nombres de rama",
+        "derivar_a": "mensajes-de-commit"
+      },
+      {
+        "tema": "Reglas propias del equipo comprobables con expresiones regulares (prohibir una llamada, exigir una cabecera)",
+        "derivar_a": "reglas-del-proyecto"
+      },
+      {
+        "tema": "Qué capa o módulo puede importar a cuál",
+        "derivar_a": "arquitectura-monolitica-por-capas"
+      },
+      {
+        "tema": "Credenciales o archivos de secretos en el código",
+        "derivar_a": "secretos-y-credenciales"
+      },
+      {
+        "tema": "Formato automático y linters del lenguaje (sangría, punto y coma, orden de imports)",
+        "derivar_a": null
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "herramientas",
+    "referencia",
+    "ejemplos",
+    "pruebas",
+    "cambios"
+  ],
+  "proceso": [
+    "diagnosticar",
+    "escribir-codigo",
+    "verificar"
   ],
   "ajustes": {
     "raices": [
@@ -52,7 +103,6 @@
       "**/migrations/**"
     ],
     "limite_lineas": 350,
-    "exenciones_lineas": [],
-    "commits_revisar": 20
+    "exenciones_lineas": []
   }
 }

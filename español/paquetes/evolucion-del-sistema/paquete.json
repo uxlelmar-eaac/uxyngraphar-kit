@@ -1,7 +1,7 @@
 {
-  "manifiesto_formato": 1,
+  "manifiesto_formato": 2,
   "id": "evolucion-del-sistema",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "titulo": "Evolución del sistema",
   "descripcion": "Buzón de mejoras del propio sistema (paquetes, plantillas, procesos), no del producto: fichas EVO con evidencia, matriz de cobertura y exportación para llevarlas al catálogo.",
   "familia": "sistema",
@@ -16,6 +16,60 @@
   "verificaciones": [
     "scripts/comun/verificar.py",
     "scripts/verificar-evolucion.py"
+  ],
+  "alcance": {
+    "problemas": [
+      {
+        "id": "carencias-del-sistema-sin-registro",
+        "descripcion": "Huecos de un paquete, una plantilla o un proceso que se notan al trabajar y se pierden porque no hay dónde anotarlos."
+      },
+      {
+        "id": "paquetes-editados-en-el-proyecto",
+        "descripcion": "Paquetes instalados que se editan a mano para resolver un caso, rompen su integridad y pierden el cambio en la siguiente actualización."
+      },
+      {
+        "id": "cobertura-desconocida",
+        "descripcion": "Nadie sabe qué dimensiones del proyecto cubren los paquetes instalados (servidor, cliente, multi-repositorio) y cuáles quedan sin cubrir."
+      },
+      {
+        "id": "propuestas-sin-llegar-al-catalogo",
+        "descripcion": "Propuestas aprobadas que nunca se llevan al catálogo, o fichas cuyo estado no refleja si el cambio ya está aplicado."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "Deuda técnica y bugs del producto",
+        "derivar_a": "deuda-y-mejoras"
+      },
+      {
+        "tema": "Investigaciones técnicas del producto",
+        "derivar_a": "auditorias-tecnicas"
+      },
+      {
+        "tema": "Ajuste local que adapta un paquete a este proyecto mientras llega el cambio al catálogo",
+        "derivar_a": "adaptaciones-de-paquetes"
+      },
+      {
+        "tema": "Aplicar el cambio en el catálogo y publicar la versión nueva del paquete",
+        "derivar_a": null
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "herramientas",
+    "plantillas",
+    "ejemplos",
+    "pruebas",
+    "cambios"
+  ],
+  "proceso": [
+    "detectar-carencia",
+    "registrar-evo",
+    "revisar-cobertura",
+    "llevar-al-catalogo"
   ],
   "fichas": {
     "evo": {

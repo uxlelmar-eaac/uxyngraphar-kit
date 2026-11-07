@@ -1,0 +1,64 @@
+{
+  "manifiesto_formato": 2,
+  "id": "documentos-archivados",
+  "version": "1.0.0",
+  "titulo": "Documentos archivados",
+  "descripcion": "Archivo histórico inmutable de documentos retirados, con copias fechadas que solo crea y consulta la persona; el agente no lo lee ni lo edita nunca.",
+  "familia": "documentacion",
+  "motor": ">=2.0",
+  "activacion": [
+    "documentos-archivados",
+    "documentos archivados",
+    "archivo historico"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py"
+  ],
+  "alcance": {
+    "problemas": [
+      {
+        "id": "archivo-historico-alterado",
+        "descripcion": "Documentos del archivo histórico editados, borrados o leídos por el agente, de modo que el histórico deja de ser fiable."
+      },
+      {
+        "id": "documentos-retirados-sin-archivar",
+        "descripcion": "Documentos que dejan de usarse se borran sin dejar copia fechada, y se pierde el histórico."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "Notas breves con lo que la persona quiere recordar, incluido lo que vuelve a importar de un documento archivado",
+        "derivar_a": "notas-de-memoria"
+      },
+      {
+        "tema": "Decisiones técnicas sustituidas o rechazadas",
+        "derivar_a": "decisiones-de-arquitectura"
+      },
+      {
+        "tema": "Copias de seguridad del repositorio o de la base de datos",
+        "derivar_a": null
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "componentes",
+    "herramientas",
+    "plantillas",
+    "ejemplos",
+    "pruebas",
+    "cambios"
+  ],
+  "proceso": [
+    "archivar-documento"
+  ],
+  "protegidos": [
+    "archivo/**"
+  ],
+  "fuera_de_ia": [
+    "archivo/**"
+  ]
+}

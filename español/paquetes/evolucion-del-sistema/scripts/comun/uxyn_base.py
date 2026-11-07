@@ -16,11 +16,30 @@ from pathlib import Path
 MANIFIESTO = "paquete.json"
 INTEGRIDAD = "INTEGRIDAD.json"
 ENTRADA = "README.md"
+DESCRIPCION = "PAQUETE.md"
+NUCLEO = (MANIFIESTO, ENTRADA, DESCRIPCION)
+SCRIPTS = "scripts"
 CARPETA_RAIZ = "uxyngraphar"
 CARPETA_PAQUETES = "uxyngraphar/paquetes"
 CARPETA_TRABAJO = "uxyngraphar/trabajo"
-FORMATO_MANIFIESTO = 1
+FORMATO_MANIFIESTO = 2
 FORMATO_INTEGRIDAD = 1
+
+# Piezas estándar (opcionales): nombre en «piezas» → ruta reservada dentro del paquete.
+PIEZAS = {
+    "limites": "LIMITES.md",
+    "proceso": "proceso",
+    "skills": "skills",
+    "componentes": "COMPONENTES.md",
+    "herramientas": "HERRAMIENTAS.md",
+    "andamiaje": "andamiaje",
+    "plantillas": "plantillas",
+    "referencia": "referencia",
+    "ejemplos": "ejemplos",
+    "pruebas": "pruebas",
+    "cambios": "CHANGELOG.md",
+}
+RESERVADOS = {*NUCLEO, INTEGRIDAD, SCRIPTS, *PIEZAS.values()}
 
 ID_VALIDO = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 SEMVER = re.compile(r"^\d+\.\d+\.\d+$")
@@ -230,6 +249,90 @@ def validar_manifiesto(m) -> list[str]:
     activar = m.get("al_activar_paquete")
     if activar is not None and not (isinstance(activar, str) and activar.startswith("scripts/") and "{id}" in activar):
         errores.append("al_activar_paquete: «scripts/… {id}» (se ejecuta al activar cualquier paquete)")
+    errores += _validar_alcance(m.get("alcance"))
+    errores += _validar_piezas(m)
+    return errores
+
+
+def _texto(valor) -> bool:
+    return isinstance(valor, str) and bool(valor.strip())
+
+
+def _relativa(ruta) -> bool:
+    return _texto(ruta) and not ruta.startswith("/") and ".." not in ruta.split("/") and "\\" not in ruta
+
+
+def _validar_alcance(alcance) -> list[str]:
+    """«alcance»: los problemas concretos que resuelve el paquete y lo que deja fuera (y a quién lo deriva)."""
+    if not isinstance(alcance, dict):
+        return ["alcance: obligatorio, objeto con «problemas» y «fuera_de_alcance»"]
+    errores = []
+    problemas = alcance.get("problemas")
+    if not isinstance(problemas, list) or not problemas:
+        errores.append("alcance.problemas: al menos un problema {id, descripcion}")
+    else:
+        vistos = set()
+        for i, p in enumerate(problemas):
+            if not isinstance(p, dict) or not isinstance(p.get("id"), str) or not ID_VALIDO.match(p["id"]) or not _texto(p.get("descripcion")):
+                errores.append(f"alcance.problemas[{i}]: {{id: kebab-case, descripcion: texto}}")
+            elif p["id"] in vistos:
+                errores.append(f"alcance.problemas: id repetido «{p['id']}»")
+            else:
+                vistos.add(p["id"])
+    fuera = alcance.get("fuera_de_alcance")
+    if not isinstance(fuera, list) or not fuera:
+        errores.append("alcance.fuera_de_alcance: al menos una entrada {tema, derivar_a}")
+    else:
+        for i, f in enumerate(fuera):
+            derivar = f.get("derivar_a") if isinstance(f, dict) else None
+            if not isinstance(f, dict) or not _texto(f.get("tema")) or not (derivar is None or (isinstance(derivar, str) and ID_VALIDO.match(derivar))):
+                errores.append(f"alcance.fuera_de_alcance[{i}]: {{tema: texto, derivar_a: id de paquete o null}}")
+    return errores
+
+
+def ids_problemas(m: dict) -> set[str]:
+    alcance = m.get("alcance") if isinstance(m.get("alcance"), dict) else {}
+    return {p["id"] for p in alcance.get("problemas") or [] if isinstance(p, dict) and isinstance(p.get("id"), str)}
+
+
+def _validar_piezas(m: dict) -> list[str]:
+    """«piezas» (estándar, opcionales) y «extensiones» (libres, declaradas), y los campos que dependen de ellas."""
+    errores = []
+    piezas = m.get("piezas")
+    if not isinstance(piezas, list) or not all(isinstance(p, str) for p in piezas):
+        return ["piezas: lista de piezas estándar (puede estar vacía): " + ", ".join(PIEZAS)]
+    for p in piezas:
+        if p not in PIEZAS:
+            errores.append(f"piezas: «{p}» no es una pieza estándar ({', '.join(PIEZAS)}); lo propio va en «extensiones»")
+    if len(set(piezas)) != len(piezas):
+        errores.append("piezas: repetidas")
+    proceso = m.get("proceso")
+    if "proceso" in piezas:
+        if not isinstance(proceso, list) or not proceso or not all(isinstance(f, str) and ID_VALIDO.match(f) for f in proceso):
+            errores.append("proceso: lista ordenada de fases (kebab-case), una por archivo proceso/<fase>.md")
+        elif len(set(proceso)) != len(proceso):
+            errores.append("proceso: fases repetidas")
+    elif proceso is not None:
+        errores.append("proceso: solo con la pieza «proceso» en «piezas»")
+    andamiaje = m.get("andamiaje")
+    if "andamiaje" in piezas:
+        if not isinstance(andamiaje, dict) or not andamiaje:
+            errores.append("andamiaje: objeto {variante: {descripcion, destino}} no vacío")
+        else:
+            for nombre, d in andamiaje.items():
+                if not ID_VALIDO.match(nombre) or not isinstance(d, dict) or not _texto(d.get("descripcion")) or not _relativa(d.get("destino")):
+                    errores.append(f"andamiaje.{nombre}: {{descripcion: texto, destino: ruta relativa a la raíz de la app}}")
+    elif andamiaje is not None:
+        errores.append("andamiaje: solo con la pieza «andamiaje» en «piezas»")
+    if m.get("fichas") and "plantillas" not in piezas:
+        errores.append("fichas: necesitan la pieza «plantillas» en «piezas»")
+    extensiones = m.get("extensiones", {})
+    if not isinstance(extensiones, dict):
+        errores.append("extensiones: objeto {ruta: para qué sirve}")
+    else:
+        for ruta, para in extensiones.items():
+            if not _relativa(ruta) or "/" in ruta.strip("/") or ruta in RESERVADOS or not _texto(para):
+                errores.append(f"extensiones.{ruta}: nombre de primer nivel no reservado y una frase de para qué sirve")
     return errores
 
 

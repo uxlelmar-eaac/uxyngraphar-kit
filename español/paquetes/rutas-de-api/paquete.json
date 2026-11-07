@@ -1,7 +1,7 @@
 {
-  "manifiesto_formato": 1,
+  "manifiesto_formato": 2,
   "id": "rutas-de-api",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "titulo": "Rutas de API",
   "descripcion": "Una ficha viva por endpoint HTTP (método, ruta, autenticación, entrada, salida, pipeline y archivos ancla) que se actualiza con cada cambio de la API.",
   "familia": "documentacion",
@@ -16,6 +16,66 @@
   "verificaciones": [
     "scripts/comun/verificar.py",
     "scripts/verificar-rutas.py"
+  ],
+  "alcance": {
+    "problemas": [
+      {
+        "id": "endpoints-sin-ficha",
+        "descripcion": "Endpoints HTTP que existen en el código sin una ficha que describa su método, ruta, autenticación, entrada y salida."
+      },
+      {
+        "id": "fichas-de-ruta-desfasadas",
+        "descripcion": "Fichas que ya no coinciden con el endpoint: otra ruta, otro cuerpo, otros errores o archivos ancla que ya no existen."
+      },
+      {
+        "id": "rutas-documentadas-dos-veces",
+        "descripcion": "Dos fichas activas para la misma combinación de método y ruta, cada una con un contrato distinto."
+      },
+      {
+        "id": "seguridad-de-endpoint-implicita",
+        "descripcion": "Endpoints sin autenticación ni roles declarados, o públicos sin una justificación escrita."
+      },
+      {
+        "id": "endpoints-retirados-sin-rastro",
+        "descripcion": "Endpoints eliminados o en desuso cuya ficha se borra o sigue activa, sin estado ni alternativa para quien los consume."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "Contratos entre el repositorio que sirve la API y los que la consumen (ids compartidos, orden de merge)",
+        "derivar_a": "contratos-entre-repositorios"
+      },
+      {
+        "tema": "Páginas y rutas de la interfaz, incluidos los manejadores de ruta del framework de cliente",
+        "derivar_a": "paginas-de-interfaz"
+      },
+      {
+        "tema": "Contrastar el código con las fichas para encontrar endpoints sin documentar de forma automática",
+        "derivar_a": "verificaciones-vivas"
+      },
+      {
+        "tema": "Capas internas del módulo que implementa el endpoint y sus imports",
+        "derivar_a": "arquitectura-monolitica-por-capas"
+      },
+      {
+        "tema": "Generar o publicar la especificación OpenAPI y los clientes derivados",
+        "derivar_a": null
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "herramientas",
+    "plantillas",
+    "ejemplos",
+    "cambios"
+  ],
+  "proceso": [
+    "consultar-ficha",
+    "documentar-cambio",
+    "verificar"
   ],
   "fichas": {
     "ruta": {

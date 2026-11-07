@@ -1,7 +1,7 @@
 {
-  "manifiesto_formato": 1,
+  "manifiesto_formato": 2,
   "id": "contratos-entre-repositorios",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "titulo": "Contratos entre repositorios",
   "descripcion": "Contratos entre el repo que provee una API y los que la consumen: ids compartidos estables, registro, comparación con los repos hermanos y orden de merge (proveedor primero), sin duplicar las fichas del proveedor.",
   "familia": "arquitectura",
@@ -16,6 +16,69 @@
   "verificaciones": [
     "scripts/comun/verificar.py",
     "scripts/verificar-contratos.py"
+  ],
+  "alcance": {
+    "problemas": [
+      {
+        "id": "ids-compartidos-inconsistentes",
+        "descripcion": "Un mismo contrato con id distinto en cada repositorio, un id mal formado o repetido, o un id renombrado que deja huérfanos a los consumidores."
+      },
+      {
+        "id": "contratos-divergentes-entre-repositorios",
+        "descripcion": "El consumidor espera otro método, otra ruta u otra versión de la que documenta el proveedor, o el proveedor no la documenta."
+      },
+      {
+        "id": "fichas-del-proveedor-copiadas",
+        "descripcion": "El consumidor copia la ficha de la ruta o el OpenAPI del proveedor en lugar de citarlos, y las copias se desfasan."
+      },
+      {
+        "id": "consumidor-fusionado-antes-que-proveedor",
+        "descripcion": "El cambio del consumidor se fusiona dependiendo de un contrato que el proveedor aún no ha fusionado."
+      },
+      {
+        "id": "cambios-incompatibles-sin-version",
+        "descripcion": "Cambios que rompen a los consumidores sin una versión nueva del contrato ni periodo de convivencia."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "La ficha de cada endpoint en el repositorio proveedor",
+        "derivar_a": "rutas-de-api"
+      },
+      {
+        "tema": "La ficha de la página o del manejador propio del cliente (BFF) que usa el contrato",
+        "derivar_a": "paginas-de-interfaz"
+      },
+      {
+        "tema": "Capas e imports dentro de cada repositorio",
+        "derivar_a": "arquitectura-monolitica-por-capas"
+      },
+      {
+        "tema": "Secretos o credenciales expuestos en variables públicas del cliente",
+        "derivar_a": "secretos-y-credenciales"
+      },
+      {
+        "tema": "El script del proyecto que genera tipos desde OpenAPI",
+        "derivar_a": null
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "componentes",
+    "herramientas",
+    "plantillas",
+    "referencia",
+    "ejemplos",
+    "cambios"
+  ],
+  "proceso": [
+    "identificar-contrato",
+    "registrar-contrato",
+    "sincronizar-repositorios",
+    "verificar"
   ],
   "fichas": {
     "contrato": {

@@ -1,23 +1,27 @@
 # Arquitectura monolítica por capas
 
-Activado con «usa el paquete arquitectura-monolitica-por-capas» / «sigue el protocolo monolito modular» o por `uxyngraphar/FLUJO.json`. Rutas relativas a la raíz de la app. `S=uxyngraphar/paquetes/arquitectura-monolitica-por-capas/scripts`.
+<!-- uxyngraphar:entrada:inicio -->
+Activado con «usa el paquete arquitectura-monolitica-por-capas» / «sigue el protocolo arquitectura monolitica por capas» o por `uxyngraphar/FLUJO.json`. Rutas relativas a la raíz de la app. `P=uxyngraphar/paquetes/arquitectura-monolitica-por-capas`.
 
-Cada módulo (`modulos` en ajustes, p. ej. `src/modules/*`) se divide en capas según el `perfil` (`servidor` o `cliente`). El perfil dice qué capa puede importar a cuál; los cruces entre módulos solo salen de `integrations/`; el código común no importa módulos.
+1. Integridad: `python3 $P/scripts/comun/verificar-integridad.py`. Si falla, **detente y avisa**.
+2. Alcance: lee `$P/PAQUETE.md`. Si el pedido cae en «Fuera de alcance», dilo y propón el paquete indicado; no lo resuelvas aquí.
+3. Límites: lee `$P/LIMITES.md`; se cumplen en todo el trabajo.
+4. Proceso, en orden: `$P/proceso/diagnosticar.md` → `$P/proceso/disenar-modulo.md` → `$P/proceso/implementar.md` → `$P/proceso/verificar.md` → `$P/proceso/registrar-desviacion.md`. Cada fase dice qué skills usar y cuándo está terminada.
+5. Skills: en `$P/skills/<nombre>/SKILL.md`; léelas cuando una fase las cite o el pedido encaje con su descripción.
+6. Consulta cuando haga falta: `$P/COMPONENTES.md` (piezas que define), `$P/HERRAMIENTAS.md` (scripts), `$P/referencia/` (guías), `$P/ejemplos/` (casos resueltos).
+7. Andamiaje: `python3 $P/scripts/comun/andamiar.py <variante> --nombre <nombre>` muestra lo que crearía; con `--aplicar` lo crea sin sobrescribir. Variantes: `modulo-servidor`, `modulo-cliente`.
+8. Trabajo: escribe solo en `uxyngraphar/trabajo/arquitectura-monolitica-por-capas/` y, en el código del proyecto, solo lo que el pedido pida.
+9. Antes de terminar: `python3 $P/scripts/comun/verificar.py`, `python3 $P/scripts/verificar-capas.py`.
 
-1. Integridad: `python3 $S/comun/verificar-integridad.py`. Si falla, **detente y avisa**.
-2. Lee las **Reglas** (al final de este archivo) y `uxyngraphar/paquetes/arquitectura-monolitica-por-capas/docs/restricciones.md`.
-3. Si existe, lee `uxyngraphar/trabajo/arquitectura-monolitica-por-capas/ARQUITECTURA.md` (lo concreto de este repo). Para orientarte: `python3 $S/capas.py mapa`.
-4. Módulo nuevo: sigue `uxyngraphar/paquetes/arquitectura-monolitica-por-capas/plantillas/modulo.md`.
-5. Antes de terminar, sobre lo que tocaste: `python3 $S/capas.py revisar <rutas>`; y `python3 $S/comun/verificar.py` y `python3 $S/verificar-capas.py`.
+Paquete inmutable: ni la IA ni la persona lo editan dentro del repo; los cambios se hacen en el catálogo.
+<!-- uxyngraphar:entrada:fin -->
 
-Persona: `perfil`, `nivel` (`aviso` o `bloqueante`), `modulos`, `comun` y `alias` en `uxyngraphar/trabajo/arquitectura-monolitica-por-capas/ajustes.json`; el documento del proyecto con `python3 $S/capas.py iniciar`.
+## En una frase
 
-## Reglas
+Cada módulo (`modulos` en ajustes, p. ej. `src/modules/*`) se divide en capas según el `perfil` (`servidor` o `cliente`); el perfil dice qué capa puede importar a cuál, los cruces entre módulos solo salen de `integrations/` y el código común no importa módulos.
 
-Paquete inmutable: ni la IA ni la persona lo editan dentro del repo. Cambios: catálogo del panel.
+## Lo que decide la persona
 
-1. **Respeta las capas del perfil.** Si una dependencia no está permitida, muévela a la capa correcta o crea la frontera (`integrations/`, un contrato, un puerto).
-2. **Cruces de módulo solo por `integrations/`**, con métodos pocos y de nombre estable.
-3. **Lo común no depende del negocio.**
-4. **No introduzcas infracciones nuevas**, aunque el `nivel` sea `aviso`: las existentes se corrigen por tandas, como deuda registrada.
-5. **Romper una restricción exige una ADR aceptada** y su anotación en «Desviaciones aceptadas» de `ARQUITECTURA.md`.
+- Ajustes en `uxyngraphar/trabajo/arquitectura-monolitica-por-capas/ajustes.json`: `perfil`, `nivel` (`aviso` o `bloqueante`), `raices`, `modulos`, `comun` y `alias`.
+- El documento del proyecto: `python3 $P/scripts/capas.py iniciar` crea `ARQUITECTURA.md` en el trabajo del paquete; lo edita una persona o una instrucción aprobada.
+- Las desviaciones: solo con una ADR aceptada.

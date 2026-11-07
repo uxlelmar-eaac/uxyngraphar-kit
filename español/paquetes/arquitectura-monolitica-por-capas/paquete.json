@@ -1,7 +1,7 @@
 {
-  "manifiesto_formato": 1,
+  "manifiesto_formato": 2,
   "id": "arquitectura-monolitica-por-capas",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "titulo": "Arquitectura monolítica por capas",
   "descripcion": "Monolito modular: módulos de negocio aislados (cruces solo por integraciones, código común sin dependencias de negocio) y capas internas en cada módulo (servidor o cliente) con qué capa puede importar a cuál; se verifica leyendo los imports.",
   "familia": "arquitectura",
@@ -18,6 +18,78 @@
     "scripts/comun/verificar.py",
     "scripts/verificar-capas.py"
   ],
+  "alcance": {
+    "problemas": [
+      {
+        "id": "modulos-acoplados",
+        "descripcion": "Módulos de negocio que se importan entre sí directamente en lugar de cruzar por una frontera explícita (integrations/)."
+      },
+      {
+        "id": "capas-mal-importadas",
+        "descripcion": "Capas de un módulo que importan capas que su perfil no permite, por ejemplo un dominio que depende de la infraestructura."
+      },
+      {
+        "id": "comun-dependiente-del-negocio",
+        "descripcion": "Código común que importa módulos de negocio y arrastra sus dependencias a todo el sistema."
+      },
+      {
+        "id": "modulos-sin-estructura-uniforme",
+        "descripcion": "Módulos nuevos que nacen cada uno con su propia estructura en lugar de las capas del perfil."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "Decidir y registrar excepciones de arquitectura (la ADR que autoriza una desviación)",
+        "derivar_a": "decisiones-de-arquitectura"
+      },
+      {
+        "tema": "Describir las áreas funcionales, sus fronteras y su mapa de lectura",
+        "derivar_a": "mapa-de-modulos"
+      },
+      {
+        "tema": "Documentar cada archivo o carpeta del código",
+        "derivar_a": "documentacion-espejo"
+      },
+      {
+        "tema": "Contratos HTTP entre el repositorio que provee una API y los que la consumen",
+        "derivar_a": "contratos-entre-repositorios"
+      },
+      {
+        "tema": "Arquitecturas distribuidas (microservicios, colas entre servicios, despliegue independiente)",
+        "derivar_a": null
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "componentes",
+    "herramientas",
+    "andamiaje",
+    "plantillas",
+    "referencia",
+    "ejemplos",
+    "pruebas",
+    "cambios"
+  ],
+  "proceso": [
+    "diagnosticar",
+    "disenar-modulo",
+    "implementar",
+    "verificar",
+    "registrar-desviacion"
+  ],
+  "andamiaje": {
+    "modulo-servidor": {
+      "descripcion": "Módulo de servidor con las capas del perfil «servidor» (dominio, contratos, aplicación, infraestructura, presentación) y sus imports permitidos.",
+      "destino": "src/modules/{nombre}"
+    },
+    "modulo-cliente": {
+      "descripcion": "Módulo de cliente con las capas del perfil «cliente» (tipos, modelo, api, recepción, hooks, componentes) y sus imports permitidos.",
+      "destino": "src/modules/{nombre}"
+    }
+  },
   "ajustes": {
     "perfil": "servidor",
     "nivel": "aviso",

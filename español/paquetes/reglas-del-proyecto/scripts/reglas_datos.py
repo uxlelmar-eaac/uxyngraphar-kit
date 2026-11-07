@@ -1,4 +1,4 @@
-"""Datos de reglas, excepciones y ajustes locales; compartido por reglas.py y verificar-reglas.py."""
+"""Datos de reglas y excepciones; compartido por reglas.py y verificar-reglas.py."""
 
 from __future__ import annotations
 
@@ -151,14 +151,3 @@ def comprobar(rutas: list[str] | None = None, git: bool = False) -> list[dict]:
                                "excusado": excusado(f.id, rel, excepciones)})
     return salida
 
-
-def objetivo_ajuste(fm: dict) -> Path:
-    return raiz() / base.CARPETA_PAQUETES / str(fm.get("paquete")) / str(fm.get("aplica_a") or base.ENTRADA)
-
-
-def estado_ajuste(fm: dict) -> str:
-    """«vigente», «por revisar» (el archivo del paquete cambió) o «sin paquete»."""
-    objetivo = objetivo_ajuste(fm)
-    if not objetivo.is_file():
-        return "sin paquete"
-    return "vigente" if fm.get("huella") == base.sha256(objetivo) else "por revisar"

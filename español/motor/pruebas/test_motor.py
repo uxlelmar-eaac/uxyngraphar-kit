@@ -9,10 +9,12 @@ import tempfile
 import threading
 import unittest
 import urllib.error
+from unittest import mock
 import urllib.request
 from pathlib import Path
 
 import _rutas  # noqa: F401
+from _paquetes import completar, con_titulo
 import catalogo
 import generar
 import panel
@@ -34,8 +36,8 @@ class Base(unittest.TestCase):
         self.cat.mkdir()
         self.repo = raiz / "repo"
         self.repo.mkdir()
-        catalogo.crear("pruebas-demo", "Pruebas demo", "Paquete de prueba", self.cat)
-        catalogo.crear("pruebas-otras", "Pruebas otras", "Segundo paquete", self.cat)
+        completar(catalogo.crear("pruebas-demo", "Pruebas demo", "Paquete de prueba", self.cat))
+        completar(catalogo.crear("pruebas-otras", "Pruebas otras", "Segundo paquete", self.cat))
 
     def tearDown(self):
         repo.borrar_arbol(Path(self.tmp.name))
@@ -44,8 +46,14 @@ class Base(unittest.TestCase):
 
 class TestCatalogo(Base):
     def test_listar_y_validar(self):
-        self.assertEqual([(m["id"], m["errores"], m["avisos"]) for m in catalogo.listar(self.cat)],
-                         [("pruebas-demo", [], []), ("pruebas-otras", [], [])])
+        self.assertEqual([(m["id"], m["errores"]) for m in catalogo.listar(self.cat)],
+                         [("pruebas-demo", []), ("pruebas-otras", [])])
+
+    def test_recien_creado_no_valida_hasta_rellenar_el_nucleo(self):
+        nuevo = catalogo.crear("pruebas-nuevas", "Pruebas nuevas", "", self.cat)
+        errores = catalogo.esp.validar_paquete(nuevo)
+        self.assertTrue(any(e.startswith("PAQUETE.md: marcadores") for e in errores), errores)
+        self.assertEqual(catalogo.esp.validar_paquete(completar(nuevo)), [])
 
     def test_crear_parte_de_la_plantilla(self):
         demo = self.cat / "pruebas-demo"
@@ -61,8 +69,9 @@ class TestCatalogo(Base):
         self.assertTrue(base.integro(base.comprobar_integridad(salida)))
 
     def test_editar_y_versionar(self):
-        self.assertEqual(catalogo.guardar_archivo("pruebas-demo", "docs/nueva.md", "# Guía\n", self.cat), [])
-        self.assertIn("docs/nueva.md", catalogo.archivos("pruebas-demo", self.cat))
+        self.assertEqual(catalogo.guardar_archivo("pruebas-demo", "plantillas/nueva.md", "# Guía\n", self.cat), [])
+        self.assertIn("plantillas/nueva.md", catalogo.archivos("pruebas-demo", self.cat))
+        self.assertTrue(catalogo.guardar_archivo("pruebas-demo", "docs/nueva.md", "# Guía\n", self.cat))
         self.assertEqual(catalogo.versionar("pruebas-demo", "menor", self.cat), "0.2.0")
         with self.assertRaises(ValueError):
             catalogo.leer_archivo("pruebas-demo", "../pruebas-otras/README.md", self.cat)
@@ -76,7 +85,7 @@ class TestCatalogo(Base):
         self.assertEqual(catalogo.guardar_archivo("pruebas-demo", fichas, texto, self.cat), [])
         (demo,) = [m for m in catalogo.listar(self.cat) if m["id"] == "pruebas-demo"]
         self.assertEqual(demo["errores"], [])
-        self.assertEqual(demo["avisos"], [f"{fichas}: difiere de paquetes/!base"])
+        self.assertIn(f"{fichas}: difiere de paquetes/!base", demo["avisos"])
         catalogo.construir("pruebas-demo", Path(self.tmp.name) / "dist", self.cat)
 
 
@@ -105,7 +114,7 @@ class TestRepo(Base):
         (trabajo / "ajustes.json").write_text('{"limite": 3}', encoding="utf-8")
         antes = huella(self.repo / "uxyngraphar" / "trabajo")
         self.assertEqual(repo.actualizar(self.repo, None, self.cat), [])
-        catalogo.guardar_archivo("pruebas-demo", "README.md", "# Demo v2\n", self.cat)
+        catalogo.guardar_archivo("pruebas-demo", "README.md", con_titulo(self.cat / "pruebas-demo", "Demo v2"), self.cat)
         catalogo.versionar("pruebas-demo", "menor", self.cat)
         self.assertTrue(repo.estado(self.repo, self.cat)[0]["actualizable"])
         self.assertEqual(repo.actualizar(self.repo, None, self.cat), ["pruebas-demo"])
@@ -176,6 +185,17 @@ class TestRepo(Base):
         repo.instalar(self.repo, ["pruebas-demo"], self.cat)
         r = repo.verificar(self.repo)
         self.assertEqual([(x["paquete"], x["codigo"]) for x in r], [("pruebas-demo", 0)])
+
+
+class TestLanzador(unittest.TestCase):
+    def test_version_con_id_sube_la_del_paquete(self):
+        import uxyngraphar
+        with mock.patch.object(uxyngraphar.cli, "main", return_value=0) as catalogo_main, \
+                mock.patch.object(uxyngraphar, "cmd_version", return_value=0) as herramienta:
+            uxyngraphar.main(["version", "pruebas-demo", "menor"])
+            catalogo_main.assert_called_once_with(["version", "pruebas-demo", "menor"])
+            uxyngraphar.main(["version"])
+            herramienta.assert_called_once_with([])
 
 
 class TestPanel(unittest.TestCase):

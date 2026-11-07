@@ -1,0 +1,87 @@
+{
+  "manifiesto_formato": 2,
+  "id": "adaptaciones-de-paquetes",
+  "version": "1.0.0",
+  "titulo": "Adaptaciones de paquetes",
+  "descripcion": "Ajustes locales aprobados por una persona que adaptan un archivo de un paquete instalado (inmutable) a este proyecto sin editarlo, y aviso cuando ese archivo cambia y el ajuste queda por revisar.",
+  "familia": "sistema",
+  "motor": ">=2.0",
+  "activacion": [
+    "adaptaciones-de-paquetes",
+    "adaptaciones de paquetes",
+    "ajustes locales"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py",
+    "scripts/verificar-adaptaciones.py"
+  ],
+  "alcance": {
+    "problemas": [
+      {
+        "id": "paquetes-sin-adaptar-al-proyecto",
+        "descripcion": "Un paquete instalado trae un paso o una regla que no encaja en este proyecto y, al ser inmutable, no hay dónde corregirlo."
+      },
+      {
+        "id": "ajustes-locales-desfasados",
+        "descripcion": "Ajustes locales que siguen mandando sobre un archivo de paquete que cambió desde que una persona los aprobó."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "Reglas propias del equipo para su código y sus excepciones",
+        "derivar_a": "reglas-del-proyecto"
+      },
+      {
+        "tema": "Cambiar un paquete del catálogo de forma permanente para todos los proyectos",
+        "derivar_a": "evolucion-del-sistema"
+      },
+      {
+        "tema": "Valores de configuración que un paquete ya expone en su ajustes.json",
+        "derivar_a": null
+      },
+      {
+        "tema": "Instalar, actualizar o reparar la integridad de un paquete",
+        "derivar_a": null
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "componentes",
+    "herramientas",
+    "plantillas",
+    "ejemplos",
+    "pruebas",
+    "cambios"
+  ],
+  "proceso": [
+    "consultar-ajustes",
+    "seguir-ajustes",
+    "proponer-ajuste",
+    "verificar"
+  ],
+  "al_activar_paquete": "scripts/adaptaciones.py ajustes {id}",
+  "fichas": {
+    "ajuste": {
+      "carpeta": "ajustes-locales",
+      "prefijo": "AJL",
+      "plantilla": "plantillas/ajuste.md",
+      "inicial": "propuesto",
+      "status_validos": [
+        "propuesto",
+        "activo",
+        "retirado"
+      ],
+      "solo_humano": [
+        "activo",
+        "retirado"
+      ],
+      "comandos": {
+        "activo": "scripts/adaptaciones.py aprobar-ajuste {id} --humano"
+      }
+    }
+  }
+}

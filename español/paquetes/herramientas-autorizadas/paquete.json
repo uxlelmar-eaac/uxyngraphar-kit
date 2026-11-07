@@ -1,7 +1,7 @@
 {
-  "manifiesto_formato": 1,
+  "manifiesto_formato": 2,
   "id": "herramientas-autorizadas",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "titulo": "Herramientas autorizadas",
   "descripcion": "Procedimientos y scripts que una persona autorizó para ejecutarse sin instrucción nueva cuando el pedido encaja en su alcance; el agente solo puede proponer.",
   "familia": "proceso",
@@ -15,6 +15,64 @@
   "verificaciones": [
     "scripts/comun/verificar.py",
     "scripts/verificar-herramientas.py"
+  ],
+  "alcance": {
+    "problemas": [
+      {
+        "id": "procedimientos-repetidos-sin-atajo",
+        "descripcion": "Tareas conocidas y repetitivas que exigen redactar y aprobar una instrucción completa cada vez que se piden."
+      },
+      {
+        "id": "herramientas-usadas-fuera-de-alcance",
+        "descripcion": "El agente usa una herramienta autorizada para pedidos que no encajan en su alcance permitido, o una que ya fue revocada."
+      },
+      {
+        "id": "autorizaciones-sin-responsable",
+        "descripcion": "Herramientas que se dan por autorizadas sin constar quién y cuándo las autorizó, o que creó o editó el propio agente."
+      },
+      {
+        "id": "propuestas-ejecutadas",
+        "descripcion": "El agente ejecuta como herramienta un procedimiento que solo propuso, antes de que una persona lo promueva."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "Pedidos que no encajan en ninguna herramienta autorizada, incluido escribir o cambiar el script de una herramienta",
+        "derivar_a": "instrucciones-aprobadas"
+      },
+      {
+        "tema": "Reglas propias del equipo para su código y sus excepciones",
+        "derivar_a": "reglas-del-proyecto"
+      },
+      {
+        "tema": "Mejoras de los paquetes y procesos de uxyngraphar",
+        "derivar_a": "evolucion-del-sistema"
+      },
+      {
+        "tema": "Credenciales o secretos que una herramienta necesite para ejecutarse",
+        "derivar_a": "secretos-y-credenciales"
+      },
+      {
+        "tema": "Ejecución programada o automática fuera de una sesión con el agente (cron, CI)",
+        "derivar_a": null
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "componentes",
+    "herramientas",
+    "plantillas",
+    "ejemplos",
+    "pruebas",
+    "cambios"
+  ],
+  "proceso": [
+    "buscar-herramienta",
+    "ejecutar-herramienta",
+    "proponer-herramienta"
   ],
   "fichas": {
     "propuesta": {

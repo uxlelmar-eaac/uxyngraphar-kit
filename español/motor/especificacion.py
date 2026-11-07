@@ -1,7 +1,8 @@
 """Contratos de uxyngraphar 2.0 del lado del motor: paquete (fuente o construido) y FLUJO.json.
 
 El manifiesto y la integridad se validan con la copia de `scripts/comun/uxyn_base.py` de `paquetes/!base/`, la base de
-la que nacen los paquetes nuevos (no es un paquete: no se lista, no se construye ni se instala).
+la que nacen los paquetes nuevos (no es un paquete: no se lista, no se construye ni se instala). Las piezas estándar las
+valida `piezas.py`; el bloque de entrada del README lo genera `entrada.py`.
 """
 
 from __future__ import annotations
@@ -26,7 +27,7 @@ INDICE = "INDICE.md"
 FORMATO_FLUJO = 1
 MODOS = ("manual", "leer_por_defecto", "trabajar_con", "secuencia")
 CONFLICTOS = ("preguntar",)
-OBLIGATORIOS = (base.ENTRADA,)
+OBLIGATORIOS = (base.ENTRADA, base.DESCRIPCION)
 FLUJO_INICIAL = {"formato": FORMATO_FLUJO, "modo": "manual", "leer_por_defecto": [], "trabajar_con": None,
                  "secuencia": [], "conflictos": "preguntar"}
 
@@ -68,6 +69,12 @@ def validar_paquete(carpeta: Path, construido: bool = False) -> list[str]:
     for rel in base.archivos_del_paquete(carpeta):
         if not rel.isascii() or " " in rel:
             errores.append(f"nombre de archivo no ASCII o con espacios: {rel}")
+    import entrada
+    import piezas
+    errores += piezas.nucleo(carpeta, m)
+    errores += piezas.validar(carpeta, m)[0]
+    if (carpeta / base.ENTRADA).is_file() and not entrada.al_dia(carpeta):
+        errores.append(f"{base.ENTRADA}: el bloque de entrada no corresponde al manifiesto; ejecuta «uxyngraphar indice-paquete {m['id']}»")
     if construido:
         informe = base.comprobar_integridad(carpeta)
         if not base.integro(informe):
@@ -78,8 +85,16 @@ def validar_paquete(carpeta: Path, construido: bool = False) -> list[str]:
 
 
 def avisos_paquete(carpeta: Path) -> list[str]:
-    """Avisos (no impiden validar): scripts de `scripts/comun/` que faltan o difieren de `paquetes/!base/`."""
+    """Avisos (no impiden validar): especialización, completitud, marcadores en piezas opcionales y scripts de
+    `scripts/comun/` que faltan o difieren de `paquetes/!base/`."""
+    import piezas
     avisos = []
+    try:
+        m = base.leer_manifiesto(carpeta)
+        if not base.validar_manifiesto(m):
+            avisos += piezas.validar(Path(carpeta), m)[1]
+    except (OSError, ValueError):
+        pass
     for script in sorted(COMUN.glob("*.py")):
         propio = Path(carpeta) / DESTINO_COMUN / script.name
         if not propio.is_file():

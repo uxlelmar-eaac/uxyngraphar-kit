@@ -1,7 +1,7 @@
 {
-  "manifiesto_formato": 1,
+  "manifiesto_formato": 2,
   "id": "documentacion-espejo",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "titulo": "Documentación espejo",
   "descripcion": "Documentación espejo del código: una ficha por archivo o carpeta relevante (rol, responsabilidades, interacciones), con cobertura medible y detección de espejos huérfanos.",
   "familia": "documentacion",
@@ -15,6 +15,63 @@
   "verificaciones": [
     "scripts/comun/verificar.py",
     "scripts/verificar-espejo.py"
+  ],
+  "alcance": {
+    "problemas": [
+      {
+        "id": "codigo-sin-espejo",
+        "descripcion": "Archivos con lógica relevante o carpetas de módulo sin espejo, o cobertura por debajo de la mínima del proyecto."
+      },
+      {
+        "id": "espejos-huerfanos",
+        "descripcion": "Espejos cuyo archivo o carpeta de código ya no existe porque se borró o se movió."
+      },
+      {
+        "id": "espejos-desfasados",
+        "descripcion": "Espejos que describen un rol, unas responsabilidades o unas interacciones que el código ya no tiene."
+      },
+      {
+        "id": "espejos-que-copian-codigo",
+        "descripcion": "Espejos que pegan el código o lo parafrasean línea a línea en lugar de explicar su papel en el sistema."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "Describir áreas funcionales, sus fronteras y su mapa de lectura",
+        "derivar_a": "mapa-de-modulos"
+      },
+      {
+        "tema": "Documentar el contrato de cada endpoint HTTP",
+        "derivar_a": "rutas-de-api"
+      },
+      {
+        "tema": "Documentar cada página o ruta de la interfaz",
+        "derivar_a": "paginas-de-interfaz"
+      },
+      {
+        "tema": "Revisar si los imports respetan las capas de cada módulo",
+        "derivar_a": "arquitectura-monolitica-por-capas"
+      },
+      {
+        "tema": "Comentarios dentro del código y documentación pública para usuarios externos",
+        "derivar_a": null
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "componentes",
+    "herramientas",
+    "plantillas",
+    "ejemplos",
+    "cambios"
+  ],
+  "proceso": [
+    "leer-espejo",
+    "actualizar-espejo",
+    "verificar"
   ],
   "ajustes": {
     "raices": [

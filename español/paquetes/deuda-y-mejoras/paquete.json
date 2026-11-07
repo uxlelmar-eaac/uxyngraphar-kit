@@ -1,7 +1,7 @@
 {
-  "manifiesto_formato": 1,
+  "manifiesto_formato": 2,
   "id": "deuda-y-mejoras",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "titulo": "Deuda y mejoras",
   "descripcion": "Cola de deuda técnica y bugs detectados fuera de alcance: se registran con evidencia y no se implementan hasta que una persona los apruebe.",
   "familia": "proceso",
@@ -15,6 +15,62 @@
   "entrada": "README.md",
   "verificaciones": [
     "scripts/comun/verificar.py"
+  ],
+  "alcance": {
+    "problemas": [
+      {
+        "id": "deuda-detectada-sin-registro",
+        "descripcion": "Deuda técnica y bugs que se ven durante una tarea y se olvidan porque no quedan anotados en ningún sitio."
+      },
+      {
+        "id": "arreglos-fuera-de-alcance",
+        "descripcion": "El agente arregla sobre la marcha problemas ajenos al pedido y amplía el cambio sin que una persona lo haya aprobado."
+      },
+      {
+        "id": "mejoras-sin-evidencia",
+        "descripcion": "Mejoras anotadas como impresiones vagas, sin ruta:línea, salida de comando ni pasos para reproducir, que nadie puede valorar."
+      },
+      {
+        "id": "cola-de-mejoras-inmanejable",
+        "descripcion": "Cola de mejoras llena de duplicados, de fichas sin tipo, severidad ni prioridad, o de demasiadas fichas nuevas por tarea para poder decidir."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "Mejoras del propio sistema uxyngraphar (paquetes, plantillas, procesos)",
+        "derivar_a": "evolucion-del-sistema"
+      },
+      {
+        "tema": "Investigar a fondo una causa con alcance, preguntas y hallazgos",
+        "derivar_a": "auditorias-tecnicas"
+      },
+      {
+        "tema": "Implementar una mejora aprobada con alcance y anclas de código",
+        "derivar_a": "instrucciones-aprobadas"
+      },
+      {
+        "tema": "Decidir un cambio de arquitectura que una mejora pone sobre la mesa",
+        "derivar_a": "decisiones-de-arquitectura"
+      },
+      {
+        "tema": "Gestionar el backlog de producto (funcionalidades nuevas, hoja de ruta)",
+        "derivar_a": null
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "plantillas",
+    "ejemplos",
+    "cambios"
+  ],
+  "proceso": [
+    "clasificar-hallazgo",
+    "buscar-duplicados",
+    "registrar",
+    "implementar-aprobada"
   ],
   "fichas": {
     "mejora": {

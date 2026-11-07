@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Verifica las instrucciones del trabajo: alcance, fechas de aprobación/cierre y anclas existentes. Código 0 = sin errores."""
+"""Verifica las instrucciones del trabajo: alcance, fechas de aprobación/cierre, anclas existentes y, si existe el trabajo
+de preguntas-de-clarificacion, la pregunta citada. Código 0 = sin errores."""
 
 from __future__ import annotations
 
@@ -21,6 +22,7 @@ ACTIVAS = {"awaiting_approval", "approved"}
 def main() -> int:
     raiz = base.raiz_app(PAQUETE)
     ajustes = base.leer_ajustes(PAQUETE)
+    trabajo_preguntas = raiz / base.CARPETA_TRABAJO / reglas.PREGUNTAS
     errores, avisos = [], []
     for f in fichas.listar(PAQUETE, "instruccion"):
         fm, _ = base.leer_frontmatter(f.ruta.read_text(encoding="utf-8"))
@@ -31,6 +33,9 @@ def main() -> int:
             for ancla in reglas.lista(fm.get("anclas_codigo")):
                 if not (raiz / reglas.separar_ancla(ancla)[0]).exists():
                     avisos.append(f"{rel}: ancla inexistente {ancla}")
+            aviso = reglas.aviso_pregunta(trabajo_preguntas, fm.get("preguntas_id"))
+            if aviso:
+                avisos.append(f"{rel}: {aviso}")
         if f.status in ("approved", "done") and fm.get("approved_at") in vacio:
             (errores if f.status == "approved" else avisos).append(f"{rel}: {f.status} sin approved_at")
         if f.status == "done" and fm.get("executed_at") in vacio:

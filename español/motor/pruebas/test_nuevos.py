@@ -1,4 +1,4 @@
-"""Pruebas funcionales de los paquetes nuevos (no extraídos del 1.x): paginas-de-aterrizaje-bento y experiencia-de-usuario."""
+"""Pruebas funcionales de los paquetes nuevos (no extraídos del 1.x): paginas-de-aterrizaje-bento y evaluaciones-de-usabilidad."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ class TestNuevos(unittest.TestCase):
         cls.tmp = tempfile.TemporaryDirectory()
         cls.app = Path(cls.tmp.name) / "app"
         cls.app.mkdir()
-        repo.instalar(cls.app, ["paginas-de-aterrizaje-bento", "experiencia-de-usuario"])
+        repo.instalar(cls.app, ["paginas-de-aterrizaje-bento", "evaluaciones-de-usabilidad"])
 
     @classmethod
     def tearDownClass(cls):
@@ -90,35 +90,35 @@ class TestNuevos(unittest.TestCase):
         self.assertEqual(correr(self.s(pid, "verificar.py"), cwd=self.app).returncode, 0)
 
     def test_ux_aprobacion_y_metricas(self):
-        pid = "experiencia-de-usuario"
+        pid = "evaluaciones-de-usabilidad"
         ficha = self.nueva(pid, "evaluacion", "alta-usuario")
-        self.assertEqual(correr(self.s(pid, "verificar-ux.py"), cwd=self.app).returncode, 0)
+        self.assertEqual(correr(self.s(pid, "verificar-evaluaciones.py"), cwd=self.app).returncode, 0)
         self.rellenar(ficha, "Problemas", PROBLEMAS)
         ficha = self.estado(pid, ficha, "propuesta")
-        r = correr(self.s(pid, "verificar-ux.py"), cwd=self.app)
+        r = correr(self.s(pid, "verificar-evaluaciones.py"), cwd=self.app)
         self.assertEqual(r.returncode, 1)
         self.assertIn("aprueba una persona", r.stderr)
         self.assertIn("sin métricas", r.stderr)
         self.rellenar(ficha, "Métricas", METRICAS.format(despues=""))
-        self.assertEqual(correr(self.s(pid, "verificar-ux.py"), cwd=self.app).returncode, 1)
+        self.assertEqual(correr(self.s(pid, "verificar-evaluaciones.py"), cwd=self.app).returncode, 1)
         r = correr(self.s(pid, "fichas.py"), "estado", ficha.stem, "aprobada", cwd=self.app)
         self.assertNotEqual(r.returncode, 0)
         ficha = self.estado(pid, ficha, "aprobada", humano=True)
-        self.assertEqual(correr(self.s(pid, "verificar-ux.py"), cwd=self.app).returncode, 0)
+        self.assertEqual(correr(self.s(pid, "verificar-evaluaciones.py"), cwd=self.app).returncode, 0)
         ficha = self.estado(pid, ficha, "implementada")
         ficha = self.estado(pid, ficha, "validada", humano=True)
-        r = correr(self.s(pid, "verificar-ux.py"), cwd=self.app)
+        r = correr(self.s(pid, "verificar-evaluaciones.py"), cwd=self.app)
         self.assertEqual(r.returncode, 1)
         self.assertIn("sin Después", r.stderr)
         ficha.write_text(ficha.read_text(encoding="utf-8").replace("| 7 | 4 |  |", "| 7 | 4 | 4 |"), encoding="utf-8")
-        r = correr(self.s(pid, "verificar-ux.py"), cwd=self.app)
+        r = correr(self.s(pid, "verificar-evaluaciones.py"), cwd=self.app)
         self.assertEqual(r.returncode, 0, r.stderr)
 
     def test_ux_severidad_alta_sin_propuesta(self):
-        pid = "experiencia-de-usuario"
+        pid = "evaluaciones-de-usabilidad"
         ficha = self.nueva(pid, "evaluacion", "checkout")
         self.rellenar(ficha, "Problemas", "| 1 | H5 | 4 | Se puede pagar dos veces | `src/pay.ts:12` | - | |\n| 2 | H99 | 9 | x | - | - | |\n")
-        r = correr(self.s(pid, "verificar-ux.py"), cwd=self.app)
+        r = correr(self.s(pid, "verificar-evaluaciones.py"), cwd=self.app)
         self.assertEqual(r.returncode, 1)
         for esperado in ("severidad 4 sin propuesta", "heurística «H99»", "severidad «9»", "sin evidencia"):
             self.assertIn(esperado, r.stderr)

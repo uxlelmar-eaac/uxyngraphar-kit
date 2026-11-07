@@ -1,6 +1,6 @@
 # Nomenclatura de los paquetes
 
-Norma **propia del kit uxyngraphar**: rige solo lo que pertenece al kit (ids, títulos, familia, prefijos y status de fichas, frases de activación, scripts y archivos de los paquetes del catálogo). No se aplica al código, las carpetas ni los nombres de los proyectos donde se instalan los paquetes; eso es cosa de paquetes como `calidad-de-codigo`.
+Norma **propia del kit uxyngraphar**: rige solo lo que pertenece al kit (ids, títulos, familia, prefijos y status de fichas, frases de activación, scripts y archivos de los paquetes del catálogo). No se aplica al código, las carpetas ni los nombres de los proyectos donde se instalan los paquetes; eso es cosa de paquetes como `calidad-de-codigo` o `idiomas-del-codigo`.
 
 - Vocabulario y excepciones: `motor/nomenclatura.json`.
 - Comprobación: `motor/nomenclatura.py`. La ejecutan `uxyngraphar validar` (errores con prefijo `nomenclatura:`), `uxyngraphar crear` (rechaza nombres que no cumplen) y el panel.
@@ -63,7 +63,7 @@ Complementarios con significado propio: `pendiente` (por decidir o por hacer), `
 
 Excepciones de dominio (declaradas en `nomenclatura.json`, no se amplían sin decisión de la persona): `aceptada` en ADR (estándar de la industria) y `borrador` en manuales y páginas de aterrizaje.
 
-**Status heredados**: los paquetes que vienen del 1.x conservan algunos status (en inglés y sinónimos) para no romper el trabajo de los proyectos. Están declarados por paquete en `nomenclatura.json` → `status.heredados`. No dan error, se listan con `uxyngraphar nomenclatura` y se quitan de la lista cuando el paquete migra (si el paquete deja de usar uno declarado, `validar` exige quitarlo). Ningún paquete nuevo puede declararlos.
+**Status heredados**: los paquetes que vienen del 1.x conservan algunos status (en inglés y sinónimos) para no romper el trabajo de los proyectos. Están declarados por paquete en `nomenclatura.json` → `status.heredados`. No dan error, se listan con `uxyngraphar nomenclatura` y se quitan de la lista cuando el paquete migra (si el paquete deja de usar uno declarado, `validar` exige quitarlo). Ningún paquete nuevo puede declararlos, salvo el que nace al dividir otro: hereda los status del tipo de ficha que se lleva.
 
 ## 5. Frases de activación
 
@@ -82,7 +82,19 @@ Excepciones de dominio (declaradas en `nomenclatura.json`, no se amplían sin de
 | Módulo auxiliar importable | `<tema>_<aspecto>.py` | `capas_datos.py`, `secretos_patrones.py` |
 | Común | `scripts/comun/` (lo copia `!base`) | — |
 | Documento único del trabajo | MAYÚSCULAS, sin `id` en el frontmatter | `ARQUITECTURA.md`, `GLOSARIO.md` |
-| Guías y plantillas | `docs/<tema>.md`, `plantillas/<nombre>.md` en kebab-case o MAYÚSCULAS | `docs/restricciones.md` |
+| Guías y plantillas | `referencia/<tema>.md`, `plantillas/<nombre>.md` en kebab-case o MAYÚSCULAS | `referencia/restricciones.md` |
+| Fase del proceso | `proceso/<fase>.md`; la fase es un verbo en infinitivo o un sustantivo de acción, kebab-case, sin números (el orden lo da «proceso» del manifiesto) | `proceso/diagnosticar.md`, `proceso/disenar-modulo.md` |
+| Skill | `skills/<nombre>/SKILL.md`; el nombre es la acción en infinitivo + objeto, kebab-case | `skills/crear-modulo/`, `skills/revisar-imports/` |
+| Variante de andamiaje | `andamiaje/<variante>/`; lo que crea, kebab-case; `__nombre__` en rutas | `andamiaje/modulo-servidor/` |
+| Ejemplo | `ejemplos/<caso>.md`, kebab-case | `ejemplos/modulo-orders.md` |
+| Prueba del paquete | `pruebas/test_<tema>.py` | `pruebas/test_capas.py` |
+| Extensión libre | nombre de primer nivel kebab-case, no reservado, declarado en «extensiones» | `catalogos/` |
+
+## 6.1 Problemas del alcance
+
+- Id del problema (`alcance.problemas[].id`): **lo que sale mal**, como sustantivo + calificador, kebab-case, sin verbos en imperativo (`modulos-acoplados`, `capas-mal-importadas`; no `acoplar-modulos`).
+- Descripción: una frase que describe el síntoma, no la solución.
+- Un id por problema; `PAQUETE.md` los cita entre comillas invertidas en «Problemas que cubre».
 
 ## 7. Ajustes y frontmatter
 
@@ -92,7 +104,7 @@ Excepciones de dominio (declaradas en `nomenclatura.json`, no se amplían sin de
 ## 8. Crear un paquete
 
 ```
-python3 motor/uxyngraphar.py crear contratos-de-pago --titulo "Contratos de pago" --familia arquitectura
+python3 motor/uxyngraphar.py crear contratos-de-pago --titulo "Contratos de pago" --familia arquitectura --piezas limites,proceso,plantillas,cambios
 ```
 
-`crear` comprueba id, título y familia, copia `paquetes/!base`, deriva el tipo (`contrato`), propone un prefijo libre (`CON`), renombra la plantilla a `plantillas/contrato.md` y deja la activación con el id y el id con espacios. Después, `validar` comprueba el resto de reglas a medida que se edita el paquete.
+`crear` comprueba id, título y familia, copia el núcleo de `paquetes/!base` (`paquete.json`, `README.md`, `PAQUETE.md`, `scripts/comun/`) y añade las piezas pedidas desde `paquetes/!base/piezas/` (por defecto `plantillas` y `cambios`). Con `plantillas` deriva el tipo de ficha (`contrato`), propone un prefijo libre (`CON`) y renombra la plantilla a `plantillas/contrato.md`. La activación queda con el id y el id con espacios. El núcleo lleva marcadores `{{…}}`: el paquete no valida hasta rellenarlos. Las piezas se añaden o quitan después con `uxyngraphar pieza <id> agregar|quitar <pieza>`.

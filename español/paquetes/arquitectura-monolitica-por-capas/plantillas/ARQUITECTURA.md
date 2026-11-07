@@ -16,4 +16,4 @@ Qué no sigue el perfil de capas y por qué (cita la ADR que lo decide).
 
 ## Restricciones propias
 
-Las de `docs/restricciones.md` del paquete que aplican aquí, y las que añade el equipo (o en `reglas-del-proyecto`).
+Las de `referencia/restricciones.md` del paquete que aplican aquí, y las que añade el equipo (o en `reglas-del-proyecto`).

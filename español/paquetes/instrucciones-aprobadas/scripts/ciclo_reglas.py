@@ -1,4 +1,4 @@
-"""Reglas del ciclo compartidas por ciclo.py y verificar-ciclo.py: anclas, alcance y fechas."""
+"""Reglas del ciclo compartidas por ciclo.py y verificar-ciclo.py: anclas, alcance, fechas y pregunta citada."""
 
 from __future__ import annotations
 
@@ -7,6 +7,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 RANGO = re.compile(r"^(.*?):(\d+)(?:-(\d+))?$")
+STATUS = re.compile(r"^status:\s*(\S+)", re.MULTILINE)
+PREGUNTAS = "preguntas-de-clarificacion"
 EXT_CODIGO = {".py", ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".vue", ".svelte", ".go", ".rs", ".java", ".kt", ".rb",
               ".php", ".cs", ".swift", ".dart", ".c", ".cc", ".cpp", ".h", ".hpp", ".css", ".scss", ".sql", ".sh"}
 
@@ -58,3 +60,16 @@ def problemas_alcance(fm: dict, ajustes: dict) -> list[str]:
     if len(docs) > int(ajustes.get("max_docs", 8)):
         problemas.append(f"{len(docs)} documentos en lectura_minima (máximo {ajustes.get('max_docs', 8)})")
     return problemas
+
+
+def aviso_pregunta(trabajo_preguntas: Path, pid) -> str | None:
+    """Aviso sobre la pregunta citada en `preguntas_id`; None si todo cuadra o si el trabajo de PREGUNTAS no existe."""
+    if pid in (None, "", "null") or not trabajo_preguntas.is_dir():
+        return None
+    halladas = sorted(trabajo_preguntas.rglob(f"{pid}.md"))
+    if not halladas:
+        return f"preguntas_id {pid} no está en {PREGUNTAS}"
+    m = STATUS.search(halladas[0].read_text(encoding="utf-8"))
+    if m and m.group(1) == "en-curso":
+        return f"preguntas_id {pid} sigue en-curso en {PREGUNTAS}: ciérrala al enlazarla"
+    return None

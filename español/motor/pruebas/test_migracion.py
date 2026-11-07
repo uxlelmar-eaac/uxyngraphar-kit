@@ -129,7 +129,7 @@ class TestMigracion(unittest.TestCase):
             "05-instrucciones/03-completadas/2026-01-01/landing.md": "instrucciones-aprobadas/instrucciones/completadas/landing.md",
             "20-decisiones/03-completadas/2026-01-01/ADR-001-orm.md": "decisiones-de-arquitectura/completadas/ADR-001-orm.md",
             "25-areas/auth/RESUMEN.md": "mapa-de-modulos/auth/RESUMEN.md",
-            "95-memoria/nota.md": "memoria-e-historial/memoria/nota.md",
+            "95-memoria/nota.md": "notas-de-memoria/memoria/nota.md",
             "50-sistema-integral/mapa-capas.md": "documentacion-espejo/mapa-capas.md",
             ".decisiones/tokens/t1.json": "_legado-1x/.decisiones/tokens/t1.json",
         }
@@ -137,7 +137,7 @@ class TestMigracion(unittest.TestCase):
             self.assertEqual(origen[viejo], migrar.sha256(trabajo / nuevo), nuevo)
         self.assertFalse((self.app / "docs").exists())
         self.assertTrue(all(e["integro"] for e in repo.estado(self.app)))
-        self.assertEqual(len(repo.estado(self.app)), 18)
+        self.assertEqual(len(repo.estado(self.app)), len(migrar.COMUNES) + 1)
         self.assertEqual(json.loads((trabajo / "arquitectura-monolitica-por-capas/ajustes.json").read_text())["perfil"], "servidor")
         self.assertEqual(json.loads((trabajo / "calidad-de-codigo/ajustes.json").read_text())["limite_lineas"], 300)
         self.assertEqual(json.loads((trabajo / "secretos-y-credenciales/ajustes.json").read_text())["permitir"], ["src/fixtures/**"])
@@ -156,7 +156,7 @@ class TestMigracion(unittest.TestCase):
         self.assertNotIn("contexto.py", (self.app / "CLAUDE.md").read_text(encoding="utf-8"))
         self.assertFalse((self.app / ".git/hooks/pre-commit").exists())
         ignorados = (self.app / ".cursorignore").read_text(encoding="utf-8")
-        self.assertIn("uxyngraphar/trabajo/memoria-e-historial/archivo/**", ignorados)
+        self.assertIn("uxyngraphar/trabajo/documentos-archivados/archivo/**", ignorados)
         self.assertNotIn("docs/90-archivo", ignorados)
         self.assertEqual((self.app / ".github/CODEOWNERS").read_text(encoding="utf-8"), "* @equipo\n")
         deny = json.loads((self.app / ".claude/settings.json").read_text())["permissions"]["deny"]
@@ -206,7 +206,7 @@ class TestMigracion(unittest.TestCase):
         (i,) = migrar.ejecutar(self.raiz, aplicar=True)["instalaciones"]
         self.assertTrue(i["aplicada"], i)
         trabajo = self.app / migrar.TRABAJO
-        self.assertEqual(origen["95-memoria/nota.md"], migrar.sha256(trabajo / "memoria-e-historial/memoria/nota.md"))
+        self.assertEqual(origen["95-memoria/nota.md"], migrar.sha256(trabajo / "notas-de-memoria/memoria/nota.md"))
         self.assertEqual(sorted(p.name for p in (self.app / "uxyngraphar").iterdir()), ["FLUJO.json", "INDICE.md", "paquetes", "trabajo"])
         self.assertFalse((self.app / migrar.PROVISIONAL).exists())
         self.assertTrue(all(e["integro"] for e in repo.estado(self.app)))

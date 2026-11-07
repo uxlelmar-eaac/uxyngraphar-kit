@@ -11,7 +11,7 @@ import repo
 from test_pilotos import correr
 
 PAQUETES = ["calidad-de-codigo", "documentacion-espejo", "mapa-de-modulos", "rutas-de-api", "auditorias-tecnicas", "herramientas-autorizadas",
-            "memoria-e-historial", "decisiones-de-arquitectura"]
+            "documentos-archivados", "decisiones-de-arquitectura"]
 
 
 class TestExtraidos(unittest.TestCase):
@@ -104,12 +104,12 @@ class TestExtraidos(unittest.TestCase):
         self.assertEqual(correr(self.s("decisiones-de-arquitectura", "fichas.py"), "estado", fid, "aceptada", cwd=self.app).returncode, 1)
         self.assertEqual(correr(self.s("decisiones-de-arquitectura", "fichas.py"), "estado", fid, "en-evaluacion", cwd=self.app).returncode, 0)
 
-    def test_memoria_archivar_solo_persona(self):
+    def test_archivar_solo_persona(self):
         doc = self.escribir(self.app / "NOTAS.md", "decision: usar postgres\n")
-        memoria = self.s("memoria-e-historial", "memoria.py")
-        self.assertEqual(correr(memoria, "archivar", str(doc), cwd=self.app).returncode, 1)
-        self.assertEqual(correr(memoria, "archivar", str(doc), "--humano", cwd=self.app).returncode, 0)
-        self.assertIn("postgres", correr(memoria, "buscar", "POSTGRES", "--archivo", "--humano", cwd=self.app).stdout)
+        archivo = self.s("documentos-archivados", "archivo.py")
+        self.assertEqual(correr(archivo, "archivar", str(doc), cwd=self.app).returncode, 1)
+        self.assertEqual(correr(archivo, "archivar", str(doc), "--humano", cwd=self.app).returncode, 0)
+        self.assertIn("postgres", correr(archivo, "buscar", "POSTGRES", "--humano", cwd=self.app).stdout)
 
 
 if __name__ == "__main__":

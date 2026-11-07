@@ -1,7 +1,7 @@
 {
-  "manifiesto_formato": 1,
+  "manifiesto_formato": 2,
   "id": "secretos-y-credenciales",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "titulo": "Secretos y credenciales",
   "descripcion": "Evita que credenciales, llaves y archivos de secretos entren al código o a la documentación: solo placeholders, escaneo por contenido y por nombre de archivo.",
   "familia": "seguridad",
@@ -15,6 +15,64 @@
   "verificaciones": [
     "scripts/comun/verificar.py",
     "scripts/secretos.py"
+  ],
+  "alcance": {
+    "problemas": [
+      {
+        "id": "secretos-en-el-codigo",
+        "descripcion": "Credenciales, tokens o llaves privadas escritos con su valor real en el código, la configuración, las pruebas o la documentación."
+      },
+      {
+        "id": "archivos-de-secretos-versionados",
+        "descripcion": "Archivos de secretos (.env, *.pem, credentials.json, *.tfstate) dentro del repositorio o a punto de versionarse."
+      },
+      {
+        "id": "secretos-expuestos-sin-rotar",
+        "descripcion": "Un secreto real que llegó al repositorio se borra del archivo sin avisar a la persona ni revocarlo en el proveedor."
+      },
+      {
+        "id": "escaneo-silenciado",
+        "descripcion": "Exclusiones, rutas permitidas o marcas de permiso añadidas para que el escaneo pase en lugar de corregir el hallazgo."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "Revocar o rotar la credencial en el proveedor y gestionar un almacén de secretos",
+        "derivar_a": null
+      },
+      {
+        "tema": "Limpiar el historial de git de un remoto (git filter-repo o equivalente)",
+        "derivar_a": null
+      },
+      {
+        "tema": "Qué comandos y herramientas puede ejecutar la IA sin instrucción nueva",
+        "derivar_a": "herramientas-autorizadas"
+      },
+      {
+        "tema": "Auditorías de seguridad con alcance, preguntas y hallazgos (dependencias vulnerables, permisos, configuración)",
+        "derivar_a": "auditorias-tecnicas"
+      },
+      {
+        "tema": "Otras prohibiciones de seguridad propias del equipo comprobables con expresiones regulares",
+        "derivar_a": "reglas-del-proyecto"
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "herramientas",
+    "referencia",
+    "ejemplos",
+    "pruebas",
+    "cambios"
+  ],
+  "proceso": [
+    "diagnosticar",
+    "implementar",
+    "escanear",
+    "atender-incidente"
   ],
   "ajustes": {
     "raices": [

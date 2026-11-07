@@ -1,24 +1,26 @@
 # Auditorías técnicas
 
-Activado con «usa el paquete auditorias-tecnicas» / «sigue el protocolo auditoria tecnica» o por `uxyngraphar/FLUJO.json`. `S=uxyngraphar/paquetes/auditorias-tecnicas/scripts`.
+<!-- uxyngraphar:entrada:inicio -->
+Activado con «usa el paquete auditorias-tecnicas» / «sigue el protocolo auditorias tecnicas» o por `uxyngraphar/FLUJO.json`. Rutas relativas a la raíz de la app. `P=uxyngraphar/paquetes/auditorias-tecnicas`.
 
-1. Integridad: `python3 $S/comun/verificar-integridad.py`. Si falla, **detente y avisa**.
-2. Lee las **Reglas** (al final de este archivo).
-3. Mira las activas: `python3 $S/comun/fichas.py listar auditoria --status activa`. Si ya hay `max_activas`, cierra o pospón una (`pendiente`) antes de abrir otra.
-   Abre la auditoría: `python3 $S/comun/fichas.py nueva auditoria --slug <slug> --titulo "…"` (nace `activa`); define alcance y preguntas **antes** de investigar. Una auditoría planificada para más adelante va a `pendiente`.
-4. Investiga solo dentro del alcance; cada hallazgo con evidencia (`ruta:línea`, comando, medición) y severidad. Cada vez que avances, pon la fecha de hoy en `actualizado`.
-5. Cierra con conclusiones y promociones propuestas; `fichas.py estado <id> cerrada`.
-6. Antes de terminar: `python3 $S/comun/verificar.py` y `python3 $S/verificar-auditorias.py`.
+1. Integridad: `python3 $P/scripts/comun/verificar-integridad.py`. Si falla, **detente y avisa**.
+2. Alcance: lee `$P/PAQUETE.md`. Si el pedido cae en «Fuera de alcance», dilo y propón el paquete indicado; no lo resuelvas aquí.
+3. Límites: lee `$P/LIMITES.md`; se cumplen en todo el trabajo.
+4. Proceso, en orden: `$P/proceso/abrir-auditoria.md` → `$P/proceso/investigar.md` → `$P/proceso/concluir.md` → `$P/proceso/promover.md`. Cada fase dice qué skills usar y cuándo está terminada.
+5. Skills: en `$P/skills/<nombre>/SKILL.md`; léelas cuando una fase las cite o el pedido encaje con su descripción.
+6. Consulta cuando haga falta: `$P/HERRAMIENTAS.md` (scripts), `$P/ejemplos/` (casos resueltos).
+7. Trabajo: escribe solo en `uxyngraphar/trabajo/auditorias-tecnicas/` (fichas con `python3 $P/scripts/comun/fichas.py …`) y, en el código del proyecto, solo lo que el pedido pida.
+8. Antes de terminar: `python3 $P/scripts/comun/verificar.py`, `python3 $P/scripts/verificar-auditorias.py`.
 
-## Reglas
+Paquete inmutable: ni la IA ni la persona lo editan dentro del repo; los cambios se hacen en el catálogo.
+<!-- uxyngraphar:entrada:fin -->
 
-Paquete inmutable: ni la IA ni la persona lo editan dentro del repo. Cambios: catálogo del panel.
+## En una frase
 
-1. **Auditar no es arreglar.** Una auditoría no modifica código ni documentación del producto; solo produce la ficha.
-2. **Alcance y preguntas primero.** Sin ellos no se investiga.
-3. **Evidencia o no es hallazgo.** Cada hallazgo cita `ruta:línea`, comando reproducible o medición. Las opiniones van en «Notas».
-4. **Severidad** obligatoria por hallazgo: `critica`, `alta`, `media`, `baja` o `info` (según `ajustes.severidades`).
-5. **`findings_count`** coincide con el número de hallazgos de la tabla.
-6. **Promociones, no acciones.** Lo que haya que cambiar se propone como ADR, instrucción, mejora o actualización de documentación; lo decide una persona.
-7. **Pocas activas y vivas.** Como mucho `max_activas` (5) a la vez; una activa sin cambios en `dias_sin_cambios` (14) días se propone cerrar o pasar a `pendiente`.
-8. **Nada se borra.** Una auditoría descartada va a `cancelada`; lo que una persona quiere retirar va a `para-eliminar` y de ahí al archivo histórico.
+Una auditoría (ficha `AUD-…`) responde preguntas concretas sobre el sistema dentro de un alcance fijado, con hallazgos que citan su evidencia y su severidad; no cambia nada: lo que haya que hacer sale como promociones que decide una persona.
+
+## Lo que decide la persona
+
+- Qué promociones propuestas se aceptan (ADR, instrucción, mejora o documentación) y en qué paquete se registran.
+- Posponer (`pendiente`), cancelar o mandar a `para-eliminar` una auditoría.
+- Ajustes en `uxyngraphar/trabajo/auditorias-tecnicas/ajustes.json`: `severidades` (`critica`, `alta`, `media`, `baja`, `info`), `max_activas` (5) y `dias_sin_cambios` (14).

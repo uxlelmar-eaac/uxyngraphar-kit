@@ -1,20 +1,26 @@
 # Deuda y mejoras
 
-Activado con «usa el paquete deuda-y-mejoras» / «sigue el protocolo deuda tecnica» o por `uxyngraphar/FLUJO.json`. `S=uxyngraphar/paquetes/deuda-y-mejoras/scripts`.
+<!-- uxyngraphar:entrada:inicio -->
+Activado con «usa el paquete deuda-y-mejoras» / «sigue el protocolo deuda y mejoras» o por `uxyngraphar/FLUJO.json`. Rutas relativas a la raíz de la app. `P=uxyngraphar/paquetes/deuda-y-mejoras`.
 
-1. Integridad: `python3 $S/comun/verificar-integridad.py`. Si falla, **detente y avisa**.
-2. Lee las **Reglas** (al final de este archivo).
-3. Si durante una tarea detectas deuda o un bug fuera de alcance: `python3 $S/comun/fichas.py nueva mejora --slug <slug> --titulo "…"` con evidencia. **No lo implementes.**
-4. Antes de registrar, revisa duplicados: `python3 $S/comun/fichas.py listar mejora --status pending`.
-5. Antes de terminar: `python3 $S/comun/verificar.py`.
+1. Integridad: `python3 $P/scripts/comun/verificar-integridad.py`. Si falla, **detente y avisa**.
+2. Alcance: lee `$P/PAQUETE.md`. Si el pedido cae en «Fuera de alcance», dilo y propón el paquete indicado; no lo resuelvas aquí.
+3. Límites: lee `$P/LIMITES.md`; se cumplen en todo el trabajo.
+4. Proceso, en orden: `$P/proceso/clasificar-hallazgo.md` → `$P/proceso/buscar-duplicados.md` → `$P/proceso/registrar.md` → `$P/proceso/implementar-aprobada.md`. Cada fase dice qué skills usar y cuándo está terminada.
+5. Skills: en `$P/skills/<nombre>/SKILL.md`; léelas cuando una fase las cite o el pedido encaje con su descripción.
+6. Consulta cuando haga falta: `$P/ejemplos/` (casos resueltos).
+7. Trabajo: escribe solo en `uxyngraphar/trabajo/deuda-y-mejoras/` (fichas con `python3 $P/scripts/comun/fichas.py …`) y, en el código del proyecto, solo lo que el pedido pida.
+8. Antes de terminar: `python3 $P/scripts/comun/verificar.py`.
 
-## Reglas
+Paquete inmutable: ni la IA ni la persona lo editan dentro del repo; los cambios se hacen en el catálogo.
+<!-- uxyngraphar:entrada:fin -->
 
-Paquete inmutable: ni la IA ni la persona lo editan dentro del repo. Cambios: catálogo del panel.
+## En una frase
 
-1. **Registrar, no implementar.** Una mejora se implementa solo cuando una persona la aprueba (`approved`) y, si se usa `instrucciones-aprobadas`, mediante una instrucción aprobada que la cite.
-2. **Máximo `max_por_tarea` (3) fichas nuevas por tarea.** Prioriza; agrupa problemas de la misma causa.
-3. **Evidencia obligatoria:** `ruta:línea`, salida de un comando o pasos para reproducir.
-4. **Sin duplicados:** si ya existe, añade evidencia a la ficha existente en lugar de crear otra.
-5. **Solo una persona aprueba o rechaza** (`approved`, `rejected`).
-6. Clasifica: `tipo` (`bug`, `deuda-tecnica`, `rendimiento`, `seguridad`, `dx`), `severidad` y `prioridad` (`ahora`, `pronto`, `despues`).
+Lo que se ve mal durante una tarea y no forma parte del pedido se anota como ficha `MEJ-…` con evidencia, sin arreglarlo; una persona decide qué se aprueba y solo entonces se implementa.
+
+## Lo que decide la persona
+
+- Aprobar o rechazar una mejora: `python3 $P/scripts/comun/fichas.py estado MEJ-… approved --humano` (o `rejected`).
+- La prioridad final de la cola (`ahora`, `pronto`, `despues`); el agente solo la propone.
+- Ajustes en `uxyngraphar/trabajo/deuda-y-mejoras/ajustes.json`: `max_por_tarea` (3 fichas nuevas por tarea como máximo).

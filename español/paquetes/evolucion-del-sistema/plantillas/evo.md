@@ -10,7 +10,7 @@ ajuste_local: null
 exportada: null
 ---
 <!-- tipo: cobertura | proceso | plantilla | paquete-nuevo | herramienta. paquete: id del paquete afectado (null = sistema).
-     prioridad: ahora | pronto | despues. ajuste_local: AJL-… si se aplica ya en este proyecto (reglas-del-proyecto).
+     prioridad: ahora | pronto | despues. ajuste_local: AJL-… si se aplica ya en este proyecto (adaptaciones-de-paquetes).
      exportada: fecha en que se exportó para llevarla al catálogo (la escribe evolucion.py exportar). -->
 
 # {{titulo}}

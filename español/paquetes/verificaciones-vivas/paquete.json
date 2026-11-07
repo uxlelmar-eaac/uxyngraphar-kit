@@ -1,7 +1,7 @@
 {
-  "manifiesto_formato": 1,
+  "manifiesto_formato": 2,
   "id": "verificaciones-vivas",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "titulo": "Verificaciones vivas",
   "descripcion": "Contrasta la documentación con el código bajo pedido: rutas y páginas sin ficha, anclas rotas, decisiones aceptadas que el código incumple, manuales sin verificar, ids colgantes y pruebas de humo; el resultado sale como auditoría.",
   "familia": "codigo",
@@ -16,6 +16,68 @@
   "entrada": "README.md",
   "verificaciones": [
     "scripts/comun/verificar.py"
+  ],
+  "alcance": {
+    "problemas": [
+      {
+        "id": "fichas-desalineadas-del-codigo",
+        "descripcion": "Rutas de API o páginas que existen en el código sin ficha, o fichas activas cuyo código ya no existe."
+      },
+      {
+        "id": "referencias-rotas",
+        "descripcion": "Fichas que citan archivos de código (anclas) o ids de otras fichas que ya no existen."
+      },
+      {
+        "id": "decisiones-incumplidas",
+        "descripcion": "Decisiones de arquitectura aceptadas cuyo patrón prohibido sigue apareciendo en el código."
+      },
+      {
+        "id": "manuales-sin-verificar",
+        "descripcion": "Manuales vigentes que nadie ha verificado en meses o que citan rutas que ya no existen."
+      },
+      {
+        "id": "flujos-basicos-rotos",
+        "descripcion": "La app no arranca o un flujo básico falla y la documentación sigue dándolo por bueno porque nadie lo ha comprobado."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "Corregir los hallazgos en el código o en las fichas",
+        "derivar_a": "instrucciones-aprobadas"
+      },
+      {
+        "tema": "Registrar y priorizar los hallazgos que no se corrigen ahora",
+        "derivar_a": "deuda-y-mejoras"
+      },
+      {
+        "tema": "Auditorías técnicas con alcance y preguntas propias (rendimiento, seguridad, dependencias)",
+        "derivar_a": "auditorias-tecnicas"
+      },
+      {
+        "tema": "Escribir o actualizar las fichas de las rutas de API",
+        "derivar_a": "rutas-de-api"
+      },
+      {
+        "tema": "Pruebas automatizadas del proyecto (unitarias, de integración, de extremo a extremo, CI)",
+        "derivar_a": null
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "componentes",
+    "herramientas",
+    "ejemplos",
+    "pruebas",
+    "cambios"
+  ],
+  "proceso": [
+    "acotar-revision",
+    "ejecutar-revisiones",
+    "informar",
+    "derivar-hallazgos"
   ],
   "ajustes": {
     "raices": [

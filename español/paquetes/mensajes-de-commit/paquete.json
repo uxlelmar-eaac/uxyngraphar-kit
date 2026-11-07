@@ -1,0 +1,60 @@
+{
+  "manifiesto_formato": 2,
+  "id": "mensajes-de-commit",
+  "version": "1.0.0",
+  "titulo": "Mensajes de commit",
+  "descripcion": "Mensajes de commit en Conventional Commits, en inglés ASCII, en imperativo, de una sola intención y de 72 caracteres como máximo; ramas tipo/descripcion-corta. Se comprueban sin IA antes y después de cada commit.",
+  "familia": "codigo",
+  "motor": ">=2.0",
+  "activacion": [
+    "mensajes-de-commit",
+    "mensajes de commit",
+    "conventional commits"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py"
+  ],
+  "alcance": {
+    "problemas": [
+      {
+        "id": "commits-sin-convencion",
+        "descripcion": "Mensajes de commit que no siguen Conventional Commits en inglés ASCII o pasan de 72 caracteres."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "Idioma del código, de los comentarios y de los títulos de PR",
+        "derivar_a": "idiomas-del-codigo"
+      },
+      {
+        "tema": "Tamaño de los archivos y nombres de identificadores del cambio",
+        "derivar_a": "calidad-de-codigo"
+      },
+      {
+        "tema": "Notas de versión y CHANGELOG del producto generados a partir de los commits",
+        "derivar_a": null
+      },
+      {
+        "tema": "Ganchos de git, commitlint y reglas de protección de ramas en el servidor",
+        "derivar_a": null
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "herramientas",
+    "referencia",
+    "ejemplos",
+    "pruebas",
+    "cambios"
+  ],
+  "proceso": [
+    "preparar-commit"
+  ],
+  "ajustes": {
+    "commits_revisar": 20
+  }
+}

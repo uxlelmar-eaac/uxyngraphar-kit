@@ -1,0 +1,98 @@
+{
+  "manifiesto_formato": 2,
+  "id": "idiomas-del-codigo",
+  "version": "1.0.0",
+  "titulo": "Idiomas del código",
+  "descripcion": "Código, nombres de archivo y textos para desarrolladores en inglés ASCII; solo los términos de dominio del glosario que mantiene la persona quedan sin traducir y el texto para el usuario va por i18n.",
+  "familia": "codigo",
+  "motor": ">=2.0",
+  "activacion": [
+    "idiomas-del-codigo",
+    "idiomas del codigo",
+    "glosario de dominio",
+    "codigo en ingles"
+  ],
+  "entrada": "README.md",
+  "verificaciones": [
+    "scripts/comun/verificar.py",
+    "scripts/idiomas.py"
+  ],
+  "alcance": {
+    "problemas": [
+      {
+        "id": "codigo-en-idioma-mezclado",
+        "descripcion": "Código, nombres de archivo o textos para desarrolladores en otro idioma o con caracteres no ASCII, sin que el término esté en el glosario del proyecto."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "Que los nombres digan qué es cada cosa (genéricos, unidades, casing del lenguaje) y el límite de líneas",
+        "derivar_a": "calidad-de-codigo"
+      },
+      {
+        "tema": "Idioma y formato de los mensajes de commit y de los nombres de rama",
+        "derivar_a": "mensajes-de-commit"
+      },
+      {
+        "tema": "Renombrar contratos públicos (rutas de API, columnas, eventos persistidos) escritos en otro idioma",
+        "derivar_a": "decisiones-de-arquitectura"
+      },
+      {
+        "tema": "Traducir el texto para el usuario final y mantener los archivos de locale de cada idioma",
+        "derivar_a": null
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "herramientas",
+    "plantillas",
+    "referencia",
+    "ejemplos",
+    "pruebas",
+    "cambios"
+  ],
+  "proceso": [
+    "diagnosticar",
+    "escribir-codigo",
+    "verificar"
+  ],
+  "protegidos": [
+    "GLOSARIO.md"
+  ],
+  "ajustes": {
+    "raices": [
+      "src"
+    ],
+    "extensiones": [
+      ".ts",
+      ".tsx",
+      ".js",
+      ".jsx",
+      ".mjs",
+      ".cjs",
+      ".vue",
+      ".svelte",
+      ".py",
+      ".go",
+      ".rs",
+      ".java",
+      ".kt",
+      ".rb",
+      ".php",
+      ".cs"
+    ],
+    "excluir": [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/generated/**",
+      "**/__generated__/**",
+      "*.generated.*",
+      "*.min.js",
+      "**/migrations/**"
+    ]
+  }
+}

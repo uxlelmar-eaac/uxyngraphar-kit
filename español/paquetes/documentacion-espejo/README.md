@@ -1,23 +1,25 @@
 # Documentación espejo
 
-Activado con «usa el paquete documentacion-espejo» / «sigue el protocolo documentacion espejo» o por `uxyngraphar/FLUJO.json`. `S=uxyngraphar/paquetes/documentacion-espejo/scripts`.
+<!-- uxyngraphar:entrada:inicio -->
+Activado con «usa el paquete documentacion-espejo» / «sigue el protocolo documentacion espejo» o por `uxyngraphar/FLUJO.json`. Rutas relativas a la raíz de la app. `P=uxyngraphar/paquetes/documentacion-espejo`.
 
-1. Integridad: `python3 $S/comun/verificar-integridad.py`. Si falla, **detente y avisa**.
-2. Lee las **Reglas** (al final de este archivo).
-3. Para entender código, lee primero su espejo: `python3 $S/espejo.py ver <ruta-del-codigo>`. Mapa y cobertura: `python3 $S/espejo.py mapa [--faltantes]`.
-4. Al crear, mover o cambiar la responsabilidad de un archivo o carpeta, crea o actualiza su espejo en la misma tarea: `python3 $S/espejo.py nuevo <ruta-del-codigo>`.
-5. Al borrar código, borra su espejo (`python3 $S/espejo.py huerfanos` los lista).
-6. Antes de terminar: `python3 $S/comun/verificar.py` y `python3 $S/verificar-espejo.py`.
+1. Integridad: `python3 $P/scripts/comun/verificar-integridad.py`. Si falla, **detente y avisa**.
+2. Alcance: lee `$P/PAQUETE.md`. Si el pedido cae en «Fuera de alcance», dilo y propón el paquete indicado; no lo resuelvas aquí.
+3. Límites: lee `$P/LIMITES.md`; se cumplen en todo el trabajo.
+4. Proceso, en orden: `$P/proceso/leer-espejo.md` → `$P/proceso/actualizar-espejo.md` → `$P/proceso/verificar.md`. Cada fase dice qué skills usar y cuándo está terminada.
+5. Skills: en `$P/skills/<nombre>/SKILL.md`; léelas cuando una fase las cite o el pedido encaje con su descripción.
+6. Consulta cuando haga falta: `$P/COMPONENTES.md` (piezas que define), `$P/HERRAMIENTAS.md` (scripts), `$P/ejemplos/` (casos resueltos).
+7. Trabajo: escribe solo en `uxyngraphar/trabajo/documentacion-espejo/` y, en el código del proyecto, solo lo que el pedido pida.
+8. Antes de terminar: `python3 $P/scripts/comun/verificar.py`, `python3 $P/scripts/verificar-espejo.py`.
 
-Trabajo: `uxyngraphar/trabajo/documentacion-espejo/<ruta-del-codigo>.md` (archivo) y `…/<carpeta>/README.md` (carpeta).
+Paquete inmutable: ni la IA ni la persona lo editan dentro del repo; los cambios se hacen en el catálogo.
+<!-- uxyngraphar:entrada:fin -->
 
-## Reglas
+## En una frase
 
-Paquete inmutable: ni la IA ni la persona lo editan dentro del repo. Cambios: catálogo del panel.
+Cada archivo o carpeta relevante del código tiene un espejo en `uxyngraphar/trabajo/documentacion-espejo/` con la misma ruta: `src/orders/service.ts` → `…/src/orders/service.md`; `src/orders/` → `…/src/orders/README.md`. El espejo explica el papel del código; nunca lo copia.
 
-1. **Ruta espejo:** `src/orders/service.ts` → `uxyngraphar/trabajo/documentacion-espejo/src/orders/service.md`; la carpeta `src/orders/` → `…/documentacion-espejo/src/orders/README.md`.
-2. **Qué se espeja:** archivos con lógica relevante y toda carpeta de módulo. No hace falta espejar pruebas, tipos triviales ni código generado.
-3. **Contenido, no copia:** rol, responsabilidades, interacciones y puntos de extensión. Nunca pegues el código.
-4. **Espejo vivo:** cambio de responsabilidad, interacciones o ubicación → espejo actualizado en la misma tarea.
-5. **Sin huérfanos:** un espejo cuyo código ya no existe es un error; se borra o se mueve con el código.
-6. **Tamaño:** indica las líneas del archivo espejado; si supera el límite del proyecto, anótalo.
+## Lo que decide la persona
+
+- Ajustes en `uxyngraphar/trabajo/documentacion-espejo/ajustes.json`: `raices` (carpetas de código espejadas), `extensiones`, `excluir` (globs) y `cobertura_minima` (porcentaje que exige `verificar-espejo.py`; por defecto 0).
+- Qué cuenta como «lógica relevante» cuando hay dudas: el agente pregunta antes de espejar carpetas enteras.

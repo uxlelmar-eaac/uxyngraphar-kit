@@ -1,23 +1,84 @@
 {
-  "manifiesto_formato": 1,
+  "manifiesto_formato": 2,
   "id": "reglas-del-proyecto",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "titulo": "Reglas del proyecto",
-  "descripcion": "Reglas propias del equipo para su código (comprobables sin IA con expresiones regulares), sus excepciones aprobadas por una persona y los ajustes locales que adaptan un paquete inmutable a este proyecto.",
+  "descripcion": "Reglas propias del equipo para su código, comprobables sin IA con expresiones regulares, y sus excepciones aprobadas por una persona.",
   "familia": "codigo",
   "motor": ">=2.0",
   "activacion": [
     "reglas-del-proyecto",
     "reglas del proyecto",
-    "reglas propias",
-    "ajustes locales"
+    "reglas propias"
   ],
   "entrada": "README.md",
   "verificaciones": [
     "scripts/comun/verificar.py",
     "scripts/verificar-reglas.py"
   ],
-  "al_activar_paquete": "scripts/reglas.py ajustes {id}",
+  "alcance": {
+    "problemas": [
+      {
+        "id": "convenciones-sin-comprobar",
+        "descripcion": "Convenciones y prohibiciones del equipo que solo viven en la memoria de las personas y se rompen sin que nadie lo detecte."
+      },
+      {
+        "id": "reglas-incumplidas-en-silencio",
+        "descripcion": "Código que incumple una regla activa del proyecto sin una excepción aprobada por una persona."
+      }
+    ],
+    "fuera_de_alcance": [
+      {
+        "tema": "Límite de líneas y nombres del código",
+        "derivar_a": "calidad-de-codigo"
+      },
+      {
+        "tema": "Idioma del código y glosario de dominio",
+        "derivar_a": "idiomas-del-codigo"
+      },
+      {
+        "tema": "Formato de los mensajes de commit y nombres de rama",
+        "derivar_a": "mensajes-de-commit"
+      },
+      {
+        "tema": "Qué capa o módulo puede importar a cuál",
+        "derivar_a": "arquitectura-monolitica-por-capas"
+      },
+      {
+        "tema": "Decisiones de arquitectura con contexto, alternativas y consecuencias",
+        "derivar_a": "decisiones-de-arquitectura"
+      },
+      {
+        "tema": "Adaptar a este proyecto un paso o una regla de otro paquete instalado sin editarlo (ajustes locales)",
+        "derivar_a": "adaptaciones-de-paquetes"
+      },
+      {
+        "tema": "Cambiar un paquete del catálogo de forma permanente para todos los proyectos",
+        "derivar_a": "evolucion-del-sistema"
+      },
+      {
+        "tema": "Análisis estático que no se expresa con una expresión regular por línea o por archivo (tipos, flujo de datos)",
+        "derivar_a": null
+      }
+    ]
+  },
+  "piezas": [
+    "limites",
+    "proceso",
+    "skills",
+    "componentes",
+    "herramientas",
+    "plantillas",
+    "ejemplos",
+    "pruebas",
+    "cambios"
+  ],
+  "proceso": [
+    "consultar-reglas",
+    "implementar",
+    "verificar",
+    "proponer-cambios"
+  ],
   "fichas": {
     "regla": {
       "carpeta": "reglas",
@@ -48,24 +109,6 @@
         "aprobada",
         "rechazada"
       ]
-    },
-    "ajuste": {
-      "carpeta": "ajustes-locales",
-      "prefijo": "AJL",
-      "plantilla": "plantillas/ajuste.md",
-      "inicial": "propuesto",
-      "status_validos": [
-        "propuesto",
-        "activo",
-        "retirado"
-      ],
-      "solo_humano": [
-        "activo",
-        "retirado"
-      ],
-      "comandos": {
-        "activo": "scripts/reglas.py aprobar-ajuste {id} --humano"
-      }
     }
   },
   "ajustes": {

@@ -32,7 +32,7 @@ RESPALDOS = ".uxyngraphar-respaldos"
 PROVISIONAL = ".uxyngraphar-migrando"
 SALTAR = {"node_modules", ".git", RESPALDOS, PROVISIONAL, "dist", "build", ".next", "vendor", ".venv", "venv", "coverage"}
 DESTINOS = (
-    ("03-preguntas/", "instrucciones-aprobadas", "preguntas/"),
+    ("03-preguntas/", "preguntas-de-clarificacion", "preguntas/"),
     ("05-instrucciones/", "instrucciones-aprobadas", "instrucciones/"),
     ("15-rutas/", "<rutas>", ""),
     ("20-decisiones/", "decisiones-de-arquitectura", ""),
@@ -45,14 +45,14 @@ DESTINOS = (
     ("50-sistema-integral/", "documentacion-espejo", ""),
     ("46-evolucion-documentacion/matriz-cobertura-proyectos.md", "evolucion-del-sistema", "MATRIZ-COBERTURA.md"),
     ("46-evolucion-documentacion/", "evolucion-del-sistema", ""),
-    ("90-archivo/", "memoria-e-historial", "archivo/"),
-    ("95-memoria/", "memoria-e-historial", "memoria/"),
+    ("90-archivo/", "documentos-archivados", "archivo/"),
+    ("95-memoria/", "notas-de-memoria", "memoria/"),
     ("96-reglas-proyecto/", "reglas-del-proyecto", "reglas/"),
-    ("97-ajustes-locales/", "reglas-del-proyecto", "ajustes-locales/"),
+    ("97-ajustes-locales/", "adaptaciones-de-paquetes", "ajustes-locales/"),
     ("00-nucleo/arquitectura.md", "arquitectura-monolitica-por-capas", "ARQUITECTURA.md"),
     ("00-nucleo/restricciones.md", "arquitectura-monolitica-por-capas", "RESTRICCIONES.md"),
     ("00-nucleo/registro-ids-compartidos.md", "contratos-entre-repositorios", "REGISTRO-1X.md"),
-    ("00-nucleo/glosario-dominio.md", "calidad-de-codigo", "GLOSARIO.md"),
+    ("00-nucleo/glosario-dominio.md", "idiomas-del-codigo", "GLOSARIO.md"),
     ("ESTADO.md", "instrucciones-aprobadas", "ESTADO.md"),
 )
 ESTADO_1X = re.compile(r"^0[1-9]-(?:listas-)?([a-z-]+)/(\d{4}-\d{2}-\d{2})/(.+)$")
@@ -71,9 +71,9 @@ EQUIVALENCIAS_1X = {
 CAMPOS_1X = {"approved": {"approved_at": "aprobada-en-1x"}}
 PAQUETE_BASE = "instrucciones-aprobadas"   # en 1.x el ciclo era obligatorio en cada pedido
 COMUNES = ["instrucciones-aprobadas", "calidad-de-codigo", "secretos-y-credenciales", "decisiones-de-arquitectura", "mapa-de-modulos", "documentacion-espejo",
-           "herramientas-autorizadas", "auditorias-tecnicas", "deuda-y-mejoras", "manuales-operativos", "memoria-e-historial",
+           "herramientas-autorizadas", "auditorias-tecnicas", "deuda-y-mejoras", "manuales-operativos", "notas-de-memoria", "documentos-archivados",
            "evolucion-del-sistema", "reglas-del-proyecto", "revision-humana", "contratos-entre-repositorios", "arquitectura-monolitica-por-capas",
-           "verificaciones-vivas"]
+           "verificaciones-vivas", "preguntas-de-clarificacion", "idiomas-del-codigo", "mensajes-de-commit", "adaptaciones-de-paquetes"]
 
 
 def sha256(ruta: Path) -> str:
@@ -154,7 +154,8 @@ def _ajustes(cfg: dict) -> dict[str, dict]:
     calidad = {k: v for k, v in {"raices": codigo.get("raices"), "extensiones": codigo.get("extensiones"),
                                  "excluir": codigo.get("excluir"), "limite_lineas": cfg.get("limite_lineas"),
                                  "exenciones_lineas": cfg.get("exenciones_lineas")}.items() if v is not None}
-    salida = {"calidad-de-codigo": calidad, "documentacion-espejo": {k: calidad[k] for k in ("raices", "extensiones") if k in calidad}}
+    salida = {"calidad-de-codigo": calidad, "documentacion-espejo": {k: calidad[k] for k in ("raices", "extensiones") if k in calidad},
+              "idiomas-del-codigo": {k: calidad[k] for k in ("raices", "extensiones", "excluir") if k in calidad}}
     if cfg.get("secretos_permitir"):
         salida["secretos-y-credenciales"] = {"permitir": cfg["secretos_permitir"]}
     return {k: v for k, v in salida.items() if v}

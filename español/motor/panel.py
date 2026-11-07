@@ -35,12 +35,15 @@ RUTAS_GET = {
     "/api/catalogo": lambda d: catalogo.listar(),
     "/api/catalogo/archivos": lambda d: catalogo.archivos(d["id"]),
     "/api/catalogo/archivo": lambda d: {"contenido": catalogo.leer_archivo(d["id"], d["rel"])},
+    "/api/catalogo/completitud": lambda d: catalogo.completitud(d["id"]),
     "/api/repo/estado": lambda d: {"paquetes": repo.estado(_raiz(d)), "antigua": str(repo.instalacion_1x(_raiz(d)) or "")},
     "/api/repo/flujo": lambda d: (generar.flujo_inicial(_raiz(d)), generar.leer_flujo(_raiz(d)))[1],
     "/api/repo/migrar": lambda d: _migrar(d, aplicar=False),
 }
 RUTAS_POST = {
-    "/api/catalogo/crear": lambda d: str(catalogo.crear(d["id"], d["titulo"], d.get("descripcion", ""), familia=d.get("familia", "proceso"))),
+    "/api/catalogo/crear": lambda d: str(catalogo.crear(d["id"], d["titulo"], d.get("descripcion", ""), familia=d.get("familia", "proceso"),
+                                                        piezas=d.get("piezas"))),
+    "/api/catalogo/pieza": lambda d: (catalogo.agregar_pieza if d["accion"] == "agregar" else catalogo.quitar_pieza)(d["id"], d["pieza"]),
     "/api/catalogo/archivo": lambda d: {"errores": catalogo.guardar_archivo(d["id"], d["rel"], d["contenido"])},
     "/api/catalogo/version": lambda d: catalogo.versionar(d["id"], d["nivel"]),
     "/api/repo/instalar": lambda d: repo.instalar(_raiz(d), list(d["ids"]), paquete_base=d.get("base") or None),

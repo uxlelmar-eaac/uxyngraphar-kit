@@ -1,23 +1,25 @@
 # Decisiones de arquitectura
 
-Activado con «usa el paquete decisiones-de-arquitectura» / «sigue el protocolo adr» o por `uxyngraphar/FLUJO.json`. `S=uxyngraphar/paquetes/decisiones-de-arquitectura/scripts`.
+<!-- uxyngraphar:entrada:inicio -->
+Activado con «usa el paquete decisiones-de-arquitectura» / «sigue el protocolo decisiones de arquitectura» o por `uxyngraphar/FLUJO.json`. Rutas relativas a la raíz de la app. `P=uxyngraphar/paquetes/decisiones-de-arquitectura`.
 
-1. Integridad: `python3 $S/comun/verificar-integridad.py`. Si falla, **detente y avisa**.
-2. Lee las **Reglas** (al final de este archivo).
-3. Antes de decidir algo estructural, consulta las ADR vigentes: `python3 $S/comun/fichas.py listar adr --status aceptada`.
-4. Nueva decisión: `python3 $S/comun/fichas.py nueva adr --slug <slug> --titulo "…"`; complétala y pásala a `en-evaluacion` cuando esté lista para la persona.
-5. Antes de terminar: `python3 $S/comun/verificar.py`.
+1. Integridad: `python3 $P/scripts/comun/verificar-integridad.py`. Si falla, **detente y avisa**.
+2. Alcance: lee `$P/PAQUETE.md`. Si el pedido cae en «Fuera de alcance», dilo y propón el paquete indicado; no lo resuelvas aquí.
+3. Límites: lee `$P/LIMITES.md`; se cumplen en todo el trabajo.
+4. Proceso, en orden: `$P/proceso/consultar-vigentes.md` → `$P/proceso/redactar-adr.md` → `$P/proceso/someter-a-evaluacion.md` → `$P/proceso/registrar-reemplazo.md`. Cada fase dice qué skills usar y cuándo está terminada.
+5. Skills: en `$P/skills/<nombre>/SKILL.md`; léelas cuando una fase las cite o el pedido encaje con su descripción.
+6. Consulta cuando haga falta: `$P/COMPONENTES.md` (piezas que define), `$P/ejemplos/` (casos resueltos).
+7. Trabajo: escribe solo en `uxyngraphar/trabajo/decisiones-de-arquitectura/` (fichas con `python3 $P/scripts/comun/fichas.py …`) y, en el código del proyecto, solo lo que el pedido pida.
+8. Antes de terminar: `python3 $P/scripts/comun/verificar.py`.
 
-Trabajo: `uxyngraphar/trabajo/decisiones-de-arquitectura/<estado>/`.
+Paquete inmutable: ni la IA ni la persona lo editan dentro del repo; los cambios se hacen en el catálogo.
+<!-- uxyngraphar:entrada:fin -->
 
-## Reglas
+## En una frase
 
-Paquete inmutable: ni la IA ni la persona lo editan dentro del repo. Cambios: catálogo del panel.
+El agente consulta las ADR vigentes antes de decidir algo estructural, redacta una ADR nueva (o un reemplazo) con opciones reales y la deja `en-evaluacion`; la persona la acepta o la rechaza.
 
-1. **Cuándo hace falta una ADR:** elegir o cambiar framework, base de datos, protocolo, patrón transversal, proveedor externo, modelo de seguridad o cualquier decisión cara de revertir.
-2. **Una decisión por ADR**, con al menos dos opciones reales y sus consecuencias (positivas y negativas).
-3. **Solo una persona acepta o rechaza** (`aceptada`, `rechazada`). El agente propone y deja en `en-evaluacion`.
-4. **Las ADR aceptadas son vinculantes.** Si el trabajo contradice una, detente y propón una ADR nueva que la reemplace (`reemplaza: <id>`); nunca edites la aceptada.
-5. **Reemplazo:** al aceptarse la nueva, la anterior pasa a `reemplazada` con `reemplazada_por: <id>`.
-6. **Sin prosa genérica:** contexto concreto del proyecto, con rutas o enlaces cuando existan.
-7. **Prohibiciones comprobables:** si la decisión veta algo detectable en el código, escríbelo como expresión regular en `comprobacion_prohibido` (y, si aplica, los archivos en `aplica_a`, p. ej. `["src/**/*.ts"]`); `verificaciones-vivas` lo busca.
+## Lo que decide la persona
+
+- Aceptar o rechazar una ADR: `python3 $P/scripts/comun/fichas.py estado <ADR-…> aceptada --humano` (o `rechazada`). Una aceptada es vinculante hasta que otra la reemplace.
+- Si una decisión necesita una ADR: el agente lo propone; la persona puede pedirla aunque el agente no lo vea necesario.

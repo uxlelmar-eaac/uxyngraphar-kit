@@ -23,7 +23,7 @@ Este proyecto tiene paquetes de gobernanza en `uxyngraphar/` (índice: `uxyngrap
    - `leer_por_defecto`: lee el `README.md` de esos paquetes en cada pedido; aplica solo los nombrados.
    - `trabajar_con`: ese es el paquete base: aplícalo en **cada** pedido aunque no lo nombre; si el pedido nombra otros, aplícalos también.
    - `secuencia`: recorre esos paquetes en orden.
-2. **Al activar un paquete `<id>`:** ejecuta `python3 uxyngraphar/paquetes/<id>/scripts/comun/verificar-integridad.py`; si falla, detente y avisa. Luego lee `uxyngraphar/paquetes/<id>/README.md` (pasos y reglas), trabaja y ejecuta sus `verificaciones` antes de terminar.
+2. **Al activar un paquete `<id>`:** ejecuta `python3 uxyngraphar/paquetes/<id>/scripts/comun/verificar-integridad.py`; si falla, detente y avisa. Luego lee `uxyngraphar/paquetes/<id>/README.md`: dice en qué orden leer su alcance (`PAQUETE.md`), sus límites, su proceso por fases y sus skills. Si el pedido cae fuera de su alcance, dilo y no lo resuelvas con ese paquete. Ejecuta sus `verificaciones` antes de terminar.
 3. **Escribe solo en `uxyngraphar/trabajo/<id>/`** de los paquetes activos. Nunca crees, edites ni borres nada en `uxyngraphar/paquetes/`, `uxyngraphar/FLUJO.json`, `uxyngraphar/INDICE.md` ni los `ajustes.json` de `uxyngraphar/trabajo/`: son de la persona y del panel.
 4. **Lo que decide una persona lo ejecuta una persona.** Nunca uses `--humano` ni `UXYNGRAPHAR_HUMANO`: deja la ficha lista y di qué comando debe ejecutar la persona.
 5. **Si dos paquetes activos se contradicen, detente y pregunta.**
@@ -63,11 +63,12 @@ def indice(raiz_app: Path) -> Path:
     if not paquetes:
         lineas.append("(sin paquetes instalados)")
     else:
-        lineas += ["| Paquete | Versión | Frases de activación | Qué gobierna | Entrada |", "|---|---|---|---|---|"]
+        lineas += ["| Paquete | Versión | Frases de activación | Qué gobierna | Problemas que cubre | Entrada |", "|---|---|---|---|---|---|"]
         for m in paquetes:
             frases = ", ".join(f"«{f}»" for f in m.get("activacion", []))
+            problemas = ", ".join(f"`{p}`" for p in sorted(base.ids_problemas(m))) or "—"
             lineas.append(f"| {m.get('titulo', m['id'])} (`{m['id']}`) | {m.get('version', '?')} | {frases} | "
-                          f"{m.get('descripcion', '')} | `paquetes/{m['id']}/{base.ENTRADA}` |")
+                          f"{m.get('descripcion', '')} | {problemas} | `paquetes/{m['id']}/{base.ENTRADA}` |")
     destino = Path(raiz_app) / base.CARPETA_RAIZ / esp.INDICE
     destino.parent.mkdir(parents=True, exist_ok=True)
     destino.write_text("\n".join(lineas) + "\n", encoding="utf-8")
