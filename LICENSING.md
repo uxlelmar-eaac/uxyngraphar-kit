@@ -14,6 +14,16 @@ El contenido de este repositorio (sistemas de gobernanza, guías, plantillas, mo
 
 Puedes compartir y adaptar el material, incluso con fines comerciales, **si atribuyes** la autoría a uxleleaac / uxlelmar y enlazas la licencia.
 
+## Componentes de terceros
+
+El panel incluye las fuentes de marca en `español/motor/web/fuentes/` (subconjunto latino, `woff2`). No están bajo CC BY 4.0: cada una conserva su licencia **SIL Open Font License 1.1**, cuyo texto acompaña a los archivos.
+
+| Fuente | Copyright | Licencia |
+|---|---|---|
+| Inter | The Inter Project Authors | [`OFL-inter.txt`](./español/motor/web/fuentes/OFL-inter.txt) |
+| Poppins | The Poppins Project Authors | [`OFL-poppins.txt`](./español/motor/web/fuentes/OFL-poppins.txt) |
+| Montserrat | The Montserrat Project Authors | [`OFL-montserrat.txt`](./español/motor/web/fuentes/OFL-montserrat.txt) |
+
 ## Software hermano (código de producto)
 
 El código de aplicación vive en repositorios separados y usa **GPL-3.0-only** con opción de **licencia comercial**:
