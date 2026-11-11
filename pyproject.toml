@@ -1,0 +1,46 @@
+# Solo configuración de herramientas de desarrollo (ruff, mypy, coverage). El kit no tiene dependencias: en tiempo de
+# ejecución usa únicamente la biblioteca estándar de Python y no se instala con pip.
+
+[tool.ruff]
+target-version = "py310"
+line-length = 140
+extend-exclude = ["español/sistemas-de-gobernanza/*/andamiaje", "dist"]
+
+[tool.ruff.lint]
+select = ["E", "F", "B", "S", "PL", "UP"]
+ignore = [
+    "E501",     # líneas largas: el estilo del kit admite hasta 140 y algunas cadenas de mensajes pasan
+    "S603",     # subprocess sin shell: el kit siempre pasa listas de argumentos
+    "S607",     # programas por nombre (git, gh, cmd): se buscan en el PATH de la persona a propósito
+    "S101",     # assert en pruebas
+    "PLR0911", "PLR0912", "PLR0913", "PLR0915",   # complejidad: se revisa en código, no por umbral
+    "PLR2004",  # números mágicos: códigos de salida y límites legibles en su sitio
+    "PLC0415",  # import dentro de función: se usa para evitar ciclos y cargar solo lo necesario
+    "PLW0603",  # global: estado del proceso (panel, trabajo en segundo plano)
+    "PLW1510",  # subprocess.run sin check: el kit lee siempre el código de salida (returncode) y decide
+    "PLR0917",  # argumentos posicionales: las funciones públicas mantienen su firma por compatibilidad
+]
+
+[tool.ruff.lint.per-file-ignores]
+"español/motor/pruebas/*" = ["S", "PLW", "PLR", "B", "E741"]
+"español/sistemas-de-gobernanza/*/pruebas/*" = ["S", "PLW", "PLR", "B", "E741"]
+"español/motor/distribucion/arranque*.py" = ["UP", "F403", "F405"]   # sintaxis de Python 3.6; el instalador se publica concatenado (import *)
+"español/motor/distribucion/accesos.py" = ["UP"]
+
+[tool.mypy]
+python_version = "3.10"
+mypy_path = ["español/motor", "español/motor/distribucion", "español/sistemas-de-gobernanza/_base/scripts/comun"]
+explicit_package_bases = true
+ignore_missing_imports = true
+follow_imports = "silent"   # los módulos que aún no están en la lista de CI no dan errores
+warn_unused_ignores = true
+# Gradual: los módulos de la lista de CI se comprueban con estas opciones; el resto, cuando se incorporen.
+check_untyped_defs = true
+
+[tool.coverage.run]
+branch = true
+source = ["motor"]   # relativo a español/, desde donde se ejecutan las pruebas
+omit = ["motor/pruebas/*"]
+
+[tool.coverage.report]
+skip_covered = true

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>uxyngraphar · panel</title>
+<link rel="icon" href="icono.svg" type="image/svg+xml">
+<link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+<div class="marco">
+  <aside class="lateral" aria-label="Secciones del panel">
+    <div class="marca"><img src="icono.svg" alt="" width="32" height="32"><div><b>uxyngraphar</b><span id="version-lateral" class="tenue"></span></div></div>
+    <nav id="navegacion">
+      <a href="#/inicio" data-seccion="inicio" data-icono="inicio">Inicio</a>
+      <a href="#/proyectos" data-seccion="proyectos" data-icono="proyectos">Mis proyectos</a>
+      <a href="#/flujos" data-seccion="flujos" data-icono="flujos">Flujos guardados</a>
+      <a href="#/catalogo" data-seccion="catalogo" data-icono="catalogo">Catálogo de sistemas</a>
+      <a href="#/herramienta" data-seccion="herramienta" data-icono="herramienta">Herramienta y ajustes</a>
+    </nav>
+    <div class="pie-lateral">
+      <label class="interruptor" title="Muestra el editor de sistemas del catálogo"><input type="checkbox" id="modo-avanzado"> <span>Modo avanzado</span></label>
+      <button type="button" id="cerrar-panel" class="boton fantasma">Cerrar el panel</button>
+    </div>
+  </aside>
+  <main id="contenido" tabindex="-1" aria-live="polite"></main>
+</div>
+<div id="avisos" class="avisos" role="status" aria-live="polite"></div>
+<dialog id="dialogo" aria-modal="true"></dialog>
+<div id="desconectado" class="desconectado" hidden>
+  <div class="tarjeta">
+    <h2>El panel se cerró</h2>
+    <p>Para volver a abrirlo, usa el acceso directo de uxyngraphar o escribe <code>uxyngraphar</code> en una terminal.</p>
+  </div>
+</div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

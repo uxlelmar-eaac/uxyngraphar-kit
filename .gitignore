@@ -1,0 +1,20 @@
+# Artefactos locales de herramientas del autor (no forman parte del kit)
+.atl/
+
+# Bytecode, cachés de herramientas y sesiones locales
+__pycache__/
+*.pyc
+.mypy_cache/
+.ruff_cache/
+.coverage
+cobertura-html/
+cobertura.txt
+.decisiones/
+
+# Archivos de release generados por español/motor/distribucion/publicar.py
+dist/
+
+# Copias locales de scripts/comun en cada sistema: la fuente es sistemas-de-gobernanza/_base/scripts/comun/ y el motor la copia al
+# construir o instalar (M-06). «uxyngraphar sincronizar-comun» las crea para ejecutar scripts y pruebas desde la fuente.
+español/sistemas-de-gobernanza/*/scripts/comun/
+!español/sistemas-de-gobernanza/_base/scripts/comun/

@@ -1,0 +1,61 @@
+{
+  "formato": 1,
+  "descripcion": "Status heredados → vocabulario de NOMENCLATURA.md, por sistema (M-05). Los usa «uxyngraphar nomenclatura migrar» y la migración del legado.",
+  "migraciones": {
+    "instrucciones-aprobadas": {
+      "awaiting_approval": "propuesta",
+      "approved": "aprobada",
+      "done": "hecha",
+      "archived": "archivada",
+      "cancelled": "cancelada"
+    },
+    "deuda-y-mejoras": {
+      "pending": "propuesta",
+      "approved": "aprobada",
+      "done": "hecha",
+      "archived": "archivada",
+      "rejected": "rechazada"
+    },
+    "evolucion-del-sistema": {
+      "pending": "propuesta",
+      "approved": "aprobada",
+      "done": "hecha",
+      "rejected": "rechazada"
+    },
+    "herramientas-autorizadas": {
+      "pending": "propuesta",
+      "rejected": "rechazada",
+      "authorized": "vigente",
+      "revoked": "retirada"
+    },
+    "decisiones-de-arquitectura": {
+      "obsoleta": "retirada"
+    },
+    "evaluaciones-de-usabilidad": {
+      "abierta": "en-curso"
+    },
+    "paginas-de-aterrizaje-bento": {
+      "revision": "en-evaluacion"
+    },
+    "preguntas-de-clarificacion": {
+      "completada": "cerrada"
+    },
+    "contratos-entre-repositorios": {
+      "deprecado": "reemplazado"
+    },
+    "manuales-operativos": {
+      "obsoleto": "retirado"
+    },
+    "mapa-de-modulos": {
+      "active": "activa",
+      "planned": "planificada",
+      "deprecated": "retirada"
+    },
+    "paginas-de-interfaz": {
+      "deprecada": "reemplazada"
+    },
+    "rutas-de-api": {
+      "deprecada": "reemplazada"
+    }
+  }
+}

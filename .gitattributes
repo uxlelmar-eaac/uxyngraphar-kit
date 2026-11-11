@@ -1,0 +1,8 @@
+# Finales de línea: el repositorio guarda LF; los scripts y fuentes deben ser LF también en el árbol de trabajo.
+* text=auto
+*.py text eol=lf
+*.md text eol=lf
+*.html text eol=lf
+*.json text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf

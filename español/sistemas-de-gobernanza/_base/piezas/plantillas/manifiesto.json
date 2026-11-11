@@ -1,0 +1,2 @@
+{"fichas": {"ficha": {"carpeta": ".", "prefijo": "FIC", "plantilla": "plantillas/ficha.md", "inicial": "propuesta",
+                      "estados": {"propuesta": "pendientes", "en-curso": "en-progreso", "cerrada": "completadas"}}}}

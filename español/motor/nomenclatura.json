@@ -1,0 +1,26 @@
+{
+  "formato": 1,
+  "familias": ["proceso", "codigo", "arquitectura", "documentacion", "seguridad", "producto", "plataforma"],
+  "enlaces": ["de", "del", "y", "e", "entre", "por", "con"],
+  "palabras_funcion": ["a", "al", "de", "del", "e", "el", "en", "entre", "la", "las", "lo", "los", "o", "para", "por", "con", "sin", "u", "un", "una", "y"],
+  "siglas": ["adr", "api", "ci", "ux"],
+  "abreviaturas": ["app", "apps", "cfg", "conf", "config", "doc", "docs", "info", "mgmt", "repo", "repos", "tmp", "ui", "util", "utils"],
+  "verbos": ["aplicar", "buscar", "comprobar", "crear", "ejecutar", "escanear", "generar", "gestionar", "revisar", "validar", "verificar"],
+  "prefijos_reservados": ["FIC", "MEM", "TMP", "UXY", "XXX"],
+  "carpetas_reservadas": ["memorias"],
+  "archivos_nucleo": ["sistema.json", "README.md", "SISTEMA.md", "MEMORIAS.md", "LIMITES.md", "PERMISOS.md"],
+  "frases_de_una_palabra": ["adr", "endpoints", "runbook", "uxyn", "uxynar", "uxyngraphar"],
+  "status": {
+    "canonicos": ["propuesta", "propuesto", "en-evaluacion", "aprobada", "aprobado", "activa", "activo", "vigente", "hecha", "hecho",
+                  "cerrada", "cerrado", "reemplazada", "reemplazado", "retirada", "retirado", "archivada", "archivado",
+                  "rechazada", "rechazado", "para-eliminar"],
+    "complementarios": ["pendiente", "en-curso", "planificada", "planificado", "publicada", "publicado", "implementada",
+                        "implementado", "validada", "validado", "cancelada", "cancelado", "promovida", "promovido"],
+    "dominio": {
+      "decisiones-de-arquitectura": ["aceptada"],
+      "manuales-operativos": ["borrador"],
+      "paginas-de-aterrizaje-bento": ["borrador"]
+    },
+    "heredados": {}
+  }
+}

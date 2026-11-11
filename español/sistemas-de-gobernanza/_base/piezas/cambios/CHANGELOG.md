@@ -1,0 +1,5 @@
+# Cambios
+
+## {{version}}
+
+- Primera versión.
