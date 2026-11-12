@@ -489,7 +489,7 @@ def nombre_equipo() -> str:
 def pedir_codigo(equipo: str | None = None) -> dict:
     """Paso 1 del inicio de sesión: {codigo_dispositivo, codigo_usuario, url, url_completa, intervalo, caduca_en}."""
     codigo, cuerpo = _pedir_json("/dispositivo/codigo", {"equipo": equipo or nombre_equipo()})
-    if codigo != 201 and codigo != 200:
+    if codigo not in {200, 201}:
         raise SinServidor(_mensaje(cuerpo, f"no se pudo iniciar sesión (HTTP {codigo})"))
     if not cuerpo.get("codigo_dispositivo") or not cuerpo.get("codigo_usuario"):
         raise SinServidor("el servidor devolvió una respuesta inesperada")
