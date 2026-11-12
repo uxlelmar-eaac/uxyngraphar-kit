@@ -2,6 +2,7 @@
 
 import { obtener, enviar, catalogo } from "../api.js";
 import { h, vaciar, boton, avisar, dialogo, pestanas } from "../ui.js";
+import { asistenteIA, sincronizarBorrador } from "./creador.js";
 
 const PIEZAS = ["proceso", "skills", "componentes", "herramientas", "andamiaje", "plantillas", "referencia", "ejemplos", "pruebas", "cambios"];
 const FAMILIAS = ["proceso", "codigo", "arquitectura", "documentacion", "seguridad", "producto", "plataforma"];
@@ -62,6 +63,8 @@ export async function editorAvanzado(id, recargar) {
 
   archivos.addEventListener("change", abrir);
   await cargarArchivos();
+  const sincronia = h("div", { class: "pila" });
+  const ia = await asistenteIA(id, () => archivos.value, contenido);
   const cuerpo = h("div", { class: "pila" },
     h("p", { class: "tenue", texto: "Estás editando el catálogo de esta instalación. Los cambios llegan a los proyectos al actualizar sus sistemas." }),
     h("div", { class: "fila" }, h("div", { class: "espacio" }, archivos), boton("Nuevo archivo", nuevoArchivo, { clase: "pequeno" })),
@@ -70,7 +73,10 @@ export async function editorAvanzado(id, recargar) {
     h("div", { class: "fila" }, piezaSel, boton("Agregar pieza", () => pieza("agregar"), { clase: "pequeno" }), boton("Quitar pieza", () => pieza("quitar"), { clase: "pequeno peligro" }),
       h("span", { class: "espacio" }), boton("+ parche", () => version("parche"), { clase: "pequeno" }), boton("+ menor", () => version("menor"), { clase: "pequeno" }),
       boton("+ mayor", () => version("mayor"), { clase: "pequeno" })),
-    contenido, errores);
+    contenido, errores, ia,
+    h("div", { class: "fila" }, boton("Subir al Creador web", () => sincronizarBorrador("subir", id, sincronia), { clase: "pequeno" }),
+      h("span", { class: "tenue", texto: "Necesita sesión iniciada. Si también cambió en la web, verás las diferencias antes de elegir." })),
+    sincronia);
   const d = document.getElementById("dialogo");
   d.style.width = "min(1100px, 96vw)";
   await dialogo({ titulo: `Editar ${id}`, contenido: cuerpo, cancelar: "Cerrar", acciones: [{ texto: "Guardar archivo", clase: "primario", accion: async () => { await guardar(); return false; } }] });

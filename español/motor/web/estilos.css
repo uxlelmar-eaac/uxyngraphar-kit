@@ -170,10 +170,12 @@ main { padding: 32px 40px 80px; max-width: 1180px; width: 100%; outline: none; }
 .boton.peligro.lleno { background: var(--mal); color: var(--sobre-mal); }
 .boton.fantasma { border-color: transparent; background: transparent; color: var(--tenue); }
 .boton.pequeno { padding: 6px 11px; font-size: var(--font-size-sm); }
+.codigo-grande { font-family: var(--font-mono); font-size: var(--font-size-xl); letter-spacing: .12em; }
 .boton.grande { padding: 14px 18px; font-size: var(--font-size-md); justify-content: flex-start; text-align: left; }
 .boton[disabled] { opacity: .55; cursor: progress; }
 input[type=text], input[type=search], select, textarea { font: inherit; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--borde); background: var(--superficie); color: var(--texto); width: 100%; }
 textarea { min-height: 360px; font-family: var(--font-mono); font-size: var(--font-size-xs); }
+textarea.corto { min-height: 140px; font-family: var(--font-body); font-size: inherit; }
 label.campo { display: flex; flex-direction: column; gap: 6px; font-weight: var(--font-weight-medium); }
 label.casilla { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
 label.casilla input { margin-top: 4px; width: 18px; height: 18px; flex: none; }
@@ -269,3 +271,13 @@ pre { white-space: pre-wrap; background: var(--superficie-2); padding: 12px; bor
 /* Matriz repo × sistema de un grupo (M-18) */
 .matriz { border-collapse: collapse; width: 100%; font-size: var(--font-size-sm); }
 .matriz th, .matriz td { border-bottom: 1px solid var(--borde); padding: 4px 8px; text-align: left; white-space: nowrap; }
+
+/* Creador local: diferencias, informe y conversación con la IA */
+.diferencias { max-height: 360px; overflow: auto; margin: 0; padding: 10px 12px; background: var(--superficie-2); border-radius: var(--radio); font-family: var(--font-mono); font-size: var(--font-size-xs); white-space: pre-wrap; }
+.dif-nueva { background: var(--bien-suave); color: var(--bien); }
+.dif-quitada { background: var(--mal-suave); color: var(--mal); text-decoration: line-through; }
+.informe { margin: 0; white-space: pre-wrap; font-family: inherit; }
+.conversacion { max-height: 320px; overflow: auto; }
+.mensaje { padding: 8px 12px; border-radius: var(--radio); white-space: pre-wrap; }
+.mensaje.tuyo { background: var(--acento-suave); align-self: flex-end; }
+.mensaje.ia { background: var(--superficie-2); }

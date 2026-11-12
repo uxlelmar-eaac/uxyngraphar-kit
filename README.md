@@ -22,9 +22,23 @@ irm https://github.com/uxlelmar-eaac/uxyngraphar-kit/releases/latest/download/in
 
 En Windows se usa `py` (el lanzador de Python que instala python.org); si no lo tienes, cambia `py` por `python`. La línea no ejecuta ningún script de PowerShell (`irm` solo descarga el texto y se lo pasa a Python), así que no depende de la política de ejecución.
 
-El instalador llega **vacío**: los sistemas de gobernanza se guardan en el servidor de uxyngraphar y los traes cuando los necesitas, desde el panel (vista «Sistemas de gobernanza») o con `uxyngraphar buscar <texto>` e `uxyngraphar instalar <id>`. Lo que traes queda guardado en tu equipo y sigue funcionando sin red. Quien escribe sistemas los publica con `uxyngraphar publicar <id>` (necesita un token de publicación). Ver [ADR 0007](./decisiones/0007-sistemas-en-el-servidor.md).
+El instalador llega **vacío**: los sistemas de gobernanza se guardan en el servidor de uxyngraphar y los traes cuando los necesitas, desde el panel (vista «Sistemas de gobernanza») o con `uxyngraphar buscar <texto>` e `uxyngraphar instalar <id>`. Lo que traes queda guardado en tu equipo y sigue funcionando sin red. Quien escribe sistemas los publica con `uxyngraphar publicar <id>` (con la sesión de tu cuenta). Ver [ADR 0007](./decisiones/0007-sistemas-en-el-servidor.md).
 
 El instalador te pregunta si quieres un acceso directo en el menú de inicio, el escritorio o la barra de tareas. Después, el único comando que necesitas es **`uxyngraphar`** (o ese acceso directo): abre el panel en tu navegador, desde donde gestionas todo sin comandos. Añades tus proyectos, instalas, actualizas o quitas sistemas, ves y cambias el flujo del asistente, guardas flujos para reutilizarlos en otros proyectos y actualizas uxyngraphar.
+
+## Tu cuenta: biblioteca, Creador y reportes
+
+Con una cuenta en la web (Mercado, biblioteca, Creador y ventas), conecta el kit una vez por equipo y todo lo demás va solo:
+
+| Quiero… | Comando |
+|---|---|
+| Conectar este equipo con mi cuenta | `uxyngraphar iniciar-sesion` (apruebas el código en la web) |
+| Traer mi biblioteca (lo obtenido, comprado y mío) y ver qué proyectos pueden actualizarse | `uxyngraphar sincronizar` |
+| Trabajar un borrador del Creador web en mi equipo | `uxyngraphar creador bajar <borrador>` y, al terminar, `uxyngraphar creador subir <id>` |
+| Contar al autor qué falla o falta | `uxyngraphar reportar <[editor/]id> --tipo problema\|mejora\|duda --texto "…"` (enseña antes lo que envía) |
+| Desconectar este equipo | `uxyngraphar cerrar-sesion` |
+
+Para publicar desde CI, usa una llave de automatización (se crea en la web) en la variable `UXYNGRAPHAR_TOKEN`. Las decisiones: [sesión por dispositivo](./decisiones/0011-sesion-por-dispositivo.md), [biblioteca sincronizada](./decisiones/0012-biblioteca-sincronizada.md) y [Creador local e IA](./decisiones/0013-creador-local-e-ia.md).
 
 ## Actualizar, reparar, volver atrás y desinstalar
 

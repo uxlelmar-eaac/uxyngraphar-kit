@@ -3,6 +3,7 @@
 
 import { obtener, enviar, esperarServidor, nombreDe } from "../api.js";
 import { h, vaciar, cabecera, boton, insignia, avisar, confirmar, dialogo } from "../ui.js";
+import { tarjetaCreador } from "./creador.js";
 
 const TRAS_ACTUALIZAR = "uxyn-tras-actualizar";
 
@@ -60,6 +61,9 @@ export async function vista() {
     recienActualizado ? h("div", { class: "banda bien", style: "margin-bottom:16px" }, h("b", { texto: `uxyngraphar se actualizó a ${recienActualizado}.` }),
       " Los sistemas de tus proyectos pueden tener mejoras.", h("span", { class: "espacio" }), boton("Actualizar todos mis proyectos", actualizarProyectos, { clase: "primario" })) : null,
     h("div", { class: "tarjeta pila" }, h("div", { class: "fila separada" }, h("h2", { texto: "Versión" }), insignia(info.version, "acento")), estadoVersion, registro),
+    await tarjetaCuenta(),
+    await tarjetaBiblioteca(),
+    await tarjetaCreador(),
     h("div", { class: "tarjeta pila" }, h("h2", { texto: "Sistemas de mis proyectos" }),
       h("p", { class: "tenue", texto: "Actualiza (o repara) de una vez los sistemas de todos tus proyectos con la versión del catálogo que tienes ahora." }),
       h("div", {}, boton("Actualizar todos mis proyectos", actualizarProyectos, { icono: "descargar" }))),
@@ -182,4 +186,117 @@ async function tarjetaHistorial() {
   return h("div", { class: "tarjeta pila" }, h("h2", { texto: "Historial" }),
     h("p", { class: "tenue", texto: "Las últimas acciones que cambiaron algo en tus proyectos o en la herramienta, desde el panel o desde la terminal." }),
     acciones.length ? h("ul", { class: "lista desplazable" }, acciones.map(fila)) : h("p", { class: "tenue", texto: "Aún no hay acciones registradas." }));
+}
+
+
+// Cuenta (K01): conecta este equipo con tu cuenta de uxyngraphar sin copiar tokens (flujo de dispositivo).
+export async function tarjetaCuenta() {
+  const zona = h("div", { class: "tarjeta pila" });
+  let cancelado = false;
+
+  async function pintar(comprobar = true) {
+    const c = await obtener("/api/cuenta", comprobar ? { comprobar: 1 } : {});
+    const titulo = h("div", { class: "fila separada" }, h("h2", { texto: "Tu cuenta" }),
+      c.tipo === "sesion" ? insignia(c.valida === false ? "sesión caducada" : `@${c.usuario || "?"}`, c.valida === false ? "mal" : "bien") : null);
+    if (c.tipo === "sesion" && c.valida !== false) {
+      vaciar(zona, titulo,
+        h("p", { class: "tenue", texto: `Este equipo${c.equipo ? ` («${c.equipo}»)` : ""} está conectado. Tu biblioteca se descarga sola y puedes publicar desde aquí.` }),
+        c.error ? h("div", { class: "banda aviso", texto: `Sin conexión con el servidor ahora: ${c.error}` }) : null,
+        h("div", { class: "fila" }, boton("Cerrar sesión en este equipo", cerrar, { clase: "peligro" })));
+      return;
+    }
+    if (c.tipo === "publicacion") {
+      vaciar(zona, titulo,
+        h("p", { class: "tenue", texto: "Este equipo usa un token de automatización. Para conectarlo con tu cuenta (biblioteca, compras y Creador), inicia sesión." }),
+        h("div", { class: "fila" }, boton("Iniciar sesión", iniciar, { clase: "primario" })));
+      return;
+    }
+    vaciar(zona, titulo,
+      h("p", { class: "tenue", texto: c.valida === false
+        ? "La sesión de este equipo caducó o se revocó desde la web. Vuelve a conectarlo."
+        : "Conecta este equipo con tu cuenta: tus sistemas obtenidos o comprados se descargan solos y puedes publicar los tuyos." }),
+      c.error ? h("div", { class: "banda aviso", texto: c.error }) : null,
+      h("div", { class: "fila" }, boton("Iniciar sesión", iniciar, { clase: "primario" })));
+  }
+
+  async function iniciar() {
+    const datos = await enviar("/api/cuenta/iniciar", {});
+    cancelado = false;
+    vaciar(zona, h("h2", { texto: "Aprueba este equipo en la web" }),
+      h("p", {}, "Tu código: ", h("b", { class: "codigo-grande", texto: datos.codigo_usuario })),
+      h("p", { class: "tenue", texto: "Abre el enlace, comprueba que el código coincide y pulsa «Aprobar»." }),
+      h("div", { class: "fila" },
+        h("a", { class: "boton primario", href: datos.url_completa, target: "_blank", rel: "noopener noreferrer", texto: "Abrir uxyngraphar en el navegador" }),
+        boton("Cancelar", () => { cancelado = true; pintar(false); })),
+      h("div", { class: "cargando" }, h("span", { class: "giro" }), "Esperando la aprobación…"));
+    let intervalo = Math.max(1, datos.intervalo || 5) * 1000;
+    const limite = Date.now() + (datos.caduca_en || 600) * 1000;
+    while (!cancelado && Date.now() < limite) {
+      await new Promise((r) => setTimeout(r, intervalo));
+      if (cancelado) return;
+      const r = await enviar("/api/cuenta/consultar", { codigo_dispositivo: datos.codigo_dispositivo });
+      if (r.estado === "aprobado") {
+        avisar(`Equipo conectado como @${r.usuario || "?"}. Descargando tu biblioteca…`);
+        return pintar(false);
+      }
+      if (r.estado === "lento") intervalo += 5000;
+      if (r.estado === "denegado") { avisar("Se rechazó la conexión de este equipo.", "mal"); return pintar(false); }
+      if (r.estado === "caducado") break;
+    }
+    if (!cancelado) { avisar("El código caducó sin aprobarse. Vuelve a intentarlo.", "mal"); pintar(false); }
+  }
+
+  async function cerrar() {
+    if (!(await confirmar({ titulo: "Cerrar sesión en este equipo", texto: "El kit deja de descargar tu biblioteca y de publicar en tu nombre. Lo instalado en tus proyectos no cambia.", si: "Cerrar sesión" }))) return;
+    const r = await enviar("/api/cuenta/cerrar", {});
+    avisar(r.revocada ? "Sesión cerrada" : "Sesión cerrada en este equipo (sin red: revócala también en la web, «Equipos conectados»)");
+    pintar(false);
+  }
+
+  await pintar(true).catch((e) => vaciar(zona, h("h2", { texto: "Tu cuenta" }), h("div", { class: "banda aviso", texto: String(e.message || e) })));
+  return zona;
+}
+
+
+// Mi biblioteca (ADR 0012): lo obtenido, comprado y propio, descargado a la caché. Nunca toca los proyectos.
+const ORIGENES = { gratis: "gratis", compra: "comprado", regalo: "regalo", propio: "tuyo" };
+
+export async function tarjetaBiblioteca() {
+  const zona = h("div", { class: "tarjeta pila" });
+
+  function fila(s) {
+    return h("li", { class: "fila separada" },
+      h("span", {}, h("b", { texto: s.titulo || s.id }), h("span", { class: "tenue", texto: ` ${s.editor}/${s.id}${s.version ? ` · ${s.version}` : ""}` })),
+      h("span", { class: "fila" },
+        s.origen && s.origen !== "gratis" ? insignia(ORIGENES[s.origen] || s.origen, s.origen === "propio" ? "acento" : "bien") : null,
+        s.privado ? insignia("privado") : null,
+        insignia(s.traido ? "descargado" : "pendiente", s.traido ? "bien" : "aviso")));
+  }
+
+  async function pintar() {
+    const b = await obtener("/api/biblioteca");
+    const titulo = h("div", { class: "fila separada" }, h("h2", { texto: "Mi biblioteca" }),
+      b.en_curso ? insignia("sincronizando…", "acento") : b.sistemas.length ? insignia(`${b.sistemas.length} sistemas`) : null);
+    if (!b.sesion) {
+      vaciar(zona, titulo, h("p", { class: "tenue", texto: "Inicia sesión arriba y lo que obtengas o compres en el Mercado se descargará solo en este equipo." }));
+      return;
+    }
+    const r = b.resultado;
+    vaciar(zona, titulo,
+      h("p", { class: "tenue", texto: "Se descarga al abrir el panel y al iniciar sesión. Las versiones nuevas no se aplican solas: cada proyecto te avisa con «Actualización disponible»." }),
+      b.error ? h("div", { class: "banda aviso", texto: `No se pudo sincronizar: ${b.error}. Lo ya descargado sigue sirviendo.` }) : null,
+      r && r.fallidos && r.fallidos.length ? h("div", { class: "banda mal", texto: `Fallaron: ${r.fallidos.map((f) => `${f.ref} (${f.error})`).join("; ")}` }) : null,
+      b.sistemas.length ? h("ul", { class: "lista desplazable" }, b.sistemas.map(fila))
+        : h("p", { class: "tenue", texto: b.en_curso ? "Consultando tu biblioteca…" : "Tu biblioteca está vacía: obtén sistemas en el Mercado." }),
+      b.en_curso ? null : h("div", { class: "fila" }, boton("Sincronizar ahora", sincronizar, { icono: "descargar" })));
+    if (b.en_curso) setTimeout(() => pintar().catch(() => {}), 1500);
+  }
+
+  async function sincronizar() {
+    await enviar("/api/biblioteca/sincronizar", {});
+    await pintar();
+  }
+
+  await pintar().catch((e) => vaciar(zona, h("h2", { texto: "Mi biblioteca" }), h("div", { class: "banda aviso", texto: String(e.message || e) })));
+  return zona;
 }

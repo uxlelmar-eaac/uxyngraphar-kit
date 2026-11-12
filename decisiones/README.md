@@ -14,3 +14,6 @@ Decisiones de diseño del propio kit, con su contexto y sus consecuencias. Una d
 | [0008](0008-artefacto-y-editor.md) | Artefacto zip reproducible y espacio de nombres por editor | aceptada |
 | [0009](0009-memorias-en-el-nucleo.md) | Memorias del proyecto en el núcleo obligatorio de cada sistema | aceptada |
 | [0010](0010-limites-y-permisos-en-el-nucleo.md) | Límites y permisos en el núcleo obligatorio de cada sistema | aceptada |
+| [0011](0011-sesion-por-dispositivo.md) | El kit se conecta a la cuenta con un flujo de dispositivo | aceptada |
+| [0012](0012-biblioteca-sincronizada.md) | La biblioteca de la cuenta se sincroniza con la caché local | aceptada |
+| [0013](0013-creador-local-e-ia.md) | Creador local sincronizado con la web y proveedores de IA | aceptada |

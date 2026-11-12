@@ -407,6 +407,7 @@ def servir(puerto: int = 0, abrir: bool = True, bienvenida: bool = False, manten
           + ("" if mantener else "Se cierra solo si no queda ninguna pestaña abierta."), flush=True)
     if abrir:
         _abrir(url)
+    rutas_panel.sincronizar_en_fondo()
     servidor.vigilar()
     try:
         servidor.serve_forever()

@@ -30,11 +30,19 @@ uxyngraphar buscar secretos          # busca en el servidor (sin red, en el últ
 uxyngraphar info secretos-y-credenciales
 uxyngraphar instalar secretos-y-credenciales --repo .   # lo trae si hace falta y lo instala
 uxyngraphar cache                    # lo traído: ~/.uxyngraphar/sistemas-de-gobernanza/<editor>/<id>/<version>/
+uxyngraphar sincronizar              # con sesión: trae tu biblioteca (lo obtenido, comprado y tuyo, ADR 0012)
 ```
 
+Con la sesión iniciada, el kit sincroniza tu biblioteca al iniciar sesión, al abrir el panel y con
+`uxyngraphar sincronizar`: descarga a la caché lo adquirido (también lo de pago y lo privado, que no salen en el índice
+público), comprueba cada sha256 y nunca toca los repos. Cada repo avisa «Actualización disponible» y se actualiza
+cuando lo decides (`uxyngraphar actualizar` o el botón del panel, con respaldo para `deshacer`). Sin sesión o sin red,
+todo sigue funcionando con la caché.
+
 Quien escribe sistemas trabaja con un catálogo local (este `sistemas-de-gobernanza/`, `UXYNGRAPHAR_CATALOGO` o
-`catalogo_local` en `casa.json`) y publica con `uxyngraphar sesion guardar <token>` + `uxyngraphar publicar <id>` (o
-`--todos`, `--simular`). Si un id está en local y en el servidor, se instala la versión más alta; a igual, la local.
+`catalogo_local` en `casa.json`), conecta el equipo una vez con `uxyngraphar iniciar-sesion` (apruebas el código en la
+web; `uxyngraphar sesion` dice con qué cuenta y `cerrar-sesion` lo desconecta) y publica con `uxyngraphar publicar <id>`
+(o `--todos`, `--simular`). En CI, `UXYNGRAPHAR_TOKEN` con un token de automatización. Si un id está en local y en el servidor, se instala la versión más alta; a igual, la local.
 `UXYNGRAPHAR_SIN_RED=1` trabaja solo en local.
 
 ## El protocolo de sistemas
@@ -124,6 +132,7 @@ Todo error responde `{"error": {"codigo", "mensaje", "accion"}}`; `accion` dice 
 | `proyecto_no_registrado` | 400 | `registrar` | se quiere cambiar una carpeta que no está en «Mis proyectos» |
 | `falta_confirmacion` | 400 | `confirmar` | acción que borra o mueve trabajo sin `confirmar` |
 | `ajustes_claude_invalidos` | 400 | `corregir_ajustes` | `.claude/settings.json` no es JSON válido |
+| `de_pago` | 400 | `comprar` | el sistema es de pago y tu cuenta no lo tiene: cómpralo en el Mercado |
 | `sin_permiso` | 400 | — | el sistema no deja leer o escribir |
 | `no_encontrado` | 400 | — | no existe lo pedido |
 | `ya_existe` | 400 | — | ya existe lo que se quería crear |

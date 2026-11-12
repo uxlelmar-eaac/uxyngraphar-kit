@@ -17,13 +17,26 @@ Catálogo (aquí se crean y editan los sistemas):
   sincronizar-comun                          copia scripts/comun de _base en cada sistema (copias locales, no versionadas)
   empaquetar <id>…|--todos --destino DIR     artefacto de cada sistema (<id>-<version>.zip reproducible, el que se publica)
 
+Creador (borradores de la web ↔ catálogo local; CREADOR en GENERADOR.md):
+  creador borradores [--json]                tus borradores del Creador web y si ya están en este equipo
+  creador bajar <borrador> [--conservar web|local] [--json]   trae el borrador al catálogo local
+  creador subir <id> [--conservar web|local] [--json]         sube el sistema del catálogo local a su borrador web
+                                             (ante un conflicto muestra las diferencias y no toca nada sin --conservar)
+  creador modelos [--json]                   modelos de IA locales (Ollama, LM Studio) que responden en este equipo
+  creador validar|nuevo|desde-spec|empaquetar --dir DIR …   puente del servidor: un sistema suelto en DIR (JSON)
+
 Servidor de sistemas de gobernanza (el instalador llega vacío: los sistemas se buscan y se traen de aquí):
   buscar [TEXTO] [--familia F] [--json]      busca en el servidor (sin red, en el último índice guardado)
   info <[editor/]id[@X.Y.Z]> [--json]        ficha de un sistema del servidor y sus versiones
   traer <[editor/]id[@X.Y.Z]>…               lo descarga a la caché local (luego «instalar» lo usa sin red)
-  publicar <id>…|--todos [--simular]         sube la versión del catálogo local al servidor (necesita token)
-  sesion guardar <token>|borrar|ver          token de publicación (o la variable UXYNGRAPHAR_TOKEN)
+  publicar <id>…|--todos [--simular]         sube la versión del catálogo local al servidor (necesita sesión)
+  iniciar-sesion [--equipo NOMBRE] [--no-abrir]   conecta este equipo con tu cuenta (apruebas el código en la web)
+  cerrar-sesion                              desconecta este equipo (y revoca la sesión en el servidor)
+  sesion ver|guardar <token>|borrar          quién eres en este equipo; guardar: token de automatización (CI)
+  sincronizar [--json]                       trae a la caché tu biblioteca (lo obtenido, comprado y tuyo); no toca los repos
   cache [limpiar]                            sistemas traídos y el índice guardado
+  reportar <[editor/]id> --tipo problema|mejora|duda --texto "…"|- [--repo RUTA] [--si|--simular] [--json]
+                                             cuenta al autor qué falla o falta (enseña antes lo que se envía)
 
 Repo (RUTA = raíz de la app; por defecto, el directorio actual):
   instalar <id>… [--repo RUTA] [--base id]   instala en RUTA/uxyngraphar/sistemas-de-gobernanza/<id>/ (--base: se aplica en cada pedido)
@@ -55,6 +68,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -181,6 +195,62 @@ def cmd_generar(a) -> int:
             print("\n".join(f"crearía: {r['id']}/{x}" for x in r["archivos"]))
             print("(simulación: añade --aplicar para crearlo)")
     return 1 if r["errores"] else 0
+
+
+def cmd_creador(a) -> int:
+    import creador
+    try:
+        if a.accion == "borradores":
+            filas = creador.borradores()
+            if a.json:
+                _json(filas)
+            for f in [] if a.json else filas:
+                aqui = "en este equipo" if f.get("en_equipo") else "solo en la web"
+                print(f"{f.get('slug')}\trevisión {f.get('revision')}\t{f.get('titulo', '')}\t({aqui})")
+            if not filas and not a.json:
+                print("No tienes borradores en el Creador web.")
+            return 0
+        if a.accion in ("bajar", "subir"):
+            r = (creador.bajar if a.accion == "bajar" else creador.subir)(a.slug, a.conservar)
+            if a.json:
+                _json(r)
+            else:
+                print({"al_dia": f"{a.slug}: ya estaba al día (revisión {r['revision']})",
+                       "conservado_local": f"{a.slug}: se conserva tu versión local; «creador subir {a.slug}» la lleva a la web",
+                       "subido": f"{a.slug}: subido a la web (revisión {r['revision']})"}.get(
+                    r["accion"], f"{a.slug}: en el catálogo local ({r.get('ruta')}), revisión {r['revision']}"))
+            return 0
+        if a.accion == "modelos":
+            import ia_local
+            modelos = ia_local.modelos()
+            if a.json:
+                _json(modelos)
+            for m in [] if a.json else modelos:
+                print(f"{m['proveedor']}\t{m['modelo']}")
+            if not modelos and not a.json:
+                print("Ningún modelo local responde (arranca Ollama o el servidor de LM Studio).")
+            return 0
+    except creador.Conflicto as e:
+        if a.json:
+            _json({"conflicto": True, "slug": e.slug, "revision_web": e.revision_web, "diferencias": e.diferencias})
+        else:
+            print(f"conflicto: {e}", file=sys.stderr)
+            for d in e.diferencias:
+                print(f"\n— {d['ruta']} ({d['cambio']})\n{d['diff']}")
+        return 3
+    carpeta = Path(a.dir)
+    if a.accion == "validar":
+        _json(creador.validar(carpeta))
+        return 0
+    if a.accion == "nuevo":
+        _json(creador.nuevo(carpeta, a.id, a.titulo, a.familia, a.descripcion))
+        return 0
+    if a.accion == "desde-spec":
+        r = creador.desde_spec(carpeta, creador.json_de_entrada(sys.stdin.read()))
+        _json(r)
+        return 1 if r["errores"] else 0
+    _json(creador.empaquetar(carpeta, Path(a.destino)))
+    return 0
 
 
 def cmd_validar(a) -> int:
@@ -385,10 +455,53 @@ def analizador() -> argparse.ArgumentParser:
     pu.add_argument("--todos", action="store_true")
     pu.add_argument("--simular", action="store_true")
     se = sub.add_parser("sesion")
-    se.add_argument("accion", choices=("guardar", "borrar", "ver"))
+    se.add_argument("accion", nargs="?", default="ver", choices=("guardar", "borrar", "ver"))
     se.add_argument("token", nargs="?")
+    se.add_argument("--json", action="store_true")
+    ini = sub.add_parser("iniciar-sesion")
+    ini.add_argument("--equipo", help="nombre con el que verás este equipo en «Equipos conectados»")
+    ini.add_argument("--no-abrir", action="store_true", help="no abrir el navegador (muestra el enlace)")
+    sub.add_parser("cerrar-sesion")
+    si = sub.add_parser("sincronizar")
+    si.add_argument("--json", action="store_true")
     ca = sub.add_parser("cache")
     ca.add_argument("accion", nargs="?", choices=("limpiar",))
+    rp = sub.add_parser("reportar")
+    rp.add_argument("ref", help="sistema: id, editor/id o editor/id@versión")
+    rp.add_argument("--tipo", required=True, choices=("problema", "mejora", "duda"))
+    rp.add_argument("--texto", required=True, help="qué pasó o qué falta («-» lo lee de la entrada estándar)")
+    rp.add_argument("--repo", help="proyecto donde lo usas (para indicar la versión instalada)")
+    rp.add_argument("--si", action="store_true", help="enviar sin preguntar (tras mostrar la vista previa)")
+    rp.add_argument("--simular", action="store_true", help="solo la vista previa; no envía nada")
+    rp.add_argument("--json", action="store_true")
+    cr = sub.add_parser("creador")
+    crs = cr.add_subparsers(dest="accion", required=True)
+    crb = crs.add_parser("borradores")
+    crb.add_argument("--json", action="store_true")
+    for nombre in ("bajar", "subir"):
+        x = crs.add_parser(nombre)
+        x.add_argument("slug")
+        x.add_argument("--conservar", choices=("web", "local"))
+        x.add_argument("--json", action="store_true")
+    crm = crs.add_parser("modelos")
+    crm.add_argument("--json", action="store_true")
+    crv = crs.add_parser("validar")
+    crv.add_argument("--dir", required=True)
+    crv.add_argument("--json", action="store_true")
+    crn = crs.add_parser("nuevo")
+    crn.add_argument("--dir", required=True)
+    crn.add_argument("--id", required=True)
+    crn.add_argument("--titulo", required=True)
+    crn.add_argument("--familia", default="proceso", choices=nomenclatura.NORMA["familias"])
+    crn.add_argument("--descripcion", default="")
+    crn.add_argument("--json", action="store_true")
+    crd = crs.add_parser("desde-spec")
+    crd.add_argument("--dir", required=True)
+    crd.add_argument("--json", action="store_true")
+    cre = crs.add_parser("empaquetar")
+    cre.add_argument("--dir", required=True)
+    cre.add_argument("--destino", required=True)
+    cre.add_argument("--json", action="store_true")
     an = sub.add_parser("andamiar")
     an.add_argument("id")
     an.add_argument("variante", nargs="?")
@@ -507,7 +620,17 @@ def cmd_servidor(a) -> int:
         elif a.accion == "borrar":
             print("token borrado" if remoto.borrar_token() else "no había token guardado")
         else:
-            print(f"servidor: {remoto.servidor() or '(sin red)'}\ntoken: {'sí' if remoto.token() else 'no'}")
+            return cmd_sesion_ver(a)
+    elif a.cmd == "iniciar-sesion":
+        return cmd_iniciar_sesion(a)
+    elif a.cmd == "cerrar-sesion":
+        r = remoto.cerrar_sesion()
+        if r["borrada"]:
+            print("sesión cerrada en este equipo" + ("" if r["revocada"] else " (sin red: revócala también en la web, «Equipos conectados»)"))
+        else:
+            print("no había sesión en este equipo")
+    elif a.cmd == "sincronizar":
+        return cmd_sincronizar(a)
     elif a.cmd == "cache":
         if a.accion == "limpiar":
             print(f"caché vaciada ({remoto.limpiar_cache()} versiones)")
@@ -517,6 +640,114 @@ def cmd_servidor(a) -> int:
                 editor, pid, version = marca.parent.relative_to(c).parts
                 print(f"{editor}/{pid}@{version}")
             print(f"carpeta: {c}")
+    return 0
+
+
+def cmd_sincronizar(a) -> int:
+    import fuentes
+    r = fuentes.sincronizar_biblioteca(None if a.json else lambda ref: print(f"traído: {ref}", flush=True))
+    if a.json:
+        _json(r)
+        return 0 if not r["fallidos"] else 1
+    print(f"Biblioteca: {r['total']} sistemas · {r['descargados']} traídos · {len(r['al_dia'])} ya estaban")
+    for o in r["omitidos"]:
+        print(f"  omitido {o['ref']}: {o['motivo']}")
+    for f in r["fallidos"]:
+        print(f"  error en {f['ref']}: {f['error']}", file=sys.stderr)
+    if r["descargados"]:
+        print("Las versiones nuevas no se aplican solas: «uxyngraphar estado» en cada repo y «uxyngraphar actualizar» cuando quieras.")
+    return 0 if not r["fallidos"] else 1
+
+
+def cmd_reportar(a) -> int:
+    import reportes
+    texto = sys.stdin.read() if a.texto == "-" else a.texto
+    datos = reportes.armar(a.ref, a.tipo, texto, Path(a.repo) if a.repo else None)
+    if a.json and (a.simular or not a.si):
+        _json({"vista_previa": datos, "enviado": False})
+        return 0
+    if not a.json:
+        print(reportes.vista_previa(datos))
+    if a.simular:
+        print("(--simular: no se envió nada)")
+        return 0
+    if not a.si:
+        if not sys.stdin.isatty() or a.texto == "-":
+            print("error: añade --si para enviarlo sin preguntar", file=sys.stderr)
+            return 1
+        if input("¿Enviar esto al autor? [s/N] ").strip().lower() not in ("s", "si", "sí"):
+            print("no se envió nada")
+            return 0
+    r = reportes.enviar(datos)
+    if a.json:
+        _json({"vista_previa": datos, "enviado": True, **r})
+    else:
+        print("Ya lo habías enviado hoy; no se duplicó." if r["repetido"] else "Enviado. El autor lo verá en sus sugerencias. Gracias.")
+    return 0
+
+
+def cmd_iniciar_sesion(a) -> int:
+    import remoto
+    import webbrowser
+
+    def avisar(datos: dict) -> None:
+        print(f"Tu código: {datos['codigo_usuario']}")
+        print(f"Apruébalo en: {datos['url_completa']}")
+        abierto = False
+        if not a.no_abrir:
+            try:
+                abierto = webbrowser.open(datos["url_completa"])
+            except webbrowser.Error:
+                abierto = False
+        print("Se abrió el navegador; " if abierto else "Abre ese enlace en tu navegador; ", end="")
+        print("comprueba que el código coincide y pulsa «Aprobar». Esperando…", flush=True)
+
+    try:
+        r = remoto.iniciar_sesion(a.equipo, avisar)
+    except remoto.SesionRechazada as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 1
+    except KeyboardInterrupt:
+        print("\ncancelado", file=sys.stderr)
+        return 130
+    print(f"Listo: este equipo está conectado como @{r.get('usuario') or '?'}.")
+    try:
+        import fuentes
+        hecho = fuentes.sincronizar_biblioteca()
+        print(f"Biblioteca sincronizada: {hecho['descargados']} sistemas nuevos o actualizados.")
+    except (remoto.SinServidor, PermissionError, OSError) as e:
+        print(f"aviso: la biblioteca no se pudo sincronizar ahora ({e})", file=sys.stderr)
+    return 0
+
+
+def cmd_sesion_ver(a) -> int:
+    import remoto
+    datos = remoto.sesion()
+    salida = {"servidor": remoto.servidor(), "tipo": "ninguna", "usuario": None}
+    if os.environ.get("UXYNGRAPHAR_TOKEN"):
+        salida["tipo"] = "variable UXYNGRAPHAR_TOKEN"
+    elif datos:
+        salida.update(tipo=datos.get("tipo"), usuario=datos.get("usuario"), equipo=datos.get("equipo"))
+        if datos.get("tipo") == "sesion":
+            try:
+                yo = remoto.quien_soy()
+                salida.update(usuario=yo.get("usuario"), email=yo.get("email"), equipo=yo.get("equipo"), valida=True)
+            except PermissionError:
+                salida["valida"] = False
+            except remoto.SinServidor:
+                salida["valida"] = None
+    if a.json:
+        _json(salida)
+        return 0
+    print(f"servidor: {salida['servidor'] or '(sin red)'}")
+    if salida["tipo"] == "ninguna":
+        print("sesión: ninguna  (conéctate con: uxyngraphar iniciar-sesion)")
+    elif salida["tipo"] == "sesion":
+        estado = {True: "activa", False: "caducada o revocada (vuelve a ejecutar «uxyngraphar iniciar-sesion»)",
+                  None: "sin comprobar (sin red)"}[salida.get("valida")]
+        print(f"sesión: @{salida.get('usuario') or '?'} en «{salida.get('equipo') or 'este equipo'}» — {estado}")
+    else:
+        print(f"sesión: token de automatización ({salida['tipo']})")
     return 0
 
 
@@ -576,7 +807,8 @@ def _main(a) -> int:
             ids = [m["id"] for m in catalogo.listar()] if a.todos else a.ids
             for pid in ids:
                 print(catalogo.construir(pid, Path(a.destino)))
-        elif a.cmd in ("empaquetar", "buscar", "info", "traer", "publicar", "sesion", "cache"):
+        elif a.cmd in ("empaquetar", "buscar", "info", "traer", "publicar", "sesion", "cache", "iniciar-sesion", "cerrar-sesion",
+                       "sincronizar"):
             return cmd_servidor(a)
         elif a.cmd == "instalar":
             print("instalados: " + ", ".join(repo.instalar(Path(a.repo), a.ids, sistema_base=a.base))
@@ -634,14 +866,14 @@ def _main(a) -> int:
             if not a.con_trabajo:
                 print("El trabajo propio se conserva (uxyngraphar/trabajo/).")
         else:
-            return {"generar": cmd_generar, "estado": cmd_estado, "verificar": cmd_verificar, "flujo": cmd_flujo, "andamiar": cmd_andamiar,
+            return {"generar": cmd_generar, "creador": cmd_creador, "reportar": cmd_reportar, "estado": cmd_estado, "verificar": cmd_verificar, "flujo": cmd_flujo, "andamiar": cmd_andamiar,
                     "panel": cmd_panel, "proyectos": cmd_proyectos,
                     "flujos-guardados": cmd_flujos_guardados, "accesos": cmd_accesos}[a.cmd](a)
     except (ValueError, FileNotFoundError, FileExistsError, transaccion.ProyectoOcupado,
             remoto.SinServidor, remoto.NoEncontrado) as e:
         print(f"error: {e}", file=sys.stderr)
         return 1
-    except OSError as e:   # permisos, disco lleno…: un mensaje, no un traceback
+    except OSError as e:   # permisos, disco lleno, sesión rechazada…: un mensaje, no un traceback
         print(f"error: {e.strerror or e}" + (f": {e.filename}" if getattr(e, "filename", None) else ""), file=sys.stderr)
         return 1
     return 0

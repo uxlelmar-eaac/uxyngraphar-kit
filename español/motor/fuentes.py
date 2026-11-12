@@ -43,9 +43,16 @@ def remotas() -> dict[str, dict]:
         return {}
 
 
+def sincronizar_biblioteca(avisar=None) -> dict:
+    """Trae a la caché lo adquirido y lo propio (`remoto.sincronizar`). Sin sesión lanza PermissionError; sin red,
+    SinServidor (lo ya traído sigue sirviendo). Añade "descargados" como número para los resúmenes."""
+    r = remoto.sincronizar(avisar)
+    return {**r, "lista_descargados": r["descargados"], "descargados": len(r["descargados"])}
+
+
 def ids_conocidos() -> list[str]:
     """Ids del catálogo local y del último índice guardado, sin usar la red (autocompletado)."""
-    guardados = remoto._indice_guardado().get("sistemas", [])  # noqa: SLF001 - lectura de la caché propia
+    guardados = [*remoto._indice_guardado().get("sistemas", []), *remoto._sistemas_biblioteca()]  # noqa: SLF001 - lectura de la caché propia
     return sorted(set(locales()) | {s.get("id") for s in guardados if isinstance(s, dict) and s.get("id")})
 
 

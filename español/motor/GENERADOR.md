@@ -89,3 +89,21 @@ y piezas recomendadas para la familia que faltan.
   recomendadas, avisos y, al final, cerrar (CHANGELOG, versión y pruebas).
 
 La secuencia de comandos, como skill para quien crea sistemas: [`skills/crear-sistema/SKILL.md`](skills/crear-sistema/SKILL.md).
+
+## Creador
+
+El Creador web y el Creador local usan este mismo generador ([ADR 0013](../../decisiones/0013-creador-local-e-ia.md)).
+
+- **Puente del servidor.** El backend escribe el borrador en una carpeta temporal y llama al kit:
+  `creador validar --dir D --json` (errores, avisos, marcadores y «siguiente»), `creador nuevo --dir D --id … --titulo …`
+  (desde `_base`), `creador desde-spec --dir D` (la especificación por la entrada estándar; la IA la rellena a partir de
+  una descripción) y `creador empaquetar --dir D --destino OUT` (el zip que se publica). Así no hay dos validadores.
+- **Borradores.** No llevan `scripts/comun/` ni `INTEGRIDAD.json`: los añade la construcción.
+- **Sincronización.** `creador borradores`, `creador bajar <id>` y `creador subir <id>` con sesión iniciada. Cada
+  borrador tiene una `revision` en el servidor y este equipo recuerda la última que sincronizó (`creador.json` en la
+  carpeta de uxyngraphar). Si cambió en los dos lados, el comando termina con código 3 y muestra las diferencias;
+  `--conservar web` o `--conservar local` decide.
+- **IA local.** En el panel, el editor del catálogo tiene el «Asistente de IA»: mejorar el archivo abierto (con vista de
+  diferencias y «Aceptar»), revisar el sistema, chat y simulador. Usa un modelo de este equipo (Ollama en
+  `127.0.0.1:11434`, LM Studio en `127.0.0.1:1234`; `UXYNGRAPHAR_OLLAMA_URL` / `UXYNGRAPHAR_LMSTUDIO_URL` para otro
+  puerto local) o la clave de IA de tu cuenta a través del servidor. `creador modelos` lista los locales.

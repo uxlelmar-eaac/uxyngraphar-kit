@@ -47,14 +47,33 @@ async function pestanaSistemas(ctx) {
     recargar();
   };
 
+  // Reporte al autor (Fase 8): siempre con vista previa de lo que sale del equipo antes de enviarlo.
+  const reportar = (p) => async () => {
+    const nombre = p.titulo || p.id;
+    const tipo = h("select", {}, h("option", { value: "problema", texto: "Algo no funciona" }),
+      h("option", { value: "mejora", texto: "Falta algo o se puede mejorar" }), h("option", { value: "duda", texto: "No se entiende algo" }));
+    const texto = h("textarea", { class: "corto", rows: "6", placeholder: "Qué hacías, qué esperabas y qué pasó. No pegues datos privados ni código." });
+    const pedido = () => ({ ref: p.id, tipo: tipo.value, texto: texto.value, repo: ruta });
+    const contenido = h("div", { class: "pila" },
+      h("p", { class: "tenue", texto: `El autor de «${nombre}» lo verá en sus sugerencias y podrá mejorar el sistema. Antes de enviar verás exactamente qué sale de tu equipo.` }),
+      h("label", { class: "campo" }, "Tipo", tipo), h("label", { class: "campo" }, "Qué quieres contar", texto));
+    const previa = await dialogo({ titulo: `Reportar «${nombre}»`, contenido,
+      acciones: [{ texto: "Ver qué se envía", clase: "primario", accion: () => enviar("/api/reportes/vista-previa", pedido()) }] });
+    if (!previa) return;
+    const r = await dialogo({ titulo: "Esto es lo que se envía", contenido: h("pre", { texto: previa.vista_previa }),
+      acciones: [{ texto: "Enviar al autor", clase: "primario", accion: () => enviar("/api/reportes/enviar", pedido()) }] });
+    if (r) avisar(r.repetido ? "Ya lo habías enviado hoy; no se duplicó." : "Enviado. El autor lo verá en sus sugerencias. Gracias.");
+  };
+
   const tarjetaInstalado = (p) => h("div", { class: "tarjeta tarjeta-item" },
     h("div", { class: "fila separada" }, h("h3", { texto: p.titulo || p.id }),
-      !p.integro ? insignia("alterado", "mal") : p.actualizable ? insignia(`nueva ${p.catalogo}`, "aviso") : insignia("al día", "bien")),
+      !p.integro ? insignia("alterado", "mal") : p.actualizable ? insignia(`Actualización disponible: ${p.catalogo}`, "aviso") : insignia("al día", "bien")),
     h("div", { class: "tenue", texto: p.descripcion }),
     h("div", { class: "tenue", texto: `Versión ${p.version}` }),
     h("div", { class: "acciones" },
       !p.integro ? boton("Reparar", actualizar([p.id]), { clase: "primario pequeno" }) : null,
       p.integro && p.actualizable ? boton("Actualizar", actualizar([p.id]), { clase: "primario pequeno" }) : null,
+      boton("Reportar al autor", reportar(p), { clase: "pequeno", titulo: "Cuenta al autor qué falla o qué falta" }),
       boton("Quitar", quitar(p), { clase: "peligro pequeno" })));
 
   const elegidos = new Set();

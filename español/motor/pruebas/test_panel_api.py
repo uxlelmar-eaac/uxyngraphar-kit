@@ -67,6 +67,19 @@ class TestServidor(ConServidor):
         self.assertIn("version", sesion)
         self.assertEqual(self.error("/api/no-existe")[0], 404)
 
+    def test_cuenta_sin_sesion(self):
+        cuenta = self.pedir("/api/cuenta?comprobar=1")
+        self.assertEqual((cuenta["tipo"], cuenta["usuario"], cuenta["valida"]), ("ninguna", None, None))
+        self.assertEqual(self.error("/api/cuenta/consultar", {})[0], 400)
+        self.assertEqual(self.pedir("/api/cuenta/cerrar", {}), {"revocada": False, "borrada": False})
+
+    def test_biblioteca_sin_sesion(self):
+        b = self.pedir("/api/biblioteca")
+        self.assertEqual((b["sesion"], b["sistemas"], b["en_curso"]), (False, [], False))
+        codigo, cuerpo = self.error("/api/biblioteca/sincronizar", {})
+        self.assertEqual(codigo, 400)
+        self.assertIn("sin sesión", json.dumps(cuerpo, ensure_ascii=False))
+
     def test_herramienta_reparar_anterior_y_desinstalar_simulado(self):
         app = self.repo_git("app")
         self.pedir("/api/proyectos/agregar", {"rutas": [str(app)]})

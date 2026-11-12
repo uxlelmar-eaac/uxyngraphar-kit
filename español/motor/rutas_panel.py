@@ -3,6 +3,8 @@ herramienta). Cada función recibe los datos del pedido (query o JSON) y devuelv
 
 from __future__ import annotations
 
+import threading
+import time
 from pathlib import Path
 from typing import Any
 
@@ -19,7 +21,7 @@ import repo
 import transaccion
 
 ERRORES_USUARIO = (ValueError, FileNotFoundError, FileExistsError, PermissionError,
-                   remoto.SinServidor, remoto.NoEncontrado)
+                   remoto.SinServidor, remoto.NoEncontrado)   # remoto.SesionRechazada es un PermissionError
 ERRORES_CONFLICTO = (transaccion.ProyectoOcupado,)
 # Rutas POST que cambian algo y van al registro de auditoría (M-11): ruta → nombre de la acción.
 AUDITADAS = {"/api/repo/instalar": "instalar", "/api/sistemas/traer": "traer del servidor", "/api/repo/actualizar": "actualizar", "/api/repo/quitar": "quitar",
@@ -32,7 +34,10 @@ AUDITADAS = {"/api/repo/instalar": "instalar", "/api/sistemas/traer": "traer del
              "/api/catalogo/instalar-en": "instalar", "/api/flujos/aplicar": "aplicar flujo",
              "/api/herramienta/proyectos": "actualizar proyectos", "/api/herramienta/desinstalar": "desinstalar",
              "/api/herramienta/actualizar": "actualizar herramienta", "/api/herramienta/usar": "usar versión",
-             "/api/herramienta/anterior": "volver a la versión anterior", "/api/herramienta/reparar": "reparar"}
+             "/api/herramienta/anterior": "volver a la versión anterior", "/api/herramienta/reparar": "reparar",
+             "/api/cuenta/cerrar": "cerrar sesión", "/api/biblioteca/sincronizar": "sincronizar biblioteca",
+             "/api/creador/bajar": "bajar borrador del Creador", "/api/creador/subir": "subir borrador al Creador",
+             "/api/reportes/enviar": "reportar al autor"}
 
 
 class FaltaCampo(ValueError):
@@ -53,6 +58,7 @@ CODIGOS = [
     (ProyectoNoRegistrado, "proyecto_no_registrado", "registrar"),
     (FaltaConfirmacion, "falta_confirmacion", "confirmar"),
     (transaccion.ProyectoOcupado, "proyecto_ocupado", "reintentar"),
+    (remoto.DePago, "de_pago", "comprar"),
     (PermissionError, "sin_permiso", ""),
     (FileNotFoundError, "no_encontrado", ""),
     (FileExistsError, "ya_existe", ""),
@@ -196,7 +202,136 @@ def _servidor(d: dict) -> dict:
     return salida
 
 
+def _cuenta(d: dict) -> dict:
+    """Tarjeta «Cuenta» (K01): con qué cuenta está conectado este equipo. «comprobar» pregunta al servidor."""
+    datos = remoto.sesion()
+    salida: dict[str, Any] = {"servidor": None, "tipo": datos.get("tipo") or "ninguna", "usuario": datos.get("usuario"),
+                              "equipo": datos.get("equipo"), "valida": None, "error": ""}
+    try:
+        salida["servidor"] = remoto.servidor()
+    except remoto.SinServidor as e:
+        salida["error"] = str(e)
+    if datos.get("tipo") == "sesion" and d.get("comprobar"):
+        try:
+            yo = remoto.quien_soy()
+            salida.update(usuario=yo.get("usuario"), equipo=yo.get("equipo"), valida=True)
+        except PermissionError:
+            salida["valida"] = False
+        except remoto.SinServidor as e:
+            salida["error"] = str(e)
+    return salida
+
+
+def _cuenta_consultar(d: dict) -> dict:
+    r = remoto.consultar_codigo(_campo(d, "codigo_dispositivo", str))
+    if r["estado"] == "aprobado":
+        sincronizar_en_fondo()
+    return r
+
+
+# ── biblioteca sincronizada (ADR 0012): al abrir el panel, al iniciar sesión y a petición ─────────────────────
+
+_SINCRONIA: dict[str, Any] = {"en_curso": False, "cuando": None, "resultado": None, "error": ""}
+_CANDADO_SINCRONIA = threading.Lock()
+
+
+def _sincronizar() -> None:
+    import fuentes
+    try:
+        r = fuentes.sincronizar_biblioteca()
+        _SINCRONIA.update(resultado=r, error="")
+    except (remoto.SinServidor, PermissionError, OSError, ValueError) as e:
+        _SINCRONIA["error"] = str(e)
+    finally:
+        _SINCRONIA.update(en_curso=False, cuando=time.time())
+
+
+def sincronizar_en_fondo(esperar: bool = False) -> bool:
+    """Arranca la sincronización si hay sesión del kit y no hay otra en curso. Nunca toca los repos."""
+    if remoto.sesion().get("tipo") != "sesion":
+        return False
+    with _CANDADO_SINCRONIA:
+        if _SINCRONIA["en_curso"]:
+            return False
+        _SINCRONIA["en_curso"] = True
+    hilo = threading.Thread(target=_sincronizar, daemon=True, name="uxy-sincronizar")
+    hilo.start()
+    if esperar:
+        hilo.join()
+    return True
+
+
+def _biblioteca(_d: dict) -> dict:
+    """Lo que el panel muestra de la biblioteca: lo guardado (sirve sin red) y la última sincronización."""
+    datos = remoto.sesion()
+    sistemas = []
+    for s in remoto._sistemas_biblioteca():  # noqa: SLF001 - lectura de la caché propia
+        version = (s["versiones"] or [{}])[0].get("version")
+        sistemas.append({"editor": s["editor"], "id": s["id"], "titulo": s["titulo"], "version": version,
+                         "origen": s.get("origen"), "de_pago": s.get("de_pago"), "privado": s.get("privado"),
+                         "traido": bool(version and remoto.en_cache(s["editor"], s["id"], version))})
+    return {"sesion": datos.get("tipo") == "sesion", "usuario": datos.get("usuario"), "sistemas": sistemas,
+            **{k: _SINCRONIA[k] for k in ("en_curso", "cuando", "resultado", "error")}}
+
+
+def _biblioteca_sincronizar(d: dict) -> dict:
+    if remoto.sesion().get("tipo") != "sesion":
+        raise PermissionError("sin sesión: inicia sesión en la tarjeta «Cuenta» para sincronizar tu biblioteca")
+    sincronizar_en_fondo(esperar=bool(d.get("esperar")))
+    return _biblioteca(d)
+
+
+# ── Creador local (ADR 0013): borradores de la web e IA (modelos de este equipo o la clave de tu cuenta) ────────
+
+def _creador_sincronizar(accion: str, d: dict) -> dict:
+    import creador
+    conservar = d.get("conservar") or None
+    if conservar not in (None, "web", "local"):
+        raise ValueError("conservar: web o local")
+    try:
+        return (creador.bajar if accion == "bajar" else creador.subir)(_campo(d, "slug", str), conservar)
+    except creador.Conflicto as e:
+        return {"conflicto": True, "slug": e.slug, "revision_web": e.revision_web, "diferencias": e.diferencias}
+
+
+def _ia(d: dict) -> tuple[str, str]:
+    return _campo(d, "proveedor", str), str(d.get("modelo") or "")
+
+
+def _creador_mejorar(d: dict) -> dict:
+    import ia_local
+    pid, rel = _campo(d, "id", str), _campo(d, "rel", str)
+    original = d["contenido"] if isinstance(d.get("contenido"), str) else catalogo.leer_archivo(pid, rel)
+    r = ia_local.mejorar(*_ia(d), rel, original, str(d.get("instruccion") or ""))
+    return {"id": pid, "rel": rel, "original": original, "propuesta": r["propuesta"], "modelo": r["modelo"]}
+
+
+def _creador_revisar(d: dict) -> dict:
+    import creador
+    import ia_local
+    pid = _campo(d, "id", str)
+    return ia_local.revisar(*_ia(d), creador.leer(catalogo.catalogo(), pid))
+
+
+def _creador_chat(d: dict) -> dict:
+    import creador
+    import ia_local
+    pid = _campo(d, "id", str)
+    archivos = creador.leer(catalogo.catalogo(), pid)
+    contexto = "\n\n".join(f"=== {r} ===\n{t}" for r, t in sorted(archivos.items()))[:60_000]
+    simulador = bool(d.get("simulador"))
+    sistema = (("Actúa como el agente que trabaja con este sistema de gobernanza: sigue sus reglas, límites y "
+                "permisos al pie de la letra y dilo cuando algo no te lo permite.") if simulador else
+               "Ayudas a escribir este sistema de gobernanza de uxyngraphar. Responde en español, breve y concreto.")
+    proveedor, modelo = _ia(d)
+    return ia_local.completar(proveedor, list(_campo(d, "mensajes", list)),
+                              f"{sistema}\n\nArchivos del sistema:\n{contexto}", modelo)
+
+
 GET = {
+    # cuenta (sesión del kit en este equipo)
+    "/api/cuenta": _cuenta,
+    "/api/biblioteca": _biblioteca,
     # servidor de sistemas de gobernanza
     "/api/sistemas/buscar": _servidor,
     # catálogo
@@ -206,6 +341,9 @@ GET = {
     "/api/catalogo/completitud": lambda d: catalogo.completitud(_campo(d, "id")),
     "/api/catalogo/pendientes": lambda d: generador.pendientes(_campo(d, "id")),
     "/api/catalogo/plantilla-spec": lambda d: generador.plantilla_spec(d.get("id") or "contratos-de-pago", d.get("familia") or "proceso"),
+    # Creador local
+    "/api/creador/modelos": lambda d: __import__("ia_local").modelos(),
+    "/api/creador/borradores": lambda d: __import__("creador").borradores(),
     # un proyecto
     "/api/repo/estado": _estado_repo,
     "/api/repo/flujo": lambda d: _flujo_sin_escribir(_raiz(d)),
@@ -233,6 +371,17 @@ GET = {
 }
 
 POST = {
+    "/api/cuenta/iniciar": lambda d: remoto.pedir_codigo(str(d.get("equipo") or "") or None),
+    "/api/cuenta/consultar": _cuenta_consultar,
+    "/api/cuenta/cerrar": lambda d: remoto.cerrar_sesion(),
+    "/api/biblioteca/sincronizar": _biblioteca_sincronizar,
+    "/api/creador/bajar": lambda d: _creador_sincronizar("bajar", d),
+    "/api/creador/subir": lambda d: _creador_sincronizar("subir", d),
+    "/api/creador/mejorar": _creador_mejorar,
+    "/api/creador/revisar": _creador_revisar,
+    "/api/creador/chat": _creador_chat,
+    "/api/reportes/vista-previa": lambda d: _reporte(d, enviar=False),
+    "/api/reportes/enviar": lambda d: _reporte(d, enviar=True),
     "/api/sistemas/traer": lambda d: {"ruta": str(remoto.traer(_campo(d, "ref", str)))},
     # catálogo (modo avanzado)
     "/api/catalogo/crear": lambda d: str(catalogo.crear(_campo(d, "id"), _campo(d, "titulo"), d.get("descripcion", ""), familia=d.get("familia", "proceso"),
@@ -286,6 +435,15 @@ POST = {
     "/api/herramienta/path": lambda d: herramienta.agregar_path(),
     "/api/accesos": lambda d: herramienta.cambiar_accesos(list(d.get("tipos") or [])),
 }
+
+
+def _reporte(d: dict, enviar: bool) -> dict:
+    """Vista previa (lo que saldría del equipo) o envío de exactamente eso; ver `reportes`."""
+    import reportes
+    datos = reportes.armar(_campo(d, "ref", str), _campo(d, "tipo", str), _campo(d, "texto", str),
+                           _raiz(d) if d.get("repo") else None)
+    salida = {"datos": datos, "vista_previa": reportes.vista_previa(datos)}
+    return {**salida, **reportes.enviar(datos)} if enviar else salida
 
 
 def _instalar_en(ruta: str, ids: list[str]) -> dict:
