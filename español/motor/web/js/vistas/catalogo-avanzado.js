@@ -7,6 +7,51 @@ import { asistenteIA, sincronizarBorrador } from "./creador.js";
 const PIEZAS = ["proceso", "skills", "componentes", "herramientas", "andamiaje", "plantillas", "referencia", "ejemplos", "pruebas", "cambios"];
 const FAMILIAS = ["proceso", "codigo", "arquitectura", "documentacion", "seguridad", "producto", "plataforma"];
 
+function bytesLegibles(n) {
+  if (n < 1024) return `${n} bytes`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KiB`;
+  return `${(n / (1024 * 1024)).toFixed(1)} MiB`;
+}
+
+/** Publica el sistema en el Mercado (versión inmutable). Distinto de «Subir al Creador web» (borrador).
+ * La confirmación va en `zona` (inline) para no cerrar el diálogo del editor. */
+export async function publicarEnMercado(id, zona) {
+  const cuenta = await obtener("/api/cuenta");
+  const usuario = (cuenta.usuario || "").replace(/^@/, "");
+  if (!usuario || cuenta.tipo === "ninguna") {
+    avisar("Inicia sesión en Herramienta antes de publicar en el Mercado.", "mal");
+    return;
+  }
+  const previa = await enviar("/api/catalogo/publicar", { id, simular: true });
+  const editor = (previa.editor || "").replace(/^@/, "");
+  const distinto = editor !== usuario;
+  const marca = distinto ? h("input", { type: "checkbox" }) : null;
+  const destino = zona || document.createElement("div");
+
+  async function confirmarYSubir() {
+    if (distinto && !marca?.checked) {
+      avisar(`Marca «Usar @${usuario} como editor» o corrige editor en sistema.json.`, "mal");
+      return;
+    }
+    const r = await enviar("/api/catalogo/publicar", { id, simular: false, alinear_editor: !!marca?.checked });
+    vaciar(destino);
+    avisar(`Publicado ${r.editor}/${r.id}@${r.version}`);
+  }
+
+  vaciar(destino,
+    h("div", { class: "banda" },
+      h("b", { texto: "Publicar en el Mercado" }),
+      h("p", { texto: `${previa.editor || editor}/${previa.id}@${previa.version}` }),
+      h("p", { class: "tenue", texto: `${bytesLegibles(previa.tamano || 0)} · sha256 ${previa.sha256 || "?"}` }),
+      h("p", { texto: distinto
+        ? `El sistema declara editor «${editor}» y tu sesión es @${usuario}. Marca la casilla para alinearlo antes de publicar.`
+        : `Se publicará con tu cuenta @${usuario}. Esta versión queda inmutable (no es un borrador del Creador web).` }),
+      distinto ? h("label", { class: "casilla" }, marca, h("span", { texto: `Usar @${usuario} como editor` })) : null,
+      h("div", { class: "fila" },
+        boton("Cancelar", () => vaciar(destino), { clase: "pequeno fantasma" }),
+        boton("Publicar", confirmarYSubir, { clase: "pequeno primario" }))));
+}
+
 export async function editorAvanzado(id, recargar) {
   if (!id) id = await crear();
   if (!id) return;
@@ -74,8 +119,10 @@ export async function editorAvanzado(id, recargar) {
       h("span", { class: "espacio" }), boton("+ parche", () => version("parche"), { clase: "pequeno" }), boton("+ menor", () => version("menor"), { clase: "pequeno" }),
       boton("+ mayor", () => version("mayor"), { clase: "pequeno" })),
     contenido, errores, ia,
-    h("div", { class: "fila" }, boton("Subir al Creador web", () => sincronizarBorrador("subir", id, sincronia), { clase: "pequeno" }),
-      h("span", { class: "tenue", texto: "Necesita sesión iniciada. Si también cambió en la web, verás las diferencias antes de elegir." })),
+    h("div", { class: "fila" },
+      boton("Subir al Creador web", () => sincronizarBorrador("subir", id, sincronia), { clase: "pequeno", titulo: "Borrador sincronizado con el Creador web" }),
+      boton("Publicar en el Mercado", () => publicarEnMercado(id, sincronia), { clase: "pequeno primario", titulo: "Versión inmutable en el servidor (como uxyngraphar publicar)" })),
+    h("p", { class: "tenue", texto: "«Subir al Creador web» es un borrador editable. «Publicar en el Mercado» deja una versión inmutable (hace falta sesión). Si el editor del sistema no es tu @usuario, te pedirá alinearlo antes de subir." }),
     sincronia);
   const d = document.getElementById("dialogo");
   d.style.width = "min(1100px, 96vw)";

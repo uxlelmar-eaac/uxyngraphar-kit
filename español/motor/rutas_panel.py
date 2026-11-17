@@ -15,6 +15,7 @@ import generador
 import generar
 import herramienta
 import proyectos
+import publicacion
 import remoto
 import repo
 
@@ -37,6 +38,7 @@ AUDITADAS = {"/api/repo/instalar": "instalar", "/api/sistemas/traer": "traer del
              "/api/herramienta/anterior": "volver a la versión anterior", "/api/herramienta/reparar": "reparar",
              "/api/cuenta/cerrar": "cerrar sesión", "/api/biblioteca/sincronizar": "sincronizar biblioteca",
              "/api/creador/bajar": "bajar borrador del Creador", "/api/creador/subir": "subir borrador al Creador",
+             "/api/catalogo/publicar": "publicar sistema",
              "/api/reportes/enviar": "reportar al autor"}
 
 
@@ -391,6 +393,8 @@ POST = {
     "/api/catalogo/archivo": lambda d: {"errores": catalogo.guardar_archivo(_campo(d, "id"), _campo(d, "rel"), _campo(d, "contenido"))},
     "/api/catalogo/version": lambda d: catalogo.versionar(_campo(d, "id"), _campo(d, "nivel")),
     "/api/catalogo/instalar-en": lambda d: [_instalar_en(r, list(_campo(d, "ids", list))) for r in _campo(d, "repos", list)],
+    "/api/catalogo/publicar": lambda d: publicacion.publicar_local(
+        _campo(d, "id", str), simular=bool(d.get("simular")), alinear_editor=bool(d.get("alinear_editor"))),
     # un proyecto
     "/api/repo/instalar": lambda d: repo.instalar(_escribible(d), list(_campo(d, "ids", list)), sistema_base=d.get("base") or None),
     "/api/repo/actualizar": lambda d: repo.actualizar(_escribible(d), list(d.get("ids") or []) or None, forzar=bool(d.get("forzar"))),

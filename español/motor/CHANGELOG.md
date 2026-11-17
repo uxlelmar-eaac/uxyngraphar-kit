@@ -1,5 +1,12 @@
 # Cambios
 
+## 1.1.2
+
+- El panel (Catálogo › modo avanzado) permite **Publicar en el Mercado**: misma ruta que
+  `uxyngraphar publicar` (empaquetar + subir), con simulación, confirmación de tamaño/sha256 y opción
+  de alinear el campo `editor` de `sistema.json` con el `@usuario` de la sesión antes de publicar.
+- Distinto de «Subir al Creador web» (borrador sincronizado).
+
 ## 1.1.1
 
 - Al instalar o actualizar, si ya hay una carpeta local con el mismo número de versión pero otra huella que la

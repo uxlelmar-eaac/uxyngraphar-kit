@@ -600,18 +600,16 @@ def cmd_servidor(a) -> int:
         for ref in a.refs:
             print(remoto.traer(ref))
     elif a.cmd == "publicar":
-        import tempfile
+        import publicacion
         ids = [m["id"] for m in catalogo.listar() if not m["errores"]] if a.todos else a.ids
         if not ids:
             raise ValueError("indica ids o --todos")
-        with tempfile.TemporaryDirectory(prefix="uxy-publicar-") as tmp:
-            for pid in ids:
-                z = artefacto.empaquetar(pid, Path(tmp))
-                if a.simular:
-                    print(f"{pid}: {z.name} listo ({z.stat().st_size} bytes, sha256 {artefacto.sha256_de(z)}); no se subió (--simular)")
-                    continue
-                r = remoto.publicar(z)
-                print(f"{pid}: publicado {r.get('editor', '')}/{r.get('id', pid)}@{r.get('version', '')}")
+        for pid in ids:
+            r = publicacion.publicar_local(pid, simular=a.simular)
+            if a.simular:
+                print(f"{pid}: {r['id']}-{r['version']}.zip listo ({r['tamano']} bytes, sha256 {r['sha256']}); no se subió (--simular)")
+                continue
+            print(f"{pid}: publicado {r.get('editor', '')}/{r.get('id', pid)}@{r.get('version', '')}")
     elif a.cmd == "sesion":
         if a.accion == "guardar":
             if not a.token:

@@ -179,6 +179,86 @@ class TestInstanciaUnica(ConServidor):
         self.assertIsNone(panel.panel_abierto())
 
 
+class TestPublicarCatalogo(ConServidor):
+    """POST /api/catalogo/publicar: simular no sube; sin sesión falla; con servidor falso publica."""
+
+    def test_simular_no_llama_publicar(self):
+        with mock.patch("remoto.publicar") as pub:
+            r = self.pedir("/api/catalogo/publicar", {"id": "pruebas-demo", "simular": True})
+        pub.assert_not_called()
+        self.assertTrue(r["simulado"])
+        self.assertEqual(r["id"], "pruebas-demo")
+        self.assertIn("sha256", r)
+        self.assertGreater(r["tamano"], 0)
+
+    def test_sin_sesion_no_publica(self):
+        codigo, mensaje = self.error("/api/catalogo/publicar", {"id": "pruebas-demo", "simular": False})
+        self.assertEqual(codigo, 400)
+        self.assertIn("sin sesión", mensaje.lower())
+
+    def test_sistema_con_errores(self):
+        malo = self.cat / "pruebas-demo" / "sistema.json"
+        datos = json.loads(malo.read_text(encoding="utf-8"))
+        datos["version"] = "no-semver"
+        malo.write_text(json.dumps(datos, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        codigo, mensaje = self.error("/api/catalogo/publicar", {"id": "pruebas-demo", "simular": True})
+        self.assertEqual(codigo, 400)
+        self.assertIn("errores", mensaje.lower())
+
+    def test_publicar_con_sesion_y_servidor_falso(self):
+        from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+        import artefacto
+        import remoto
+
+        publicados: list = []
+
+        class Falso(BaseHTTPRequestHandler):
+            def log_message(self, *a):
+                pass
+
+            def do_POST(self):
+                if self.path != "/v1/sistemas/publicar":
+                    self.send_response(404)
+                    self.end_headers()
+                    return
+                if self.headers.get("Authorization") != "Bearer uxk_sesion_de_prueba_1234567890abcdefgh":
+                    self.send_response(401)
+                    self.end_headers()
+                    return
+                cuerpo = self.rfile.read(int(self.headers["Content-Length"]))
+                publicados.append(cuerpo)
+                pid, m = artefacto.leer(cuerpo)
+                resp = json.dumps({"editor": "ana", "id": pid, "version": m["version"]}).encode()
+                self.send_response(201)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(resp)))
+                self.end_headers()
+                self.wfile.write(resp)
+
+        srv = ThreadingHTTPServer(("127.0.0.1", 0), Falso)
+        hilo = threading.Thread(target=srv.serve_forever, daemon=True)
+        hilo.start()
+        url = f"http://127.0.0.1:{srv.server_address[1]}/v1"
+        try:
+            with mock.patch.dict(os.environ, {"UXYNGRAPHAR_SERVIDOR": url}, clear=False):
+                os.environ.pop("UXYNGRAPHAR_SIN_RED", None)
+                os.environ.pop("UXYNGRAPHAR_TOKEN", None)
+                remoto.guardar_token("uxk_sesion_de_prueba_1234567890abcdefgh")
+                # alinear editor con @ana (el falso responde como ana)
+                import casa
+                s = casa.leer_json("sesion.json", {})
+                s["usuario"] = "ana"
+                casa.escribir_json("sesion.json", s, privado=True)
+                r = self.pedir("/api/catalogo/publicar", {"id": "pruebas-demo", "simular": False, "alinear_editor": True})
+            self.assertEqual((r["editor"], r["id"]), ("ana", "pruebas-demo"))
+            self.assertTrue(publicados)
+            self.assertTrue(r.get("alineado"))
+        finally:
+            srv.shutdown()
+            srv.server_close()
+            hilo.join(5)
+
+
 class TestSinNombreDelEquipo(unittest.TestCase):
     def test_arranca_sin_resolver_el_nombre_del_equipo(self):
         with mock.patch("socket.getfqdn", side_effect=AssertionError("getfqdn se cuelga en macOS fuera de la terminal")):
