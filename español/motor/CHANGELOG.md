@@ -7,6 +7,14 @@
   agente); lo que se ve se recuerda en el navegador. Lo básico de `sistema.json` se edita con un formulario, las piezas
   con interruptores, «Lo que falta» lleva a cada marcador por rellenar, y la tarjeta de borradores de la web vive aquí
   (antes en «Herramienta y ajustes»). El Catálogo queda para buscar e instalar; su botón «Editar» abre el Creador.
+- El chat del Creador habla con el **Asistente del Creador** del servidor (protocolo creacion-agente): lee y valida
+  el sistema, crea borradores y deja **propuestas** que se aceptan o rechazan archivo por archivo en el propio chat;
+  al aceptar se traen a este equipo. Sigue disponible el chat simple con tu clave o con Ollama / LM Studio.
+- Nueva sección **Conexiones**: detecta Claude Code, Codex, Cursor, Gemini CLI, OpenCode, Grok y Copilot y los conecta
+  a tus proyectos (instrucciones de uxyngraphar en su archivo y uxyngraphar como servidor MCP). También por terminal:
+  `uxyngraphar conexiones ver|conectar|desconectar`.
+- `uxyngraphar mcp`: servidor MCP de solo lectura (buscar sistemas, ver los del proyecto, leerlos y ver el flujo).
+- GEMINI.md se mantiene con el bloque de uxyngraphar si el proyecto lo tiene.
 
 ## 1.1.2
 

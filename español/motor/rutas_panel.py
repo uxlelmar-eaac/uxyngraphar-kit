@@ -38,7 +38,8 @@ AUDITADAS = {"/api/repo/instalar": "instalar", "/api/sistemas/traer": "traer del
              "/api/herramienta/anterior": "volver a la versión anterior", "/api/herramienta/reparar": "reparar",
              "/api/cuenta/cerrar": "cerrar sesión", "/api/biblioteca/sincronizar": "sincronizar biblioteca",
              "/api/creador/bajar": "bajar borrador del Creador", "/api/creador/subir": "subir borrador al Creador",
-             "/api/catalogo/publicar": "publicar sistema",
+             "/api/catalogo/publicar": "publicar sistema", "/api/agente/decidir": "decidir propuesta del agente",
+             "/api/conexiones/conectar": "conectar agente", "/api/conexiones/desconectar": "desconectar agente",
              "/api/reportes/enviar": "reportar al autor"}
 
 
@@ -330,6 +331,40 @@ def _creador_chat(d: dict) -> dict:
                               f"{sistema}\n\nArchivos del sistema:\n{contexto}", modelo)
 
 
+# ── Agente del Creador (servidor): el sistema abierto se sube a su borrador antes de cada turno ──────────────────
+
+def _conflicto(e) -> dict:
+    return {"conflicto": True, "slug": e.slug, "revision_web": e.revision_web, "diferencias": e.diferencias}
+
+
+def _agente_turno(d: dict) -> dict:
+    import agente
+    import creador
+    pid = d.get("id") or None
+    if pid:
+        try:
+            creador.subir(str(pid))
+        except creador.Conflicto as e:
+            return _conflicto(e)
+    conversacion = d.get("conversacion")
+    return agente.turno(_campo(d, "mensaje", str), int(conversacion) if conversacion else None, pid,
+                        str(d.get("modelo") or ""))
+
+
+def _agente_decidir(d: dict) -> dict:
+    import agente
+    import creador
+    slug = _campo(d, "slug", str)
+    aceptar = [str(x) for x in d.get("aceptar") or []]
+    r = agente.decidir(slug, int(_campo(d, "propuesta", int)), aceptar, [str(x) for x in d.get("rechazar") or []])
+    if aceptar:
+        try:
+            creador.bajar(slug)
+        except creador.Conflicto as e:
+            return {**_conflicto(e), "propuesta": r}
+    return {"propuesta": r, "traido": bool(aceptar)}
+
+
 GET = {
     # cuenta (sesión del kit en este equipo)
     "/api/cuenta": _cuenta,
@@ -346,6 +381,10 @@ GET = {
     # Creador local
     "/api/creador/modelos": lambda d: __import__("ia_local").modelos(),
     "/api/creador/borradores": lambda d: __import__("creador").borradores(),
+    "/api/agente/info": lambda d: __import__("agente").info(),
+    "/api/conexiones": lambda d: {"agentes": __import__("conexiones").resumen(proyectos.listar()),
+                                  "mcp_manual": __import__("conexiones").mcp_manual()},
+    "/api/agente/propuestas": lambda d: __import__("agente").propuestas(_campo(d, "slug", str)),
     # un proyecto
     "/api/repo/estado": _estado_repo,
     "/api/repo/flujo": lambda d: _flujo_sin_escribir(_raiz(d)),
@@ -382,6 +421,10 @@ POST = {
     "/api/creador/mejorar": _creador_mejorar,
     "/api/creador/revisar": _creador_revisar,
     "/api/creador/chat": _creador_chat,
+    "/api/agente/turno": _agente_turno,
+    "/api/conexiones/conectar": lambda d: __import__("conexiones").conectar(_campo(d, "agente", str), list(_campo(d, "proyectos", list))),
+    "/api/conexiones/desconectar": lambda d: __import__("conexiones").desconectar(_campo(d, "agente", str), list(_campo(d, "proyectos", list))),
+    "/api/agente/decidir": _agente_decidir,
     "/api/reportes/vista-previa": lambda d: _reporte(d, enviar=False),
     "/api/reportes/enviar": lambda d: _reporte(d, enviar=True),
     "/api/sistemas/traer": lambda d: {"ruta": str(remoto.traer(_campo(d, "ref", str)))},

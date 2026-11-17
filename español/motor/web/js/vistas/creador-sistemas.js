@@ -112,7 +112,7 @@ export async function vista(params, { ir }) {
   // Derecha: chat con el agente.
   async function pintarAgente() {
     vaciar(zonaAgente, h("h2", {}, icono("chat"), " Agente"),
-      await chatAgente(() => (abierto ? { id: idAbierto, rutaActual: abierto.rutaActual, textarea: abierto.textarea } : null)));
+      await chatAgente(() => (abierto ? { id: idAbierto, rutaActual: abierto.rutaActual, textarea: abierto.textarea, recargar: abierto.recargar } : null)));
   }
 
   aplicar();

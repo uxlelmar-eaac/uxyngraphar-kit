@@ -9,9 +9,10 @@ import * as flujos from "./vistas/flujos.js";
 import * as catalogo from "./vistas/catalogo.js";
 import * as herramienta from "./vistas/herramienta.js";
 import * as creador from "./vistas/creador-sistemas.js";
+import * as conexiones from "./vistas/conexiones.js";
 import * as bienvenida from "./vistas/bienvenida.js";
 
-const VISTAS = { inicio, proyectos, proyecto, flujos, catalogo, creador, herramienta, bienvenida };
+const VISTAS = { inicio, proyectos, proyecto, flujos, catalogo, creador, conexiones, herramienta, bienvenida };
 const SECCION_DE = { proyecto: "proyectos" };
 const main = document.getElementById("contenido");
 function rutaActual() {

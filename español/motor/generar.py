@@ -15,7 +15,7 @@ INICIO = "<!-- uxyngraphar:inicio -->"
 FIN = "<!-- uxyngraphar:fin -->"
 ARCHIVOS_AGENTE = ("AGENTES.md", "AGENTS.md", "CLAUDE.md")
 # Archivos de otros agentes que se mantienen con el bloque solo si el proyecto ya los tiene (M-15).
-OPCIONALES = (".github/copilot-instructions.md",)
+OPCIONALES = (".github/copilot-instructions.md", "GEMINI.md")
 
 BLOQUE = f"""{INICIO}
 ## uxyngraphar — sistemas de gobernanza

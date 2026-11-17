@@ -392,6 +392,27 @@ def cmd_panel(a) -> int:
     return arrancar(a.puerto, abrir=not a.no_abrir, bienvenida=a.bienvenida, mantener=a.mantener)
 
 
+def cmd_mcp(a) -> int:
+    import mcp_servidor
+    return mcp_servidor.servir()
+
+
+def cmd_conexiones(a) -> int:
+    import conexiones
+    import proyectos
+    if a.accion == "ver":
+        for c in conexiones.resumen(proyectos.listar()):
+            marca = "en este equipo" if c["detectado"] else "no detectado"
+            print(f"{c['id']:<9} {c['nombre']} ({marca}) · conectado en {len(c['proyectos'])} proyecto(s)")
+        return 0
+    if not a.agente or not a.proyectos:
+        raise ValueError("indica el agente y al menos un proyecto")
+    funcion = conexiones.conectar if a.accion == "conectar" else conexiones.desconectar
+    for r in funcion(a.agente, a.proyectos):
+        print(r if isinstance(r, str) else f"{r['proyecto']}: {r['instrucciones']}" + (f" · MCP en {r['mcp']}" if r["mcp"] else ""))
+    return 0
+
+
 def analizador() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="uxyngraphar", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -561,6 +582,11 @@ def analizador() -> argparse.ArgumentParser:
             s.add_argument("--formato", choices=("texto", "json"), default="texto",
                            help="json: salida estable para CI (salida: 0 bien, 1 problemas, 2 error de ejecución)")
             s.add_argument("--trabajos", type=int, default=1, help="verificaciones a la vez (por defecto 1)")
+    sub.add_parser("mcp", help="servidor MCP (stdio, solo lectura) para tus agentes; lo arrancan ellos")
+    cx = sub.add_parser("conexiones", help="conectar tus agentes (Claude Code, Codex, Cursor…) con tus proyectos")
+    cx.add_argument("accion", choices=("ver", "conectar", "desconectar"))
+    cx.add_argument("agente", nargs="?")
+    cx.add_argument("proyectos", nargs="*")
     pa = sub.add_parser("panel")
     pa.add_argument("--puerto", type=int, default=0)
     pa.add_argument("--no-abrir", "--fondo", dest="no_abrir", action="store_true")
@@ -865,7 +891,7 @@ def _main(a) -> int:
                 print("El trabajo propio se conserva (uxyngraphar/trabajo/).")
         else:
             return {"generar": cmd_generar, "creador": cmd_creador, "reportar": cmd_reportar, "estado": cmd_estado, "verificar": cmd_verificar, "flujo": cmd_flujo, "andamiar": cmd_andamiar,
-                    "panel": cmd_panel, "proyectos": cmd_proyectos,
+                    "panel": cmd_panel, "proyectos": cmd_proyectos, "mcp": cmd_mcp, "conexiones": cmd_conexiones,
                     "flujos-guardados": cmd_flujos_guardados, "accesos": cmd_accesos}[a.cmd](a)
     except (ValueError, FileNotFoundError, FileExistsError, transaccion.ProyectoOcupado,
             remoto.SinServidor, remoto.NoEncontrado) as e:

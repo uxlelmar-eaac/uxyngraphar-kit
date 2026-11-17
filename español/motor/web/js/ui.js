@@ -43,6 +43,7 @@ const TRAZOS = {
   editar: "M4 20h4L19 9l-4-4L4 16zM13 7l4 4",
   creador: "M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z",
   chat: "M4 5h16v11H9l-5 4z",
+  conexiones: "M9 7a3 3 0 1 0 0 .01M15 17a3 3 0 1 0 0 .01M10.5 9.5l3 5M7 12H4M20 12h-3",
 };
 
 export function icono(nombre) {
