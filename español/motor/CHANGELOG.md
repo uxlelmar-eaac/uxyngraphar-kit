@@ -1,5 +1,10 @@
 # Cambios
 
+## 1.2.2
+
+- El panel, el favicon y los accesos directos usan la PNG oficial de marca (`icono.png`); se elimina el
+  `icono.svg` inventado que no coincidía con las logos del sistema.
+
 ## 1.2.1
 
 - Identidad visual renovada desde las logos: paleta «Tres señales» pasa a oro/naranja/verde
