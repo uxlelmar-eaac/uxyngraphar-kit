@@ -1,5 +1,10 @@
 # Cambios
 
+## 1.2.1
+
+- Identidad visual renovada desde las logos: paleta «Tres señales» pasa a oro/naranja/verde
+  (brújula) y el icono del panel usa la nueva marca.
+
 ## 1.2.0
 
 - Se quita el «Modo avanzado»: todas las funciones del panel están siempre visibles.
