@@ -34,6 +34,10 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python: ["3.10", "3.12", "3.13", "3.14"]
+        # macos+3.14 suele quedar en cola sin runner y cancela el workflow de publicar.
+        exclude:
+          - os: macos-latest
+            python: "3.14"
     defaults:
       run:
         shell: bash
