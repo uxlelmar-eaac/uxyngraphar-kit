@@ -41,6 +41,8 @@ const TRAZOS = {
   arriba: "M12 19V5M5 12l7-7 7 7",
   siguiente: "M9 6l6 6-6 6",
   editar: "M4 20h4L19 9l-4-4L4 16zM13 7l4 4",
+  creador: "M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z",
+  chat: "M4 5h16v11H9l-5 4z",
 };
 
 export function icono(nombre) {

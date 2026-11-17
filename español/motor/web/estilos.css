@@ -281,3 +281,38 @@ pre { white-space: pre-wrap; background: var(--superficie-2); padding: 12px; bor
 .mensaje { padding: 8px 12px; border-radius: var(--radio); white-space: pre-wrap; }
 .mensaje.tuyo { background: var(--acento-suave); align-self: flex-end; }
 .mensaje.ia { background: var(--superficie-2); }
+
+/* Creador de sistemas: tres zonas que se ocultan y muestran (lista · sistema · agente) */
+main:has(.creador) { max-width: none; }
+.creador { display: grid; gap: 16px; align-items: start; grid-template-columns: 260px minmax(0, 1fr) 360px; }
+.creador[data-zonas="lista sistema"] { grid-template-columns: 260px minmax(0, 1fr); }
+.creador[data-zonas="sistema agente"] { grid-template-columns: minmax(0, 1fr) 380px; }
+.creador[data-zonas="lista agente"] { grid-template-columns: 300px minmax(0, 1fr); }
+.creador[data-zonas="lista"], .creador[data-zonas="sistema"], .creador[data-zonas="agente"] { grid-template-columns: minmax(0, 1fr); }
+.zona { background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio); padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.zona[hidden] { display: none; }
+.zona h2 { margin: 0; font-size: var(--font-size-lg); display: flex; align-items: center; gap: 8px; }
+.zona h2 svg { width: 20px; height: 20px; }
+.zona-lista, .zona-agente { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow: auto; }
+.zona-sistema .tarjeta { box-shadow: none; }
+.boton.conmutador[aria-pressed=true] { background: var(--acento-suave); border-color: var(--acento); color: var(--acento); }
+.boton.conmutador[aria-pressed=false] { color: var(--tenue); }
+.lista-sistemas li { padding: 0; }
+.elemento-sistema { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; width: 100%; color: var(--texto); text-decoration: none; }
+.elemento-sistema:hover { background: var(--superficie-2); }
+.elemento-sistema.activo { background: var(--acento-suave); }
+.piezas { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.pieza { display: flex; align-items: center; gap: 8px; padding: 12px; border: 1px solid var(--borde); border-radius: 10px; cursor: pointer; }
+.pieza.activa { border-color: var(--acento); background: var(--acento-suave); }
+.editor-texto { min-height: 320px; font-family: var(--font-mono); }
+textarea.breve { min-height: 64px; font-family: var(--font-body); font-size: inherit; }
+.insignia.nota { background: var(--aviso-suave); color: var(--aviso); }
+.elemento-sistema { align-items: flex-start; }
+.pieza { flex-wrap: wrap; }
+button.enlace { font: inherit; background: none; border: none; padding: 0; color: var(--acento); text-decoration: underline; cursor: pointer; text-align: left; }
+.chat-agente { display: flex; flex-direction: column; gap: 10px; }
+.chat-agente .conversacion { max-height: none; min-height: 200px; flex: 1; }
+@media (max-width: 1100px) {
+  .creador, .creador[data-zonas] { grid-template-columns: minmax(0, 1fr); }
+  .zona-lista, .zona-agente { position: static; max-height: none; }
+}

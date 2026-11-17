@@ -385,7 +385,7 @@ POST = {
     "/api/reportes/vista-previa": lambda d: _reporte(d, enviar=False),
     "/api/reportes/enviar": lambda d: _reporte(d, enviar=True),
     "/api/sistemas/traer": lambda d: {"ruta": str(remoto.traer(_campo(d, "ref", str)))},
-    # catálogo (modo avanzado)
+    # catálogo y Creador de sistemas
     "/api/catalogo/crear": lambda d: str(catalogo.crear(_campo(d, "id"), _campo(d, "titulo"), d.get("descripcion", ""), familia=d.get("familia", "proceso"),
                                                         piezas=d.get("piezas"))),
     "/api/catalogo/generar": lambda d: generador.desde_spec(_campo(d, "spec"), aplicar=bool(d.get("aplicar"))),

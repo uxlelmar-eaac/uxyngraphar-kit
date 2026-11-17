@@ -1,14 +1,13 @@
 // Catálogo: buscar sistemas de gobernanza en el servidor, traerlos e instalarlos en varios proyectos a la vez.
-// Debajo, el catálogo local (solo para quien escribe sistemas: el instalador llega vacío).
+// Debajo, el catálogo local. Crear y editar sistemas se hace en «Creador de sistemas».
 
 import { obtener, enviar, catalogo, nombreDe } from "../api.js";
 import { h, vaciar, cabecera, boton, insignia, avisar, dialogo, elegirVarios } from "../ui.js";
-import { editorAvanzado } from "./catalogo-avanzado.js";
 
 const FAMILIAS = { proceso: "Proceso", codigo: "Código", arquitectura: "Arquitectura", documentacion: "Documentación",
   seguridad: "Seguridad", producto: "Producto", plataforma: "Plataforma" };
 
-export async function vista(params, { modoAvanzado, recargar }) {
+export async function vista(params, { ir }) {
   const cat = await catalogo(true);
   const filtro = h("input", { type: "search", placeholder: "¿Qué problema quieres resolver? (ej.: secretos, accesibilidad, commits)", "aria-label": "Buscar en el catálogo" });
   const familias = [...new Set(cat.map((m) => m.familia).filter(Boolean))].sort();
@@ -31,16 +30,16 @@ export async function vista(params, { modoAvanzado, recargar }) {
     h("div", { class: "acciones" },
       boton("Ver detalles", () => detalles(m), { clase: "pequeno" }),
       (m.errores || []).length ? null : boton("Instalar en proyectos", () => instalarEn([m]), { clase: "primario pequeno" }),
-      modoAvanzado() ? boton("Editar", () => editorAvanzado(m.id, recargar), { clase: "pequeno fantasma" }) : null));
+      boton("Editar", () => ir("creador", { id: m.id }), { clase: "pequeno fantasma", icono: "editar" })));
 
   filtro.addEventListener("input", pintar);
   familia.addEventListener("change", pintar);
   pintar();
-  if (params.editar && modoAvanzado()) setTimeout(() => editorAvanzado(params.editar, recargar));
+  if (params.editar) setTimeout(() => ir("creador", { id: params.editar }));
 
   return h("div", {},
     cabecera("Sistemas de gobernanza", "Cada sistema resuelve un conjunto concreto de problemas en tus proyectos. Búscalos en el servidor e instálalos.",
-      modoAvanzado() ? boton("Crear sistema", () => editorAvanzado(null, recargar), { icono: "mas" }) : null),
+      boton("Crear sistema", () => ir("creador"), { icono: "mas" })),
     servidor(),
     cat.length ? h("div", {},
       h("h2", { texto: `Catálogo local (${cat.length})` }),

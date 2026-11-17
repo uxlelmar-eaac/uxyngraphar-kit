@@ -107,8 +107,10 @@ está fuera de alcance, deriva), las memorias (`MEMORIAS.md` y las vigentes del 
   para actualizarlos y verificarlos juntos (con la comparación de contratos entre ellos) y ver su matriz repo × sistema.
 - **Flujos guardados**: combinaciones de sistemas y forma de trabajar que se aplican a uno o varios proyectos con un clic.
   Se guardan en `flujos/` de la carpeta de uxyngraphar (sobreviven a las actualizaciones) y se exportan o importan como `.json`.
-- **Catálogo**: busca por el problema que quieres resolver e instala en varios proyectos a la vez. «Modo avanzado» muestra el
-  editor de sistemas.
+- **Catálogo**: busca por el problema que quieres resolver e instala en varios proyectos a la vez.
+- **Creador de sistemas**: pantalla con tres zonas que se ocultan o muestran (Mis sistemas, el sistema abierto y el chat
+  con el agente). Lo básico se edita con un formulario, las piezas se activan con un clic, «Lo que falta» lleva a cada
+  cosa por rellenar, y desde ahí se guardan borradores en la web o se publica en el Mercado.
 - **Herramienta y ajustes**: actualizar uxyngraphar (el panel se reinicia solo y ofrece actualizar todos tus proyectos),
   volver a una versión guardada, accesos directos, el historial de acciones y desinstalar.
 

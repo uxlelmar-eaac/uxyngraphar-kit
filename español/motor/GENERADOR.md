@@ -12,8 +12,8 @@ y el criterio de diseño [`GUIA-DE-SISTEMAS.md`](GUIA-DE-SISTEMAS.md). Los agent
 | Completo | El sistema ya está pensado (alcance, fases, skills) | `generar plantilla` → editar la especificación → `generar desde` (simula) → `generar desde --aplicar` |
 | Guiado | Se va pensando sobre la marcha | `crear` (esqueleto con marcadores `{{…}}`) → `generar pendientes` → rellenar → repetir hasta «listo» |
 
-En el panel: Catálogo → Modo avanzado → «Crear sistema», pestaña «Esqueleto» o «Desde especificación». El editor de cada
-sistema muestra sus pendientes y la siguiente acción.
+En el panel: «Creador de sistemas» → «Crear», pestaña «Paso a paso» o «Desde especificación». El editor de cada
+sistema muestra lo que falta y el siguiente paso.
 
 ## Comandos
 

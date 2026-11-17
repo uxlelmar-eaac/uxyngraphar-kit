@@ -8,15 +8,12 @@ import * as proyecto from "./vistas/proyecto.js";
 import * as flujos from "./vistas/flujos.js";
 import * as catalogo from "./vistas/catalogo.js";
 import * as herramienta from "./vistas/herramienta.js";
+import * as creador from "./vistas/creador-sistemas.js";
 import * as bienvenida from "./vistas/bienvenida.js";
 
-const VISTAS = { inicio, proyectos, proyecto, flujos, catalogo, herramienta, bienvenida };
+const VISTAS = { inicio, proyectos, proyecto, flujos, catalogo, creador, herramienta, bienvenida };
 const SECCION_DE = { proyecto: "proyectos" };
 const main = document.getElementById("contenido");
-const avanzado = document.getElementById("modo-avanzado");
-
-export const modoAvanzado = () => avanzado.checked;
-
 function rutaActual() {
   const limpio = location.hash.replace(/^#\/?/, "");
   if (!limpio || limpio.startsWith("t=")) return { vista: "inicio", params: {} };
@@ -40,7 +37,7 @@ async function pintar() {
   }
   vaciar(main, cargando());
   try {
-    const nodo = await VISTAS[vista].vista(params, { ir, recargar: pintar, modoAvanzado });
+    const nodo = await VISTAS[vista].vista(params, { ir, recargar: pintar });
     if (propio === turno) vaciar(main, nodo);
   } catch (e) {
     if (propio === turno) vaciar(main, h("div", { class: "banda mal" }, e.message || String(e)));
@@ -51,8 +48,7 @@ async function pintar() {
 
 async function arrancar() {
   for (const a of document.querySelectorAll("#navegacion a")) a.prepend(icono(a.dataset.icono));
-  avanzado.checked = localStorage.getItem("uxyn-avanzado") === "1";
-  avanzado.addEventListener("change", () => { localStorage.setItem("uxyn-avanzado", avanzado.checked ? "1" : "0"); pintar(); });
+  try { localStorage.removeItem("uxyn-avanzado"); } catch { /* sin almacenamiento */ }
   document.getElementById("cerrar-panel").addEventListener("click", async () => {
     const r = await confirmar({ titulo: "Cerrar el panel", texto: "Se apagará el panel y se liberará su puerto. Podrás abrirlo de nuevo con el acceso directo o el comando uxyngraphar.", si: "Cerrar" });
     if (r) { await enviar("/api/cerrar").catch(() => {}); mostrarDesconectado(); }

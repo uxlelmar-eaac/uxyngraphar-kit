@@ -1,4 +1,4 @@
-// Creador local (ADR 0013): IA en el editor del catálogo (modelos de este equipo o la clave de tu cuenta) y
+// Creador local (ADR 0013): chat del agente en la pantalla «Creador de sistemas» (modelos de este equipo o la clave de tu cuenta) y
 // sincronización con los borradores del Creador web. Nada se escribe sin que la persona lo acepte.
 
 import { obtener, enviar } from "../api.js";
@@ -50,57 +50,69 @@ async function selectorIA() {
   return { sel, elegido };
 }
 
-/** Panel de IA del editor: mejorar el archivo abierto (con diferencias), revisar el sistema, chat y simulador. */
-export async function asistenteIA(id, rutaActual, textarea) {
+/**
+ * Chat del agente del Creador. `contexto()` devuelve el sistema abierto ({ id, rutaActual, textarea }) o null.
+ * Mientras no exista el agente dedicado del servidor, usa las rutas /api/creador/* (clave de la cuenta o modelo local).
+ * Las propuestas nunca se guardan solas: se ven las diferencias y la persona acepta.
+ */
+export async function chatAgente(contexto) {
   const { sel, elegido } = await selectorIA();
-  const instruccion = h("input", { type: "text", "aria-label": "Qué mejorar", placeholder: "Qué mejorar (opcional): más claro, añade ejemplos…" });
-  const resultado = h("div", { class: "pila" });
   const mensajes = [];
-  const conversacion = h("div", { class: "pila conversacion" });
-  const pregunta = h("textarea", { "aria-label": "Mensaje", rows: 2, placeholder: "Pregunta sobre el sistema o, en el simulador, habla con el agente" });
-  const simulador = h("input", { type: "checkbox", "aria-label": "Simulador" });
+  const conversacion = h("div", { class: "pila conversacion", role: "log", "aria-live": "polite" },
+    h("div", { class: "mensaje ia", texto: "Hola. Puedo revisar tu sistema, proponer mejoras al archivo abierto o ayudarte a pensar qué debería resolver. ¿Por dónde empezamos?" }));
+  const propuesta = h("div", { class: "pila" });
+  const pregunta = h("textarea", { "aria-label": "Mensaje para el agente", rows: 3, class: "breve", placeholder: "Escribe aquí (Ctrl+Enter para enviar)" });
+  const simulador = h("input", { type: "checkbox" });
+  const abierto = () => {
+    const c = contexto();
+    if (!c) throw new Error("Abre o crea un sistema para que el agente pueda trabajar con él.");
+    return c;
+  };
+  const decir = (quien, texto) => { conversacion.append(h("div", { class: `mensaje ${quien}`, texto })); conversacion.scrollTop = conversacion.scrollHeight; };
 
   async function mejorar() {
-    const r = await enviar("/api/creador/mejorar", { id, rel: rutaActual(), contenido: textarea.value, instruccion: instruccion.value, ...elegido() });
-    const aceptar = boton("Aceptar propuesta", () => {
-      textarea.value = r.propuesta;
-      vaciar(resultado);
-      avisar("Propuesta en el editor: revisa y pulsa «Guardar archivo»");
-    }, { clase: "pequeno primario" });
-    vaciar(resultado, h("div", { class: "fila separada" }, h("b", { texto: `Propuesta para ${r.rel}` }), insignia(r.modelo)),
-      vistaDiferencias(textarea.value, r.propuesta),
-      h("div", { class: "fila" }, aceptar, boton("Descartar", () => vaciar(resultado), { clase: "pequeno" })));
+    const c = abierto();
+    const r = await enviar("/api/creador/mejorar", { id: c.id, rel: c.rutaActual(), contenido: c.textarea.value, instruccion: pregunta.value.trim(), ...elegido() });
+    pregunta.value = "";
+    vaciar(propuesta, h("div", { class: "fila separada" }, h("b", { texto: `Propuesta para ${r.rel}` }), insignia(r.modelo)),
+      vistaDiferencias(c.textarea.value, r.propuesta),
+      h("div", { class: "fila" },
+        boton("Aceptar", () => { c.textarea.value = r.propuesta; vaciar(propuesta); avisar("Propuesta en el editor: revisa y pulsa «Guardar archivo»"); }, { clase: "pequeno primario" }),
+        boton("Descartar", () => vaciar(propuesta), { clase: "pequeno" })));
   }
   async function revisar() {
-    const r = await enviar("/api/creador/revisar", { id, ...elegido() });
-    vaciar(resultado, h("b", { texto: "Revisión del sistema" }), h("pre", { class: "informe", texto: r.texto }),
-      boton("Cerrar", () => vaciar(resultado), { clase: "pequeno" }));
+    const c = abierto();
+    const r = await enviar("/api/creador/revisar", { id: c.id, ...elegido() });
+    decir("ia", r.texto);
   }
   async function hablar() {
     const texto = pregunta.value.trim();
     if (!texto) return;
+    const c = abierto();
     mensajes.push({ role: "user", content: texto });
-    conversacion.append(h("div", { class: "mensaje tuyo", texto }));
+    decir("tuyo", texto);
     pregunta.value = "";
     try {
-      const r = await enviar("/api/creador/chat", { id, mensajes, simulador: simulador.checked, ...elegido() });
+      const r = await enviar("/api/creador/chat", { id: c.id, mensajes, simulador: simulador.checked, ...elegido() });
       mensajes.push({ role: "assistant", content: r.texto });
-      conversacion.append(h("div", { class: "mensaje ia", texto: r.texto }));
+      decir("ia", r.texto);
     } catch (e) {
       mensajes.pop();
       throw e;
     }
   }
-  return h("details", { class: "tarjeta pila" },
-    h("summary", { texto: "Asistente de IA" }),
-    h("p", { class: "tenue", texto: "Usa la clave de IA de tu cuenta (Cuenta › Claves de IA en la web) o un modelo de este equipo (Ollama, LM Studio). Las propuestas no se guardan solas." }),
-    h("div", { class: "fila" }, sel, instruccion),
-    h("div", { class: "fila" }, boton("Mejorar este archivo", mejorar, { clase: "pequeno" }),
-      boton("Revisar el sistema", revisar, { clase: "pequeno" })),
-    resultado,
+  const enviarBoton = boton("Enviar", hablar, { clase: "pequeno primario" });
+  pregunta.addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); enviarBoton.click(); } });
+  return h("div", { class: "chat-agente" },
+    h("div", { class: "fila" }, h("label", { class: "campo espacio" }, "IA que usa el agente", sel)),
+    h("div", { class: "fila" },
+      boton("Revisar el sistema", revisar, { clase: "pequeno" }),
+      boton("Mejorar el archivo abierto", mejorar, { clase: "pequeno", titulo: "Usa lo que escribas abajo como instrucción" })),
     conversacion,
-    h("div", { class: "fila" }, h("label", { class: "casilla" }, simulador, "Simulador (habla con el agente que usa este sistema)")),
-    h("div", { class: "fila" }, h("div", { class: "espacio" }, pregunta), boton("Enviar", hablar, { clase: "pequeno" })));
+    propuesta,
+    h("label", { class: "casilla" }, simulador, "Simulador: habla con el agente que usará este sistema"),
+    pregunta,
+    h("div", { class: "fila" }, enviarBoton));
 }
 
 function conflicto(r, alElegir) {
@@ -123,16 +135,16 @@ export async function sincronizarBorrador(accion, slug, zona, alTerminar, conser
   if (alTerminar) await alTerminar(r);
 }
 
-/** Tarjeta «Creador web»: borradores de la cuenta y bajar/subir con control de conflictos. */
-export async function tarjetaCreador() {
+/** Tarjeta «Borradores en la web»: borradores de la cuenta y bajar/subir con control de conflictos. */
+export async function tarjetaCreador({ alTraer } = {}) {
   const zona = h("div", { class: "tarjeta pila" });
   const detalle = h("div", { class: "pila" });
 
   async function pintar() {
     const cuenta = await obtener("/api/cuenta");
-    const titulo = h("h2", { texto: "Creador web" });
+    const titulo = h("h3", { texto: "Borradores en la web" });
     if (!cuenta || cuenta.tipo !== "sesion") {
-      vaciar(zona, titulo, h("p", { class: "tenue", texto: "Inicia sesión arriba para traer a este equipo los borradores que creas en la web (y subir los tuyos)." }));
+      vaciar(zona, titulo, h("p", { class: "tenue", texto: "Inicia sesión en «Herramienta y ajustes» para traer a este equipo los borradores que creas en la web (y subir los tuyos)." }));
       return;
     }
     let filas = [];
@@ -143,17 +155,17 @@ export async function tarjetaCreador() {
       return;
     }
     vaciar(zona, titulo,
-      h("p", { class: "tenue", texto: "Bajar trae el borrador al catálogo local (Catálogo › modo avanzado para editarlo). Subir lleva tus cambios a la web. Si cambió en los dos sitios te enseñamos las diferencias." }),
+      h("p", { class: "tenue", texto: "Traer copia el borrador a este equipo para editarlo aquí. Guardar en la web lleva tus cambios. Si cambió en los dos sitios te enseñamos las diferencias." }),
       filas.length ? h("ul", { class: "lista" }, filas.map((f) => h("li", { class: "fila separada" },
         h("span", {}, h("b", { texto: f.titulo || f.slug }), h("span", { class: "tenue", texto: ` ${f.slug} · revisión ${f.revision}` })),
         h("span", { class: "fila" },
           f.en_equipo ? insignia(f.revision_equipo === f.revision ? "al día" : "en este equipo", "bien") : null,
-          boton("Bajar", () => sincronizarBorrador("bajar", f.slug, detalle, pintar), { clase: "pequeno" }),
-          f.en_equipo ? boton("Subir", () => sincronizarBorrador("subir", f.slug, detalle, pintar), { clase: "pequeno" }) : null))))
+          boton("Traer", () => sincronizarBorrador("bajar", f.slug, detalle, async (r) => { await pintar(); if (alTraer) await alTraer(r, f.slug); }), { clase: "pequeno" }),
+          f.en_equipo ? boton("Guardar en la web", () => sincronizarBorrador("subir", f.slug, detalle, pintar), { clase: "pequeno" }) : null))))
         : h("p", { class: "tenue", texto: "No tienes borradores en el Creador web todavía." }),
       detalle);
   }
 
-  await pintar().catch((e) => vaciar(zona, h("h2", { texto: "Creador web" }), h("div", { class: "banda aviso", texto: String(e.message || e) })));
+  await pintar().catch((e) => vaciar(zona, h("h3", { texto: "Borradores en la web" }), h("div", { class: "banda aviso", texto: String(e.message || e) })));
   return zona;
 }

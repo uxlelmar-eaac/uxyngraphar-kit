@@ -3,7 +3,6 @@
 
 import { obtener, enviar, esperarServidor, nombreDe } from "../api.js";
 import { h, vaciar, cabecera, boton, insignia, avisar, confirmar, dialogo } from "../ui.js";
-import { tarjetaCreador } from "./creador.js";
 
 const TRAS_ACTUALIZAR = "uxyn-tras-actualizar";
 
@@ -63,7 +62,6 @@ export async function vista() {
     h("div", { class: "tarjeta pila" }, h("div", { class: "fila separada" }, h("h2", { texto: "Versión" }), insignia(info.version, "acento")), estadoVersion, registro),
     await tarjetaCuenta(),
     await tarjetaBiblioteca(),
-    await tarjetaCreador(),
     h("div", { class: "tarjeta pila" }, h("h2", { texto: "Sistemas de mis proyectos" }),
       h("p", { class: "tenue", texto: "Actualiza (o repara) de una vez los sistemas de todos tus proyectos con la versión del catálogo que tienes ahora." }),
       h("div", {}, boton("Actualizar todos mis proyectos", actualizarProyectos, { icono: "descargar" }))),

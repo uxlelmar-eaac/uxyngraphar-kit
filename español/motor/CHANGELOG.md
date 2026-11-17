@@ -1,5 +1,13 @@
 # Cambios
 
+## 1.2.0
+
+- Se quita el «Modo avanzado»: todas las funciones del panel están siempre visibles.
+- Nueva sección **Creador de sistemas** con tres zonas que se pueden ocultar (Mis sistemas, el sistema abierto y el
+  agente); lo que se ve se recuerda en el navegador. Lo básico de `sistema.json` se edita con un formulario, las piezas
+  con interruptores, «Lo que falta» lleva a cada marcador por rellenar, y la tarjeta de borradores de la web vive aquí
+  (antes en «Herramienta y ajustes»). El Catálogo queda para buscar e instalar; su botón «Editar» abre el Creador.
+
 ## 1.1.2
 
 - El panel (Catálogo › modo avanzado) permite **Publicar en el Mercado**: misma ruta que
