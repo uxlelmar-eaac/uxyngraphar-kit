@@ -47,6 +47,23 @@ def info() -> dict:
             "ultima_buena": registro.get("ultima_buena", ""), "lanzador": lanzador(), "python": sys.executable}
 
 
+def _misma_version_otra_huella(actual: str, publicada: str) -> bool:
+    """True si la release «latest» es el mismo X.Y.Z que la activa pero el zip remoto no es el de la copia local
+    (reinicio de tags, release republicada). Sin red o sin marca local, no fuerza actualización."""
+    if not publicada or publicada != actual or not instalada():
+        return False
+    home = str(casa.carpeta())
+    carpeta = os.path.join(home, "versiones", actual)
+    marca = ar.leer_marca(carpeta)
+    if not marca or not marca.get("sha256"):
+        return True
+    try:
+        remota = ar.huella_zip_publicada(actual, intentos=1, espera=8)
+    except (ar.ErrorInstalacion, OSError):
+        return False
+    return bool(remota) and remota != marca["sha256"]
+
+
 def ultima(forzar: bool = False) -> dict:
     """Última versión publicada (consulta la red como mucho una vez por hora; sin red no falla)."""
     if forzar or time.time() - _ultima["cuando"] > CACHE_ULTIMA:
@@ -59,9 +76,12 @@ def ultima(forzar: bool = False) -> dict:
                 _ultima.update(version="", error=str(e))
         _ultima["cuando"] = time.time()
     actual = version()
-    nueva = bool(_ultima["version"]) and ar.VERSION_RE.match(_ultima["version"]) is not None and \
-        tuple(map(int, _ultima["version"].split("."))) > tuple(map(int, actual.split(".")))
-    return {"actual": actual, "ultima": _ultima["version"], "hay_nueva": nueva, "error": _ultima["error"]}
+    publicada = _ultima["version"]
+    nueva = bool(publicada) and ar.VERSION_RE.match(publicada) is not None and \
+        tuple(map(int, publicada.split("."))) > tuple(map(int, actual.split(".")))
+    if not nueva and _misma_version_otra_huella(actual, publicada):
+        nueva = True
+    return {"actual": actual, "ultima": publicada, "hay_nueva": nueva, "error": _ultima["error"]}
 
 
 def descargar_instalador(version_pedida: str, carpeta: str) -> str:
@@ -82,6 +102,20 @@ def _anotar(linea: str) -> None:
         _trabajo["lineas"].append(linea)
 
 
+def version_del_instalador(ruta: str) -> str:
+    """Lee el VERSION = "X.Y.Z" que publicar.py dejó fijado en el instalador de una línea."""
+    import re
+    try:
+        with open(ruta, encoding="utf-8", errors="replace") as f:
+            for linea in f:
+                m = re.match(r'^VERSION = "(\d+\.\d+\.\d+)"\s*$', linea)
+                if m:
+                    return m.group(1)
+    except OSError:
+        return ""
+    return ""
+
+
 def _actualizar_en_fondo(version_pedida: str) -> None:
     """Pase lo que pase (sin red, disco lleno, permisos…), el trabajo termina en «hecho» o «error»: nunca se queda
     «en_curso» y se puede volver a intentar."""
@@ -92,8 +126,13 @@ def _actualizar_en_fondo(version_pedida: str) -> None:
         with tempfile.TemporaryDirectory(dir=home) as t:
             _anotar("Descargando el instalador…")
             instalador = descargar_instalador(version_pedida, t)
+            objetivo = (version_pedida or "").lstrip("v") or version_del_instalador(instalador)
+            extra: list[str] = ["--version", objetivo] if version_pedida else []
+            # Si ya hay carpeta local de ese X.Y.Z, --reparar la sustituye (instaladores viejos no comparan huella).
+            if objetivo and ar.version_completa(os.path.join(str(home), "versiones", objetivo)):
+                extra.append("--reparar")
             env = dict(os.environ, UXYNGRAPHAR_CONSOLA="1", UXYNGRAPHAR_SIN_ACCESOS="1", PYTHONIOENCODING="utf-8", NO_COLOR="1")
-            proc = subprocess.Popen([sys.executable, instalador, "--consola", *argumentos_instalador()],
+            proc = subprocess.Popen([sys.executable, instalador, "--consola", *argumentos_instalador(), *extra],
                                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
                                     env=env, text=True, encoding="utf-8", errors="replace")
             with proc:
@@ -134,12 +173,15 @@ def progreso() -> dict:
 
 def usar(v: str) -> dict:
     """Activa una versión guardada (respaldando y adaptando los datos, y comprobando que arranca; si algo falla, todo
-    queda como estaba). Si no está guardada, la descarga en segundo plano."""
+    queda como estaba). Si no está guardada, o la copia local no coincide con la release, la descarga en segundo plano."""
     v = str(v or "").lstrip("v")
     if not ar.VERSION_RE.match(v):
         raise ValueError("versión no válida (formato X.Y.Z)")
     home = str(casa.carpeta())
     if v in ar.versiones_guardadas(home):
+        carpeta = os.path.join(home, "versiones", v)
+        if not ar.coincide_con_publicada(carpeta, v):
+            return actualizar(v)
         with ar.Candado(home):
             try:
                 ar.activar_version(home, v, lanzador())

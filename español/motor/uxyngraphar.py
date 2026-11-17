@@ -67,7 +67,13 @@ def cmd_autoactualizar(args: list[str]) -> int:
         except ar.ErrorInstalacion as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 1
-        extra = ["--reparar"] if "--reparar" in args else []
+        objetivo = v or herramienta.version_del_instalador(destino)
+        extra = ["--version", v] if v else []
+        carpeta = home() / "versiones" / objetivo if objetivo else None
+        if "--reparar" in args:
+            extra.append("--reparar")
+        elif carpeta and ar.version_completa(str(carpeta)) and not ar.coincide_con_publicada(str(carpeta), objetivo):
+            extra.append("--reparar")
         return subprocess.call([sys.executable, destino, *herramienta.argumentos_instalador(), *extra])
 
 

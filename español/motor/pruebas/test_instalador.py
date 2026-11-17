@@ -207,6 +207,21 @@ class TestInstalacion(Entorno):
         if not WINDOWS:
             self.assertEqual(self.perfil().read_text().count(arranque.BLOQUE_INI), 1)
 
+    def test_mismo_numero_otra_huella_redescarga(self):
+        """Si la carpeta local tiene el mismo X.Y.Z pero otra sha256 que la release, se sustituye."""
+        self.servir()
+        self.assertEqual(self.por_tuberia(self.instalador()).returncode, 0)
+        completa = self.uxy / "versiones" / VERSION / ".completa"
+        marca = __import__("json").loads(completa.read_text(encoding="utf-8"))
+        marca["sha256"] = "0" * 64
+        completa.write_text(__import__("json").dumps(marca, indent=2) + "\n", encoding="utf-8")
+        r = self.por_tuberia(self.instalador())
+        self.assertEqual(r.returncode, 0, r.stdout.decode() + r.stderr.decode())
+        self.assertIn("no coincide con la release", r.stdout.decode())
+        nueva = __import__("json").loads(completa.read_text(encoding="utf-8"))
+        zip_srv = self.srv / "download" / f"v{VERSION}" / f"uxyngraphar-{VERSION}.zip"
+        self.assertEqual(nueva["sha256"], hashlib.sha256(zip_srv.read_bytes()).hexdigest())
+
     def test_script_cortado_no_hace_nada(self):
         self.servir()
         codigo = self.instalador()

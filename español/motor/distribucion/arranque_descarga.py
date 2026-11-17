@@ -351,6 +351,33 @@ def version_completa(carpeta):
     return leer_marca(carpeta) is not None
 
 
+def huella_zip_publicada(version, intentos=2, espera=15):
+    """SHA256 del zip de esa versión en la release, o None si la lista remota no lo trae."""
+    nombre_zip = "uxyngraphar-{}.zip".format(version)
+    trabajo = tempfile.mkdtemp(prefix=".sumas-")
+    try:
+        ruta = os.path.join(trabajo, "SHA256SUMS")
+        descargar(url_de(version, "SHA256SUMS"), ruta, intentos=intentos, espera=espera)
+        return leer_sumas(ruta).get(nombre_zip)
+    finally:
+        shutil.rmtree(trabajo, ignore_errors=True)
+
+
+def coincide_con_publicada(carpeta, version):
+    """True si la marca local apunta al mismo zip que la release. Sin red, confía en lo local (con aviso)."""
+    marca = leer_marca(carpeta)
+    if not marca or not marca.get("sha256"):
+        return False
+    try:
+        remota = huella_zip_publicada(version)
+    except ErrorInstalacion:
+        decir("  Aviso: no pude comprobar la release remota; uso la copia local de {}.".format(version), "aviso")
+        return True
+    if not remota:
+        return False
+    return remota == marca["sha256"]
+
+
 def es_legado(carpeta):
     """Carpeta de una versión del legado (instalada por los instaladores 1.0.0-1.2.4 antiguos)."""
     if os.path.isfile(os.path.join(carpeta, "motor", "uxyngraphar.py")):
@@ -455,10 +482,16 @@ def prueba_de_humo(carpeta, home, version):
 
 
 def instalar_version(home, version, forzar=False):
-    """Descarga, verifica, prueba y deja lista versiones/X.Y.Z. False si ya estaba completa (y no se fuerza)."""
+    """Descarga, verifica, prueba y deja lista versiones/X.Y.Z. False si ya estaba completa (y no se fuerza).
+
+    Si hay una carpeta local con el mismo número pero otra huella que la release (p. ej. tras reiniciar tags),
+    la descarta y vuelve a bajar: el número de versión solo no basta.
+    """
     final = os.path.join(home, "versiones", version)
     if version_completa(final) and not forzar:
-        return False
+        if coincide_con_publicada(final, version):
+            return False
+        decir("  La copia local de {} no coincide con la release publicada; la descargo de nuevo.".format(version), "aviso")
     os.makedirs(os.path.dirname(final), exist_ok=True)
     trabajo = tempfile.mkdtemp(prefix=".descarga-", dir=home)
     tmp = final + ".tmp"

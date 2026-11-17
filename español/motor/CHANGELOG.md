@@ -1,5 +1,11 @@
 # Cambios
 
+## 1.1.1
+
+- Al instalar o actualizar, si ya hay una carpeta local con el mismo número de versión pero otra huella que la
+  release publicada (p. ej. tras reiniciar tags), se descarga de nuevo en lugar de reutilizar la copia vieja.
+- El panel y `autoactualizar` detectan ese desfase (mismo X.Y.Z, otro zip) como actualización pendiente.
+
 ## 1.1.0
 
 - `iniciar-sesion`, `sesion` y `cerrar-sesion`: el equipo se conecta con tu cuenta aprobando un código en la web
