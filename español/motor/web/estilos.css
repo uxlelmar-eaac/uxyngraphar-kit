@@ -136,6 +136,7 @@ a { color: var(--acento); }
 .marco { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
 .lateral { background: var(--superficie); border-right: 1px solid var(--borde); padding: 20px 14px; display: flex; flex-direction: column; gap: 18px; position: sticky; top: 0; height: 100vh; }
 .marca { display: flex; gap: 10px; align-items: center; padding: 0 8px; }
+.marca img { border-radius: 8px; flex: none; display: block; }
 .marca div { display: flex; flex-direction: column; line-height: var(--line-height-tight); }
 nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
 nav a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; color: var(--texto); text-decoration: none; font-weight: var(--font-weight-medium); }

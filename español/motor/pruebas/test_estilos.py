@@ -68,10 +68,12 @@ class EstilosDelPanel(unittest.TestCase):
         for familia in ("inter", "poppins", "montserrat"):
             self.assertTrue((WEB / "fuentes" / f"OFL-{familia}.txt").is_file(), familia)
 
-    def test_el_icono_usa_solo_la_paleta(self):
-        paleta = set(PRIMITIVOS.values())
-        fuera = {expandir(h) for h in HEX.findall((WEB / "icono.svg").read_text(encoding="utf-8"))} - paleta
-        self.assertEqual(fuera, set())
+    def test_el_icono_es_la_marca_oficial_png(self):
+        """El panel y los accesos usan la PNG oficial (Logo-uxyngraphar), no un SVG inventado."""
+        icono = WEB / "icono.png"
+        self.assertTrue(icono.is_file(), "falta web/icono.png")
+        self.assertEqual(icono.read_bytes()[:8], b"\x89PNG\r\n\x1a\n")
+        self.assertFalse((WEB / "icono.svg").exists(), "no debe quedar un icono.svg inventado")
 
 
 if __name__ == "__main__":

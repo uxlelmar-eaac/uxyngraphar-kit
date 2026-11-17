@@ -171,7 +171,7 @@ class TestInstalacion(Entorno):
         self.assertEqual(r.returncode, 0, r.stdout.decode() + r.stderr.decode())
         menu = self.home / ".local" / "share" / "applications" / "uxyngraphar.desktop"
         self.assertIn(str(self.lanzador()), menu.read_text(encoding="utf-8"))
-        self.assertTrue((self.uxy / "icono.svg").is_file(), "el icono se copia fuera de versiones/ (que se podan)")
+        self.assertTrue((self.uxy / "icono.png").is_file(), "el icono se copia fuera de versiones/ (que se podan)")
         self.assertEqual(self.uxyngraphar("desinstalar", "--si").returncode, 0)
         self.assertFalse(menu.exists())
         self.assertEqual(self.por_tuberia(self.instalador(), "--accesos", "nada").returncode, 2)

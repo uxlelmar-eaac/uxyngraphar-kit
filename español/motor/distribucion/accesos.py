@@ -69,12 +69,12 @@ def _acc_python_sin_consola():
 
 
 def _acc_icono(home):
-    """Copia el icono de la versión activa a la carpeta base (las versiones se podan; el icono debe quedarse)."""
-    destino = os.path.join(home, "icono.svg")
+    """Copia el icono oficial (PNG) de la versión activa a la carpeta base (las versiones se podan; el icono debe quedarse)."""
+    destino = os.path.join(home, "icono.png")
     try:
         with open(os.path.join(home, "actual"), encoding="utf-8") as f:
             version = f.read().strip()
-        origen = os.path.join(home, "versiones", version, "motor", "web", "icono.svg")
+        origen = os.path.join(home, "versiones", version, "motor", "web", "icono.png")
         if os.path.isfile(origen):
             shutil.copyfile(origen, destino)
     except OSError:

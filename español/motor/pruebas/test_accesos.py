@@ -24,7 +24,8 @@ class Simulado(unittest.TestCase):
         self.t = Path(self._t.name)
         self.home = self.t / "casa"
         (self.home / "versiones" / "9.9.9" / "motor" / "web").mkdir(parents=True)
-        (self.home / "versiones" / "9.9.9" / "motor" / "web" / "icono.svg").write_text("<svg/>", encoding="utf-8")
+        (self.home / "versiones" / "9.9.9" / "motor" / "web" / "icono.png").write_bytes(
+            b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc\xf8\x0f\x00\x00\x01\x01\x00\x05\x18\xd8N\x00\x00\x00\x00IEND\xaeB`\x82")
         (self.home / "actual").write_text("9.9.9\n", encoding="utf-8")
         self.lanzador = str(self.t / "bin" / "uxyngraphar")
         self.ordenes: list[list[str]] = []
@@ -65,7 +66,7 @@ class TestLinux(Simulado):
         texto = menu.read_text(encoding="utf-8")
         self.assertIn(f'"{self.lanzador}" panel', texto)
         self.assertIn("Terminal=false", texto)
-        self.assertIn("Icon=" + str(self.home / "icono.svg"), texto)
+        self.assertIn("Icon=" + str(self.home / "icono.png"), texto)
         self.assertTrue(escritorio.is_file() and os.access(escritorio, os.X_OK))
         self.assertIn("uxyngraphar.desktop", self.favoritos)
         self.assertEqual(sorted(a["tipo"] for a in registro["accesos"]), ["barra", "escritorio", "menu"])
