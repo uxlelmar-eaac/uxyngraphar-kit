@@ -13,12 +13,12 @@ WEB = Path(__file__).resolve().parents[1] / "web"
 ESTILOS = WEB / "estilos.css"
 
 PRIMITIVOS = {
-    "--color-ink": "#060919", "--color-depth": "#04050f", "--color-brand": "#3d5afe", "--color-brand-alt": "#878fb8",
-    "--color-tone": "#ff6b1a", "--color-canvas": "#f5f7ff", "--color-surface": "#e8ebff", "--color-edge": "#fbfcff",
-    "--color-affirm": "#19d27a", "--color-signal": "#d32008",
-    "--color-on-ink": "#fbfcff", "--color-on-depth": "#fbfcff", "--color-on-brand": "#fbfcff", "--color-on-brand-alt": "#060919",
-    "--color-on-tone": "#060919", "--color-on-canvas": "#060919", "--color-on-surface": "#060919", "--color-on-edge": "#060919",
-    "--color-on-affirm": "#060919", "--color-on-signal": "#fbfcff",
+    "--color-ink": "#121002", "--color-depth": "#0b0a01", "--color-brand": "#b8a018", "--color-brand-alt": "#a6a07e",
+    "--color-tone": "#e84800", "--color-canvas": "#fbfaf3", "--color-surface": "#f6f4e3", "--color-edge": "#fefdfa",
+    "--color-affirm": "#00a870", "--color-signal": "#cc1600",
+    "--color-on-ink": "#fefdfa", "--color-on-depth": "#fefdfa", "--color-on-brand": "#121002", "--color-on-brand-alt": "#121002",
+    "--color-on-tone": "#121002", "--color-on-canvas": "#121002", "--color-on-surface": "#121002", "--color-on-edge": "#121002",
+    "--color-on-affirm": "#121002", "--color-on-signal": "#fefdfa",
 }
 FAMILIAS = {"--font-heading": "'Poppins'", "--font-body": "'Inter'", "--font-accent": "'Montserrat'"}
 HEX = re.compile(r"#[0-9a-fA-F]{3,8}\b")
