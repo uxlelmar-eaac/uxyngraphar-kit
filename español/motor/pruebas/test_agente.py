@@ -15,7 +15,7 @@ class PruebasAgente(unittest.TestCase):
         llamadas = []
 
         def falso(ruta, cuerpo=None, metodo="POST", con_sesion=False, segundos=0):
-            llamadas.append((ruta, cuerpo, metodo, con_sesion))
+            llamadas.append((ruta, dict(cuerpo) if isinstance(cuerpo, dict) else cuerpo, metodo, con_sesion))
             return respuestas.pop(0)
 
         return mock.patch.object(remoto, "_pedir_json", side_effect=falso), llamadas
@@ -63,6 +63,18 @@ class PruebasAgente(unittest.TestCase):
             agente.progreso("../fuera")
         with self.assertRaises(ValueError):
             agente.turno("hola", progreso_id="mal id")
+
+    def test_turno_reintenta_sin_progreso_si_el_servidor_lo_rechaza(self):
+        parche, llamadas = self._con([
+            (400, {"message": "property progreso should not exist"}),
+            (200, {"conversacion": 6, "respuesta": "Creado"}),
+        ])
+        with parche:
+            r = agente.turno("crea uno", progreso_id="turno-123456")
+        self.assertEqual(r["respuesta"], "Creado")
+        self.assertEqual(llamadas[0][1].get("progreso"), "turno-123456")
+        self.assertNotIn("progreso", llamadas[1][1])
+        self.assertEqual(llamadas[1][1]["mensaje"], "crea uno")
 
     def test_panel_pasa_el_progreso_al_turno(self):
         import creador

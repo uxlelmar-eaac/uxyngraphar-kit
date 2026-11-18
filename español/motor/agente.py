@@ -110,6 +110,10 @@ def turno(mensaje: str, conversacion: int | None = None, borrador: str | None = 
     if progreso_id:
         cuerpo["progreso"] = _progreso(progreso_id)
     codigo, r = remoto._pedir_json("/me/agente/turno", cuerpo, con_sesion=True, segundos=SEGUNDOS_TURNO)
+    # Servidores antiguos rechazan «progreso» (forbidNonWhitelisted): reintenta sin él; el turno sigue, sin pasos en vivo.
+    if codigo == 400 and cuerpo.get("progreso") and "progreso" in str(remoto._mensaje(r, "")).lower():
+        sin = {k: v for k, v in cuerpo.items() if k != "progreso"}
+        codigo, r = remoto._pedir_json("/me/agente/turno", sin, con_sesion=True, segundos=SEGUNDOS_TURNO)
     return _respuesta(codigo, r, "agente")
 
 

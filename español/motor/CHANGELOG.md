@@ -1,5 +1,10 @@
 # Cambios
 
+## 1.5.2
+
+- **Agente del Creador:** si el servidor aún no admite el campo `progreso` (pasos en vivo), el panel
+  reintenta el turno sin él en lugar de fallar con «property progreso should not exist».
+
 ## 1.5.1
 
 - **Creador, flujo claro crear vs editar:** sin sistema abierto solo ves «Crea un sistema» (sin chat a la
