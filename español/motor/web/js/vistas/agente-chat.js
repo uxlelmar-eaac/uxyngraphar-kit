@@ -3,6 +3,7 @@
 
 import { obtener } from "../api.js";
 import { h, vaciar, icono } from "../ui.js";
+import { anotar } from "../registro.js";
 
 /** Cada cuánto se pregunta por el progreso mientras el agente trabaja (igual que la web). */
 export const SONDEO_MS = 900;
@@ -113,9 +114,24 @@ export function trabajando({ pista = "" } = {}) {
       pasos));
   let temporizador = null;
   let actual = null;
+  let ultimoPaso = "";
   function pintar(p) {
     etiqueta.textContent = p?.fase === "cerrando" ? "Resumiendo lo que hizo" : p?.pasos?.length ? "Trabajando en tu sistema" : "Pensando";
-    vaciar(pasos, pasosAgente(p?.pasos || []));
+    const lista = p?.pasos || [];
+    vaciar(pasos, pasosAgente(lista));
+    const marca = lista.map((s) => `${s.etiqueta || s.herramienta}:${s.estado}`).join("|");
+    if (marca && marca !== ultimoPaso) {
+      ultimoPaso = marca;
+      const ultimo = lista[lista.length - 1];
+      if (ultimo) {
+        anotar({
+          nivel: ultimo.estado === "failed" ? "error" : "info",
+          origen: "agente",
+          titulo: `Paso: ${ultimo.etiqueta || ultimo.herramienta || "acción"}`,
+          detalle: ultimo.estado || "",
+        });
+      }
+    }
   }
   return {
     nodo,

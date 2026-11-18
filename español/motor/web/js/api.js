@@ -1,6 +1,8 @@
 // Llamadas a la API del panel. Al abrirlo, la URL trae un código de un solo uso (#c=…) que se canjea por una cookie
 // HttpOnly: la página nunca ve ni guarda el token, y la URL del historial ya no abre el panel.
 
+import { anotar, debeOmitirRuta, resumir } from "./registro.js";
+
 const CODIGO = new URLSearchParams(location.hash.replace(/^#\/?/, "").split("?")[0]).get("c") || "";
 export const BIENVENIDA_EN_URL = /[#&]bienvenida=1/.test(location.hash);
 export const VIENE_CON_CODIGO = Boolean(CODIGO);
@@ -31,17 +33,43 @@ export async function api(ruta, datos, metodo) {
   const opciones = { method: m, headers: { "Content-Type": "application/json" }, credentials: "same-origin" };
   if (m === "POST") opciones.body = JSON.stringify(datos || {});
   else if (datos) url += "?" + new URLSearchParams(datos);
+  const t0 = performance.now();
+  const silencioso = debeOmitirRuta(ruta);
   let respuesta;
   try {
     respuesta = await fetch(url, opciones);
   } catch {
     alPerderConexion();
+    if (!silencioso) {
+      anotar({
+        nivel: "error", origen: "api", titulo: `${m} ${ruta} (sin conexión)`,
+        ruta, ms: Math.round(performance.now() - t0), ok: false,
+      });
+    }
     throw new ErrorApi("No hay conexión con el panel.");
   }
   let cuerpo = {};
   try { cuerpo = await respuesta.json(); } catch { /* respuesta vacía */ }
-  if (respuesta.ok) return cuerpo.ok;
+  const ms = Math.round(performance.now() - t0);
+  if (respuesta.ok) {
+    if (!silencioso) {
+      anotar({
+        nivel: "info", origen: "api", titulo: `${m} ${ruta}`,
+        ruta, ms, ok: true,
+        datos: m === "POST" ? { pedido: resumir(datos), respuesta: resumir(cuerpo.ok) } : { respuesta: resumir(cuerpo.ok) },
+      });
+    }
+    return cuerpo.ok;
+  }
   const e = typeof cuerpo.error === "object" && cuerpo.error ? cuerpo.error : { mensaje: cuerpo.error || "", codigo: "", accion: "" };
+  if (!silencioso) {
+    anotar({
+      nivel: "error", origen: "api", titulo: `${m} ${ruta} → ${respuesta.status}`,
+      ruta, ms, ok: false,
+      detalle: e.mensaje || cuerpo.detalle || "",
+      datos: { codigo: e.codigo, accion: e.accion, detalle: cuerpo.detalle, registro: cuerpo.registro },
+    });
+  }
   if (respuesta.status === 403 && e.accion === "abrir_de_nuevo") {
     throw new ErrorApi("Esta pestaña no tiene permiso. Abre el panel de nuevo con el comando uxyngraphar o su acceso directo.", e.codigo, e.accion);
   }

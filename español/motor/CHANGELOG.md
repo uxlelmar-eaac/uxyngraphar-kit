@@ -1,5 +1,11 @@
 # Cambios
 
+## 1.5.8
+
+- **Logs del panel:** cajón en el Creador y sección «Logs» en el menú. Registra API, turnos
+  uxyn, traer borrador, progreso y errores (sin secretos). `GET /api/registros` mezcla eventos
+  del servidor.
+
 ## 1.5.7
 
 - **Creador, menos ruido:** al crear no se repite el mismo texto en cabecera, carril, editor y

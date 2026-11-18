@@ -426,6 +426,7 @@ GET = {
     "/api/organizacion": lambda d: __import__("organizacion").leer(),
     "/api/grupos/matriz": lambda d: __import__("grupos").matriz(_campo(d, "nombre", str)),
     "/api/historial": lambda d: __import__("auditoria").leer(int(d.get("limite") or 100)),
+    "/api/registros": lambda d: __import__("registros_panel").listar(int(d.get("desde") or 0)),
 }
 
 POST = {

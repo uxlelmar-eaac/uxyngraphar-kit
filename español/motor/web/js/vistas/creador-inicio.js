@@ -3,6 +3,7 @@
 
 import { enviar } from "../api.js";
 import { h, vaciar, boton, avisar, icono } from "../ui.js";
+import { anotar } from "../registro.js";
 import { mensajeAgente, nuevoIdProgreso, trabajando } from "./agente-chat.js";
 
 export const MAX_ADJUNTOS = 80;
@@ -261,6 +262,10 @@ export function inicioConAgente({ alCrear, conBoton = true, cabecera = true } = 
     }
     const mensaje = texto || DESDE_ARCHIVOS;
     if (fallo) { fallo.remove(); fallo = null; }
+    anotar({
+      nivel: "info", origen: "agente", titulo: conversacion ? "Turno uxyn (seguir creación)" : "Turno uxyn (crear sistema)",
+      datos: { adjuntos: archivos.length, charsIdea: mensaje.length, conversacion },
+    });
     const espera = trabajando({ pista: "uxyn está creando tu sistema. Suele tardar menos de un minuto." });
     const progreso = nuevoIdProgreso();
     zonaEspera.append(espera.nodo);
@@ -270,6 +275,7 @@ export function inicioConAgente({ alCrear, conBoton = true, cabecera = true } = 
       try {
         r = await enviar("/api/agente/turno", { mensaje: conversacion ? mensaje : `${PREFIJO_CREAR}\n\n${mensaje}`, conversacion, adjuntos: archivos, progreso });
       } catch (e) {
+        anotar({ nivel: "error", origen: "agente", titulo: "Turno uxyn falló al crear", detalle: e.message || String(e) });
         // El texto y los adjuntos siguen en la caja: «Reintentar» repite el mismo envío.
         fallo = mensajeAgente(e.message || String(e), { error: true, extra: [h("div", { class: "fila" }, boton("Reintentar", crear, { clase: "pequeno", icono: "deshacer" }))] });
         zonaEspera.after(fallo);
@@ -277,11 +283,29 @@ export function inicioConAgente({ alCrear, conBoton = true, cabecera = true } = 
       }
       conversacion = r.conversacion;
       if (r.borrador) {
-        if (r.error_al_traer || r.conflicto_al_traer) avisar(`El sistema se creó en tu cuenta, pero no se pudo traer a este equipo: ${r.error_al_traer || "cambió aquí también"}`, "mal");
-        else avisar("Sistema creado. Revisa «Por revisar» para aceptar o corregir.");
+        if (r.error_al_traer || r.conflicto_al_traer) {
+          anotar({
+            nivel: "error", origen: "creador",
+            titulo: `Borrador «${r.borrador}» en la cuenta, pero no en este equipo`,
+            detalle: r.error_al_traer || "conflicto al traer",
+            datos: { borrador: r.borrador, traido: r.traido, conversacion: r.conversacion },
+          });
+          avisar(`El sistema se creó en tu cuenta, pero no se pudo traer a este equipo: ${r.error_al_traer || "cambió aquí también"}`, "mal");
+        } else {
+          anotar({
+            nivel: "info", origen: "creador",
+            titulo: `Sistema traído al catálogo local: ${r.traido || r.borrador}`,
+            datos: { borrador: r.borrador, traido: r.traido, conversacion: r.conversacion, propuestas: r.propuestas },
+          });
+          avisar("Sistema creado. Revisa «Por revisar» para aceptar o corregir.");
+        }
         if (alCrear) await alCrear(r.traido || r.borrador, r);
         return r.traido || r.borrador;
       }
+      anotar({
+        nivel: "aviso", origen: "agente", titulo: "uxyn respondió sin crear borrador aún",
+        datos: { conversacion: r.conversacion, propuestas: r.propuestas },
+      });
       respuestas.hidden = false;
       respuestas.append(h("div", { class: "mensaje tuyo", texto: mensaje }), mensajeAgente(r.respuesta, { acciones: r.acciones }));
       respuestas.scrollTop = respuestas.scrollHeight;

@@ -3,6 +3,7 @@
 
 import { obtener, enviar } from "../api.js";
 import { h, vaciar, boton, avisar, insignia } from "../ui.js";
+import { anotar } from "../registro.js";
 import { cajaAgente } from "./creador-inicio.js";
 import { mensajeAgente, nuevoIdProgreso, trabajando } from "./agente-chat.js";
 
@@ -203,6 +204,10 @@ export async function chatAgente(contexto, {
   async function pedirTurno(cuerpo) {
     const c = contexto();
     if (alEmpezarTurno) await alEmpezarTurno();
+    anotar({
+      nivel: "info", origen: "agente", titulo: "Turno uxyn",
+      datos: { id: c?.id || cuerpo.id, conversacion, chars: String(cuerpo.mensaje || "").length },
+    });
     const progreso = nuevoIdProgreso();
     const espera = trabajando();
     hilo.append(espera.nodo);
@@ -213,6 +218,7 @@ export async function chatAgente(contexto, {
       r = await enviar("/api/agente/turno", { ...cuerpo, conversacion, progreso });
     } catch (e) {
       espera.parar();
+      anotar({ nivel: "error", origen: "agente", titulo: "Turno uxyn falló", detalle: e.message || String(e) });
       if (alTerminarTurno) await alTerminarTurno();
       const fallo = mensajeAgente(e.message || String(e), {
         error: true,
@@ -224,18 +230,24 @@ export async function chatAgente(contexto, {
     }
     espera.parar();
     if (r.conflicto) {
+      anotar({ nivel: "aviso", origen: "creador", titulo: "Conflicto web ↔ equipo", datos: { slug: r.slug } });
       if (alTerminarTurno) await alTerminarTurno();
       decir("ia", "Tu sistema cambió en la web y en este equipo. Elige qué versión conservar y vuelve a enviar el mensaje.");
       vaciar(propuestaLocal, conflicto(r, (cual) => sincronizarBorrador("subir", r.slug, propuestaLocal, null, cual)));
       return;
     }
     conversacion = r.conversacion;
+    anotar({
+      nivel: "info", origen: "agente", titulo: "Turno uxyn terminó",
+      datos: { conversacion, propuestas: r.propuestas, borrador: r.borrador, traido: r.traido, acciones: (r.acciones || []).length },
+    });
     hilo.append(mensajeAgente(r.respuesta, { acciones: r.acciones }));
     hilo.scrollTop = hilo.scrollHeight;
     if (typeof refrescarLista === "function") void refrescarLista();
     if (r.propuestas?.length) {
       const pendientes = await refrescarSugerencias();
       if (pendientes?.length) {
+        anotar({ nivel: "aviso", origen: "creador", titulo: `${pendientes.length} sugerencia(s) en Por revisar` });
         decir("ia", `Hay ${pendientes.length === 1 ? "1 sugerencia" : `${pendientes.length} sugerencias`} en «Por revisar» (arriba). Acéptala o corrígela ahí.`);
       }
       if (alProponer) await alProponer(pendientes);

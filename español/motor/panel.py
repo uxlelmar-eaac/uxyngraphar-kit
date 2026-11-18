@@ -132,11 +132,17 @@ def manejador(servidor_ref: dict):
             return self._json(200, {"ok": True}, {"Set-Cookie": galleta})
 
         def _api(self, metodo: str, datos: dict) -> None:
+            import registros_panel
             srv = servidor_ref["servidor"]
             ruta = urlparse(self.path).path
+            t0 = time.time()
+            def _log(codigo: int, detalle: str = "") -> None:
+                registros_panel.anotar(metodo=metodo, ruta=ruta, codigo=codigo,
+                                       ms=(time.time() - t0) * 1000, detalle=detalle)
             if metodo == "POST" and ruta == "/api/canjear":
                 return self._canjear(datos)
             if not self._autorizado():
+                _log(403, "sin_sesion")
                 return self._error(403, "sin_sesion", "token inválido", "abrir_de_nuevo")
             srv.latido = time.time()
             propias = {"GET /api/sesion": lambda d: srv.sesion(), "POST /api/latido": lambda d: True,
@@ -144,6 +150,7 @@ def manejador(servidor_ref: dict):
                        "POST /api/cerrar": lambda d: srv.cerrar(), "POST /api/reiniciar": lambda d: srv.cerrar(reiniciar=True)}
             funcion = propias.get(f"{metodo} {ruta}") or (rutas_panel.GET if metodo == "GET" else rutas_panel.POST).get(ruta)
             if not funcion:
+                _log(404, "ruta desconocida")
                 return self._error(404, "ruta_desconocida", "ruta desconocida")
             accion = str(rutas_panel.AUDITADAS.get(ruta) or "") if metodo == "POST" and not datos.get("simular") else ""
             def auditar(error: str = "") -> None:
@@ -155,15 +162,19 @@ def manejador(servidor_ref: dict):
                 resultado = funcion(datos)
             except rutas_panel.ERRORES_CONFLICTO as e:
                 auditar(str(e))
+                _log(409, str(e))
                 return self._error(409, *_codigo_y_mensaje(e))
             except rutas_panel.ERRORES_USUARIO as e:
                 auditar(str(e))
+                _log(400, str(e))
                 return self._error(400, *_codigo_y_mensaje(e))
             except Exception as e:  # noqa: BLE001 - un fallo no previsto responde 500 con JSON y queda en el registro
                 auditar(f"{type(e).__name__}: {e}")
                 registro = registrar_error(f"{metodo} {ruta}")
+                _log(500, f"{type(e).__name__}: {e}")
                 return self._error(500, "error_interno", "error interno", "ver_registro", detalle=f"{type(e).__name__}: {e}", registro=registro)
             auditar()
+            _log(200)
             self._json(200, {"ok": resultado})
             if ruta == "/api/herramienta/desinstalar" and not datos.get("simular") and datos.get("alcance") in ("todo", "herramienta", None):
                 srv.cerrar()   # la herramienta ya no está: el panel se apaga y libera el puerto

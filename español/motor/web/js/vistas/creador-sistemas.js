@@ -3,10 +3,12 @@
 
 import { catalogo, obtener } from "../api.js";
 import { h, vaciar, boton, cabecera, insignia, icono, avisar } from "../ui.js";
+import { anotar } from "../registro.js";
 import { editorSistema, crearSistema, FAMILIAS } from "./creador-editor.js";
 import { chatAgente, tarjetaCreador, panelSugerencias } from "./creador.js";
 import { inicioConAgente } from "./creador-inicio.js";
 import { resolverEstado } from "./creador-estado.js";
+import { panelLogs } from "./logs-ui.js";
 
 const CLAVE = "uxyn-creador-zonas-v4";
 export const ZONAS = [
@@ -210,6 +212,12 @@ export async function vista(params, { ir }) {
     }
     const meta = (await catalogo()).find((m) => m.id === idAbierto);
     if (!meta) {
+      anotar({
+        nivel: "error", origen: "creador",
+        titulo: `No encuentro «${idAbierto}» en el catálogo local`,
+        detalle: "La URL apunta a un id que no está en este equipo (¿falló el traer del borrador web?).",
+        datos: { id: idAbierto, conversacion: params.conversacion || null },
+      });
       vaciar(zonaSistema, h("div", { class: "banda mal", texto: `No encuentro «${idAbierto}» en este equipo.` }),
         h("p", {}, boton("Crear con uxyn", () => abrir(""), { clase: "pequeno" })));
       return;
@@ -303,12 +311,18 @@ export async function vista(params, { ir }) {
 
   aplicar();
   cuerpo.append(zonaLista, zonaSistema, zonaAgente);
-  marco.append(zonaCarril, cuerpo);
+  const logs = panelLogs({ colapsable: true, titulo: "Logs" });
+  marco.append(zonaCarril, cuerpo, logs.nodo);
+  anotar({
+    nivel: "info", origen: "creador",
+    titulo: idAbierto ? `Creador abierto: ${idAbierto}` : "Creador abierto (sin sistema)",
+    datos: { id: idAbierto || null, conversacion: params.conversacion || null },
+  });
   await Promise.all([pintarLista(), pintarSistema(), pintarCarril()]);
   await pintarAgente();
   await pintarCarril();
 
-  return h("div", {},
+  return h("div", { class: "creador-pagina" },
     cabecera("Creador de sistemas", null,
       h("div", { class: "fila", role: "group", "aria-label": "Zonas" }, interruptorLista)),
     marco);
