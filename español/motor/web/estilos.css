@@ -290,13 +290,24 @@ pre { white-space: pre-wrap; background: var(--superficie-2); padding: 12px; bor
 .mensaje.tuyo { background: var(--acento-suave); align-self: flex-end; }
 .mensaje.ia { background: var(--superficie-2); }
 
-/* Creador de sistemas: tres zonas que se ocultan y muestran (lista · sistema · agente) */
+/* Creador de sistemas: crear (hero) vs editar (editor + un chat); zonas conmutables */
 main:has(.creador) { max-width: none; }
 .creador { display: grid; gap: 16px; align-items: start; grid-template-columns: 260px minmax(0, 1fr) 360px; }
+.creador[data-modo="crear"] { grid-template-columns: 240px minmax(0, 1fr); }
+.creador[data-modo="crear"][data-zonas="sistema"] { grid-template-columns: minmax(0, 1fr); max-width: 720px; margin-inline: auto; }
 .creador[data-zonas="lista sistema"] { grid-template-columns: 260px minmax(0, 1fr); }
 .creador[data-zonas="sistema agente"] { grid-template-columns: minmax(0, 1fr) 380px; }
 .creador[data-zonas="lista agente"] { grid-template-columns: 300px minmax(0, 1fr); }
 .creador[data-zonas="lista"], .creador[data-zonas="sistema"], .creador[data-zonas="agente"] { grid-template-columns: minmax(0, 1fr); }
+.inicio-ayuda { margin-top: 4px; }
+.modos-chat { gap: 6px; }
+.pista-modo { margin: 0; font-size: var(--font-size-sm); }
+.atajos-chat { flex-wrap: wrap; }
+.avanzado-ia { border: 1px solid var(--borde); border-radius: var(--radio); padding: 8px 12px; background: var(--superficie-2); }
+.avanzado-ia summary { cursor: pointer; font-size: var(--font-size-sm); color: var(--tenue); }
+.falta-sticky { position: sticky; top: 12px; z-index: 1; border-color: var(--acento); }
+.salida-borrador, .salida-mercado { display: flex; flex-direction: column; gap: 8px; }
+.salida-mercado { border-color: var(--acento); background: var(--acento-suave); }
 .zona { background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio); padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .zona[hidden] { display: none; }
 .zona h2 { margin: 0; font-size: var(--font-size-lg); display: flex; align-items: center; gap: 8px; }

@@ -1,5 +1,11 @@
 # Cambios
 
+## 1.5.1
+
+- **Creador, flujo claro crear vs editar:** sin sistema abierto solo ves «Crea un sistema» (sin chat a la
+  derecha). Con sistema abierto: editor + un chat con modos Asistente | Simulador (IA bajo Avanzado).
+  «Guardar borrador en la web» y «Publicar en el Mercado» van separados a propósito.
+
 ## 1.5.0
 
 - **Creador, más simple y moderno (igual que la web):** una sola caja para hablar con el agente con

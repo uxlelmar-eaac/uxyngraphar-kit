@@ -108,10 +108,10 @@ está fuera de alcance, deriva), las memorias (`MEMORIAS.md` y las vigentes del 
 - **Flujos guardados**: combinaciones de sistemas y forma de trabajar que se aplican a uno o varios proyectos con un clic.
   Se guardan en `flujos/` de la carpeta de uxyngraphar (sobreviven a las actualizaciones) y se exportan o importan como `.json`.
 - **Catálogo**: busca por el problema que quieres resolver e instala en varios proyectos a la vez.
-- **Creador de sistemas**: pantalla con tres zonas que se ocultan o muestran (Mis sistemas, el sistema abierto y el chat
-  con el agente). Lo básico se edita con un formulario, las piezas se activan con un clic, «Lo que falta» lleva a cada
-  cosa por rellenar, y desde ahí se guardan borradores en la web o se publica en el Mercado. El chat usa el
-  Asistente del Creador de tu cuenta: lo que propone se acepta o rechaza archivo por archivo.
+- **Creador de sistemas**: al entrar sin sistema abierto, solo la caja «Crea un sistema con el agente» (sin chat a la
+  derecha). Al abrir un sistema: editor + un chat (Asistente o Simulador). «Siguiente paso» indica qué falta. **Guardar
+  borrador en la web** no es lo mismo que **Publicar en el Mercado**. El asistente propone; tú aceptas o rechazas
+  archivo por archivo.
 - **Conexiones**: conecta tus agentes (Claude Code, Codex, Cursor, Gemini CLI, OpenCode, Grok, Copilot) con tus
   proyectos: les da las instrucciones de uxyngraphar y registra `uxyngraphar mcp` (solo lectura) en su configuración.
 - **Herramienta y ajustes**: actualizar uxyngraphar (el panel se reinicia solo y ofrece actualizar todos tus proyectos),

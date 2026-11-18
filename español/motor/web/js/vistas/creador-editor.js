@@ -20,7 +20,7 @@ function bytesLegibles(n) {
   return `${(n / (1024 * 1024)).toFixed(1)} MiB`;
 }
 
-/** Publica el sistema en el Mercado (versión inmutable). Distinto de «Subir al Creador web» (borrador). */
+/** Publica el sistema en el Mercado (versión inmutable). Distinto de «Guardar borrador en la web». */
 export async function publicarEnMercado(id, zona) {
   const cuenta = await obtener("/api/cuenta");
   const usuario = (cuenta.usuario || "").replace(/^@/, "");
@@ -199,15 +199,19 @@ export async function editorSistema(id, { alCambiar = async () => {} } = {}) {
       h("div", { class: "fila" }, h("div", { class: "espacio" }, archivos), boton("Archivo nuevo", nuevoArchivo, { clase: "pequeno", icono: "mas" })),
       contenido, errores,
       h("div", { class: "fila" }, boton("Guardar archivo", guardarArchivo, { clase: "primario pequeno", icono: "check" }))),
-    publicar: h("div", { class: "pila" },
-      h("div", { class: "fila" }, h("span", {}, "Versión ", h("b", {}, version)), h("span", { class: "espacio" }),
+    publicar: h("div", { class: "pila publicar-salidas" },
+      h("div", { class: "fila" }, h("span", {}, "Versión local ", h("b", {}, version)), h("span", { class: "espacio" }),
         boton("Arreglo pequeño", () => subirVersion("parche"), { clase: "pequeno", titulo: "+ parche" }),
         boton("Mejora", () => subirVersion("menor"), { clase: "pequeno", titulo: "+ menor" }),
         boton("Cambio grande", () => subirVersion("mayor"), { clase: "pequeno", titulo: "+ mayor" })),
-      h("div", { class: "fila" },
-        boton("Guardar borrador en la web", () => sincronizarBorrador("subir", id, sincronia), { clase: "pequeno", icono: "subir" }),
+      h("div", { class: "banda salida-borrador" },
+        h("b", { texto: "Guardar borrador en la web" }),
+        h("p", { class: "tenue", texto: "Sincroniza una copia editable con tu cuenta. No es publicar: nadie lo instala desde aquí." }),
+        boton("Guardar borrador en la web", () => sincronizarBorrador("subir", id, sincronia), { clase: "pequeno", icono: "subir" })),
+      h("div", { class: "banda salida-mercado" },
+        h("b", { texto: "Publicar en el Mercado" }),
+        h("p", { class: "tenue", texto: "Deja una versión fija que otras personas (y tú) pueden instalar. Distinto de guardar el borrador." }),
         boton("Publicar en el Mercado", () => publicarEnMercado(id, sincronia), { clase: "pequeno primario" })),
-      h("p", { class: "tenue", texto: "El borrador en la web se puede seguir editando. Publicar en el Mercado deja una versión fija que otras personas pueden instalar." }),
       sincronia),
   };
   barra = pestanas([["basico", "Lo básico"], ["piezas", "Piezas"], ["archivos", "Archivos"], ["publicar", "Versión y publicar"]],
@@ -216,7 +220,7 @@ export async function editorSistema(id, { alCambiar = async () => {} } = {}) {
 
   await recargar();
   const nodo = h("div", { class: "pila" },
-    h("div", { class: "tarjeta pila" }, h("h3", { texto: "Lo que falta" }), falta),
+    h("div", { class: "tarjeta pila falta-sticky" }, h("h3", { texto: "Siguiente paso" }), falta),
     h("div", { class: "tarjeta" }, barra, ...Object.values(secciones)));
   return { nodo, rutaActual: () => archivos.value, textarea: contenido, recargar };
 }
@@ -253,18 +257,21 @@ export async function crearSistema() {
     h("p", { class: "tenue", texto: "Sistema completo desde una especificación (formato en motor/GENERADOR.md). Solo se crea si no tiene errores." }),
     spec, h("div", { class: "fila" }, boton("Comprobar", async () => mostrar(await enviar("/api/catalogo/generar", { spec: leerSpec(), aplicar: false })), { clase: "pequeno" })),
     resultado);
-  // El agente primero: es la forma principal de crear un sistema (igual que en el Creador web).
+  // Formas alternativas al hero «Crea un sistema con el agente» (pantalla principal).
   let creado = null;
   const conAgente = inicioConAgente({ conBoton: false, cabecera: false, alCrear: (idNuevo, r) => { creado = { id: idNuevo, conversacion: r.conversacion }; } });
-  let modo = "agente";
-  esqueleto.hidden = true;
-  const barra = pestanas([["agente", "Con el agente"], ["esqueleto", "Paso a paso"], ["spec", "Desde especificación"]], (m) => {
+  let modo = "esqueleto";
+  conAgente.nodo.hidden = true;
+  esqueleto.hidden = false;
+  const barra = pestanas([["esqueleto", "Paso a paso"], ["agente", "Con el agente"], ["spec", "Desde especificación"]], (m) => {
     modo = m;
     conAgente.nodo.hidden = m !== "agente";
     esqueleto.hidden = m !== "esqueleto";
     desdeSpec.hidden = m !== "spec";
-  }, "agente");
-  return dialogo({ titulo: "Crear sistema", contenido: h("div", { class: "pila" }, barra, conAgente.nodo, esqueleto, desdeSpec), acciones: [{ texto: "Crear", clase: "primario", accion: async () => {
+  }, "esqueleto");
+  return dialogo({ titulo: "Otras formas de crear", contenido: h("div", { class: "pila" },
+    h("p", { class: "tenue", texto: "Lo habitual es usar la caja grande «Crea un sistema con el agente». Aquí: plantilla a mano, agente o especificación JSON." }),
+    barra, esqueleto, conAgente.nodo, desdeSpec), acciones: [{ texto: "Crear", clase: "primario", accion: async () => {
     if (modo === "agente") {
       const r = await conAgente.crear();
       return r && creado ? creado : false;   // si el agente pregunta algo, el diálogo sigue abierto para responder

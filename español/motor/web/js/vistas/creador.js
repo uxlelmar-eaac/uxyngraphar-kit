@@ -91,32 +91,39 @@ function tarjetaPropuesta(slug, p, alDecidir) {
 }
 
 /**
- * Chat del agente. `contexto()` devuelve el sistema abierto ({ id, rutaActual, textarea, recargar }) o null.
- * Con «Asistente del Creador» habla con el agente del servidor (herramientas y propuestas); con las otras opciones es
- * un chat simple con la clave de la cuenta o un modelo de este equipo. Nada se guarda sin que la persona lo acepte.
+ * Chat del agente (solo con sistema abierto). Modos: Asistente (propuestas) | Simulador (prueba el sistema).
+ * El selector de proveedor/modelo queda bajo «Avanzado». Nada se guarda sin que la persona lo acepte.
  */
 export async function chatAgente(contexto, { conversacionInicial = null, slugInicial = null } = {}) {
   const { sel, elegido } = await selectorIA();
   const mensajes = [];
   let conversacion = conversacionInicial;
-  let adjuntos = null;   // la caja del mensaje (texto + adjuntos), se crea cuando existe «pregunta»
+  let modo = "asistente";   // asistente | simulador
+  let adjuntos = null;
+  const saludoAsistente = "Hola. Puedo revisar este sistema, rellenar lo que falta o mejorar un archivo. Los cambios te los dejo como propuesta para que aceptes o rechaces.";
+  const saludoSimulador = "Modo simulador: hablo como el agente que usará este sistema. Pídeme algo que debería rechazar y mira si lo hace.";
   const hilo = h("div", { class: "pila conversacion", role: "log", "aria-live": "polite" },
-    h("div", { class: "mensaje ia", texto: "Hola, soy el Asistente del Creador. Puedo revisar tu sistema, rellenar lo que falta o crear uno nuevo contigo. Todo lo que cambie te lo dejo como propuesta para que lo aceptes. ¿Por dónde empezamos?" }));
+    h("div", { class: "mensaje ia", texto: saludoAsistente }));
   const propuesta = h("div", { class: "pila" });
-  const pregunta = h("textarea", { "aria-label": "Mensaje para el agente", rows: 3, class: "breve", placeholder: "Escribe aquí (Ctrl+Enter para enviar)" });
-  const simulador = h("input", { type: "checkbox" });
-  const conAgente = () => elegido().proveedor === "agente";
+  const pregunta = h("textarea", { "aria-label": "Mensaje para el asistente", rows: 3, class: "breve", placeholder: "Escribe aquí (Ctrl+Enter para enviar)" });
+  const conAgente = () => modo === "asistente" && elegido().proveedor === "agente";
+  const enSimulador = () => modo === "simulador";
   const abierto = () => {
     const c = contexto();
-    if (!c) throw new Error("Abre o crea un sistema para que el agente pueda trabajar con él.");
+    if (!c) throw new Error("Abre o crea un sistema para que el asistente pueda trabajar con él.");
     return c;
   };
   const decir = (quien, texto, ...extra) => {
+    const quienIa = enSimulador() ? "Simulador" : (conAgente() ? "Asistente del Creador" : "IA");
     hilo.append(quien === "ia"
-      ? mensajeAgente(texto, { extra, quien: conAgente() ? "Asistente del Creador" : "IA" })
+      ? mensajeAgente(texto, { extra, quien: quienIa })
       : h("div", { class: `mensaje ${quien}` }, h("div", { texto }), ...extra));
     hilo.scrollTop = hilo.scrollHeight;
   };
+  function pintarSaludo() {
+    const primero = hilo.querySelector(".mensaje.ia");
+    if (primero && hilo.children.length === 1) primero.textContent = enSimulador() ? saludoSimulador : saludoAsistente;
+  }
 
   async function turnoAgente(texto) {
     const c = contexto();
@@ -190,7 +197,11 @@ export async function chatAgente(contexto, { conversacionInicial = null, slugIni
   async function hablar() {
     const texto = pregunta.value.trim();
     if (!texto) return;
-    if (conAgente() && !simulador.checked) {
+    if (!contexto()) {
+      avisar("Abre o crea un sistema para hablar con el asistente.", "mal");
+      return;
+    }
+    if (conAgente() && !enSimulador()) {
       pregunta.value = "";
       return turnoAgente(texto);
     }
@@ -199,8 +210,10 @@ export async function chatAgente(contexto, { conversacionInicial = null, slugIni
     decir("tuyo", texto);
     pregunta.value = "";
     try {
-      const datos = conAgente() ? { proveedor: "servidor", modelo: "" } : elegido();
-      const r = await enviar("/api/creador/chat", { id: c.id, mensajes, simulador: simulador.checked, ...datos });
+      const datos = (modo === "asistente" && elegido().proveedor === "agente")
+        ? { proveedor: "servidor", modelo: "" }
+        : elegido();
+      const r = await enviar("/api/creador/chat", { id: c.id, mensajes, simulador: enSimulador(), ...datos });
       mensajes.push({ role: "assistant", content: r.texto });
       decir("ia", r.texto);
     } catch (e) {
@@ -208,10 +221,10 @@ export async function chatAgente(contexto, { conversacionInicial = null, slugIni
       throw e;
     }
   }
-  // Si venimos de crear el sistema con el agente: su conversación y las propuestas que dejó.
   if (conversacionInicial) {
     try {
       const previa = await obtener("/api/agente/conversacion", { id: conversacionInicial });
+      vaciar(hilo);
       for (const m of previa.mensajes || []) {
         if (m.rol === "user") decir("tuyo", m.texto);
         else hilo.append(mensajeAgente(m.texto, { acciones: m.acciones, fecha: m.fecha }));
@@ -225,17 +238,40 @@ export async function chatAgente(contexto, { conversacionInicial = null, slugIni
       }
     } catch { /* sin la conversación anterior: se empieza una nueva */ }
   }
-  const enviarBoton = boton("Enviar", hablar, { clase: "pequeno primario" });
-  adjuntos = cajaAgente({ etiqueta: "Mensaje para el agente", textarea: pregunta });
+
+  const btnAsistente = h("button", { type: "button", class: "boton pequeno conmutador", "aria-pressed": "true" }, "Asistente");
+  const btnSimulador = h("button", { type: "button", class: "boton pequeno conmutador", "aria-pressed": "false" }, "Simulador");
+  const atajos = h("div", { class: "fila atajos-chat" },
+    boton("Revisar el sistema", revisar, { clase: "pequeno" }),
+    boton("Mejorar el archivo abierto", mejorar, { clase: "pequeno", titulo: "Usa lo que escribas abajo como instrucción" }));
+  const pistaModo = h("p", { class: "tenue pista-modo", texto: "El asistente propone cambios en archivos; tú aceptas o rechazas." });
+  const enviarBoton = boton("Enviar al asistente", hablar, { clase: "pequeno primario" });
+  function aplicarModo(nuevo) {
+    modo = nuevo;
+    btnAsistente.setAttribute("aria-pressed", String(modo === "asistente"));
+    btnSimulador.setAttribute("aria-pressed", String(modo === "simulador"));
+    atajos.hidden = modo === "simulador";
+    pistaModo.textContent = modo === "simulador"
+      ? "Prueba cómo se comportaría un agente que sigue este sistema al pie de la letra."
+      : "El asistente propone cambios en archivos; tú aceptas o rechazas.";
+    pregunta.setAttribute("aria-label", modo === "simulador" ? "Mensaje para el simulador" : "Mensaje para el asistente");
+    enviarBoton.textContent = modo === "simulador" ? "Enviar al simulador" : "Enviar al asistente";
+    pintarSaludo();
+  }
+  btnAsistente.addEventListener("click", () => aplicarModo("asistente"));
+  btnSimulador.addEventListener("click", () => aplicarModo("simulador"));
+  adjuntos = cajaAgente({ etiqueta: "Mensaje", textarea: pregunta });
   adjuntos.ponerAccion(enviarBoton);
+
   return h("div", { class: "chat-agente" },
-    h("div", { class: "fila" }, h("label", { class: "campo espacio" }, "Con quién hablas", sel)),
-    h("div", { class: "fila" },
-      boton("Revisar el sistema", revisar, { clase: "pequeno" }),
-      boton("Mejorar el archivo abierto", mejorar, { clase: "pequeno", titulo: "Usa lo que escribas abajo como instrucción" })),
+    h("div", { class: "fila modos-chat", role: "group", "aria-label": "Modo del chat" }, btnAsistente, btnSimulador),
+    pistaModo,
+    atajos,
     hilo,
     propuesta,
-    h("label", { class: "casilla" }, simulador, "Simulador: habla con el agente que usará este sistema"),
+    h("details", { class: "avanzado-ia" },
+      h("summary", { texto: "Avanzado: qué IA usar" }),
+      h("label", { class: "campo" }, "Proveedor o modelo", sel)),
     adjuntos.nodo);
 }
 
@@ -255,7 +291,7 @@ export async function sincronizarBorrador(accion, slug, zona, alTerminar, conser
     return;
   }
   vaciar(zona);
-  avisar(accion === "subir" ? `«${slug}» subido al Creador web` : r.accion === "al_dia" ? `«${slug}» ya estaba al día` : `«${slug}» está en tu catálogo local`);
+  avisar(accion === "subir" ? `Borrador «${slug}» guardado en la web (sigue siendo editable)` : r.accion === "al_dia" ? `«${slug}» ya estaba al día` : `«${slug}» está en tu catálogo local`);
   if (alTerminar) await alTerminar(r);
 }
 
