@@ -13,6 +13,41 @@ const ETIQUETAS = {
   listo: "Listo",
 };
 
+const PROMPT_MARCADORES =
+  "Completa los archivos núcleo (SISTEMA.md, LIMITES.md, PERMISOS.md, MEMORIAS.md, README.md y sistema.json): "
+  + "sustituye todos los marcadores {{…}} y déjalo en «Por revisar». "
+  + "En sistema.json, permisos.acciones.agente y solo_persona son listas de «scripts/….py [subcomando]» (o []); sin texto libre.";
+
+/**
+ * Prompt para «Que uxyn complete»: si ya no hay marcadores pero sí errores
+ * (p. ej. permisos.acciones), pide corregir esos errores concretos.
+ * @param {{ errores?: string[], marcadores?: object[], siguiente?: string|null }} entrada
+ */
+export function armarPromptCompletar(entrada = {}) {
+  const errores = entrada.errores || [];
+  const marcadores = entrada.marcadores || [];
+  const siguiente = (entrada.siguiente || "").trim();
+  const hayMarcadoresNucleo = marcadores.some((m) => NUCLEO_SET.has(m.archivo || m.file));
+  if (hayMarcadoresNucleo || marcadores.length) return PROMPT_MARCADORES;
+  if (errores.length) {
+    const lista = errores.slice(0, 6).map((e) => `- ${e}`).join("\n");
+    return (
+      "Corrige estos errores de validación del núcleo y deja la propuesta en «Por revisar»:\n"
+      + `${lista}\n\n`
+      + "En sistema.json, permisos.acciones.agente y solo_persona son listas de «scripts/….py [subcomando]» (o []). "
+      + "El texto libre va en LIMITES.md o en «Por qué» de PERMISOS.md."
+    );
+  }
+  if (siguiente) {
+    return (
+      `Siguiente paso del validador: ${siguiente}. `
+      + "Propón los cambios en los archivos que falten y déjalos en «Por revisar». "
+      + "Si tocas permisos.acciones, usa solo «scripts/….py [subcomando]» o []."
+    );
+  }
+  return PROMPT_MARCADORES;
+}
+
 function huecoNucleo({ errores = [], marcadores = [] }) {
   const m = marcadores.find((x) => NUCLEO_SET.has(x.archivo || x.file));
   if (m) return { archivo: m.archivo || m.file, texto: m.texto || m.text || m.marcador || m.marker };

@@ -7,7 +7,7 @@ import { anotar } from "../registro.js";
 import { editorSistema, crearSistema, FAMILIAS } from "./creador-editor.js";
 import { chatAgente, tarjetaCreador, panelSugerencias } from "./creador.js";
 import { inicioConAgente } from "./creador-inicio.js";
-import { resolverEstado } from "./creador-estado.js";
+import { armarPromptCompletar, resolverEstado } from "./creador-estado.js";
 import { panelLogs } from "./logs-ui.js";
 
 const CLAVE = "uxyn-creador-zonas-v4";
@@ -301,12 +301,20 @@ export async function vista(params, { ir }) {
     chatApi = {
       pedirCompletar: async () => {
         const area = zonaAgente.querySelector("textarea");
-        if (area) {
-          area.value = "Completa los archivos núcleo (SISTEMA.md, LIMITES.md, PERMISOS.md, MEMORIAS.md, README.md y sistema.json): sustituye todos los marcadores {{…}} y déjalo en «Por revisar».";
-          area.dispatchEvent(new Event("input"));
-          const enviarBtn = [...zonaAgente.querySelectorAll("button")].find((b) => /Enviar/i.test(b.textContent || ""));
-          enviarBtn?.click();
-        }
+        if (!area) return;
+        let errores = [];
+        let marcadores = [];
+        let siguiente = null;
+        try {
+          const p = await obtener("/api/catalogo/pendientes", { id: idAbierto });
+          errores = p.errores || [];
+          marcadores = p.marcadores || [];
+          siguiente = p.siguiente || null;
+        } catch { /* sin validador local: cae al prompt de marcadores */ }
+        area.value = armarPromptCompletar({ errores, marcadores, siguiente });
+        area.dispatchEvent(new Event("input"));
+        const enviarBtn = [...zonaAgente.querySelectorAll("button")].find((b) => /Enviar/i.test(b.textContent || ""));
+        enviarBtn?.click();
       },
     };
 
