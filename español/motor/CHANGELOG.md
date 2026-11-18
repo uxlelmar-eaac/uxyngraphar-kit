@@ -10,7 +10,8 @@
   `node_modules` y binarios). Nueva ruta `GET /api/agente/conversacion`.
 - **Tus suscripciones de IA** (ADR 0014): el Creador puede usar Claude Code, Codex, Copilot CLI y
   Qwen Code con la sesión de su CLI en tu equipo (sin leer tokens). Panel › Conexiones las lista con
-  riesgo y aviso de términos; nunca se eligen solas. Google AI Pro/Ultra no se ofrece.
+  riesgo y aviso de términos; nunca se eligen solas. Google AI Pro/Ultra no se ofrece. En Windows se
+  lanzan también las CLI instaladas como `.cmd` (p. ej. las de npm).
 
 ## 1.3.0
 

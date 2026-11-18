@@ -144,14 +144,20 @@ def _plano(todos: list[dict]) -> str:
 def _cli(proveedor: str, texto: str) -> str:
     """Ejecuta la CLI oficial en una carpeta vacía y temporal (no ve tus proyectos) y devuelve su respuesta."""
     s = SUSCRIPCIONES[proveedor]
-    if shutil.which(s["cli"]) is None:
+    exe = shutil.which(s["cli"])
+    if exe is None:
         raise IaNoDisponible(f"{s['nombre']}: no está instalada en este equipo («{s['cli']}» no aparece en el PATH)")
     usa_argumento = "{texto}" in s["orden"]
     if usa_argumento and len(texto) > MAX_ARGUMENTO:
         raise ValueError(f"{s['nombre']}: la conversación es demasiado larga para pasarla a la CLI")
     with tempfile.TemporaryDirectory(prefix="uxyngraphar-ia-") as carpeta:
         salida = os.path.join(carpeta, "respuesta.txt")
-        orden = [salida if a == "{salida}" else texto if a == "{texto}" else a for a in s["orden"]]
+        # Ruta absoluta de la CLI: en Windows las de npm suelen ser `.cmd` y CreateProcess
+        # no las lanza sin `cmd /c` (WinError 2).
+        orden = [exe if a == s["cli"] else salida if a == "{salida}" else texto if a == "{texto}" else a
+                 for a in s["orden"]]
+        if os.name == "nt" and exe.lower().endswith((".cmd", ".bat")):
+            orden = ["cmd.exe", "/c", *orden]
         try:
             r = subprocess.run(orden, input=None if usa_argumento else texto, capture_output=True, text=True,  # noqa: S603
                                cwd=carpeta, timeout=SEGUNDOS_CLI, check=False)
