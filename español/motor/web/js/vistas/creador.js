@@ -42,7 +42,7 @@ export function vistaDiferencias(antes, despues) {
 
 async function selectorIA() {
   const sel = h("select", { "aria-label": "Qué IA usar" },
-    h("option", { value: "agente|", texto: "Asistente del Creador (tu cuenta)" }),
+    h("option", { value: "agente|", texto: "uxyn (tu cuenta)" }),
     h("option", { value: "servidor|", texto: "Solo chat con mi clave o suscripción de la web (cuenta)" }));
   try {
     for (const m of await obtener("/api/creador/modelos")) {
@@ -60,7 +60,7 @@ async function selectorIA() {
   return { sel, elegido };
 }
 
-/** Propuesta del agente: diferencias por archivo, casillas y aceptar o rechazar. Al aceptar se trae a este equipo. */
+/** Propuesta de uxyn: diferencias por archivo, corregir en vivo, aceptar o rechazar. Al aceptar se trae a este equipo. */
 function tarjetaPropuesta(slug, p, alDecidir) {
   const pendientes = (p.archivos || []).filter((a) => a.estado === "pendiente");
   const casillas = pendientes.map((a) => h("input", { type: "checkbox", checked: true, value: a.ruta, "aria-label": `Aceptar ${a.ruta}` }));
@@ -78,12 +78,29 @@ function tarjetaPropuesta(slug, p, alDecidir) {
     vaciar(zona, h("p", { class: "tenue", texto: aceptar.length ? "Aceptada." : "Rechazada." }));
     if (alDecidir) await alDecidir();
   }
+  function editarArchivo(a) {
+    if (a.despues === null) return;
+    const area = h("textarea", { class: "codigo", rows: 12, "aria-label": `Corregir ${a.ruta}` });
+    area.value = a.despues || "";
+    vaciar(zona,
+      h("p", { class: "tenue", texto: `Corrigiendo ${a.ruta}. Guarda la corrección y luego acepta la sugerencia.` }),
+      area,
+      h("div", { class: "fila" },
+        boton("Guardar corrección", async () => {
+          await enviar("/api/agente/corregir", { slug, propuesta: p.id, ruta: a.ruta, contenido: area.value });
+          a.despues = area.value;
+          avisar("Corrección guardada en la sugerencia.");
+          vaciar(zona);
+        }, { clase: "pequeno primario" }),
+        boton("Cancelar", () => vaciar(zona), { clase: "pequeno" })));
+  }
   return h("div", { class: "propuesta pila" },
     h("div", { class: "fila separada" }, h("b", { texto: p.titulo }), insignia(pendientes.length ? "por revisar" : (p.estado || "").toLowerCase(), pendientes.length ? "nota" : "")),
     p.resumen ? h("p", { class: "tenue", texto: p.resumen }) : null,
     pendientes.map((a, i) => h("details", {},
       h("summary", {}, casillas[i], ` ${a.ruta}${a.despues === null ? " (borrar)" : a.antes === null ? " (nuevo)" : ""}`),
-      vistaDiferencias(a.antes || "", a.despues || ""))),
+      vistaDiferencias(a.antes || "", a.despues || ""),
+      a.despues !== null ? h("div", { class: "fila" }, boton("Corregir", () => editarArchivo(a), { clase: "pequeno" })) : null)),
     pendientes.length ? h("div", { class: "fila" },
       boton("Aceptar lo marcado", () => decidir(true), { clase: "pequeno primario", icono: "check" }),
       boton("Rechazar todo", () => decidir(false), { clase: "pequeno" })) : null,
@@ -100,21 +117,21 @@ export async function chatAgente(contexto, { conversacionInicial = null, slugIni
   let conversacion = conversacionInicial;
   let modo = "asistente";   // asistente | simulador
   let adjuntos = null;
-  const saludoAsistente = "Hola. Puedo revisar este sistema, rellenar lo que falta o mejorar un archivo. Los cambios te los dejo como propuesta para que aceptes o rechaces.";
-  const saludoSimulador = "Modo simulador: hablo como el agente que usará este sistema. Pídeme algo que debería rechazar y mira si lo hace.";
+  const saludoAsistente = "Hola, soy uxyn. Puedo revisar esta gobernanza, rellenar lo que falta o mejorar un archivo. Los cambios te los dejo como propuesta: puedes corregirlos y aceptar o rechazar.";
+  const saludoSimulador = "Modo simulador: hablo como el agente de IA que usará este sistema. Pídeme algo que debería rechazar y mira si lo hace.";
   const hilo = h("div", { class: "pila conversacion", role: "log", "aria-live": "polite" },
     h("div", { class: "mensaje ia", texto: saludoAsistente }));
   const propuesta = h("div", { class: "pila" });
-  const pregunta = h("textarea", { "aria-label": "Mensaje para el asistente", rows: 3, class: "breve", placeholder: "Escribe aquí (Ctrl+Enter para enviar)" });
+  const pregunta = h("textarea", { "aria-label": "Mensaje para uxyn", rows: 3, class: "breve", placeholder: "Escribe aquí (Ctrl+Enter para enviar)" });
   const conAgente = () => modo === "asistente" && elegido().proveedor === "agente";
   const enSimulador = () => modo === "simulador";
   const abierto = () => {
     const c = contexto();
-    if (!c) throw new Error("Abre o crea un sistema para que el asistente pueda trabajar con él.");
+    if (!c) throw new Error("Abre o crea un sistema para que uxyn pueda trabajar con él.");
     return c;
   };
   const decir = (quien, texto, ...extra) => {
-    const quienIa = enSimulador() ? "Simulador" : (conAgente() ? "Asistente del Creador" : "IA");
+    const quienIa = enSimulador() ? "Simulador" : (conAgente() ? "uxyn" : "IA");
     hilo.append(quien === "ia"
       ? mensajeAgente(texto, { extra, quien: quienIa })
       : h("div", { class: `mensaje ${quien}` }, h("div", { texto }), ...extra));
@@ -163,6 +180,7 @@ export async function chatAgente(contexto, { conversacionInicial = null, slugIni
     conversacion = r.conversacion;
     hilo.append(mensajeAgente(r.respuesta, { acciones: r.acciones }));
     hilo.scrollTop = hilo.scrollHeight;
+    if (typeof refrescarLista === "function") void refrescarLista();
     const slug = r.borrador || c?.id;
     if (r.propuestas?.length && slug) {
       const todas = await obtener("/api/agente/propuestas", { slug });
@@ -239,33 +257,85 @@ export async function chatAgente(contexto, { conversacionInicial = null, slugIni
     } catch { /* sin la conversación anterior: se empieza una nueva */ }
   }
 
-  const btnAsistente = h("button", { type: "button", class: "boton pequeno conmutador", "aria-pressed": "true" }, "Asistente");
+  const btnAsistente = h("button", { type: "button", class: "boton pequeno conmutador", "aria-pressed": "true" }, "uxyn");
   const btnSimulador = h("button", { type: "button", class: "boton pequeno conmutador", "aria-pressed": "false" }, "Simulador");
   const atajos = h("div", { class: "fila atajos-chat" },
     boton("Revisar el sistema", revisar, { clase: "pequeno" }),
     boton("Mejorar el archivo abierto", mejorar, { clase: "pequeno", titulo: "Usa lo que escribas abajo como instrucción" }));
-  const pistaModo = h("p", { class: "tenue pista-modo", texto: "El asistente propone cambios en archivos; tú aceptas o rechazas." });
-  const enviarBoton = boton("Enviar al asistente", hablar, { clase: "pequeno primario" });
+  const pistaModo = h("p", { class: "tenue pista-modo", texto: "uxyn propone cambios; puedes corregirlos y aceptar o rechazar. El chat se guarda." });
+  const enviarBoton = boton("Enviar a uxyn", hablar, { clase: "pequeno primario" });
+  const selConversacion = h("select", { "aria-label": "Conversación guardada", class: "breve" });
+  const barraHistorial = h("div", { class: "fila atajos-chat" },
+    selConversacion,
+    boton("Nueva", () => { conversacion = null; vaciar(hilo, h("div", { class: "mensaje ia", texto: saludoAsistente })); }, { clase: "pequeno" }));
+
+  async function cargarHistorial(id) {
+    const previa = await obtener("/api/agente/conversacion", { id });
+    conversacion = previa.id || id;
+    vaciar(hilo);
+    for (const m of previa.mensajes || []) {
+      if (m.rol === "user") decir("tuyo", m.texto);
+      else hilo.append(mensajeAgente(m.texto, { acciones: m.acciones, fecha: m.fecha }));
+    }
+    hilo.scrollTop = hilo.scrollHeight;
+  }
+
+  async function refrescarLista() {
+    const slug = slugInicial || contexto()?.id;
+    let lista = [];
+    try {
+      lista = await obtener("/api/agente/conversaciones", slug ? { slug } : {});
+    } catch { /* sin listado: se sigue igual */ }
+    vaciar(selConversacion, h("option", { value: "", texto: lista.length ? "Conversación nueva" : "Sin conversaciones guardadas" }));
+    for (const c of lista) {
+      selConversacion.append(h("option", {
+        value: String(c.id),
+        texto: `${c.titulo || ("#" + c.id)}${c.actualizada ? " · " + new Date(c.actualizada).toLocaleString("es", { dateStyle: "short", timeStyle: "short" }) : ""}`,
+        selected: conversacion === c.id,
+      }));
+    }
+    if (conversacion && ![...selConversacion.options].some((o) => o.value === String(conversacion))) {
+      selConversacion.append(h("option", { value: String(conversacion), texto: `Conversación #${conversacion}`, selected: true }));
+    }
+  }
+
+  selConversacion.addEventListener("change", async () => {
+    const id = Number(selConversacion.value);
+    if (!id) {
+      conversacion = null;
+      vaciar(hilo, h("div", { class: "mensaje ia", texto: saludoAsistente }));
+      return;
+    }
+    try {
+      await cargarHistorial(id);
+    } catch (e) {
+      avisar(e.message || String(e), "mal");
+    }
+  });
+
   function aplicarModo(nuevo) {
     modo = nuevo;
     btnAsistente.setAttribute("aria-pressed", String(modo === "asistente"));
     btnSimulador.setAttribute("aria-pressed", String(modo === "simulador"));
     atajos.hidden = modo === "simulador";
+    barraHistorial.hidden = modo === "simulador";
     pistaModo.textContent = modo === "simulador"
-      ? "Prueba cómo se comportaría un agente que sigue este sistema al pie de la letra."
-      : "El asistente propone cambios en archivos; tú aceptas o rechazas.";
-    pregunta.setAttribute("aria-label", modo === "simulador" ? "Mensaje para el simulador" : "Mensaje para el asistente");
-    enviarBoton.textContent = modo === "simulador" ? "Enviar al simulador" : "Enviar al asistente";
+      ? "Prueba cómo se comportaría un agente de IA que sigue este sistema al pie de la letra."
+      : "uxyn propone cambios; puedes corregirlos y aceptar o rechazar. El chat se guarda.";
+    pregunta.setAttribute("aria-label", modo === "simulador" ? "Mensaje para el simulador" : "Mensaje para uxyn");
+    enviarBoton.textContent = modo === "simulador" ? "Enviar al simulador" : "Enviar a uxyn";
     pintarSaludo();
   }
   btnAsistente.addEventListener("click", () => aplicarModo("asistente"));
   btnSimulador.addEventListener("click", () => aplicarModo("simulador"));
   adjuntos = cajaAgente({ etiqueta: "Mensaje", textarea: pregunta });
   adjuntos.ponerAccion(enviarBoton);
+  void refrescarLista();
 
   return h("div", { class: "chat-agente" },
     h("div", { class: "fila modos-chat", role: "group", "aria-label": "Modo del chat" }, btnAsistente, btnSimulador),
     pistaModo,
+    barraHistorial,
     atajos,
     hilo,
     propuesta,

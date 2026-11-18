@@ -1,9 +1,9 @@
-"""Agente del Creador desde el panel del kit: el mismo «Asistente del Creador» del servidor (protocolo creacion-agente).
+"""Agente del Creador desde el panel del kit: el mismo «uxyn» del servidor (protocolo creacion-agente).
 
-El agente vive en el servidor y trabaja sobre los borradores web de tu cuenta. Para que vea el sistema que tienes abierto
-en el panel, antes de cada turno el panel sube ese sistema a su borrador (lo crea si no existe). Lo que el agente cambia
-queda como **propuesta**: la revisas aquí, aceptas o rechazas cada archivo y, al aceptar, se trae el borrador a este
-equipo. Nada se escribe sin que la persona lo acepte.
+uxyn vive en el servidor y trabaja sobre los borradores web de tu cuenta. Para que vea el sistema que tienes abierto
+en el panel, antes de cada turno el panel sube ese sistema a su borrador (lo crea si no existe). Lo que uxyn cambia
+queda como **propuesta**: la revisas aquí, puedes corregirla, aceptas o rechazas cada archivo y, al aceptar, se trae
+el borrador a este equipo. Nada se escribe sin que la persona lo acepte. Las conversaciones se guardan en el servidor.
 """
 
 from __future__ import annotations
@@ -71,10 +71,30 @@ def _adjuntos(lista) -> list[dict]:
     return salida
 
 
+def conversaciones(borrador: str | None = None) -> list[dict]:
+    """Lista de conversaciones con uxyn: [{id, titulo, borrador, actualizada}]."""
+    ruta = "/me/agente/conversaciones"
+    if borrador:
+        ruta += f"?borrador={urllib.parse.quote(_slug(borrador))}"
+    codigo, r = remoto._pedir_json(ruta, metodo="GET", con_sesion=True)
+    _respuesta(codigo, r if isinstance(r, dict) else {}, "conversaciones")
+    return r if isinstance(r, list) else []
+
+
 def conversacion(id_conversacion: int) -> dict:
-    """Una conversación con el agente: {id, borrador, mensajes: [{rol, texto, acciones?, adjuntos?}]}."""
+    """Una conversación con uxyn: {id, borrador, mensajes: [{rol, texto, acciones?, adjuntos?}]}."""
     codigo, r = remoto._pedir_json(f"/me/agente/conversaciones/{int(id_conversacion)}", metodo="GET", con_sesion=True)
     return _respuesta(codigo, r, "conversación")
+
+
+def borrar_conversacion(id_conversacion: int) -> None:
+    codigo, r = remoto._pedir_json(
+        f"/me/agente/conversaciones/{int(id_conversacion)}",
+        metodo="DELETE",
+        con_sesion=True,
+    )
+    if codigo not in (200, 204):
+        _respuesta(codigo, r if isinstance(r, dict) else {}, "borrar conversación")
 
 
 def _progreso(valor) -> str:
@@ -124,6 +144,19 @@ def propuestas(borrador: str) -> list[dict]:
         return []
     _respuesta(codigo, r if isinstance(r, dict) else {}, "propuestas")
     return r if isinstance(r, list) else []
+
+
+def corregir(borrador: str, propuesta: int, ruta: str, contenido: str) -> dict:
+    """Corrige el contenido propuesto de un archivo pendiente antes de aceptarlo."""
+    slug = urllib.parse.quote(_slug(borrador))
+    cuerpo = {"ruta": str(ruta), "contenido": str(contenido)}
+    codigo, r = remoto._pedir_json(
+        f"/me/creador/borradores/{slug}/propuestas/{int(propuesta)}",
+        cuerpo,
+        metodo="PATCH",
+        con_sesion=True,
+    )
+    return _respuesta(codigo, r, "corregir propuesta")
 
 
 def decidir(borrador: str, propuesta: int, aceptar: list[str], rechazar: list[str]) -> dict:

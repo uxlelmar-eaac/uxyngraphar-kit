@@ -18,12 +18,12 @@ export function esBasura(ruta) {
   return String(ruta).split("/").some((p) => CARPETAS_BASURA.has(p)) || ARCHIVOS_BASURA.test(ruta);
 }
 
-export const PREFIJO_CREAR = "Quiero crear un sistema de gobernanza nuevo. Créalo ahora (borrador y archivos núcleo completos como propuesta) a partir de esta idea y de los archivos adjuntos, si hay:";
-export const DESDE_ARCHIVOS = "Crea el sistema a partir de los archivos adjuntos.";
+export const PREFIJO_CREAR = "Quiero crear un sistema de gobernanza para agentes de IA. Créalo ahora (borrador y archivos núcleo completos como propuesta) a partir de esta idea y de los archivos adjuntos, si hay:";
+export const DESDE_ARCHIVOS = "Crea el sistema de gobernanza a partir de los archivos adjuntos.";
 export const EJEMPLOS = [
-  ["Revisión de código", "Revisión de código para un equipo pequeño: pruebas obligatorias, explicar los riesgos y nada de tocar producción."],
-  ["Atención al cliente", "Atención al cliente por correo: tono amable, qué puede prometer y cuándo pasar el caso a una persona."],
-  ["Contenido en redes", "Publicación de contenido en redes: quién aprueba, cómo cuidar la marca y qué no se publica nunca."],
+  ["Revisión de código", "Gobernanza de revisión de código con IA: pruebas obligatorias, explicar riesgos, rechazar secretos y nunca tocar producción."],
+  ["Soporte con IA", "Agente de atención al cliente: tono amable, qué puede prometer, cuándo escalar a una persona y qué datos no puede pedir."],
+  ["Publicación de contenido", "Agente que prepara publicaciones: quién aprueba, tono de marca, fuentes permitidas y qué no se publica nunca."],
 ];
 
 const estricto = new TextDecoder("utf-8", { fatal: true });

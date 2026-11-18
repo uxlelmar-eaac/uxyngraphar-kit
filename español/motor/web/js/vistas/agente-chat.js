@@ -1,4 +1,4 @@
-// Piezas del chat del Asistente del Creador, las mismas que en la web (inspiradas en Deo, el agente de uxconstructar):
+// Piezas del chat de uxyn (agente del Creador), las mismas que en la web (inspiradas en Deo, el agente de uxconstructar):
 // texto con formato seguro, pasos con etiquetas humanas, «trabajando…» con el progreso en vivo y pie con hora y copiar.
 
 import { obtener } from "../api.js";
@@ -87,7 +87,7 @@ export function pieMensaje(texto, fecha = new Date()) {
 }
 
 /** Respuesta del agente: avatar, texto con formato, pasos hechos, extras (botones) y pie. */
-export function mensajeAgente(texto, { acciones = [], extra = [], fecha, error = false, quien = "Asistente del Creador" } = {}) {
+export function mensajeAgente(texto, { acciones = [], extra = [], fecha, error = false, quien = "uxyn" } = {}) {
   return h("div", { class: "mensaje-agente" },
     h("span", { class: "avatar-agente", "aria-hidden": "true" }, icono("creador")),
     h("div", { class: `mensaje ia${error ? " error" : ""}` },

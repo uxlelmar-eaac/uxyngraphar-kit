@@ -398,6 +398,8 @@ GET = {
                                   "mcp_manual": __import__("conexiones").mcp_manual()},
     "/api/agente/propuestas": lambda d: __import__("agente").propuestas(_campo(d, "slug", str)),
     "/api/agente/progreso": lambda d: __import__("agente").progreso(_campo(d, "id", str)),
+    "/api/agente/conversaciones": lambda d: __import__("agente").conversaciones(
+        str(d["slug"]).strip() if d.get("slug") else None),
     "/api/agente/conversacion": lambda d: __import__("agente").conversacion(int(_campo(d, "id", str))),
     # un proyecto
     "/api/repo/estado": _estado_repo,
@@ -440,6 +442,9 @@ POST = {
     "/api/conexiones/conectar": lambda d: __import__("conexiones").conectar(_campo(d, "agente", str), list(_campo(d, "proyectos", list))),
     "/api/conexiones/desconectar": lambda d: __import__("conexiones").desconectar(_campo(d, "agente", str), list(_campo(d, "proyectos", list))),
     "/api/agente/decidir": _agente_decidir,
+    "/api/agente/corregir": lambda d: __import__("agente").corregir(
+        _campo(d, "slug", str), int(_campo(d, "propuesta")), _campo(d, "ruta", str),
+        str(d.get("contenido") if d.get("contenido") is not None else "")),
     "/api/reportes/vista-previa": lambda d: _reporte(d, enviar=False),
     "/api/reportes/enviar": lambda d: _reporte(d, enviar=True),
     "/api/sistemas/traer": lambda d: {"ruta": str(remoto.traer(_campo(d, "ref", str)))},

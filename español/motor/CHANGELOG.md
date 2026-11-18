@@ -1,5 +1,11 @@
 # Cambios
 
+## 1.5.3
+
+- **uxyn**, el agente propio del Creador: chats guardados (listar y reanudar conversaciones), foco en
+  sistemas de gobernanza para agentes de IA, y corrección en vivo de sugerencias antes de aceptarlas.
+  Nuevas rutas `GET /api/agente/conversaciones` y `POST /api/agente/corregir`.
+
 ## 1.5.2
 
 - **Agente del Creador:** si el servidor aún no admite el campo `progreso` (pasos en vivo), el panel

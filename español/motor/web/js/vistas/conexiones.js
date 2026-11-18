@@ -78,11 +78,11 @@ export async function vista(params, { recargar }) {
   return h("div", {},
     cabecera("Conexiones", "Conecta tus agentes de IA con tus proyectos para que sigan tus sistemas de gobernanza."),
     h("div", { class: "tarjeta pila" },
-      h("div", { class: "fila separada" }, h("h2", { texto: "Asistente del Creador" }),
+      h("div", { class: "fila separada" }, h("h2", { texto: "uxyn" }),
         cuenta?.tipo === "sesion" ? insignia("conectado", "bien") : insignia("sin cuenta", "nota")),
       h("p", { class: "tenue", texto: cuenta?.tipo === "sesion"
-        ? `Usa tu cuenta ${cuenta.usuario || ""}: tu clave de IA o la IA incluida. Lo encuentras en «Creador de sistemas».`
-        : "Inicia sesión en «Herramienta y ajustes» para usar el agente del Creador. Sin cuenta, el chat puede usar Ollama, LM Studio o tus suscripciones de este equipo." })),
+        ? `Usa tu cuenta ${cuenta.usuario || ""}: tu clave de IA o la IA incluida. uxyn está en «Creador de sistemas».`
+        : "Inicia sesión en «Herramienta y ajustes» para usar uxyn, el agente del Creador. Sin cuenta, el chat puede usar Ollama, LM Studio o tus suscripciones de este equipo." })),
     seccionSuscripciones,
     h("h2", { texto: "Tus agentes" }),
     detectados.length ? h("div", { class: "rejilla" }, detectados.map(tarjetaAgente))
