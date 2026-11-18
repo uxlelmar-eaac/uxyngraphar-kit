@@ -333,7 +333,7 @@ button.enlace { font: inherit; background: none; border: none; padding: 0; color
 .sugerencias-panel { display: flex; flex-direction: column; gap: 10px; padding: 12px; border: 1px solid var(--aviso); border-radius: var(--radio); background: var(--aviso-suave); }
 .sugerencias-panel[hidden] { display: none; }
 .sugerencias-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.sugerencias-cabecera h3 { margin: 0; font-size: var(--font-size-md, 1rem); }
+.sugerencias-cabecera h3 { margin: 0; font-size: var(--font-size-md); }
 .sugerencias-panel > .tenue { margin: 0; }
 .sugerencias-panel .propuesta { background: var(--superficie); }
 .propuesta { border: 1px solid var(--borde); border-radius: var(--radio); padding: 12px; background: var(--superficie); }
