@@ -1,5 +1,6 @@
-// Contrato de estados del Creador asistido (misma semántica que la web).
-// Carril: estado · qué falta · qué revisar · siguiente paso (una CTA).
+// Contrato de estados del Taller (misma semántica que la web / guidedState).
+// Carril técnico: estado · qué falta · qué revisar · siguiente paso (una CTA).
+// Ciclo de producto: Borrador → En equipo → En proyecto → Mercado.
 
 export const NUCLEO = ["sistema.json", "README.md", "SISTEMA.md", "MEMORIAS.md", "LIMITES.md", "PERMISOS.md"];
 const NUCLEO_SET = new Set(NUCLEO);
@@ -13,10 +14,20 @@ const ETIQUETAS = {
   listo: "Listo",
 };
 
+/** Pasos visibles del ciclo de vida (carril de producto). */
+export const CICLO = [
+  { id: "borrador", etiqueta: "Borrador" },
+  { id: "equipo", etiqueta: "En equipo" },
+  { id: "proyecto", etiqueta: "En proyecto" },
+  { id: "mercado", etiqueta: "Mercado" },
+];
+
 const PROMPT_MARCADORES =
   "Completa los archivos núcleo (SISTEMA.md, LIMITES.md, PERMISOS.md, MEMORIAS.md, README.md y sistema.json): "
   + "sustituye todos los marcadores {{…}} y déjalo en «Por revisar». "
   + "En sistema.json, permisos.acciones.agente y solo_persona son listas de «scripts/….py [subcomando]» (o []); sin texto libre.";
+
+const ORIGEN_IDEA_MAX = 160;
 
 /**
  * Prompt para «Que uxyn complete»: si ya no hay marcadores pero sí errores
@@ -63,11 +74,86 @@ function huecoNucleo({ errores = [], marcadores = [] }) {
 }
 
 /**
+ * Normaliza el origen (idea + adjuntos) para la franja del taller.
+ * @param {{ idea?: string, adjuntos?: string[]| { nombre?: string }[] }} entrada
+ * @returns {{ idea: string|null, adjuntos: string[], vacio: boolean, resumen: string }}
+ */
+export function resumenOrigen(entrada = {}) {
+  const ideaBruta = String(entrada.idea || "").trim();
+  const idea = ideaBruta
+    ? (ideaBruta.length > ORIGEN_IDEA_MAX ? `${ideaBruta.slice(0, ORIGEN_IDEA_MAX - 1)}…` : ideaBruta)
+    : null;
+  const adjuntos = (entrada.adjuntos || [])
+    .map((a) => (typeof a === "string" ? a : (a?.nombre || "")).trim())
+    .filter(Boolean);
+  const vacio = !idea && !adjuntos.length;
+  let resumen = "Sin origen aún: empieza con una idea, un zip o archivos.";
+  if (!vacio) {
+    const partes = [];
+    if (idea) partes.push(idea);
+    if (adjuntos.length) {
+      const nombres = adjuntos.slice(0, 4).join(", ") + (adjuntos.length > 4 ? "…" : "");
+      partes.push(adjuntos.length === 1 ? `1 adjunto (${nombres})` : `${adjuntos.length} adjuntos (${nombres})`);
+    }
+    resumen = partes.join(" · ");
+  }
+  return { idea, adjuntos, vacio, resumen };
+}
+
+/**
+ * Resuelve en qué paso del ciclo de producto está el sistema.
+ * @param {{ tieneSistema?: boolean, enEquipo?: boolean, enProyecto?: string[], publicado?: boolean }} entrada
+ * @returns {{ id: string, etiqueta: string, pasos: { id: string, etiqueta: string, activo: boolean, hecho: boolean }[], siguienteCiclo: string|null }}
+ */
+export function resolverCiclo(entrada = {}) {
+  const enProyecto = Array.isArray(entrada.enProyecto) ? entrada.enProyecto.filter(Boolean) : [];
+  const enEquipo = !!entrada.enEquipo || enProyecto.length > 0;
+  const publicado = !!entrada.publicado;
+  let id = "borrador";
+  if (publicado) id = "mercado";
+  else if (enProyecto.length) id = "proyecto";
+  else if (enEquipo) id = "equipo";
+  else if (entrada.tieneSistema) id = "borrador";
+
+  const orden = CICLO.map((p) => p.id);
+  const idx = orden.indexOf(id);
+  const pasos = CICLO.map((p, i) => ({
+    ...p,
+    activo: p.id === id,
+    hecho: i < idx,
+  }));
+
+  const siguienteCiclo = id === "borrador" ? "Guárdalo en este equipo o tráelo desde la web."
+    : id === "equipo" ? "Instálalo en un proyecto registrado."
+      : id === "proyecto" ? "Cuando esté listo, publícalo en el Mercado."
+        : null;
+
+  return { id, etiqueta: CICLO.find((p) => p.id === id)?.etiqueta || "Borrador", pasos, siguienteCiclo, enEquipo, enProyecto, publicado };
+}
+
+/**
  * @param {{ tieneSistema: boolean, proponiendo?: boolean, propuestas?: number,
  *   valido?: boolean|null, listo?: boolean|null, alDia?: boolean|null,
- *   errores?: string[], marcadores?: object[], siguiente?: string|null }} entrada
+ *   errores?: string[], marcadores?: object[], siguiente?: string|null,
+ *   enEquipo?: boolean, enProyecto?: string[], publicado?: boolean,
+ *   origen?: { idea?: string, adjuntos?: string[]|object[] } }} entrada
  */
 export function resolverEstado(entrada) {
+  const origen = resumenOrigen(entrada.origen || {});
+  const ciclo = resolverCiclo({
+    tieneSistema: !!entrada.tieneSistema,
+    enEquipo: entrada.enEquipo,
+    enProyecto: entrada.enProyecto,
+    publicado: entrada.publicado,
+  });
+  const base = {
+    enEquipo: ciclo.enEquipo,
+    enProyecto: ciclo.enProyecto,
+    publicado: ciclo.publicado,
+    origen,
+    ciclo,
+  };
+
   if (!entrada.tieneSistema) {
     return {
       id: "sin_sistema",
@@ -77,6 +163,7 @@ export function resolverEstado(entrada) {
       cta: "Crear con uxyn",
       accion: "crear",
       archivo: null,
+      ...base,
     };
   }
   if (entrada.proponiendo) {
@@ -88,6 +175,7 @@ export function resolverEstado(entrada) {
       cta: null,
       accion: "ninguna",
       archivo: null,
+      ...base,
     };
   }
   const n = entrada.propuestas || 0;
@@ -100,6 +188,7 @@ export function resolverEstado(entrada) {
       cta: n === 1 ? "Revisar cambios" : `Revisar ${n} cambios`,
       accion: "revisar",
       archivo: null,
+      ...base,
     };
   }
   const hueco = huecoNucleo(entrada);
@@ -115,6 +204,7 @@ export function resolverEstado(entrada) {
       cta: "Que uxyn complete",
       accion: "completar",
       archivo: hueco?.archivo || null,
+      ...base,
     };
   }
   if (entrada.valido === true && entrada.listo === true && entrada.alDia !== false) {
@@ -123,9 +213,10 @@ export function resolverEstado(entrada) {
       etiqueta: ETIQUETAS.listo,
       detalle: entrada.siguiente || "El sistema cumple lo mínimo. Puedes publicar o seguir afinando con uxyn.",
       revisar: null,
-      cta: "Publicar",
-      accion: "publicar",
+      cta: "Abrir salida",
+      accion: "abrir_salida",
       archivo: null,
+      ...base,
     };
   }
   if (entrada.alDia === false || entrada.valido == null) {
@@ -137,6 +228,7 @@ export function resolverEstado(entrada) {
       cta: "Validar",
       accion: "validar",
       archivo: null,
+      ...base,
     };
   }
   return {
@@ -147,5 +239,39 @@ export function resolverEstado(entrada) {
     cta: "Que uxyn complete",
     accion: "completar",
     archivo: null,
+    ...base,
   };
+}
+
+/** Clave de sessionStorage para recordar idea/adjuntos de un sistema. */
+export function claveOrigen(id) {
+  return `uxyn-taller-origen:${id || "_nuevo"}`;
+}
+
+export function guardarOrigen(id, origen) {
+  try {
+    sessionStorage.setItem(claveOrigen(id), JSON.stringify({
+      idea: String(origen?.idea || "").slice(0, 4000),
+      adjuntos: (origen?.adjuntos || []).map((a) => (typeof a === "string" ? a : a?.nombre || "")).filter(Boolean).slice(0, 40),
+    }));
+  } catch { /* sin almacenamiento */ }
+}
+
+export function leerOrigen(id) {
+  try {
+    const bruto = sessionStorage.getItem(claveOrigen(id));
+    if (!bruto) return { idea: "", adjuntos: [] };
+    const d = JSON.parse(bruto);
+    return { idea: d.idea || "", adjuntos: d.adjuntos || [] };
+  } catch {
+    return { idea: "", adjuntos: [] };
+  }
+}
+
+export function moverOrigen(desde, hacia) {
+  if (!hacia || desde === hacia) return;
+  const o = leerOrigen(desde);
+  if (!o.idea && !(o.adjuntos || []).length) return;
+  guardarOrigen(hacia, o);
+  try { sessionStorage.removeItem(claveOrigen(desde)); } catch { /* */ }
 }

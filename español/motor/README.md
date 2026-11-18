@@ -95,27 +95,18 @@ está fuera de alcance, deriva), las memorias (`MEMORIAS.md` y las vigentes del 
 
 ## El panel
 
-`uxyngraphar` (o su acceso directo) abre el panel en el navegador. Todo se gestiona desde ahí, sin comandos:
+`uxyngraphar` (o su acceso directo) abre el panel en el navegador. Áreas (ADR 0015):
 
-- **Inicio**: estado de todos tus proyectos, avisos de lo que pide atención (versión nueva, cambios a
-  medias, actualizaciones, fichas con status antiguos) y lo más habitual a un clic.
-- **Mis proyectos**: añade carpetas con el explorador (o deja que busque los repos dentro de una carpeta). En cada proyecto:
-  instalar, actualizar, reparar o quitar sistemas; las memorias del proyecto (aprobar o archivar las que propone el
-  asistente y crear las tuyas); el flujo del asistente con su diagrama; la revisión; quitar uxyngraphar.
-  «Deshacer…» vuelve a antes del último cambio. En la revisión se puede añadir
-  (o quitar) una comprobación automática en CI o antes de cada commit. Los **grupos** reúnen los repos de un mismo sistema
-  para actualizarlos y verificarlos juntos (con la comparación de contratos entre ellos) y ver su matriz repo × sistema.
-- **Flujos guardados**: combinaciones de sistemas y forma de trabajar que se aplican a uno o varios proyectos con un clic.
-  Se guardan en `flujos/` de la carpeta de uxyngraphar (sobreviven a las actualizaciones) y se exportan o importan como `.json`.
-- **Catálogo**: busca por el problema que quieres resolver e instala en varios proyectos a la vez.
-- **Creador de sistemas**: al entrar sin sistema abierto, solo la caja «Crea un sistema con el agente» (sin chat a la
-  derecha). Al abrir un sistema: editor + un chat (Asistente o Simulador). «Siguiente paso» indica qué falta. **Guardar
-  borrador en la web** no es lo mismo que **Publicar en el Mercado**. El asistente propone; tú aceptas o rechazas
-  archivo por archivo.
-- **Conexiones**: conecta tus agentes (Claude Code, Codex, Cursor, Gemini CLI, OpenCode, Grok, Copilot) con tus
-  proyectos: les da las instrucciones de uxyngraphar y registra `uxyngraphar mcp` (solo lectura) en su configuración.
-- **Herramienta y ajustes**: actualizar uxyngraphar (el panel se reinicia solo y ofrece actualizar todos tus proyectos),
-  volver a una versión guardada, accesos directos, el historial de acciones y desinstalar.
+- **Inicio**: sistemas en curso y el siguiente paso del ciclo; avisos de proyectos y atajos.
+- **Taller**: el objeto es el sistema de gobernanza. Lista unificada (borradores web + locales) con
+  insignias web / equipo / instalado. Al abrir uno: franja Origen, carril de ciclo
+  (Borrador → En equipo → En proyecto → Mercado), barra de salida (Descargar .zip, Traer/Guardar,
+  Instalar, Publicar), archivos/editor por defecto y uxyn en columna estrecha. «Por revisar» queda
+  fijo encima del editor. **Guardar en la web** no es lo mismo que **Publicar en el Mercado**.
+- **Proyectos**: añade carpetas con el explorador. En cada proyecto: instalar, actualizar, reparar o
+  quitar sistemas; memorias; flujo del asistente; revisión. Los **flujos guardados** se abren desde aquí.
+- **Mercado**: busca sistemas publicados en el servidor, tráelos e instálalos.
+- **Cuenta**: herramienta y sesión, conexiones (agentes IDE), borradores web y logs del panel.
 
 Solo escucha en `127.0.0.1`. La URL que se abre lleva un código de un solo uso (vale 60 s) que la pestaña canjea por una
 cookie `HttpOnly`; rechaza otro `Host` u `Origin` y envía CSP en todas las respuestas. Hay un panel por equipo: abrirlo otra vez reabre el mismo. Corre en su

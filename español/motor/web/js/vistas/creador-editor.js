@@ -1,10 +1,10 @@
-// Editor del Creador de sistemas: datos básicos con un formulario, piezas como interruptores, lista de lo que falta,
-// archivos y versión. Vive en la zona central de la pantalla «Creador de sistemas» (antes era el «modo avanzado»).
+// Editor del Taller: archivos + formulario + piezas. Las salidas (zip, sync, instalar, publicar)
+// viven en la barra de salida del taller; aquí quedan los retoques de versión.
 
-import { obtener, enviar, catalogo } from "../api.js";
-import { h, vaciar, boton, avisar, dialogo, pestanas, confirmar, pedirDatos, insignia } from "../ui.js";
-import { sincronizarBorrador } from "./creador.js";
+import { obtener, enviar, catalogo, nombreDe } from "../api.js";
+import { h, vaciar, boton, avisar, dialogo, pestanas, confirmar, pedirDatos, insignia, elegirVarios } from "../ui.js";
 import { inicioConAgente } from "./creador-inicio.js";
+import { construirZip, descargarBlob } from "./sistema-zip.js";
 
 export const PIEZAS = {
   proceso: "Proceso por fases", skills: "Habilidades del agente", componentes: "Componentes", herramientas: "Herramientas",
@@ -18,6 +18,60 @@ function bytesLegibles(n) {
   if (n < 1024) return `${n} bytes`;
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KiB`;
   return `${(n / (1024 * 1024)).toFixed(1)} MiB`;
+}
+
+/** Descarga el sistema local como .zip (archivos de texto del catálogo). */
+export async function descargarZipSistema(id) {
+  const lista = await obtener("/api/catalogo/archivos", { id });
+  const files = [];
+  for (const rel of lista) {
+    const { contenido } = await obtener("/api/catalogo/archivo", { id, rel });
+    files.push({ path: `${id}/${rel}`, data: new TextEncoder().encode(contenido) });
+  }
+  if (!files.length) throw new Error("Este sistema no tiene archivos para empaquetar.");
+  descargarBlob(construirZip(files), `${id}.zip`);
+  avisar(`Descargado ${id}.zip`);
+}
+
+/** Diálogo: elige proyectos registrados e instala el sistema (`/api/catalogo/instalar-en`). */
+export async function instalarEnProyecto(id, titulo) {
+  const lista = (await obtener("/api/proyectos")).filter((p) => p.existe);
+  if (!lista.length) {
+    avisar("Primero añade algún proyecto en «Proyectos».", "mal");
+    return null;
+  }
+  const opciones = lista.map((p) => ({
+    valor: p.ruta,
+    titulo: p.nombre,
+    detalle: (p.sistemas || []).includes(id) ? "ya lo tiene" : (p.grupo || ""),
+  }));
+  const eleccion = elegirVarios(opciones);
+  const repos = await dialogo({
+    titulo: `Instalar «${titulo || id}»`,
+    contenido: h("div", { class: "pila" },
+      h("p", { class: "tenue", texto: "Marca los proyectos donde quieres instalarlo." }),
+      eleccion.nodo),
+    acciones: [{
+      texto: "Instalar",
+      clase: "primario",
+      accion: () => eleccion.valores().length ? eleccion.valores() : (avisar("Marca al menos un proyecto", "mal"), false),
+    }],
+  });
+  if (!repos) return null;
+  const resultados = await enviar("/api/catalogo/instalar-en", { ids: [id], repos });
+  const zona = h("ul", { class: "lista" });
+  vaciar(zona, resultados.map((r) => h("li", {},
+    h("b", { class: "espacio", texto: nombreDe(r.ruta) }),
+    r.error ? h("span", { class: "insignia mal", texto: r.error })
+      : insignia(r.instalados.length ? "instalado" : "ya lo tenía", "bien"))));
+  await dialogo({ titulo: "Resultado", contenido: zona, cancelar: "Cerrar", acciones: [] });
+  return resultados;
+}
+
+/** Proyectos donde está instalado este id. */
+export async function proyectosConSistema(id) {
+  const lista = await obtener("/api/proyectos").catch(() => []);
+  return lista.filter((p) => p.existe && (p.sistemas || []).includes(id)).map((p) => p.nombre || nombreDe(p.ruta));
 }
 
 /** Publica el sistema en el Mercado (versión inmutable). Distinto de «Guardar borrador en la web». */
@@ -102,36 +156,19 @@ async function formularioBasico(id, alGuardar) {
 }
 
 /**
- * Editor de un sistema del catálogo local, como nodo (no diálogo). `alCambiar` se llama tras guardar algo que cambia
- * la lista (título, piezas, versión). Devuelve { nodo, rutaActual, textarea, recargar } para que el chat lo use.
+ * Editor de un sistema del catálogo local. Archivos visibles por defecto.
+ * Devuelve { nodo, rutaActual, textarea, recargar, abrirPestana, panelPublicar }.
  */
-export async function editorSistema(id, { alCambiar = async () => {} } = {}) {
+export async function editorSistema(id, { alCambiar = async () => {}, pestanaInicial = "archivos" } = {}) {
   const archivos = h("select", { "aria-label": "Archivo del sistema" });
   const contenido = h("textarea", { "aria-label": "Contenido del archivo", spellcheck: "false", class: "editor-texto" });
   const errores = h("div", { class: "tenue" });
-  const falta = h("div", { class: "pila" });
   const piezas = h("div", { class: "piezas" });
   const basico = h("div", { class: "pila" });
-  const sincronia = h("div", { class: "pila" });
+  const sincronia = h("div", { class: "pila salida-panel", "aria-label": "Publicar en el Mercado" });
   const version = h("span", {});
-  let barra = null;
+  let elegirPestana = () => {};
 
-  async function pintarFalta() {
-    const p = await obtener("/api/catalogo/pendientes", { id });
-    const marcas = p.marcadores || [];
-    const total = (p.errores || []).length + marcas.length;
-    if (p.listo) {
-      vaciar(falta, h("div", { class: "banda bien", texto: "Listo: no falta nada." }));
-      return;
-    }
-    vaciar(falta,
-      p.siguiente ? h("p", {}, h("b", { texto: "Siguiente paso: " }), p.siguiente) : null,
-      h("details", {}, h("summary", { texto: `Ver todo lo que falta (${total})` }),
-        h("ul", { class: "lista" },
-          marcas.map((m) => h("li", {}, h("button", { type: "button", class: "enlace", texto: `Rellenar ${m.archivo}, línea ${m.linea}`,
-            onclick: async () => { barra.querySelectorAll("button")[2].click(); archivos.value = m.archivo; await abrir(); contenido.focus(); } }))),
-          (p.errores || []).filter((e) => !/marcadores sin rellenar/.test(e)).map((e) => h("li", { texto: e })))));
-  }
   async function pintarPiezas() {
     const c = await obtener("/api/catalogo/completitud", { id });
     const presentes = new Set(c.piezas || []);
@@ -167,9 +204,9 @@ export async function editorSistema(id, { alCambiar = async () => {} } = {}) {
   async function guardarArchivo() {
     const r = await enviar("/api/catalogo/archivo", { id, rel: archivos.value, contenido: contenido.value });
     errores.textContent = r.errores.join("; ");
-    avisar(r.errores.length ? "Guardado, pero aún falta algo (mira «Lo que falta»)" : "Guardado", r.errores.length ? "mal" : "");
-    await pintarFalta();
+    avisar(r.errores.length ? "Guardado, pero aún falta algo" : "Guardado", r.errores.length ? "mal" : "");
     if (archivos.value === "sistema.json") vaciar(basico, await formularioBasico(id, recargar));
+    await alCambiar();
   }
   async function nuevoArchivo() {
     const r = await pedirDatos({ titulo: "Archivo nuevo", explicacion: "Ruta dentro del sistema, por ejemplo ejemplos/caso.md", campos: [{ nombre: "rel", etiqueta: "Ruta" }], si: "Crear" });
@@ -187,42 +224,63 @@ export async function editorSistema(id, { alCambiar = async () => {} } = {}) {
     const meta = (await catalogo(true)).find((m) => m.id === id);
     version.textContent = meta?.version || "";
     vaciar(basico, await formularioBasico(id, recargar));
-    await Promise.all([pintarFalta(), pintarPiezas(), cargarArchivos(archivos.value)]);
+    await Promise.all([pintarPiezas(), cargarArchivos(archivos.value)]);
     await alCambiar();
+  }
+
+  async function abrirArchivo(rel) {
+    elegirPestana("archivos");
+    if (rel && [...archivos.options].some((o) => o.value === rel)) {
+      archivos.value = rel;
+      await abrir();
+      contenido.focus();
+    }
   }
 
   archivos.addEventListener("change", abrir);
   const secciones = {
-    basico: h("div", { class: "pila" }, basico),
-    piezas: h("div", { class: "pila" }, h("p", { class: "tenue", texto: "Activa las partes que necesita tu sistema. Las marcadas como recomendadas suelen hacer falta." }), piezas),
     archivos: h("div", { class: "pila" },
       h("div", { class: "fila" }, h("div", { class: "espacio" }, archivos), boton("Archivo nuevo", nuevoArchivo, { clase: "pequeno", icono: "mas" })),
       contenido, errores,
       h("div", { class: "fila" }, boton("Guardar archivo", guardarArchivo, { clase: "primario pequeno", icono: "check" }))),
-    publicar: h("div", { class: "pila publicar-salidas" },
+    basico: h("div", { class: "pila" }, basico),
+    piezas: h("div", { class: "pila" }, h("p", { class: "tenue", texto: "Activa las partes que necesita tu sistema. Las marcadas como recomendadas suelen hacer falta." }), piezas),
+    version: h("div", { class: "pila" },
       h("div", { class: "fila" }, h("span", {}, "Versión local ", h("b", {}, version)), h("span", { class: "espacio" }),
         boton("Arreglo pequeño", () => subirVersion("parche"), { clase: "pequeno", titulo: "+ parche" }),
         boton("Mejora", () => subirVersion("menor"), { clase: "pequeno", titulo: "+ menor" }),
         boton("Cambio grande", () => subirVersion("mayor"), { clase: "pequeno", titulo: "+ mayor" })),
-      h("div", { class: "banda salida-borrador" },
-        h("b", { texto: "Guardar borrador en la web" }),
-        h("p", { class: "tenue", texto: "Sincroniza una copia editable con tu cuenta. No es publicar: nadie lo instala desde aquí." }),
-        boton("Guardar borrador en la web", () => sincronizarBorrador("subir", id, sincronia), { clase: "pequeno", icono: "subir" })),
-      h("div", { class: "banda salida-mercado" },
-        h("b", { texto: "Publicar en el Mercado" }),
-        h("p", { class: "tenue", texto: "Deja una versión fija que otras personas (y tú) pueden instalar. Distinto de guardar el borrador." }),
-        boton("Publicar en el Mercado", () => publicarEnMercado(id, sincronia), { clase: "pequeno primario" })),
-      sincronia),
+      h("p", { class: "tenue", texto: "Publicar y sincronizar están en la barra de salida del taller." })),
   };
-  barra = pestanas([["basico", "Lo básico"], ["piezas", "Piezas"], ["archivos", "Archivos"], ["publicar", "Versión y publicar"]],
-    (s) => { for (const [k, nodo] of Object.entries(secciones)) nodo.hidden = k !== s; }, "basico");
-  for (const [k, nodo] of Object.entries(secciones)) nodo.hidden = k !== "basico";
+  const barra = pestanas(
+    [["archivos", "Archivos"], ["basico", "Lo básico"], ["piezas", "Piezas"], ["version", "Versión"]],
+    (s) => {
+      for (const [k, nodo] of Object.entries(secciones)) nodo.hidden = k !== s;
+    },
+    pestanaInicial,
+  );
+  elegirPestana = (s) => {
+    for (const [k, nodo] of Object.entries(secciones)) nodo.hidden = k !== s;
+    [...barra.querySelectorAll("[role=tab]")].forEach((b, i) => {
+      const ids = ["archivos", "basico", "piezas", "version"];
+      b.setAttribute("aria-selected", String(ids[i] === s));
+    });
+  };
+  for (const [k, nodo] of Object.entries(secciones)) nodo.hidden = k !== pestanaInicial;
 
   await recargar();
-  const nodo = h("div", { class: "pila" },
-    h("div", { class: "tarjeta pila falta-sticky" }, h("h3", { texto: "Siguiente paso" }), falta),
+  const nodo = h("div", { class: "pila editor-taller" },
     h("div", { class: "tarjeta" }, barra, ...Object.values(secciones)));
-  return { nodo, rutaActual: () => archivos.value, textarea: contenido, recargar };
+  return {
+    nodo,
+    rutaActual: () => archivos.value,
+    textarea: contenido,
+    recargar,
+    abrirPestana: elegirPestana,
+    abrirArchivo,
+    panelPublicar: sincronia,
+    mostrarPublicar: () => publicarEnMercado(id, sincronia),
+  };
 }
 
 /** Diálogo para crear un sistema: con lo mínimo (esqueleto) o desde una especificación. Devuelve el id creado. */
@@ -269,8 +327,8 @@ export async function crearSistema() {
     esqueleto.hidden = m !== "esqueleto";
     desdeSpec.hidden = m !== "spec";
   }, "esqueleto");
-  return dialogo({ titulo: "Otras formas de crear", contenido: h("div", { class: "pila" },
-    h("p", { class: "tenue", texto: "Lo habitual es la caja grande «Crea un sistema con uxyn». Aquí: plantilla a mano, uxyn o especificación JSON." }),
+  return dialogo({ titulo: "Nueva plantilla", contenido: h("div", { class: "pila" },
+    h("p", { class: "tenue", texto: "Plantilla a mano, con uxyn, o desde una especificación JSON." }),
     barra, esqueleto, conAgente.nodo, desdeSpec), acciones: [{ texto: "Crear", clase: "primario", accion: async () => {
     if (modo === "agente") {
       const r = await conAgente.crear();

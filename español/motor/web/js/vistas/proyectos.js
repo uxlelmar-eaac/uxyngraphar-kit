@@ -75,7 +75,7 @@ export async function vista(_params, { ir, recargar }) {
 
   const agregar = async () => { if ((await agregarProyectos()).length) recargar(); };
   if (!lista.length) {
-    return h("div", {}, cabecera("Mis proyectos", "Los proyectos que gestionas desde el panel."),
+    return h("div", {}, cabecera("Proyectos", "Los proyectos que gestionas desde el panel."),
       vacio("Aún no hay proyectos", "Añade la carpeta de un proyecto, o una carpeta que contenga varios, y aparecerán aquí.",
         boton("Añadir proyectos", agregar, { clase: "primario", icono: "mas" })));
   }
@@ -511,7 +511,8 @@ export async function vista(_params, { ir, recargar }) {
 
   const nuevaCarpeta = async () => { await editarCarpeta(null); };
   return h("div", { class: "mis-proyectos" },
-    cabecera("Mis proyectos", "Ordénalos en carpetas y con etiquetas, arrastrando. Ábrelos para instalar sistemas o cambiar su flujo.",
+    cabecera("Proyectos", "Ordénalos en carpetas y con etiquetas, arrastrando. Ábrelos para instalar sistemas o cambiar su flujo.",
+      boton("Flujos guardados", () => ir("flujos"), { clase: "fantasma", icono: "flujos" }),
       boton("Nueva carpeta", nuevaCarpeta, { icono: "carpeta" }),
       boton("Añadir proyectos", agregar, { clase: "primario", icono: "mas" })),
     h("div", { class: "pila" }, herramientas, barraEtiquetas, resumen),

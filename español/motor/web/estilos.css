@@ -290,36 +290,57 @@ pre { white-space: pre-wrap; background: var(--superficie-2); padding: 12px; bor
 .mensaje.tuyo { background: var(--acento-suave); align-self: flex-end; }
 .mensaje.ia { background: var(--superficie-2); }
 
-/* Creador asistido: carril de estado + Editor | uxyn (+ Lista opcional) */
-main:has(.creador-puesto), main:has(.creador) { max-width: none; }
-.creador-puesto { display: flex; flex-direction: column; gap: 12px; }
-.creador-carril { margin-bottom: 0; }
-.carril-estado { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid var(--borde); border-radius: var(--radio); background: var(--superficie); }
-.carril-estado[data-estado="por_revisar"] { border-color: var(--aviso); background: var(--aviso-suave); }
-.carril-estado[data-estado="falta_nucleo"] { border-color: var(--aviso); }
-.carril-estado[data-estado="listo"] { border-color: var(--bien, var(--acento)); }
-.carril-estado-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
-.carril-detalle { margin: 0; font-size: var(--font-size-sm); }
-.creador { display: grid; gap: 16px; align-items: start; grid-template-columns: 260px minmax(0, 1fr) 360px; }
-.creador[data-modo="crear"] { grid-template-columns: minmax(0, 1fr) minmax(18rem, 26rem); }
-.creador[data-modo="crear"][data-zonas="lista sistema agente"] { grid-template-columns: 240px minmax(0, 1fr) minmax(18rem, 26rem); }
-.creador[data-zonas="lista sistema"] { grid-template-columns: 260px minmax(0, 1fr); }
-.creador[data-zonas="sistema agente"] { grid-template-columns: minmax(0, 1fr) 380px; }
-.creador[data-zonas="lista agente"] { grid-template-columns: 300px minmax(0, 1fr); }
+/* Taller de sistemas (ADR 0015): origen · ciclo · salida · archivos | uxyn estrecho */
+main:has(.taller-puesto), main:has(.taller), main:has(.creador-puesto), main:has(.creador) { max-width: none; }
+.taller-pagina, .creador-pagina { display: flex; flex-direction: column; gap: 12px; min-height: calc(100vh - 48px); }
+.taller-puesto, .creador-puesto { flex: 1; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+.taller-origen, .taller-ciclo, .taller-salida {
+  display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px;
+  padding: 12px 14px; border: 1px solid var(--borde); border-radius: var(--radio); background: var(--superficie);
+}
+.taller-origen.vacio { background: var(--superficie-2); }
+.taller-origen-etiqueta, .taller-salida-etiqueta {
+  font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: .04em; color: var(--tenue); font-weight: var(--font-weight-semibold);
+}
+.taller-origen-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+.taller-origen-resumen, .taller-origen p { margin: 0; font-size: var(--font-size-sm); }
+.taller-ciclo { flex-direction: column; align-items: stretch; }
+.ciclo-pasos { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0; padding: 0; }
+.ciclo-paso {
+  padding: 4px 10px; border-radius: 999px; border: 1px solid var(--borde);
+  font-size: var(--font-size-sm); color: var(--tenue); background: var(--superficie-2);
+}
+.ciclo-paso.hecho { color: var(--texto); border-color: var(--acento); }
+.ciclo-paso.activo { color: var(--acento); border-color: var(--acento); background: var(--acento-suave); font-weight: var(--font-weight-semibold); }
+.ciclo-tecnico { display: flex; flex-direction: column; gap: 4px; }
+.ciclo-tecnico p { margin: 0; }
+.taller-salida { flex-direction: column; align-items: stretch; position: sticky; top: 0; z-index: 2; }
+.taller-salida-barra { width: 100%; }
+.taller-salida-acciones { flex-wrap: wrap; justify-content: flex-end; }
+.taller-salida-detalle:empty { display: none; }
+.insignias-donde { gap: 6px; flex-wrap: wrap; }
+.taller, .creador {
+  display: grid; gap: 16px; align-items: start;
+  grid-template-columns: 240px minmax(0, 1fr) minmax(16rem, 20rem);
+}
+.taller[data-zonas="lista sistema"], .creador[data-zonas="lista sistema"] { grid-template-columns: 240px minmax(0, 1fr); }
+.taller[data-zonas="sistema agente"], .creador[data-zonas="sistema agente"] { grid-template-columns: minmax(0, 1fr) minmax(16rem, 20rem); }
+.taller[data-zonas="lista"], .taller[data-zonas="sistema"], .taller[data-zonas="agente"],
 .creador[data-zonas="lista"], .creador[data-zonas="sistema"], .creador[data-zonas="agente"] { grid-template-columns: minmax(0, 1fr); }
-.editor-vacio { display: flex; align-items: center; justify-content: center; min-height: 12rem; padding: 24px; text-align: center; }
-.editor-vacio .tenue { margin: 0; max-width: 16rem; }
+.plantilla-nuevo { display: flex; flex-direction: column; gap: 12px; padding: 8px 0; }
+.esqueleto-archivos { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.esqueleto-archivo {
+  padding: 10px 12px; border: 1px dashed var(--borde); border-radius: var(--radio);
+  font-family: var(--font-mono); font-size: var(--font-size-sm); color: var(--tenue);
+}
+.taller-por-revisar:empty { display: none; }
 .zona-agente > h2 { margin-bottom: 4px; }
 .zona-agente > .inicio-agente { margin-top: 0; }
-.inicio-ayuda { margin-top: 4px; }
 .modos-chat { gap: 6px; }
 .pista-modo { margin: 0; font-size: var(--font-size-sm); }
 .atajos-chat { flex-wrap: wrap; }
-.avanzado-ia { border: 1px solid var(--borde); border-radius: var(--radio); padding: 8px 12px; background: var(--superficie-2); }
-.avanzado-ia summary { cursor: pointer; font-size: var(--font-size-sm); color: var(--tenue); }
-.falta-sticky { position: sticky; top: 12px; z-index: 1; border-color: var(--acento); }
-.salida-borrador, .salida-mercado { display: flex; flex-direction: column; gap: 8px; }
-.salida-mercado { border-color: var(--acento); background: var(--acento-suave); }
+.ia-selector { font-size: var(--font-size-sm); }
+.salida-panel { margin-top: 8px; }
 .zona { background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio); padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .zona[hidden] { display: none; }
 .zona h2 { margin: 0; font-size: var(--font-size-lg); display: flex; align-items: center; gap: 8px; }
@@ -329,20 +350,18 @@ main:has(.creador-puesto), main:has(.creador) { max-width: none; }
 .boton.conmutador[aria-pressed=true] { background: var(--acento-suave); border-color: var(--acento); color: var(--acento); }
 .boton.conmutador[aria-pressed=false] { color: var(--tenue); }
 .lista-sistemas li { padding: 0; }
-.elemento-sistema { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; width: 100%; color: var(--texto); text-decoration: none; }
+.elemento-sistema { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; padding: 10px 12px; width: 100%; color: var(--texto); text-decoration: none; }
 .elemento-sistema:hover { background: var(--superficie-2); }
 .elemento-sistema.activo { background: var(--acento-suave); }
 .piezas { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
-.pieza { display: flex; align-items: center; gap: 8px; padding: 12px; border: 1px solid var(--borde); border-radius: 10px; cursor: pointer; }
+.pieza { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px; border: 1px solid var(--borde); border-radius: 10px; cursor: pointer; }
 .pieza.activa { border-color: var(--acento); background: var(--acento-suave); }
 .editor-texto { min-height: 320px; font-family: var(--font-mono); }
 textarea.breve { min-height: 64px; font-family: var(--font-body); font-size: inherit; }
 .insignia.nota { background: var(--aviso-suave); color: var(--aviso); }
-.elemento-sistema { align-items: flex-start; }
-.pieza { flex-wrap: wrap; }
 button.enlace { font: inherit; background: none; border: none; padding: 0; color: var(--acento); text-decoration: underline; cursor: pointer; text-align: left; }
 .chat-agente { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
-.sugerencias-panel { display: flex; flex-direction: column; gap: 10px; padding: 12px; border: 1px solid var(--aviso); border-radius: var(--radio); background: var(--aviso-suave); }
+.sugerencias-panel { display: flex; flex-direction: column; gap: 10px; padding: 12px; border: 1px solid var(--aviso); border-radius: var(--radio); background: var(--aviso-suave); margin-bottom: 12px; }
 .sugerencias-panel[hidden] { display: none; }
 .sugerencias-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .sugerencias-cabecera h3 { margin: 0; font-size: var(--font-size-md); }
@@ -352,11 +371,10 @@ button.enlace { font: inherit; background: none; border: none; padding: 0; color
 .propuesta summary { cursor: pointer; display: flex; align-items: center; gap: 6px; }
 .acciones-agente { margin: 6px 0 0; padding-left: 0; list-style: none; font-size: var(--font-size-sm); }
 .chat-agente .conversacion { max-height: min(42vh, 420px); min-height: 160px; flex: 1; overflow: auto; }
-.creador-extra { border: 1px solid var(--borde); border-radius: var(--radio); padding: 8px 12px; background: var(--superficie-2); font-size: var(--font-size-sm); }
-.creador-extra summary { cursor: pointer; color: var(--tenue); }
 @media (max-width: 1100px) {
-  .creador, .creador[data-zonas] { grid-template-columns: minmax(0, 1fr); }
+  .taller, .taller[data-zonas], .creador, .creador[data-zonas] { grid-template-columns: minmax(0, 1fr); }
   .zona-lista, .zona-agente { position: static; max-height: none; }
+  .taller-salida { position: static; }
 }
 /* Crear con el agente (igual que en el Creador web): caja con texto, adjuntos y botón */
 .solo-lector { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
@@ -528,9 +546,7 @@ label.casilla.carpeta-opcion input { margin-top: 0; }
 .copiar-mensaje svg { width: 14px; height: 14px; }
 @media (prefers-reduced-motion: reduce) { .puntos span { animation: none; } }
 
-/* Logs del panel (cajón del Creador + sección global) */
-.creador-pagina { display: flex; flex-direction: column; gap: 12px; min-height: calc(100vh - 48px); }
-.creador-puesto { flex: 1; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+/* Logs del panel (Cuenta / cajón global; no embebidos en el taller) */
 .logs-panel { border: 1px solid var(--borde); border-radius: var(--radio); background: var(--superficie); display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; }
 .logs-cajon { margin-top: auto; max-height: 42vh; }
 .logs-cajon .log-cuerpo { overflow: auto; max-height: 28vh; }

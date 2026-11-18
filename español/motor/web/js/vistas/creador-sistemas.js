@@ -1,28 +1,32 @@
-// Puesto de trabajo asistido: carril de estado + Editor (izq) + uxyn (der).
-// Crear y editar viven en la misma pantalla. Lista = cajón opcional.
+// Taller de sistemas (ADR 0015): el objeto es el sistema; uxyn es secundario.
+// Layout: origen · ciclo · salida · archivos/editor · uxyn en columna estrecha.
 
 import { catalogo, obtener } from "../api.js";
-import { h, vaciar, boton, cabecera, insignia, icono, avisar } from "../ui.js";
+import { h, vaciar, boton, cabecera, insignia, icono, avisar, dialogo } from "../ui.js";
 import { anotar } from "../registro.js";
-import { editorSistema, crearSistema, FAMILIAS } from "./creador-editor.js";
-import { chatAgente, tarjetaCreador, panelSugerencias } from "./creador.js";
+import {
+  editorSistema, crearSistema,
+  descargarZipSistema, instalarEnProyecto, proyectosConSistema, publicarEnMercado,
+} from "./creador-editor.js";
+import { chatAgente, sincronizarBorrador, panelSugerencias } from "./creador.js";
 import { inicioConAgente } from "./creador-inicio.js";
-import { armarPromptCompletar, resolverEstado } from "./creador-estado.js";
-import { panelLogs } from "./logs-ui.js";
+import {
+  armarPromptCompletar, resolverEstado, leerOrigen, guardarOrigen, moverOrigen, resumenOrigen,
+} from "./creador-estado.js";
 
-const CLAVE = "uxyn-creador-zonas-v4";
+const CLAVE = "uxyn-taller-zonas-v1";
 export const ZONAS = [
   ["lista", "Lista"],
-  ["sistema", "Editor"],
+  ["sistema", "Sistema"],
   ["agente", "uxyn"],
 ];
 
-/** Siempre Editor + uxyn; Lista opcional. */
+/** Archivos + sistema por defecto; uxyn como cajón (apagado al abrir). */
 export function leerZonas() {
-  const defecto = { lista: false, sistema: true, agente: true };
+  const defecto = { lista: true, sistema: true, agente: false };
   try {
     const guardado = JSON.parse(localStorage.getItem(CLAVE) || "{}");
-    const zonas = { ...defecto, ...guardado, sistema: true, agente: true };
+    const zonas = { ...defecto, ...guardado, sistema: true };
     return Object.values(zonas).some(Boolean) ? zonas : defecto;
   } catch {
     return defecto;
@@ -33,23 +37,51 @@ function guardarZonas(zonas) {
   try { localStorage.setItem(CLAVE, JSON.stringify(zonas)); } catch { /* sin almacenamiento */ }
 }
 
-function carrilEstado(estado, { alAccion, ocupado } = {}) {
-  const nodo = h("section", {
-    class: "carril-estado",
-    "data-estado": estado.id,
-    "aria-label": "Estado del sistema",
-  },
-    h("div", { class: "carril-estado-main" },
+function franjaOrigen(origen, { alVer } = {}) {
+  if (origen.vacio) {
+    return h("section", { class: "taller-origen vacio", "aria-label": "Origen" },
+      h("span", { class: "taller-origen-etiqueta", texto: "Origen" }),
+      h("p", { class: "tenue", texto: origen.resumen }));
+  }
+  return h("section", { class: "taller-origen", "aria-label": "Origen" },
+    h("div", { class: "taller-origen-main" },
+      h("span", { class: "taller-origen-etiqueta", texto: "Origen" }),
+      h("p", { class: "taller-origen-resumen", texto: origen.resumen })),
+    boton("Ver contexto", () => alVer && alVer(), { clase: "pequeno fantasma" }));
+}
+
+function carrilCiclo(ciclo, estado) {
+  return h("section", { class: "taller-ciclo", "aria-label": "Ciclo del sistema" },
+    h("ol", { class: "ciclo-pasos" }, ciclo.pasos.map((p) => h("li", {
+      class: `ciclo-paso${p.activo ? " activo" : ""}${p.hecho ? " hecho" : ""}`,
+      "aria-current": p.activo ? "step" : null,
+    }, p.etiqueta))),
+    h("div", { class: "ciclo-tecnico" },
       insignia(estado.etiqueta, estado.id === "listo" ? "bien" : estado.id === "por_revisar" || estado.id === "falta_nucleo" ? "nota" : ""),
-      h("p", { class: "carril-detalle", texto: estado.detalle }),
-      estado.revisar ? h("p", { class: "tenue", texto: estado.revisar }) : null),
-    (() => {
-      if (!estado.cta || estado.accion === "ninguna") return null;
-      const b = boton(estado.cta, () => alAccion && alAccion(estado), { clase: "pequeno primario" });
-      if (ocupado) b.disabled = true;
-      return b;
-    })());
-  return nodo;
+      h("p", { class: "tenue", texto: estado.detalle }),
+      ciclo.siguienteCiclo ? h("p", { class: "tenue", texto: `Siguiente en el ciclo: ${ciclo.siguienteCiclo}` }) : null));
+}
+
+function insigniasDonde({ enEquipo, enProyecto, publicado, enWeb }) {
+  const nodos = [];
+  if (enWeb) nodos.push(insignia("web", "acento"));
+  if (enEquipo) nodos.push(insignia("equipo", "bien"));
+  if ((enProyecto || []).length) nodos.push(insignia("instalado", "bien"));
+  if (publicado) nodos.push(insignia("mercado", "acento"));
+  return nodos.length ? h("span", { class: "fila insignias-donde" }, nodos) : null;
+}
+
+function plantillaNuevo({ proponiendo, idea, nombreInput }) {
+  return h("div", { class: "plantilla-nuevo", "aria-label": "Nuevo sistema" },
+    h("h2", { texto: "Nuevo sistema" }),
+    h("p", { class: "tenue", texto: proponiendo
+      ? "uxyn está armando el núcleo. Mientras tanto puedes nombrar el sistema y ver el esqueleto."
+      : "Cuenta tu idea o adjunta un zip a la derecha. Aquí verás archivos, origen y salida en cuanto exista el borrador." }),
+    h("label", { class: "campo" }, "Nombre", nombreInput),
+    h("div", { class: "esqueleto-archivos", "aria-label": "Primeras piezas" },
+      ["sistema.json", "README.md", "SISTEMA.md", "LIMITES.md", "PERMISOS.md", "MEMORIAS.md"].map((f) =>
+        h("div", { class: "esqueleto-archivo", texto: f }))),
+    idea ? h("p", { class: "tenue", texto: `Idea: ${resumenOrigen({ idea }).idea}` }) : null);
 }
 
 export async function vista(params, { ir }) {
@@ -58,48 +90,71 @@ export async function vista(params, { ir }) {
   let abierto = null;
   let propuestasPendientes = 0;
   let proponiendo = false;
-  let chatApi = null; // { pedirCompletar, pedirRevisar } si el chat lo expone
+  let chatApi = null;
+  let enWeb = false;
+  let publicadoSesion = false;
+  const zonaSalidaDetalle = h("div", { class: "taller-salida-detalle" });
 
-  const marco = h("div", { class: "creador-puesto" });
-  const zonaCarril = h("div", { class: "creador-carril" });
-  const cuerpo = h("div", { class: "creador", "data-modo": idAbierto ? "editar" : "crear" });
-  const zonaLista = h("section", { class: "zona zona-lista", "aria-label": "Lista de sistemas" });
-  const zonaSistema = h("section", { class: "zona zona-sistema", "aria-label": "Editor" });
+  const marco = h("div", { class: "taller-puesto" });
+  const zonaOrigen = h("div", { class: "taller-franja-origen" });
+  const zonaCiclo = h("div", { class: "taller-franja-ciclo" });
+  const zonaSalida = h("div", { class: "taller-salida", "aria-label": "Salida" });
+  const cuerpo = h("div", { class: "taller", "data-modo": idAbierto ? "editar" : "crear" });
+  const zonaLista = h("section", { class: "zona zona-lista", "aria-label": "Sistemas del taller" });
+  const zonaSistema = h("section", { class: "zona zona-sistema", "aria-label": "Sistema" });
   const zonaAgente = h("section", { class: "zona zona-agente", "aria-label": "uxyn" });
   const nodos = { lista: zonaLista, sistema: zonaSistema, agente: zonaAgente };
+  const huecoSugerencias = h("div", { class: "taller-por-revisar" });
 
-  // Solo se conmuta Lista; Editor y uxyn son fijos (no saturar la cabecera).
   const interruptorLista = h("button", {
-    type: "button",
-    class: "boton pequeno conmutador",
-    "aria-pressed": String(zonas.lista),
-    "aria-controls": "zona-lista",
-    title: "Mostrar u ocultar la lista de sistemas",
+    type: "button", class: "boton pequeno conmutador",
+    "aria-pressed": String(zonas.lista), "aria-controls": "zona-lista",
+    title: "Mostrar u ocultar la lista",
   }, "Lista");
-  interruptorLista.addEventListener("click", () => {
-    zonas.lista = !zonas.lista;
-    guardarZonas(zonas);
-    aplicar();
-  });
+  const interruptorAgente = h("button", {
+    type: "button", class: "boton pequeno conmutador",
+    "aria-pressed": String(zonas.agente), "aria-controls": "zona-agente",
+    title: "Mostrar u ocultar uxyn",
+  }, "uxyn");
+  interruptorLista.addEventListener("click", () => { zonas.lista = !zonas.lista; guardarZonas(zonas); aplicar(); });
+  interruptorAgente.addEventListener("click", () => { zonas.agente = !zonas.agente; guardarZonas(zonas); aplicar(); });
 
   function aplicar() {
     zonas.sistema = true;
-    zonas.agente = true;
     for (const [clave] of ZONAS) {
       nodos[clave].id = `zona-${clave}`;
       nodos[clave].hidden = !zonas[clave];
     }
     interruptorLista.setAttribute("aria-pressed", String(zonas.lista));
+    interruptorAgente.setAttribute("aria-pressed", String(zonas.agente));
     cuerpo.dataset.zonas = ZONAS.filter(([k]) => zonas[k]).map(([k]) => k).join(" ");
     cuerpo.dataset.modo = idAbierto ? "editar" : "crear";
   }
 
   const abrir = (id, conversacion) => ir("creador", id ? { id, ...(conversacion ? { conversacion } : {}) } : null);
 
+  async function dondeEsta(id) {
+    if (!id) return { enEquipo: false, enProyecto: [], publicado: false, enWeb: false };
+    const local = (await catalogo(true)).some((m) => m.id === id);
+    const enProyecto = await proyectosConSistema(id);
+    let web = false;
+    let publicado = publicadoSesion;
+    try {
+      const borradores = await obtener("/api/creador/borradores");
+      const b = (borradores || []).find((x) => x.slug === id);
+      web = !!b;
+      if (b && (b.version_publicada || b.publicado)) publicado = true;
+    } catch { /* sin sesión */ }
+    enWeb = web;
+    return { enEquipo: local, enProyecto, publicado, enWeb: web };
+  }
+
   async function datosEstado() {
+    const origen = leerOrigen(idAbierto || "_nuevo");
     if (!idAbierto) {
-      return resolverEstado({ tieneSistema: false, proponiendo });
+      return resolverEstado({ tieneSistema: false, proponiendo, origen });
     }
+    const donde = await dondeEsta(idAbierto);
     let errores = [];
     let marcadores = [];
     let siguiente = null;
@@ -130,141 +185,283 @@ export async function vista(params, { ir }) {
       listo,
       valido,
       alDia: true,
+      enEquipo: donde.enEquipo,
+      enProyecto: donde.enProyecto,
+      publicado: donde.publicado,
+      origen,
     });
   }
 
-  async function pintarCarril() {
-    const estado = await datosEstado();
-    // Sin sistema: la caja de uxyn es el punto de entrada; no repetir el mismo texto arriba.
-    if (estado.id === "sin_sistema" && !proponiendo) {
-      vaciar(zonaCarril);
-      zonaCarril.hidden = true;
-      return;
+  function enfocarSalidaPublicar() {
+    zonaSalidaDetalle.hidden = false;
+    zonaSalida.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    if (idAbierto) {
+      vaciar(zonaSalidaDetalle);
+      void publicarEnMercado(idAbierto, zonaSalidaDetalle).then(() => {
+        publicadoSesion = true;
+        void pintarFranjas();
+      });
     }
-    zonaCarril.hidden = false;
-    vaciar(zonaCarril, carrilEstado(estado, {
-      ocupado: proponiendo,
-      alAccion: async (e) => {
-        if (e.accion === "crear") {
+  }
+
+  async function pintarFranjas() {
+    const estado = await datosEstado();
+    vaciar(zonaOrigen, franjaOrigen(estado.origen, {
+      alVer: async () => {
+        const o = leerOrigen(idAbierto || "_nuevo");
+        await dialogo({
+          titulo: "Contexto de origen",
+          cancelar: "Cerrar",
+          contenido: h("div", { class: "pila" },
+            o.idea ? h("div", {}, h("b", { texto: "Idea" }), h("p", { texto: o.idea })) : h("p", { class: "tenue", texto: "Sin idea guardada." }),
+            (o.adjuntos || []).length
+              ? h("div", {}, h("b", { texto: "Adjuntos" }), h("ul", {}, o.adjuntos.map((n) => h("li", { texto: n }))))
+              : h("p", { class: "tenue", texto: "Sin adjuntos." })),
+          acciones: [],
+        });
+      },
+    }));
+
+    vaciar(zonaCiclo, carrilCiclo(estado.ciclo, estado), (() => {
+      if (!estado.cta || estado.accion === "ninguna") return null;
+      const b = boton(estado.cta, async () => {
+        if (estado.accion === "crear") {
+          zonas.agente = true;
+          guardarZonas(zonas);
+          aplicar();
           zonaAgente.querySelector("textarea")?.focus();
           return;
         }
-        if (e.accion === "revisar") {
-          const panel = zonaAgente.querySelector(".sugerencias-panel");
+        if (estado.accion === "revisar") {
+          const panel = huecoSugerencias.querySelector(".sugerencias-panel");
           if (panel) {
             panel.hidden = false;
             try { panel.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch { /* */ }
           }
           return;
         }
-        if (e.accion === "completar" || e.accion === "validar") {
+        if (estado.accion === "completar" || estado.accion === "validar") {
+          zonas.agente = true;
+          guardarZonas(zonas);
+          aplicar();
           if (chatApi?.pedirCompletar) await chatApi.pedirCompletar();
-          else avisar("Escribe a uxyn a la derecha: «Completa el núcleo».", "mal");
+          else avisar("Escribe a uxyn: «Completa el núcleo».", "mal");
           return;
         }
-        if (e.accion === "publicar") {
-          avisar("Usa «Versión y publicar» en el editor cuando el carril diga Listo.");
+        if (estado.accion === "publicar" || estado.accion === "abrir_salida") {
+          zonaSalida.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          try { zonaSalida.focus(); } catch { /* */ }
+          if (estado.accion === "publicar") enfocarSalidaPublicar();
         }
-      },
-    }));
+      }, { clase: "pequeno primario" });
+      if (proponiendo) b.disabled = true;
+      return h("div", { class: "fila", style: "margin-top:8px" }, b);
+    })());
+
+    await pintarSalida();
+  }
+
+  async function pintarSalida() {
+    const id = idAbierto;
+    const donde = id ? await dondeEsta(id) : { enEquipo: false, enProyecto: [], publicado: false, enWeb: false };
+    const syncBtns = [];
+    if (donde.enWeb) {
+      syncBtns.push(boton("Traer", async () => {
+        if (!id) return avisar("Abre un sistema primero.", "mal");
+        await sincronizarBorrador("bajar", id, zonaSalidaDetalle, async (r) => {
+          await catalogo(true);
+          await pintarFranjas();
+          abrir(r?.id || id);
+        });
+      }, { clase: "pequeno", icono: "descargar", titulo: "Bajar el borrador de la web a este equipo" }));
+    }
+    if (donde.enEquipo || !donde.enWeb) {
+      syncBtns.push(boton(donde.enWeb ? "Subir" : "Guardar en la web", async () => {
+        if (!id) return avisar("Abre un sistema primero.", "mal");
+        await sincronizarBorrador("subir", id, zonaSalidaDetalle, async () => { await pintarFranjas(); });
+      }, { clase: "pequeno", icono: "subir", titulo: "Subir el borrador de este equipo a la web" }));
+    }
+    const acciones = h("div", { class: "fila taller-salida-acciones" },
+      boton("Descargar .zip", async () => {
+        if (!id) return avisar("Abre un sistema primero.", "mal");
+        await descargarZipSistema(id);
+      }, { clase: "pequeno", icono: "descargar", titulo: "Empaqueta los archivos del sistema" }),
+      ...syncBtns,
+      boton("Instalar en proyecto", async () => {
+        if (!id) return avisar("Abre un sistema primero.", "mal");
+        const meta = (await catalogo(true)).find((m) => m.id === id);
+        await instalarEnProyecto(id, meta?.titulo || id);
+        await pintarFranjas();
+        await pintarLista();
+      }, { clase: "pequeno" }),
+      boton("Publicar", () => {
+        if (!id) return avisar("Abre un sistema primero.", "mal");
+        enfocarSalidaPublicar();
+      }, { clase: "pequeno primario" }));
+    if (!id) [...acciones.querySelectorAll("button")].forEach((b) => { b.disabled = true; });
+
+    vaciar(zonaSalida,
+      h("div", { class: "fila separada taller-salida-barra" },
+        h("div", { class: "fila" },
+          h("span", { class: "taller-salida-etiqueta", texto: "Salida" }),
+          insigniasDonde(donde)),
+        acciones),
+      zonaSalidaDetalle);
   }
 
   async function pintarLista() {
     const cat = await catalogo(true);
+    let borradores = [];
+    try { borradores = await obtener("/api/creador/borradores"); } catch { /* sin sesión */ }
+    const proyectos = await obtener("/api/proyectos").catch(() => []);
+    const instalados = new Map();
+    for (const p of proyectos) {
+      for (const sid of p.sistemas || []) {
+        if (!instalados.has(sid)) instalados.set(sid, []);
+        instalados.get(sid).push(p.nombre);
+      }
+    }
+    const porId = new Map();
+    for (const m of cat) {
+      porId.set(m.id, {
+        id: m.id,
+        titulo: m.titulo || m.id,
+        local: true,
+        web: false,
+        instalado: instalados.get(m.id) || [],
+        familia: m.familia,
+        version: m.version,
+        errores: m.errores || [],
+      });
+    }
+    for (const b of borradores || []) {
+      const prev = porId.get(b.slug) || {
+        id: b.slug, titulo: b.titulo || b.slug, local: !!b.en_equipo, web: true,
+        instalado: instalados.get(b.slug) || [], familia: "", version: "", errores: [],
+        publicado: !!(b.version_publicada || b.publicado),
+      };
+      prev.web = true;
+      prev.local = prev.local || !!b.en_equipo;
+      prev.titulo = prev.titulo || b.titulo || b.slug;
+      if (b.version_publicada || b.publicado) prev.publicado = true;
+      porId.set(b.slug, prev);
+    }
+    const items = [...porId.values()].sort((a, b) => (a.titulo || "").localeCompare(b.titulo || "", "es"));
+
     const filtro = h("input", { type: "search", placeholder: "Buscar…", "aria-label": "Buscar sistema" });
     const lista = h("ul", { class: "lista lista-sistemas" });
     const pintar = () => {
       const t = filtro.value.trim().toLowerCase();
-      const visibles = cat.filter((m) => !t || `${m.titulo} ${m.id} ${m.descripcion}`.toLowerCase().includes(t));
+      const visibles = items.filter((m) => !t || `${m.titulo} ${m.id}`.toLowerCase().includes(t));
       vaciar(lista, visibles.map((m) => h("li", {},
-        h("a", { href: `#/creador?id=${encodeURIComponent(m.id)}`, class: "elemento-sistema" + (m.id === idAbierto ? " activo" : ""),
-          "aria-current": m.id === idAbierto ? "page" : null },
+        h("a", {
+          href: `#/creador?id=${encodeURIComponent(m.id)}`,
+          class: "elemento-sistema" + (m.id === idAbierto ? " activo" : ""),
+          "aria-current": m.id === idAbierto ? "page" : null,
+        },
           h("b", { texto: m.titulo || m.id }),
-          h("span", { class: "tenue", texto: `${FAMILIAS[m.familia] || m.familia || ""} · ${m.version || ""}` }),
-          (m.errores || []).length ? insignia("le falta algo", "nota") : null))));
-      if (!visibles.length) lista.append(h("li", { class: "tenue", texto: cat.length ? "Nada coincide." : "Aún no hay sistemas aquí." }));
+          h("span", { class: "tenue", texto: m.id }),
+          h("span", { class: "fila" },
+            m.web ? insignia("web", "acento") : null,
+            m.local ? insignia("equipo", "bien") : null,
+            m.instalado.length ? insignia("instalado", "bien") : null,
+            m.publicado ? insignia("mercado", "acento") : null,
+            (m.errores || []).length ? insignia("le falta algo", "nota") : null)))));
+      if (!visibles.length) lista.append(h("li", { class: "tenue", texto: items.length ? "Nada coincide." : "Aún no hay sistemas en el taller." }));
     };
     filtro.addEventListener("input", pintar);
     pintar();
     vaciar(zonaLista,
       h("div", { class: "fila separada" },
-        h("h2", { texto: "Lista" }),
-        boton("Nuevo", () => abrir(""), { clase: "pequeno", icono: "mas", titulo: "Crear otro con uxyn" })),
+        h("h2", { texto: "Taller" }),
+        boton("Nuevo", () => abrir(""), { clase: "pequeno", icono: "mas", titulo: "Nuevo sistema" })),
       filtro, lista,
-      await tarjetaCreador({ alTraer: async (r, slug) => abrir(r?.id || slug) }),
-      h("details", { class: "creador-extra" },
-        h("summary", { texto: "Avanzado: crear sin uxyn" }),
-        h("p", { class: "tenue", texto: "Plantilla paso a paso (sin agente)." }),
-        boton("Paso a paso", async () => {
-          const r = await crearSistema();
-          if (!r) return;
-          if (typeof r === "string") abrir(r);
-          else abrir(r.id, r.conversacion);
-        }, { clase: "pequeno" })));
+      boton("Plantilla sin uxyn", async () => {
+        const r = await crearSistema();
+        if (!r) return;
+        if (typeof r === "string") abrir(r);
+        else abrir(r.id, r.conversacion);
+      }, { clase: "pequeno fantasma" }));
   }
 
   async function pintarSistema() {
     if (!idAbierto) {
+      const nombreInput = h("input", { type: "text", placeholder: "por ejemplo: revisión de seguridad", "aria-label": "Nombre del sistema" });
+      const origen = leerOrigen("_nuevo");
       vaciar(zonaSistema,
-        h("div", { class: "editor-vacio", "aria-label": "Editor" },
-          h("p", { class: "tenue", texto: "Los archivos del sistema aparecerán aquí." })));
+        plantillaNuevo({ proponiendo, idea: origen.idea, nombreInput }),
+        huecoSugerencias);
+      nombreInput.addEventListener("change", () => {
+        const o = leerOrigen("_nuevo");
+        guardarOrigen("_nuevo", { ...o, nombre: nombreInput.value.trim() });
+      });
       return;
     }
-    // Siempre recargar: tras crear/traer el caché del catálogo suele estar vacío y
-    // «No encuentro» era un falso negativo (el sistema ya estaba en el equipo).
     let meta = (await catalogo(true)).find((m) => m.id === idAbierto);
     if (!meta) {
       await new Promise((r) => setTimeout(r, 400));
       meta = (await catalogo(true)).find((m) => m.id === idAbierto);
     }
     if (!meta) {
+      // Puede ser solo web: ofrecer Traer
       anotar({
-        nivel: "error", origen: "creador",
-        titulo: `No encuentro «${idAbierto}» en el catálogo local`,
-        detalle: "La URL apunta a un id que no está en este equipo (¿falló el traer del borrador web?).",
-        datos: { id: idAbierto, conversacion: params.conversacion || null },
+        nivel: "aviso", origen: "creador",
+        titulo: `«${idAbierto}» no está en el catálogo local`,
+        datos: { id: idAbierto },
       });
-      vaciar(zonaSistema, h("div", { class: "banda mal", texto: `No encuentro «${idAbierto}» en este equipo.` }),
-        h("p", {}, boton("Crear con uxyn", () => abrir(""), { clase: "pequeno" })));
+      vaciar(zonaSistema,
+        h("div", { class: "banda aviso", texto: `«${idAbierto}» no está en este equipo.` }),
+        h("div", { class: "fila" },
+          boton("Traer de la web", async () => {
+            await sincronizarBorrador("bajar", idAbierto, zonaSalidaDetalle, async (r) => {
+              await catalogo(true);
+              abrir(r?.id || idAbierto);
+            });
+          }, { clase: "primario pequeno" }),
+          boton("Nuevo sistema", () => abrir(""), { clase: "pequeno" })),
+        huecoSugerencias);
       return;
     }
     abierto = await editorSistema(idAbierto, {
       alCambiar: async () => {
         await pintarLista();
-        await pintarCarril();
+        await pintarFranjas();
       },
     });
     vaciar(zonaSistema,
       h("div", { class: "fila separada" },
-        h("div", {}, h("h2", { texto: meta.titulo || meta.id }), h("code", { class: "tenue", texto: meta.id })),
-        boton("Crear otro", () => abrir(""), { clase: "pequeno", titulo: "Volver a crear con uxyn" })),
+        h("div", {},
+          h("h2", { texto: meta.titulo || meta.id }),
+          h("code", { class: "tenue", texto: meta.id }),
+          insigniasDonde(await dondeEsta(idAbierto))),
+        boton("Nuevo", () => abrir(""), { clase: "pequeno", titulo: "Nuevo sistema" })),
+      huecoSugerencias,
       abierto.nodo);
   }
 
   async function pintarAgente() {
     if (!idAbierto) {
       const inicio = inicioConAgente({
-        cabecera: false,
-        alCrear: async (id, r) => {
+        cabecera: true,
+        alAntesDeCrear: async ({ idea, adjuntos }) => {
+          guardarOrigen("_nuevo", { idea, adjuntos });
+          proponiendo = true;
+          await pintarFranjas();
+          await pintarSistema();
+        },
+        alDespuesDeCrear: async () => {
           proponiendo = false;
+          await pintarFranjas();
+        },
+        alCrear: async (id, r) => {
+          moverOrigen("_nuevo", id);
           await catalogo(true);
-          await pintarCarril();
           abrir(id, r.conversacion);
         },
       });
-      const crearOrig = inicio.crear;
-      inicio.crear = async () => {
-        proponiendo = true;
-        await pintarCarril();
-        try {
-          return await crearOrig();
-        } finally {
-          proponiendo = false;
-          await pintarCarril();
-        }
-      };
       vaciar(zonaAgente,
         h("h2", {}, icono("chat"), " uxyn"),
+        h("p", { class: "tenue", texto: "Propone el núcleo. Tú ves archivos y aceptas en «Por revisar»." }),
         inicio.nodo);
       return;
     }
@@ -273,9 +470,10 @@ export async function vista(params, { ir }) {
       alCambiar: async () => {
         if (abierto?.recargar) await abierto.recargar();
         await pintarLista();
-        await pintarCarril();
+        await pintarFranjas();
       },
     });
+    vaciar(huecoSugerencias, sugerencias.nodo);
 
     const chat = await chatAgente(
       () => (abierto ? { id: idAbierto, rutaActual: abierto.rutaActual, textarea: abierto.textarea, recargar: abierto.recargar } : null),
@@ -285,15 +483,15 @@ export async function vista(params, { ir }) {
         sugerencias,
         alProponer: async () => {
           proponiendo = false;
-          await pintarCarril();
+          await pintarFranjas();
         },
         alEmpezarTurno: async () => {
           proponiendo = true;
-          await pintarCarril();
+          await pintarFranjas();
         },
         alTerminarTurno: async () => {
           proponiendo = false;
-          await pintarCarril();
+          await pintarFranjas();
           if (abierto?.recargar) await abierto.recargar();
         },
       });
@@ -310,7 +508,7 @@ export async function vista(params, { ir }) {
           errores = p.errores || [];
           marcadores = p.marcadores || [];
           siguiente = p.siguiente || null;
-        } catch { /* sin validador local: cae al prompt de marcadores */ }
+        } catch { /* */ }
         area.value = armarPromptCompletar({ errores, marcadores, siguiente });
         area.dispatchEvent(new Event("input"));
         const enviarBtn = [...zonaAgente.querySelectorAll("button")].find((b) => /Enviar/i.test(b.textContent || ""));
@@ -320,25 +518,24 @@ export async function vista(params, { ir }) {
 
     vaciar(zonaAgente,
       h("h2", {}, icono("chat"), " uxyn"),
-      sugerencias.nodo,
+      h("p", { class: "tenue", texto: "Propone cambios; tú decides en «Por revisar»." }),
       chat);
   }
 
   aplicar();
   cuerpo.append(zonaLista, zonaSistema, zonaAgente);
-  const logs = panelLogs({ colapsable: true, titulo: "Logs" });
-  marco.append(zonaCarril, cuerpo, logs.nodo);
+  marco.append(zonaOrigen, zonaCiclo, zonaSalida, cuerpo);
   anotar({
     nivel: "info", origen: "creador",
-    titulo: idAbierto ? `Creador abierto: ${idAbierto}` : "Creador abierto (sin sistema)",
+    titulo: idAbierto ? `Taller abierto: ${idAbierto}` : "Taller abierto (nuevo sistema)",
     datos: { id: idAbierto || null, conversacion: params.conversacion || null },
   });
-  await Promise.all([pintarLista(), pintarSistema(), pintarCarril()]);
+  await Promise.all([pintarLista(), pintarSistema(), pintarFranjas()]);
   await pintarAgente();
-  await pintarCarril();
+  await pintarFranjas();
 
-  return h("div", { class: "creador-pagina" },
-    cabecera("Creador de sistemas", null,
-      h("div", { class: "fila", role: "group", "aria-label": "Zonas" }, interruptorLista)),
+  return h("div", { class: "taller-pagina" },
+    cabecera("Taller", "Sistemas de gobernanza: archivos, origen, ciclo y salida. uxyn propone; tú decides.",
+      h("div", { class: "fila", role: "group", "aria-label": "Zonas" }, interruptorLista, interruptorAgente)),
     marco);
 }

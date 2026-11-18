@@ -242,7 +242,7 @@ export function cajaAgente({ etiqueta, placeholder = "", filas = 4, textarea, oc
  * «Crea un sistema con el agente». `alCrear(id, respuesta)` se llama cuando el agente ha creado el sistema y el panel
  * lo ha traído. Si el agente pregunta algo, la conversación sigue aquí. Con `conBoton: false` lo dispara `crear()`.
  */
-export function inicioConAgente({ alCrear, conBoton = true, cabecera = true } = {}) {
+export function inicioConAgente({ alCrear, alAntesDeCrear = null, alDespuesDeCrear = null, conBoton = true, cabecera = true } = {}) {
   let conversacion = null;
   const respuestas = h("div", { class: "pila conversacion", role: "log", "aria-live": "polite", hidden: true });
   const caja = cajaAgente({ etiqueta: "Tu idea", placeholder: "¿Qué quieres que sigan tus agentes? Por ejemplo: «Que revisen los pull requests de mi equipo, que no aprueben sin pruebas y que nunca toquen producción»." });
@@ -260,6 +260,7 @@ export function inicioConAgente({ alCrear, conBoton = true, cabecera = true } = 
       avisar("Cuenta tu idea (al menos una frase) o adjunta archivos", "mal");
       return false;
     }
+    if (alAntesDeCrear) await alAntesDeCrear({ idea: texto, adjuntos: archivos.map((a) => a.nombre) });
     const mensaje = texto || DESDE_ARCHIVOS;
     if (fallo) { fallo.remove(); fallo = null; }
     anotar({
@@ -316,14 +317,15 @@ export function inicioConAgente({ alCrear, conBoton = true, cabecera = true } = 
       return false;
     } finally {
       espera.parar();
+      if (alDespuesDeCrear) await alDespuesDeCrear();
     }
   }
   if (conBoton) caja.ponerAccion(boton("Crear con uxyn", crear, { clase: "primario", icono: "flecha" }));
   const nodo = h("div", { class: "pila inicio-agente" },
     cabecera ? h("div", { class: "inicio-agente-cabecera" },
       h("span", { class: "inicio-agente-insignia", "aria-hidden": "true" }, icono("creador")),
-      h("div", {}, h("h3", { texto: "Crea un sistema con uxyn" }),
-        h("p", { class: "tenue", texto: "Cuenta tu idea o sube archivos. Tú aceptas los cambios en «Por revisar»." }))) : null,
+      h("div", {}, h("h3", { texto: "Empezar con uxyn" }),
+        h("p", { class: "tenue", texto: "Idea o zip → archivos del sistema. Tú aceptas en «Por revisar»." }))) : null,
     respuestas, zonaEspera, caja.nodo, ejemplos);
   return { nodo, crear };
 }

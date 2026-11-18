@@ -1,4 +1,5 @@
 // Arranque del panel: navegación por #/sección, latido para que el servidor sepa que hay una pestaña abierta y cierre.
+// Áreas: Inicio · Taller · Proyectos · Mercado · Cuenta (ADR 0015).
 
 import { canjearCodigo, VIENE_CON_CODIGO, BIENVENIDA_EN_URL, obtener, enviar, latir, cuandoSeDesconecte } from "./api.js";
 import { h, vaciar, icono, cargando, avisar, confirmar } from "./ui.js";
@@ -11,10 +12,27 @@ import * as herramienta from "./vistas/herramienta.js";
 import * as creador from "./vistas/creador-sistemas.js";
 import * as conexiones from "./vistas/conexiones.js";
 import * as logs from "./vistas/logs.js";
+import * as cuenta from "./vistas/cuenta.js";
 import * as bienvenida from "./vistas/bienvenida.js";
 
-const VISTAS = { inicio, proyectos, proyecto, flujos, catalogo, creador, conexiones, herramienta, logs, bienvenida };
-const SECCION_DE = { proyecto: "proyectos" };
+const VISTAS = {
+  inicio, proyectos, proyecto, flujos, catalogo, creador, conexiones, herramienta, logs, cuenta, bienvenida,
+  // Alias de producto
+  taller: creador,
+  mercado: catalogo,
+};
+const SECCION_DE = {
+  proyecto: "proyectos",
+  creador: "creador",
+  taller: "creador",
+  catalogo: "catalogo",
+  mercado: "catalogo",
+  herramienta: "cuenta",
+  conexiones: "cuenta",
+  logs: "cuenta",
+  flujos: "proyectos",
+  cuenta: "cuenta",
+};
 const main = document.getElementById("contenido");
 function rutaActual() {
   const limpio = location.hash.replace(/^#\/?/, "");

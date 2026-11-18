@@ -1,5 +1,17 @@
 # Cambios
 
+## 1.5.12
+
+- **Taller de sistemas (ADR 0015):** el panel deja el Creador chat-first.
+  Navegación: Inicio · Taller · Proyectos · Mercado · Cuenta. En un sistema:
+  franja Origen, carril de ciclo (Borrador → En equipo → En proyecto → Mercado),
+  barra de salida siempre visible (Descargar .zip, Traer y Subir a la vez si
+  aplica, Instalar, Publicar), archivos/editor por defecto y uxyn en cajón.
+  «Abrir salida» / «Publicar» del carril enfoca la barra real. Logs en Cuenta.
+  Contrato `creador-estado` añade `enEquipo`, `enProyecto`, `publicado` y
+  `origen`. El badge **mercado** usa `version_publicada` del borrador web
+  (no solo el publicar de esta sesión).
+
 ## 1.5.11
 
 - **Creador (panel):** «Que uxyn complete» arma el mensaje según pendientes:

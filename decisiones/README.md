@@ -17,3 +17,5 @@ Decisiones de diseño del propio kit, con su contexto y sus consecuencias. Una d
 | [0011](0011-sesion-por-dispositivo.md) | El kit se conecta a la cuenta con un flujo de dispositivo | aceptada |
 | [0012](0012-biblioteca-sincronizada.md) | La biblioteca de la cuenta se sincroniza con la caché local | aceptada |
 | [0013](0013-creador-local-e-ia.md) | Creador local sincronizado con la web y proveedores de IA | aceptada |
+| [0014](0014-suscripciones-de-ia.md) | Suscripciones de IA | aceptada |
+| [0015](0015-taller-de-sistemas.md) | Taller de sistemas de gobernanza (producto) | aceptada |

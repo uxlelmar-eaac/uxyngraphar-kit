@@ -12,8 +12,10 @@ y el criterio de diseño [`GUIA-DE-SISTEMAS.md`](GUIA-DE-SISTEMAS.md). Los agent
 | Completo | El sistema ya está pensado (alcance, fases, skills) | `generar plantilla` → editar la especificación → `generar desde` (simula) → `generar desde --aplicar` |
 | Guiado | Se va pensando sobre la marcha | `crear` (esqueleto con marcadores `{{…}}`) → `generar pendientes` → rellenar → repetir hasta «listo» |
 
-En el panel: «Creador de sistemas» → caja «Crea un sistema con el agente», o «Paso a paso» / «Desde especificación» en otras formas. El editor de cada
-sistema muestra lo que falta y el siguiente paso.
+En el panel: área **Taller** (ADR 0015) — archivos y editor a la vista, franja de origen, carril de ciclo
+(Borrador → En equipo → En proyecto → Mercado) y barra de salida (zip, sync, instalar, publicar). uxyn es
+columna estrecha y propone; tú aceptas en «Por revisar». Plantilla a mano o especificación JSON siguen
+disponibles como «Plantilla sin uxyn».
 
 ## Comandos
 

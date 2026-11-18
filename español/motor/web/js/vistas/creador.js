@@ -166,7 +166,7 @@ export async function chatAgente(contexto, {
   let conversacion = conversacionInicial;
   let modo = "asistente";
   let adjuntos = null;
-  const saludoAsistente = "Hola, soy uxyn. Mira el carril de arriba: te dice qué falta y el siguiente paso. Si dejo cambios, salen en «Por revisar».";
+  const saludoAsistente = "Hola, soy uxyn. A la izquierda tienes archivos y origen; arriba el ciclo del sistema. Si dejo cambios, salen en «Por revisar».";
   const saludoSimulador = "Simulador: actúo como el agente de IA que sigue este sistema. Pídeme algo que debería rechazar.";
   const hilo = h("div", { class: "pila conversacion", role: "log", "aria-live": "polite" },
     h("div", { class: "mensaje ia", texto: saludoAsistente }));
@@ -401,9 +401,7 @@ export async function chatAgente(contexto, {
     atajos,
     hilo,
     propuestaLocal,
-    h("details", { class: "avanzado-ia" },
-      h("summary", { texto: "Avanzado: qué IA usar" }),
-      h("label", { class: "campo" }, "Proveedor o modelo", sel)),
+    h("label", { class: "campo ia-selector" }, "Qué IA usar", sel),
     adjuntos.nodo);
 }
 
@@ -427,7 +425,7 @@ export async function sincronizarBorrador(accion, slug, zona, alTerminar, conser
   if (alTerminar) await alTerminar(r);
 }
 
-/** Borradores de la cuenta (sincronizar web ↔ equipo). Va colapsado para no saturar. */
+/** Borradores de la cuenta (sincronizar web ↔ equipo). Usado desde Cuenta si hace falta. */
 export async function tarjetaCreador({ alTraer } = {}) {
   const zona = h("div", { class: "pila" });
   const detalle = h("div", { class: "pila" });
@@ -435,7 +433,7 @@ export async function tarjetaCreador({ alTraer } = {}) {
   async function pintar() {
     const cuenta = await obtener("/api/cuenta");
     if (!cuenta || cuenta.tipo !== "sesion") {
-      vaciar(zona, h("p", { class: "tenue", texto: "Inicia sesión en «Herramienta y ajustes» para sincronizar borradores con la web." }));
+      vaciar(zona, h("p", { class: "tenue", texto: "Inicia sesión en «Cuenta» para sincronizar borradores con la web." }));
       return;
     }
     let filas = [];
@@ -446,7 +444,7 @@ export async function tarjetaCreador({ alTraer } = {}) {
       return;
     }
     vaciar(zona,
-      h("p", { class: "tenue", texto: "Trae un borrador de la web a este equipo, o guarda aquí cambios en la web." }),
+      h("p", { class: "tenue", texto: "Trae un borrador de la web a este equipo, o guarda aquí cambios en la web. En el Taller también puedes usar la barra de salida." }),
       filas.length ? h("ul", { class: "lista" }, filas.map((f) => h("li", { class: "fila separada" },
         h("span", {}, h("b", { texto: f.titulo || f.slug }), h("span", { class: "tenue", texto: ` ${f.slug}` })),
         h("span", { class: "fila" },
@@ -458,7 +456,5 @@ export async function tarjetaCreador({ alTraer } = {}) {
   }
 
   await pintar().catch((e) => vaciar(zona, h("div", { class: "banda aviso", texto: String(e.message || e) })));
-  return h("details", { class: "creador-extra" },
-    h("summary", { texto: "Borradores en la web" }),
-    zona);
+  return h("div", { class: "pila" }, h("h3", { texto: "Borradores en la web" }), zona);
 }
