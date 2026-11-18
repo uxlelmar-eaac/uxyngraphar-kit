@@ -1,6 +1,6 @@
 # Cambios
 
-## Sin publicar
+## 1.5.0
 
 - **Creador, más simple y moderno (igual que la web):** una sola caja para hablar con el agente con
   el texto, los adjuntos y el botón; ejemplos cortos; el chat del agente usa la misma caja.
