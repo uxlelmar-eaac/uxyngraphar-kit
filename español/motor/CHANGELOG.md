@@ -1,5 +1,11 @@
 # Cambios
 
+## 1.5.11
+
+- **Creador (panel):** «Que uxyn complete» arma el mensaje según pendientes:
+  si no hay marcadores `{{…}}` pero sí errores (p. ej. `permisos.acciones`),
+  pide corregir esos errores en lugar de repetir «sustituye marcadores».
+
 ## 1.5.10
 
 - **Permisos:** el error de `permisos.acciones.*` aclara que hace falta
