@@ -66,24 +66,18 @@ export async function vista(params, { ir }) {
   const zonaAgente = h("section", { class: "zona zona-agente", "aria-label": "uxyn" });
   const nodos = { lista: zonaLista, sistema: zonaSistema, agente: zonaAgente };
 
-  const interruptores = ZONAS.map(([clave, nombre]) => {
-    const fijo = clave === "sistema" || clave === "agente";
-    const b = h("button", {
-      type: "button",
-      class: "boton pequeno conmutador",
-      "aria-pressed": String(zonas[clave]),
-      "aria-controls": `zona-${clave}`,
-      title: fijo ? `«${nombre}» siempre visible en el puesto asistido` : `Mostrar u ocultar «${nombre}»`,
-      disabled: fijo || null,
-    }, nombre);
-    if (!fijo) {
-      b.addEventListener("click", () => {
-        zonas[clave] = !zonas[clave];
-        guardarZonas(zonas);
-        aplicar();
-      });
-    }
-    return b;
+  // Solo se conmuta Lista; Editor y uxyn son fijos (no saturar la cabecera).
+  const interruptorLista = h("button", {
+    type: "button",
+    class: "boton pequeno conmutador",
+    "aria-pressed": String(zonas.lista),
+    "aria-controls": "zona-lista",
+    title: "Mostrar u ocultar la lista de sistemas",
+  }, "Lista");
+  interruptorLista.addEventListener("click", () => {
+    zonas.lista = !zonas.lista;
+    guardarZonas(zonas);
+    aplicar();
   });
 
   function aplicar() {
@@ -93,7 +87,7 @@ export async function vista(params, { ir }) {
       nodos[clave].id = `zona-${clave}`;
       nodos[clave].hidden = !zonas[clave];
     }
-    interruptores.forEach((b, i) => b.setAttribute("aria-pressed", String(zonas[ZONAS[i][0]])));
+    interruptorLista.setAttribute("aria-pressed", String(zonas.lista));
     cuerpo.dataset.zonas = ZONAS.filter(([k]) => zonas[k]).map(([k]) => k).join(" ");
     cuerpo.dataset.modo = idAbierto ? "editar" : "crear";
   }
@@ -139,6 +133,13 @@ export async function vista(params, { ir }) {
 
   async function pintarCarril() {
     const estado = await datosEstado();
+    // Sin sistema: la caja de uxyn es el punto de entrada; no repetir el mismo texto arriba.
+    if (estado.id === "sin_sistema" && !proponiendo) {
+      vaciar(zonaCarril);
+      zonaCarril.hidden = true;
+      return;
+    }
+    zonaCarril.hidden = false;
     vaciar(zonaCarril, carrilEstado(estado, {
       ocupado: proponiendo,
       alAccion: async (e) => {
@@ -203,10 +204,8 @@ export async function vista(params, { ir }) {
   async function pintarSistema() {
     if (!idAbierto) {
       vaciar(zonaSistema,
-        h("div", { class: "pila editor-vacio" },
-          h("h2", { texto: "Editor" }),
-          h("p", { class: "tenue", texto: "Aquí verás los archivos núcleo cuando uxyn cree el sistema. Mientras, escribe la idea a la derecha." }),
-          h("div", { class: "banda aviso", texto: "1. Idea o archivos → 2. uxyn propone → 3. Aceptas en «Por revisar»." })));
+        h("div", { class: "editor-vacio", "aria-label": "Editor" },
+          h("p", { class: "tenue", texto: "Los archivos del sistema aparecerán aquí." })));
       return;
     }
     const meta = (await catalogo()).find((m) => m.id === idAbierto);
@@ -231,13 +230,13 @@ export async function vista(params, { ir }) {
   async function pintarAgente() {
     if (!idAbierto) {
       const inicio = inicioConAgente({
+        cabecera: false,
         alCrear: async (id, r) => {
           proponiendo = false;
           await pintarCarril();
           abrir(id, r.conversacion);
         },
       });
-      // Envolver create para marcar proponiendo
       const crearOrig = inicio.crear;
       inicio.crear = async () => {
         proponiendo = true;
@@ -251,7 +250,6 @@ export async function vista(params, { ir }) {
       };
       vaciar(zonaAgente,
         h("h2", {}, icono("chat"), " uxyn"),
-        h("p", { class: "tenue", texto: "Cuenta la idea o sube archivos/zip. uxyn arma el núcleo del sistema." }),
         inicio.nodo);
       return;
     }
@@ -299,7 +297,6 @@ export async function vista(params, { ir }) {
 
     vaciar(zonaAgente,
       h("h2", {}, icono("chat"), " uxyn"),
-      h("p", { class: "tenue", texto: "Pide completar o mejorar. Los cambios salen en «Por revisar» (arriba). Mira el carril de estado." }),
       sugerencias.nodo,
       chat);
   }
@@ -312,10 +309,7 @@ export async function vista(params, { ir }) {
   await pintarCarril();
 
   return h("div", {},
-    cabecera("Creador de sistemas",
-      idAbierto
-        ? "Editor a la izquierda · uxyn a la derecha · el carril dice el siguiente paso."
-        : "Cuenta la idea a uxyn. El editor se llenará cuando exista el sistema.",
-      h("div", { class: "fila", role: "group", "aria-label": "Zonas visibles" }, interruptores)),
+    cabecera("Creador de sistemas", null,
+      h("div", { class: "fila", role: "group", "aria-label": "Zonas" }, interruptorLista)),
     marco);
 }

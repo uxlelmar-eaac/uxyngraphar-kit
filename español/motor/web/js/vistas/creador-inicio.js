@@ -294,12 +294,12 @@ export function inicioConAgente({ alCrear, conBoton = true, cabecera = true } = 
       espera.parar();
     }
   }
-  if (conBoton) caja.ponerAccion(boton("Crear", crear, { clase: "primario", icono: "flecha" }));
+  if (conBoton) caja.ponerAccion(boton("Crear con uxyn", crear, { clase: "primario", icono: "flecha" }));
   const nodo = h("div", { class: "pila inicio-agente" },
     cabecera ? h("div", { class: "inicio-agente-cabecera" },
       h("span", { class: "inicio-agente-insignia", "aria-hidden": "true" }, icono("creador")),
       h("div", {}, h("h3", { texto: "Crea un sistema con uxyn" }),
-        h("p", { class: "tenue", texto: "Idea o archivos/zip → uxyn arma el núcleo → tú aceptas en «Por revisar». El editor a la izquierda es para retoques." }))) : null,
+        h("p", { class: "tenue", texto: "Cuenta tu idea o sube archivos. Tú aceptas los cambios en «Por revisar»." }))) : null,
     respuestas, zonaEspera, caja.nodo, ejemplos);
   return { nodo, crear };
 }

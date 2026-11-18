@@ -1,5 +1,10 @@
 # Cambios
 
+## 1.5.7
+
+- **Creador, menos ruido:** al crear no se repite el mismo texto en cabecera, carril, editor y
+  uxyn. Carril solo cuando ya hay sistema o uxyn está trabajando; una sola caja para la idea.
+
 ## 1.5.6
 
 - **Puesto asistido:** carril de estado (qué falta / qué revisar / siguiente paso), Editor a la

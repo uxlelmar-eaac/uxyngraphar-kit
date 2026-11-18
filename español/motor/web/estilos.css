@@ -307,7 +307,10 @@ main:has(.creador-puesto), main:has(.creador) { max-width: none; }
 .creador[data-zonas="sistema agente"] { grid-template-columns: minmax(0, 1fr) 380px; }
 .creador[data-zonas="lista agente"] { grid-template-columns: 300px minmax(0, 1fr); }
 .creador[data-zonas="lista"], .creador[data-zonas="sistema"], .creador[data-zonas="agente"] { grid-template-columns: minmax(0, 1fr); }
-.editor-vacio { padding: 8px 0; }
+.editor-vacio { display: flex; align-items: center; justify-content: center; min-height: 12rem; padding: 24px; text-align: center; }
+.editor-vacio .tenue { margin: 0; max-width: 16rem; }
+.zona-agente > h2 { margin-bottom: 4px; }
+.zona-agente > .inicio-agente { margin-top: 0; }
 .inicio-ayuda { margin-top: 4px; }
 .modos-chat { gap: 6px; }
 .pista-modo { margin: 0; font-size: var(--font-size-sm); }
