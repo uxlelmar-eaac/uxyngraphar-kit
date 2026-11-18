@@ -1,5 +1,14 @@
 # Cambios
 
+## 1.3.0
+
+- **Mis proyectos:** carpetas con nombre y color (plegables y reordenables), etiquetas de colores,
+  arrastrar y soltar entre carpetas, búsqueda, filtros, orden y vista de tarjetas o lista; se
+  recuerdan en el navegador. La organización vive en `organizacion.json` y en `/api/organizacion/*`.
+- **Flujos guardados:** sección más visual (plantillas, tarjetas por forma de trabajar, filtros y
+  orden), asistente de creación en cuatro pasos, crear desde un proyecto, aplicar a varios repos
+  con vista previa, y editor con fichas; estilos en `web/flujos.css`.
+
 ## 1.2.2
 
 - El panel, el favicon y los accesos directos usan la PNG oficial de marca (`icono.png`); se elimina el
