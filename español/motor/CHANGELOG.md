@@ -1,6 +1,6 @@
 # Cambios
 
-## Sin publicar
+## 1.4.0
 
 - **Creador de sistemas, igual que en la web:** «Crea un sistema con el agente» (cuenta tu idea y/o
   adjunta archivos o una carpeta de texto) en la zona central y como primera opción de «Crear
@@ -8,6 +8,9 @@
   equipo y lo abre con su conversación y las propuestas pendientes.
 - El chat del agente admite archivos adjuntos (30 archivos, 200 mil caracteres; se ignoran `.git`,
   `node_modules` y binarios). Nueva ruta `GET /api/agente/conversacion`.
+- **Tus suscripciones de IA** (ADR 0014): el Creador puede usar Claude Code, Codex, Copilot CLI y
+  Qwen Code con la sesión de su CLI en tu equipo (sin leer tokens). Panel › Conexiones las lista con
+  riesgo y aviso de términos; nunca se eligen solas. Google AI Pro/Ultra no se ofrece.
 
 ## 1.3.0
 
