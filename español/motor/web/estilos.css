@@ -327,6 +327,19 @@ button.enlace { font: inherit; background: none; border: none; padding: 0; color
   .creador, .creador[data-zonas] { grid-template-columns: minmax(0, 1fr); }
   .zona-lista, .zona-agente { position: static; max-height: none; }
 }
+/* Crear con el agente (igual que en el Creador web): idea, ejemplos y archivos adjuntos */
+.inicio-agente h3 { margin: 0; display: flex; align-items: center; gap: 8px; }
+.inicio-agente h3 svg { width: 20px; height: 20px; color: var(--acento); }
+.ejemplo { padding: 4px 12px; border: 1px solid var(--borde); border-radius: 999px; background: transparent; color: var(--tenue); font: inherit; font-size: var(--font-size-sm); text-align: left; cursor: pointer; }
+.ejemplo:hover { color: var(--texto); background: var(--superficie-2); }
+.ejemplo:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+.adjuntos { display: flex; flex-direction: column; gap: 8px; padding: 8px; border: 1px dashed transparent; border-radius: var(--radio); }
+.adjuntos.encima { border-color: var(--acento); background: var(--superficie-2); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.chip { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; padding: 2px 4px 2px 10px; border: 1px solid var(--borde); border-radius: 999px; background: var(--superficie-2); font-size: var(--font-size-sm); overflow-wrap: anywhere; }
+.chip-quitar { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: 0; border-radius: 50%; background: transparent; color: var(--tenue); cursor: pointer; }
+.chip-quitar:hover { color: var(--texto); background: var(--superficie); }
+.chip-quitar svg { width: 14px; height: 14px; }
 .detalles-conexion { margin: 0; padding-left: 18px; font-size: var(--font-size-sm); color: var(--tenue); }
 .rejilla > .tarjeta + .tarjeta { margin-top: 0; }
 

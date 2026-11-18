@@ -8,6 +8,7 @@ import { catalogo } from "../api.js";
 import { h, vaciar, boton, cabecera, insignia, vacio, icono } from "../ui.js";
 import { editorSistema, crearSistema, FAMILIAS } from "./creador-editor.js";
 import { chatAgente, tarjetaCreador } from "./creador.js";
+import { inicioConAgente } from "./creador-inicio.js";
 
 const CLAVE = "uxyn-creador-zonas";
 export const ZONAS = [
@@ -63,10 +64,12 @@ export async function vista(params, { ir }) {
     marco.dataset.zonas = ZONAS.filter(([k]) => zonas[k]).map(([k]) => k).join(" ");
   }
 
-  const abrir = (id) => ir("creador", id ? { id } : null);
+  const abrir = (id, conversacion) => ir("creador", id ? { id, ...(conversacion ? { conversacion } : {}) } : null);
   async function nuevo() {
-    const id = await crearSistema();
-    if (id) abrir(id);
+    const r = await crearSistema();
+    if (!r) return;
+    if (typeof r === "string") abrir(r);
+    else abrir(r.id, r.conversacion);
   }
 
   // Izquierda: lista de sistemas locales con buscador y borradores de la web.
@@ -96,8 +99,10 @@ export async function vista(params, { ir }) {
   // Centro: el sistema abierto.
   async function pintarSistema() {
     if (!idAbierto) {
-      vaciar(zonaSistema, vacio("Elige o crea un sistema", "Un sistema reúne lo que tus agentes deben saber y seguir para resolver un tipo de problema. Ábrelo desde «Mis sistemas» o crea uno nuevo; el agente te puede ayudar.",
-        boton("Crear sistema", nuevo, { clase: "primario", icono: "mas" })));
+      const inicio = inicioConAgente({ alCrear: (id, r) => abrir(id, r.conversacion) });
+      vaciar(zonaSistema, h("div", { class: "tarjeta pila" }, inicio.nodo),
+        h("p", { class: "tenue" }, "Un sistema reúne lo que tus agentes deben saber y seguir para resolver un tipo de problema. También puedes abrir uno desde «Mis sistemas» o ",
+          boton("crearlo paso a paso", nuevo, { clase: "pequeno", icono: "mas" })));
       return;
     }
     const meta = (await catalogo()).find((m) => m.id === idAbierto);
@@ -112,7 +117,8 @@ export async function vista(params, { ir }) {
   // Derecha: chat con el agente.
   async function pintarAgente() {
     vaciar(zonaAgente, h("h2", {}, icono("chat"), " Agente"),
-      await chatAgente(() => (abierto ? { id: idAbierto, rutaActual: abierto.rutaActual, textarea: abierto.textarea, recargar: abierto.recargar } : null)));
+      await chatAgente(() => (abierto ? { id: idAbierto, rutaActual: abierto.rutaActual, textarea: abierto.textarea, recargar: abierto.recargar } : null),
+        { conversacionInicial: Number(params.conversacion) || null, slugInicial: idAbierto || null }));
   }
 
   aplicar();

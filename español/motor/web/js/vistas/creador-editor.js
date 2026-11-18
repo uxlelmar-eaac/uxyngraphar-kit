@@ -4,6 +4,7 @@
 import { obtener, enviar, catalogo } from "../api.js";
 import { h, vaciar, boton, avisar, dialogo, pestanas, confirmar, pedirDatos, insignia } from "../ui.js";
 import { sincronizarBorrador } from "./creador.js";
+import { inicioConAgente } from "./creador-inicio.js";
 
 export const PIEZAS = {
   proceso: "Proceso por fases", skills: "Habilidades del agente", componentes: "Componentes", herramientas: "Herramientas",
@@ -221,6 +222,7 @@ export async function editorSistema(id, { alCambiar = async () => {} } = {}) {
 }
 
 /** Diálogo para crear un sistema: con lo mínimo (esqueleto) o desde una especificación. Devuelve el id creado. */
+/** Diálogo «Crear sistema». Devuelve el id creado, o { id, conversacion } si lo creó el agente; null si se cancela. */
 export async function crearSistema() {
   const id = h("input", { type: "text", placeholder: "por ejemplo: revision-de-seguridad", "aria-label": "Identificador" });
   const titulo = h("input", { type: "text", "aria-label": "Título" });
@@ -251,13 +253,22 @@ export async function crearSistema() {
     h("p", { class: "tenue", texto: "Sistema completo desde una especificación (formato en motor/GENERADOR.md). Solo se crea si no tiene errores." }),
     spec, h("div", { class: "fila" }, boton("Comprobar", async () => mostrar(await enviar("/api/catalogo/generar", { spec: leerSpec(), aplicar: false })), { clase: "pequeno" })),
     resultado);
-  let modo = "esqueleto";
-  const barra = pestanas([["esqueleto", "Paso a paso"], ["spec", "Desde especificación"]], (m) => {
+  // El agente primero: es la forma principal de crear un sistema (igual que en el Creador web).
+  let creado = null;
+  const conAgente = inicioConAgente({ conBoton: false, alCrear: (idNuevo, r) => { creado = { id: idNuevo, conversacion: r.conversacion }; } });
+  let modo = "agente";
+  esqueleto.hidden = true;
+  const barra = pestanas([["agente", "Con el agente"], ["esqueleto", "Paso a paso"], ["spec", "Desde especificación"]], (m) => {
     modo = m;
+    conAgente.nodo.hidden = m !== "agente";
     esqueleto.hidden = m !== "esqueleto";
     desdeSpec.hidden = m !== "spec";
-  }, "esqueleto");
-  return dialogo({ titulo: "Crear sistema", contenido: h("div", { class: "pila" }, barra, esqueleto, desdeSpec), acciones: [{ texto: "Crear", clase: "primario", accion: async () => {
+  }, "agente");
+  return dialogo({ titulo: "Crear sistema", contenido: h("div", { class: "pila" }, barra, conAgente.nodo, esqueleto, desdeSpec), acciones: [{ texto: "Crear", clase: "primario", accion: async () => {
+    if (modo === "agente") {
+      const r = await conAgente.crear();
+      return r && creado ? creado : false;   // si el agente pregunta algo, el diálogo sigue abierto para responder
+    }
     if (modo === "spec") {
       const r = await enviar("/api/catalogo/generar", { spec: leerSpec(), aplicar: true });
       mostrar(r);

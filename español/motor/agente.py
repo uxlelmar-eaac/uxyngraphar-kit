@@ -15,6 +15,10 @@ import remoto
 
 SEGUNDOS_TURNO = 300
 SLUG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+# Archivos de referencia por mensaje (los mismos límites que el servidor).
+MAX_ADJUNTOS = 30
+MAX_CARACTERES_ADJUNTO = 100_000
+MAX_CARACTERES_ADJUNTOS = 200_000
 
 
 class AgenteNoDisponible(remoto.SinServidor):
@@ -40,8 +44,40 @@ def info() -> dict:
     return _respuesta(codigo, r, "agente")
 
 
-def turno(mensaje: str, conversacion: int | None = None, borrador: str | None = None, modelo: str = "") -> dict:
-    """Un turno: {conversacion, respuesta, acciones, propuestas, borrador, modelo}."""
+def _adjuntos(lista) -> list[dict]:
+    """Valida los archivos de referencia: [{nombre, contenido}] de texto y dentro de los límites."""
+    if not lista:
+        return []
+    if not isinstance(lista, list):
+        raise ValueError("adjuntos: se esperaba una lista")
+    if len(lista) > MAX_ADJUNTOS:
+        raise ValueError(f"demasiados archivos adjuntos (máximo {MAX_ADJUNTOS})")
+    salida, total = [], 0
+    for a in lista:
+        if not isinstance(a, dict):
+            raise ValueError("adjuntos: cada archivo es {nombre, contenido}")
+        nombre = str(a.get("nombre") or "").strip()[:200]
+        contenido = a.get("contenido")
+        if not nombre or not isinstance(contenido, str):
+            raise ValueError("adjuntos: cada archivo necesita nombre y contenido de texto")
+        if len(contenido) > MAX_CARACTERES_ADJUNTO:
+            raise ValueError(f"«{nombre}» es demasiado grande (máximo {MAX_CARACTERES_ADJUNTO // 1000} mil caracteres)")
+        total += len(contenido)
+        salida.append({"nombre": nombre, "contenido": contenido})
+    if total > MAX_CARACTERES_ADJUNTOS:
+        raise ValueError(f"los adjuntos son demasiado grandes (máximo {MAX_CARACTERES_ADJUNTOS // 1000} mil caracteres en total)")
+    return salida
+
+
+def conversacion(id_conversacion: int) -> dict:
+    """Una conversación con el agente: {id, borrador, mensajes: [{rol, texto, acciones?, adjuntos?}]}."""
+    codigo, r = remoto._pedir_json(f"/me/agente/conversaciones/{int(id_conversacion)}", metodo="GET", con_sesion=True)
+    return _respuesta(codigo, r, "conversación")
+
+
+def turno(mensaje: str, conversacion: int | None = None, borrador: str | None = None, modelo: str = "",
+          adjuntos: list | None = None) -> dict:
+    """Un turno: {conversacion, respuesta, acciones, propuestas, borrador, modelo}. `adjuntos`: archivos de referencia."""
     texto = str(mensaje or "").strip()
     if not texto:
         raise ValueError("escribe un mensaje")
@@ -52,6 +88,9 @@ def turno(mensaje: str, conversacion: int | None = None, borrador: str | None = 
         cuerpo["borrador"] = _slug(borrador)
     if modelo:
         cuerpo["modelo"] = modelo
+    archivos = _adjuntos(adjuntos)
+    if archivos:
+        cuerpo["adjuntos"] = archivos
     codigo, r = remoto._pedir_json("/me/agente/turno", cuerpo, con_sesion=True, segundos=SEGUNDOS_TURNO)
     return _respuesta(codigo, r, "agente")
 

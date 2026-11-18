@@ -3,6 +3,7 @@
 
 import { obtener, enviar } from "../api.js";
 import { h, vaciar, boton, avisar, insignia } from "../ui.js";
+import { selectorAdjuntos } from "./creador-inicio.js";
 
 const MAX_LINEAS_LCS = 1500;
 
@@ -93,10 +94,11 @@ function tarjetaPropuesta(slug, p, alDecidir) {
  * Con «Asistente del Creador» habla con el agente del servidor (herramientas y propuestas); con las otras opciones es
  * un chat simple con la clave de la cuenta o un modelo de este equipo. Nada se guarda sin que la persona lo acepte.
  */
-export async function chatAgente(contexto) {
+export async function chatAgente(contexto, { conversacionInicial = null, slugInicial = null } = {}) {
   const { sel, elegido } = await selectorIA();
   const mensajes = [];
-  let conversacion = null;
+  let conversacion = conversacionInicial;
+  const adjuntos = selectorAdjuntos({ compacto: true });
   const hilo = h("div", { class: "pila conversacion", role: "log", "aria-live": "polite" },
     h("div", { class: "mensaje ia", texto: "Hola, soy el Asistente del Creador. Puedo revisar tu sistema, rellenar lo que falta o crear uno nuevo contigo. Todo lo que cambie te lo dejo como propuesta para que lo aceptes. ¿Por dónde empezamos?" }));
   const propuesta = h("div", { class: "pila" });
@@ -115,8 +117,10 @@ export async function chatAgente(contexto) {
 
   async function turnoAgente(texto) {
     const c = contexto();
-    decir("tuyo", texto);
-    const r = await enviar("/api/agente/turno", { mensaje: texto, conversacion, id: c?.id || null });
+    const archivos = adjuntos.valor();
+    decir("tuyo", texto, archivos.length ? h("div", { class: "tenue", texto: `Adjuntó: ${archivos.map((a) => a.nombre).slice(0, 5).join(", ")}${archivos.length > 5 ? "…" : ""}` }) : null);
+    adjuntos.vaciar();
+    const r = await enviar("/api/agente/turno", { mensaje: texto, conversacion, id: c?.id || null, adjuntos: archivos });
     if (r.conflicto) {
       decir("ia", "Tu sistema cambió en la web y en este equipo. Elige qué versión conservar y vuelve a enviar el mensaje.");
       vaciar(propuesta, conflicto(r, (cual) => sincronizarBorrador("subir", r.slug, propuesta, null, cual)));
@@ -177,6 +181,22 @@ export async function chatAgente(contexto) {
       throw e;
     }
   }
+  // Si venimos de crear el sistema con el agente: su conversación y las propuestas que dejó.
+  if (conversacionInicial) {
+    try {
+      const previa = await obtener("/api/agente/conversacion", { id: conversacionInicial });
+      for (const m of previa.mensajes || []) {
+        const hechas = (m.acciones || []).map((a) => h("li", { class: a.ok ? "" : "tenue", texto: `${a.ok ? "✓" : "✗"} ${a.resumen}` }));
+        decir(m.rol === "user" ? "tuyo" : "ia", m.texto, hechas.length ? h("ul", { class: "acciones-agente" }, hechas) : null);
+      }
+      const slug = slugInicial || previa.borrador;
+      if (slug) {
+        for (const p of (await obtener("/api/agente/propuestas", { slug })).filter((x) => (x.archivos || []).some((a) => a.estado === "pendiente"))) {
+          hilo.append(tarjetaPropuesta(slug, p, async () => { if (contexto()?.recargar) await contexto().recargar(); }));
+        }
+      }
+    } catch { /* sin la conversación anterior: se empieza una nueva */ }
+  }
   const enviarBoton = boton("Enviar", hablar, { clase: "pequeno primario" });
   pregunta.addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); enviarBoton.click(); } });
   return h("div", { class: "chat-agente" },
@@ -188,6 +208,7 @@ export async function chatAgente(contexto) {
     propuesta,
     h("label", { class: "casilla" }, simulador, "Simulador: habla con el agente que usará este sistema"),
     pregunta,
+    adjuntos.nodo,
     h("div", { class: "fila" }, enviarBoton));
 }
 

@@ -347,8 +347,19 @@ def _agente_turno(d: dict) -> dict:
         except creador.Conflicto as e:
             return _conflicto(e)
     conversacion = d.get("conversacion")
-    return agente.turno(_campo(d, "mensaje", str), int(conversacion) if conversacion else None, pid,
-                        str(d.get("modelo") or ""))
+    r = agente.turno(_campo(d, "mensaje", str), int(conversacion) if conversacion else None, pid,
+                     str(d.get("modelo") or ""), d.get("adjuntos") or None)
+    nuevo = r.get("borrador") if isinstance(r, dict) else None
+    if nuevo and nuevo != pid:
+        # El agente creó un sistema nuevo: se trae a este equipo para que aparezca en «Mis sistemas».
+        try:
+            creador.bajar(str(nuevo))
+            r["traido"] = str(nuevo)
+        except creador.Conflicto as e:
+            r["conflicto_al_traer"] = _conflicto(e)
+        except Exception as e:  # noqa: BLE001 — el turno ya se hizo; se avisa sin perderlo
+            r["error_al_traer"] = str(e)
+    return r
 
 
 def _agente_decidir(d: dict) -> dict:
@@ -386,6 +397,7 @@ GET = {
     "/api/conexiones": lambda d: {"agentes": __import__("conexiones").resumen(proyectos.listar()),
                                   "mcp_manual": __import__("conexiones").mcp_manual()},
     "/api/agente/propuestas": lambda d: __import__("agente").propuestas(_campo(d, "slug", str)),
+    "/api/agente/conversacion": lambda d: __import__("agente").conversacion(int(_campo(d, "id", str))),
     # un proyecto
     "/api/repo/estado": _estado_repo,
     "/api/repo/flujo": lambda d: _flujo_sin_escribir(_raiz(d)),
