@@ -1,5 +1,11 @@
 # Cambios
 
+## 1.5.10
+
+- **Permisos:** el error de `permisos.acciones.*` aclara que hace falta
+  `scripts/….py [subcomando]` (o `[]`); el texto libre no vale y va en
+  LIMITES.md / PERMISOS.md «Por qué».
+
 ## 1.5.9
 
 - **Creador:** tras crear/traer un sistema, el editor ya no dice «No encuentro» por
