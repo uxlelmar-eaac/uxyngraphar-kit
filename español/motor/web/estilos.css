@@ -329,11 +329,19 @@ textarea.breve { min-height: 64px; font-family: var(--font-body); font-size: inh
 .elemento-sistema { align-items: flex-start; }
 .pieza { flex-wrap: wrap; }
 button.enlace { font: inherit; background: none; border: none; padding: 0; color: var(--acento); text-decoration: underline; cursor: pointer; text-align: left; }
-.chat-agente { display: flex; flex-direction: column; gap: 10px; }
+.chat-agente { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.sugerencias-panel { display: flex; flex-direction: column; gap: 10px; padding: 12px; border: 1px solid var(--aviso); border-radius: var(--radio); background: var(--aviso-suave); }
+.sugerencias-panel[hidden] { display: none; }
+.sugerencias-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sugerencias-cabecera h3 { margin: 0; font-size: var(--font-size-md, 1rem); }
+.sugerencias-panel > .tenue { margin: 0; }
+.sugerencias-panel .propuesta { background: var(--superficie); }
 .propuesta { border: 1px solid var(--borde); border-radius: var(--radio); padding: 12px; background: var(--superficie); }
-.propuesta summary { cursor: pointer; }
+.propuesta summary { cursor: pointer; display: flex; align-items: center; gap: 6px; }
 .acciones-agente { margin: 6px 0 0; padding-left: 0; list-style: none; font-size: var(--font-size-sm); }
-.chat-agente .conversacion { max-height: none; min-height: 200px; flex: 1; }
+.chat-agente .conversacion { max-height: min(42vh, 420px); min-height: 160px; flex: 1; overflow: auto; }
+.creador-extra { border: 1px solid var(--borde); border-radius: var(--radio); padding: 8px 12px; background: var(--superficie-2); font-size: var(--font-size-sm); }
+.creador-extra summary { cursor: pointer; color: var(--tenue); }
 @media (max-width: 1100px) {
   .creador, .creador[data-zonas] { grid-template-columns: minmax(0, 1fr); }
   .zona-lista, .zona-agente { position: static; max-height: none; }

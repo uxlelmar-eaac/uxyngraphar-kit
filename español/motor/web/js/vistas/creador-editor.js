@@ -263,14 +263,14 @@ export async function crearSistema() {
   let modo = "esqueleto";
   conAgente.nodo.hidden = true;
   esqueleto.hidden = false;
-  const barra = pestanas([["esqueleto", "Paso a paso"], ["agente", "Con el agente"], ["spec", "Desde especificación"]], (m) => {
+  const barra = pestanas([["esqueleto", "Paso a paso"], ["agente", "Con uxyn"], ["spec", "Desde especificación"]], (m) => {
     modo = m;
     conAgente.nodo.hidden = m !== "agente";
     esqueleto.hidden = m !== "esqueleto";
     desdeSpec.hidden = m !== "spec";
   }, "esqueleto");
   return dialogo({ titulo: "Otras formas de crear", contenido: h("div", { class: "pila" },
-    h("p", { class: "tenue", texto: "Lo habitual es usar la caja grande «Crea un sistema con el agente». Aquí: plantilla a mano, agente o especificación JSON." }),
+    h("p", { class: "tenue", texto: "Lo habitual es la caja grande «Crea un sistema con uxyn». Aquí: plantilla a mano, uxyn o especificación JSON." }),
     barra, esqueleto, conAgente.nodo, desdeSpec), acciones: [{ texto: "Crear", clase: "primario", accion: async () => {
     if (modo === "agente") {
       const r = await conAgente.crear();

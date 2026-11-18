@@ -1,5 +1,11 @@
 # Cambios
 
+## 1.5.4
+
+- **Creador más claro:** zonas Lista | Editor | uxyn; al crear, hero centrado sin chat lateral.
+- **«Por revisar»:** las sugerencias de uxyn viven en un bloque fijo encima del chat (aceptar,
+  corregir o rechazar), no perdidas en el hilo. Borradores web van colapsados.
+
 ## 1.5.3
 
 - **uxyn**, el agente propio del Creador: chats guardados (listar y reanudar conversaciones), foco en

@@ -1,30 +1,29 @@
-// Pantalla «Creador de sistemas»: dos trabajos distintos, nunca mezclados.
-//   crear  · sin sistema abierto → hero «Crea un sistema» (+ lista opcional); sin chat del agente
-//   editar · sistema abierto → editor + un chat del Asistente; lista opcional
-// Qué zonas están visibles se recuerda en este navegador (si el navegador lo permite).
+// Pantalla «Creador de sistemas»: dos modos claros, sin mezclar.
+//   crear  · cuenta tu idea a uxyn (o paso a paso); sin chat lateral
+//   editar · Lista | Editor | uxyn — las sugerencias van a «Por revisar», no al chat
 
 import { catalogo } from "../api.js";
 import { h, vaciar, boton, cabecera, insignia, icono } from "../ui.js";
 import { editorSistema, crearSistema, FAMILIAS } from "./creador-editor.js";
-import { chatAgente, tarjetaCreador } from "./creador.js";
+import { chatAgente, tarjetaCreador, panelSugerencias } from "./creador.js";
 import { inicioConAgente } from "./creador-inicio.js";
 
-const CLAVE = "uxyn-creador-zonas-v2";
+const CLAVE = "uxyn-creador-zonas-v3";
 export const ZONAS = [
-  ["lista", "Mis sistemas"],
-  ["sistema", "Sistema"],
-  ["agente", "Agente"],
+  ["lista", "Lista"],
+  ["sistema", "Editor"],
+  ["agente", "uxyn"],
 ];
 
-/** Defaults distintos por modo: en crear no hay chat; en editar priorizamos editor + agente. */
+/** Defaults por modo: crear = hero centrado; editar = Editor + uxyn. */
 export function leerZonas(modo = "editar") {
   const defecto = modo === "crear"
-    ? { lista: true, sistema: true, agente: false }
+    ? { lista: false, sistema: true, agente: false }
     : { lista: false, sistema: true, agente: true };
   try {
     const guardado = JSON.parse(localStorage.getItem(CLAVE) || "{}");
     const zonas = { ...defecto, ...guardado };
-    if (modo === "crear") zonas.agente = false;   // nunca chat al crear
+    if (modo === "crear") zonas.agente = false;
     return Object.values(zonas).some(Boolean) ? zonas : defecto;
   } catch {
     return defecto;
@@ -32,7 +31,7 @@ export function leerZonas(modo = "editar") {
 }
 
 function guardarZonas(zonas) {
-  try { localStorage.setItem(CLAVE, JSON.stringify(zonas)); } catch { /* sin almacenamiento: solo dura esta visita */ }
+  try { localStorage.setItem(CLAVE, JSON.stringify(zonas)); } catch { /* sin almacenamiento */ }
 }
 
 export async function vista(params, { ir }) {
@@ -42,12 +41,11 @@ export async function vista(params, { ir }) {
   let abierto = null;
 
   const marco = h("div", { class: "creador", "data-modo": modo });
-  const zonaLista = h("section", { class: "zona zona-lista", "aria-label": "Mis sistemas" });
-  const zonaSistema = h("section", { class: "zona zona-sistema", "aria-label": modo === "crear" ? "Crear sistema" : "Sistema abierto" });
-  const zonaAgente = h("section", { class: "zona zona-agente", "aria-label": "Agente del Creador" });
+  const zonaLista = h("section", { class: "zona zona-lista", "aria-label": "Lista de sistemas" });
+  const zonaSistema = h("section", { class: "zona zona-sistema", "aria-label": modo === "crear" ? "Crear sistema" : "Editor" });
+  const zonaAgente = h("section", { class: "zona zona-agente", "aria-label": "uxyn" });
   const nodos = { lista: zonaLista, sistema: zonaSistema, agente: zonaAgente };
 
-  // En crear solo se conmutan lista y sistema; en editar las tres.
   const clavesToggle = modo === "crear" ? ZONAS.filter(([k]) => k !== "agente") : ZONAS;
   const interruptores = clavesToggle.map(([clave, nombre]) => {
     const b = h("button", { type: "button", class: "boton pequeno conmutador", "aria-pressed": String(zonas[clave]), "aria-controls": `zona-${clave}`,
@@ -84,7 +82,7 @@ export async function vista(params, { ir }) {
 
   async function pintarLista() {
     const cat = await catalogo(true);
-    const filtro = h("input", { type: "search", placeholder: "Buscar", "aria-label": "Buscar en mis sistemas" });
+    const filtro = h("input", { type: "search", placeholder: "Buscar…", "aria-label": "Buscar sistema" });
     const lista = h("ul", { class: "lista lista-sistemas" });
     const pintar = () => {
       const t = filtro.value.trim().toLowerCase();
@@ -95,17 +93,17 @@ export async function vista(params, { ir }) {
           h("b", { texto: m.titulo || m.id }),
           h("span", { class: "tenue", texto: `${FAMILIAS[m.familia] || m.familia || ""} · ${m.version || ""}` }),
           (m.errores || []).length ? insignia("le falta algo", "nota") : null))));
-      if (!visibles.length) lista.append(h("li", { class: "tenue", texto: cat.length ? "Nada coincide." : "Aún no tienes sistemas." }));
+      if (!visibles.length) lista.append(h("li", { class: "tenue", texto: cat.length ? "Nada coincide." : "Aún no hay sistemas aquí." }));
     };
     filtro.addEventListener("input", pintar);
     pintar();
     const cabLista = modo === "crear"
-      ? h("div", { class: "fila separada" }, h("h2", { texto: "Abrir uno existente" }), boton("Paso a paso", nuevo, { clase: "pequeno", icono: "mas", titulo: "Crear sin el agente" }))
+      ? h("div", { class: "fila separada" },
+          h("h2", { texto: "Lista" }),
+          boton("Paso a paso", nuevo, { clase: "pequeno", icono: "mas", titulo: "Crear sin uxyn" }))
       : h("div", { class: "fila separada" },
-          h("h2", { texto: "Mis sistemas" }),
-          h("div", { class: "fila" },
-            boton("Nuevo", () => abrir(""), { clase: "pequeno", icono: "mas", titulo: "Volver a crear un sistema" }),
-            boton("Paso a paso", nuevo, { clase: "pequeno", titulo: "Crear sin el agente" })));
+          h("h2", { texto: "Lista" }),
+          boton("Nuevo", () => abrir(""), { clase: "pequeno", icono: "mas", titulo: "Crear otro sistema" }));
     vaciar(zonaLista, cabLista, filtro, lista,
       await tarjetaCreador({ alTraer: async (r, slug) => abrir(r?.id || slug) }));
   }
@@ -116,11 +114,15 @@ export async function vista(params, { ir }) {
       vaciar(zonaSistema,
         h("div", { class: "tarjeta pila inicio" }, inicio.nodo),
         h("p", { class: "tenue inicio-ayuda" },
-          "Un sistema reúne lo que tus agentes deben saber y seguir. El botón primario es ",
-          h("b", { texto: "Crear" }),
-          ". Después revisarás las propuestas del agente. También puedes ",
+          "1. Cuenta la idea · 2. uxyn arma el sistema · 3. Revisas y aceptas en «Por revisar». ",
+          "También puedes ",
           boton("crearlo paso a paso", nuevo, { clase: "pequeno" }),
-          " o abrir uno desde la lista."));
+          zonas.lista ? null : h("span", {}, " o ", boton("abrir la lista", () => {
+            zonas.lista = true;
+            guardarZonas(zonas);
+            aplicar();
+          }, { clase: "pequeno" })),
+          "."));
       return;
     }
     const meta = (await catalogo()).find((m) => m.id === idAbierto);
@@ -133,20 +135,32 @@ export async function vista(params, { ir }) {
     vaciar(zonaSistema,
       h("div", { class: "fila separada" },
         h("div", {}, h("h2", { texto: meta.titulo || meta.id }), h("code", { class: "tenue", texto: meta.id })),
-        boton("Crear otro", () => abrir(""), { clase: "pequeno", titulo: "Volver a la pantalla de crear" })),
+        boton("Crear otro", () => abrir(""), { clase: "pequeno", titulo: "Volver a crear" })),
       abierto.nodo);
   }
 
   async function pintarAgente() {
     if (modo === "crear") {
-      vaciar(zonaAgente);   // no se muestra; evita un segundo chat frente a «Crear»
+      vaciar(zonaAgente);
       return;
     }
+    const sugerencias = panelSugerencias(idAbierto, {
+      alCambiar: async () => {
+        if (abierto?.recargar) await abierto.recargar();
+        await pintarLista();
+      },
+    });
     vaciar(zonaAgente,
-      h("h2", {}, icono("chat"), " Asistente"),
-      h("p", { class: "tenue", texto: "Revisa, rellena o mejora el sistema abierto. Los cambios llegan como propuestas: tú decides." }),
-      await chatAgente(() => (abierto ? { id: idAbierto, rutaActual: abierto.rutaActual, textarea: abierto.textarea, recargar: abierto.recargar } : null),
-        { conversacionInicial: Number(params.conversacion) || null, slugInicial: idAbierto || null }));
+      h("h2", {}, icono("chat"), " uxyn"),
+      h("p", { class: "tenue", texto: "Pide revisar o mejorar. Si deja cambios, salen arriba en «Por revisar»." }),
+      sugerencias.nodo,
+      await chatAgente(
+        () => (abierto ? { id: idAbierto, rutaActual: abierto.rutaActual, textarea: abierto.textarea, recargar: abierto.recargar } : null),
+        {
+          conversacionInicial: Number(params.conversacion) || null,
+          slugInicial: idAbierto || null,
+          sugerencias,
+        }));
   }
 
   aplicar();
@@ -154,8 +168,8 @@ export async function vista(params, { ir }) {
   await Promise.all([pintarLista(), pintarSistema()]);
   await pintarAgente();
   const sub = modo === "crear"
-    ? "Cuenta tu idea o sube archivos. El agente arma el sistema y tú decides qué aceptar."
-    : "Edita a mano o pide cambios al asistente. Nada se guarda sin que lo aceptes.";
+    ? "Cuenta tu idea. uxyn arma el sistema; tú aceptas los cambios."
+    : "Edita a mano o habla con uxyn. Nada se guarda sin que lo aceptes.";
   return h("div", {},
     cabecera(modo === "crear" ? "Crear un sistema" : "Creador de sistemas", sub,
       h("div", { class: "fila", role: "group", "aria-label": "Zonas visibles" }, interruptores)),

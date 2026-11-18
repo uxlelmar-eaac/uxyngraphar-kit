@@ -261,7 +261,7 @@ export function inicioConAgente({ alCrear, conBoton = true, cabecera = true } = 
     }
     const mensaje = texto || DESDE_ARCHIVOS;
     if (fallo) { fallo.remove(); fallo = null; }
-    const espera = trabajando({ pista: "El agente está creando tu sistema. Suele tardar menos de un minuto." });
+    const espera = trabajando({ pista: "uxyn está creando tu sistema. Suele tardar menos de un minuto." });
     const progreso = nuevoIdProgreso();
     zonaEspera.append(espera.nodo);
     espera.seguir(progreso);
@@ -278,7 +278,7 @@ export function inicioConAgente({ alCrear, conBoton = true, cabecera = true } = 
       conversacion = r.conversacion;
       if (r.borrador) {
         if (r.error_al_traer || r.conflicto_al_traer) avisar(`El sistema se creó en tu cuenta, pero no se pudo traer a este equipo: ${r.error_al_traer || "cambió aquí también"}`, "mal");
-        else avisar("Sistema creado. Revisa las propuestas del agente.");
+        else avisar("Sistema creado. Revisa «Por revisar» para aceptar o corregir.");
         if (alCrear) await alCrear(r.traido || r.borrador, r);
         return r.traido || r.borrador;
       }
@@ -298,8 +298,8 @@ export function inicioConAgente({ alCrear, conBoton = true, cabecera = true } = 
   const nodo = h("div", { class: "pila inicio-agente" },
     cabecera ? h("div", { class: "inicio-agente-cabecera" },
       h("span", { class: "inicio-agente-insignia", "aria-hidden": "true" }, icono("creador")),
-      h("div", {}, h("h3", { texto: "Crea un sistema con el agente" }),
-        h("p", { class: "tenue", texto: "Cuenta tu idea o sube lo que ya tienes. El agente arma el sistema y tú decides qué aceptar." }))) : null,
+      h("div", {}, h("h3", { texto: "Crea un sistema con uxyn" }),
+        h("p", { class: "tenue", texto: "Cuenta tu idea o sube lo que ya tienes. uxyn arma el sistema; tú aceptas en «Por revisar»." }))) : null,
     respuestas, zonaEspera, caja.nodo, ejemplos);
   return { nodo, crear };
 }

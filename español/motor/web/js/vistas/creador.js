@@ -1,5 +1,5 @@
-// Creador local (ADR 0013): chat del agente en la pantalla «Creador de sistemas» (modelos de este equipo o la clave de tu cuenta) y
-// sincronización con los borradores del Creador web. Nada se escribe sin que la persona lo acepte.
+// Creador local (ADR 0013): chat de uxyn en «Creador de sistemas» y sincronización con borradores web.
+// Nada se escribe sin que la persona lo acepte. Las sugerencias viven en «Por revisar», no perdidas en el chat.
 
 import { obtener, enviar } from "../api.js";
 import { h, vaciar, boton, avisar, insignia } from "../ui.js";
@@ -46,7 +46,6 @@ async function selectorIA() {
     h("option", { value: "servidor|", texto: "Solo chat con mi clave o suscripción de la web (cuenta)" }));
   try {
     for (const m of await obtener("/api/creador/modelos")) {
-      // Las suscripciones van al final y nunca se eligen solas: cada una tiene su aviso en «Conexiones».
       sel.append(h("option", m.suscripcion
         ? { value: `${m.proveedor}|`, "data-suscripcion": "1", texto: `${m.nombre} (tu suscripción, en este equipo${m.riesgo === "bajo" ? "" : " · lee el aviso en Conexiones"})` }
         : { value: `${m.proveedor}|${m.modelo}`, texto: `${m.modelo} (${m.proveedor === "ollama" ? "Ollama" : "LM Studio"}, en este equipo)` }));
@@ -54,13 +53,13 @@ async function selectorIA() {
   } catch { /* sin modelos locales: solo la cuenta */ }
   try {
     const cuenta = await obtener("/api/cuenta");
-    if (cuenta?.tipo !== "sesion" && sel.options.length > 2 && !sel.options[2].dataset.suscripcion) sel.selectedIndex = 2;   // sin cuenta: un modelo de este equipo
+    if (cuenta?.tipo !== "sesion" && sel.options.length > 2 && !sel.options[2].dataset.suscripcion) sel.selectedIndex = 2;
   } catch { /* sin datos de cuenta */ }
   const elegido = () => { const [proveedor, modelo] = sel.value.split("|"); return { proveedor, modelo }; };
   return { sel, elegido };
 }
 
-/** Propuesta de uxyn: diferencias por archivo, corregir en vivo, aceptar o rechazar. Al aceptar se trae a este equipo. */
+/** Una sugerencia pendiente: ver cambios, corregir, aceptar o rechazar. */
 function tarjetaPropuesta(slug, p, alDecidir) {
   const pendientes = (p.archivos || []).filter((a) => a.estado === "pendiente");
   const casillas = pendientes.map((a) => h("input", { type: "checkbox", checked: true, value: a.ruta, "aria-label": `Aceptar ${a.ruta}` }));
@@ -74,8 +73,7 @@ function tarjetaPropuesta(slug, p, alDecidir) {
       vaciar(zona, conflicto(r, (c) => sincronizarBorrador("bajar", slug, zona, alDecidir, c)));
       return;
     }
-    avisar(aceptar.length ? `Cambios aceptados y traídos a este equipo (${aceptar.length})` : "Propuesta rechazada");
-    vaciar(zona, h("p", { class: "tenue", texto: aceptar.length ? "Aceptada." : "Rechazada." }));
+    avisar(aceptar.length ? `Cambios aceptados (${aceptar.length})` : "Sugerencia rechazada");
     if (alDecidir) await alDecidir();
   }
   function editarArchivo(a) {
@@ -83,45 +81,92 @@ function tarjetaPropuesta(slug, p, alDecidir) {
     const area = h("textarea", { class: "codigo", rows: 12, "aria-label": `Corregir ${a.ruta}` });
     area.value = a.despues || "";
     vaciar(zona,
-      h("p", { class: "tenue", texto: `Corrigiendo ${a.ruta}. Guarda la corrección y luego acepta la sugerencia.` }),
+      h("p", { class: "tenue", texto: `Corrige ${a.ruta} y guarda. Luego acepta la sugerencia.` }),
       area,
       h("div", { class: "fila" },
         boton("Guardar corrección", async () => {
           await enviar("/api/agente/corregir", { slug, propuesta: p.id, ruta: a.ruta, contenido: area.value });
           a.despues = area.value;
-          avisar("Corrección guardada en la sugerencia.");
+          avisar("Corrección guardada.");
           vaciar(zona);
         }, { clase: "pequeno primario" }),
         boton("Cancelar", () => vaciar(zona), { clase: "pequeno" })));
   }
-  return h("div", { class: "propuesta pila" },
-    h("div", { class: "fila separada" }, h("b", { texto: p.titulo }), insignia(pendientes.length ? "por revisar" : (p.estado || "").toLowerCase(), pendientes.length ? "nota" : "")),
+  return h("article", { class: "propuesta pila", "aria-label": p.titulo || "Sugerencia" },
+    h("div", { class: "fila separada" },
+      h("b", { texto: p.titulo || "Sugerencia" }),
+      insignia(pendientes.length ? "por revisar" : (p.estado || "").toLowerCase(), pendientes.length ? "nota" : "")),
     p.resumen ? h("p", { class: "tenue", texto: p.resumen }) : null,
-    pendientes.map((a, i) => h("details", {},
+    pendientes.map((a, i) => h("details", { open: pendientes.length === 1 },
       h("summary", {}, casillas[i], ` ${a.ruta}${a.despues === null ? " (borrar)" : a.antes === null ? " (nuevo)" : ""}`),
       vistaDiferencias(a.antes || "", a.despues || ""),
       a.despues !== null ? h("div", { class: "fila" }, boton("Corregir", () => editarArchivo(a), { clase: "pequeno" })) : null)),
     pendientes.length ? h("div", { class: "fila" },
-      boton("Aceptar lo marcado", () => decidir(true), { clase: "pequeno primario", icono: "check" }),
-      boton("Rechazar todo", () => decidir(false), { clase: "pequeno" })) : null,
+      boton("Aceptar", () => decidir(true), { clase: "pequeno primario", icono: "check" }),
+      boton("Rechazar", () => decidir(false), { clase: "pequeno" })) : null,
     zona);
 }
 
 /**
- * Chat del agente (solo con sistema abierto). Modos: Asistente (propuestas) | Simulador (prueba el sistema).
- * El selector de proveedor/modelo queda bajo «Avanzado». Nada se guarda sin que la persona lo acepte.
+ * Bloque fijo «Por revisar»: aquí viven las sugerencias de uxyn (no en el hilo del chat).
+ * Devuelve { nodo, refrescar }.
  */
-export async function chatAgente(contexto, { conversacionInicial = null, slugInicial = null } = {}) {
+export function panelSugerencias(slug, { alCambiar } = {}) {
+  const nodo = h("section", { class: "sugerencias-panel", "aria-label": "Por revisar", hidden: true });
+  async function refrescar() {
+    if (!slug) {
+      nodo.hidden = true;
+      vaciar(nodo);
+      return [];
+    }
+    let todas = [];
+    try {
+      todas = await obtener("/api/agente/propuestas", { slug });
+    } catch {
+      nodo.hidden = true;
+      return [];
+    }
+    const pendientes = (todas || []).filter((x) => (x.archivos || []).some((a) => a.estado === "pendiente"));
+    if (!pendientes.length) {
+      nodo.hidden = true;
+      vaciar(nodo);
+      return [];
+    }
+    nodo.hidden = false;
+    vaciar(nodo,
+      h("div", { class: "sugerencias-cabecera" },
+        h("h3", { texto: "Por revisar" }),
+        insignia(String(pendientes.length), "nota")),
+      h("p", { class: "tenue", texto: "uxyn dejó cambios. Acéptalos, corrígelos o recházalos antes de seguir." }),
+      ...pendientes.map((p) => tarjetaPropuesta(slug, p, async () => {
+        await refrescar();
+        if (alCambiar) await alCambiar();
+      })));
+    try { nodo.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch { /* sin scroll */ }
+    return pendientes;
+  }
+  return { nodo, refrescar };
+}
+
+/**
+ * Chat de uxyn (sistema abierto). Modos: uxyn | Simulador.
+ * Las sugerencias van al panel «Por revisar» (`sugerencias`), no al hilo.
+ */
+export async function chatAgente(contexto, {
+  conversacionInicial = null,
+  slugInicial = null,
+  sugerencias = null,
+} = {}) {
   const { sel, elegido } = await selectorIA();
   const mensajes = [];
   let conversacion = conversacionInicial;
-  let modo = "asistente";   // asistente | simulador
+  let modo = "asistente";
   let adjuntos = null;
-  const saludoAsistente = "Hola, soy uxyn. Puedo revisar esta gobernanza, rellenar lo que falta o mejorar un archivo. Los cambios te los dejo como propuesta: puedes corregirlos y aceptar o rechazar.";
-  const saludoSimulador = "Modo simulador: hablo como el agente de IA que usará este sistema. Pídeme algo que debería rechazar y mira si lo hace.";
+  const saludoAsistente = "Hola, soy uxyn. Pídeme revisar, rellenar o mejorar este sistema. Si dejo cambios, aparecen arriba en «Por revisar».";
+  const saludoSimulador = "Simulador: actúo como el agente de IA que sigue este sistema. Pídeme algo que debería rechazar.";
   const hilo = h("div", { class: "pila conversacion", role: "log", "aria-live": "polite" },
     h("div", { class: "mensaje ia", texto: saludoAsistente }));
-  const propuesta = h("div", { class: "pila" });
+  const propuestaLocal = h("div", { class: "pila" });
   const pregunta = h("textarea", { "aria-label": "Mensaje para uxyn", rows: 3, class: "breve", placeholder: "Escribe aquí (Ctrl+Enter para enviar)" });
   const conAgente = () => modo === "asistente" && elegido().proveedor === "agente";
   const enSimulador = () => modo === "simulador";
@@ -130,6 +175,8 @@ export async function chatAgente(contexto, { conversacionInicial = null, slugIni
     if (!c) throw new Error("Abre o crea un sistema para que uxyn pueda trabajar con él.");
     return c;
   };
+  const slugDe = () => slugInicial || contexto()?.id || null;
+  const refrescarSugerencias = async () => (sugerencias ? sugerencias.refrescar() : []);
   const decir = (quien, texto, ...extra) => {
     const quienIa = enSimulador() ? "Simulador" : (conAgente() ? "uxyn" : "IA");
     hilo.append(quien === "ia"
@@ -150,7 +197,6 @@ export async function chatAgente(contexto, { conversacionInicial = null, slugIni
     await pedirTurno({ mensaje: texto, id: c?.id || null, adjuntos: archivos });
   }
 
-  /** Envía un turno con el progreso en vivo; si falla, deja el error en el hilo con «Reintentar» (mismo envío). */
   async function pedirTurno(cuerpo) {
     const c = contexto();
     const progreso = nuevoIdProgreso();
@@ -174,20 +220,20 @@ export async function chatAgente(contexto, { conversacionInicial = null, slugIni
     espera.parar();
     if (r.conflicto) {
       decir("ia", "Tu sistema cambió en la web y en este equipo. Elige qué versión conservar y vuelve a enviar el mensaje.");
-      vaciar(propuesta, conflicto(r, (cual) => sincronizarBorrador("subir", r.slug, propuesta, null, cual)));
+      vaciar(propuestaLocal, conflicto(r, (cual) => sincronizarBorrador("subir", r.slug, propuestaLocal, null, cual)));
       return;
     }
     conversacion = r.conversacion;
     hilo.append(mensajeAgente(r.respuesta, { acciones: r.acciones }));
     hilo.scrollTop = hilo.scrollHeight;
     if (typeof refrescarLista === "function") void refrescarLista();
-    const slug = r.borrador || c?.id;
-    if (r.propuestas?.length && slug) {
-      const todas = await obtener("/api/agente/propuestas", { slug });
-      for (const p of todas.filter((x) => r.propuestas.includes(x.id))) {
-        hilo.append(tarjetaPropuesta(slug, p, async () => { if (contexto()?.recargar) await contexto().recargar(); }));
+    if (r.propuestas?.length) {
+      const pendientes = await refrescarSugerencias();
+      if (pendientes?.length) {
+        decir("ia", `Hay ${pendientes.length === 1 ? "1 sugerencia" : `${pendientes.length} sugerencias`} en «Por revisar» (arriba). Acéptala o corrígela ahí.`);
       }
-      hilo.scrollTop = hilo.scrollHeight;
+    } else {
+      await refrescarSugerencias();
     }
   }
 
@@ -200,11 +246,11 @@ export async function chatAgente(contexto, { conversacionInicial = null, slugIni
     }
     const r = await enviar("/api/creador/mejorar", { id: c.id, rel: c.rutaActual(), contenido: c.textarea.value, instruccion: pregunta.value.trim(), ...elegido() });
     pregunta.value = "";
-    vaciar(propuesta, h("div", { class: "fila separada" }, h("b", { texto: `Propuesta para ${r.rel}` }), insignia(r.modelo)),
+    vaciar(propuestaLocal, h("div", { class: "fila separada" }, h("b", { texto: `Propuesta para ${r.rel}` }), insignia(r.modelo)),
       vistaDiferencias(c.textarea.value, r.propuesta),
       h("div", { class: "fila" },
-        boton("Aceptar", () => { c.textarea.value = r.propuesta; vaciar(propuesta); avisar("Propuesta en el editor: revisa y pulsa «Guardar archivo»"); }, { clase: "pequeno primario" }),
-        boton("Descartar", () => vaciar(propuesta), { clase: "pequeno" })));
+        boton("Aceptar", () => { c.textarea.value = r.propuesta; vaciar(propuestaLocal); avisar("En el editor: revisa y pulsa «Guardar archivo»"); }, { clase: "pequeno primario" }),
+        boton("Descartar", () => vaciar(propuestaLocal), { clase: "pequeno" })));
   }
   async function revisar() {
     const c = abierto();
@@ -216,7 +262,7 @@ export async function chatAgente(contexto, { conversacionInicial = null, slugIni
     const texto = pregunta.value.trim();
     if (!texto) return;
     if (!contexto()) {
-      avisar("Abre o crea un sistema para hablar con el asistente.", "mal");
+      avisar("Abre o crea un sistema para hablar con uxyn.", "mal");
       return;
     }
     if (conAgente() && !enSimulador()) {
@@ -248,22 +294,17 @@ export async function chatAgente(contexto, { conversacionInicial = null, slugIni
         else hilo.append(mensajeAgente(m.texto, { acciones: m.acciones, fecha: m.fecha }));
       }
       hilo.scrollTop = hilo.scrollHeight;
-      const slug = slugInicial || previa.borrador;
-      if (slug) {
-        for (const p of (await obtener("/api/agente/propuestas", { slug })).filter((x) => (x.archivos || []).some((a) => a.estado === "pendiente"))) {
-          hilo.append(tarjetaPropuesta(slug, p, async () => { if (contexto()?.recargar) await contexto().recargar(); }));
-        }
-      }
     } catch { /* sin la conversación anterior: se empieza una nueva */ }
   }
+  await refrescarSugerencias();
 
   const btnAsistente = h("button", { type: "button", class: "boton pequeno conmutador", "aria-pressed": "true" }, "uxyn");
   const btnSimulador = h("button", { type: "button", class: "boton pequeno conmutador", "aria-pressed": "false" }, "Simulador");
   const atajos = h("div", { class: "fila atajos-chat" },
-    boton("Revisar el sistema", revisar, { clase: "pequeno" }),
-    boton("Mejorar el archivo abierto", mejorar, { clase: "pequeno", titulo: "Usa lo que escribas abajo como instrucción" }));
-  const pistaModo = h("p", { class: "tenue pista-modo", texto: "uxyn propone cambios; puedes corregirlos y aceptar o rechazar. El chat se guarda." });
-  const enviarBoton = boton("Enviar a uxyn", hablar, { clase: "pequeno primario" });
+    boton("Revisar", revisar, { clase: "pequeno" }),
+    boton("Mejorar archivo", mejorar, { clase: "pequeno", titulo: "Usa lo que escribas abajo como instrucción" }));
+  const pistaModo = h("p", { class: "tenue pista-modo", texto: "Los cambios de uxyn salen en «Por revisar», arriba." });
+  const enviarBoton = boton("Enviar", hablar, { clase: "pequeno primario" });
   const selConversacion = h("select", { "aria-label": "Conversación guardada", class: "breve" });
   const barraHistorial = h("div", { class: "fila atajos-chat" },
     selConversacion,
@@ -278,15 +319,16 @@ export async function chatAgente(contexto, { conversacionInicial = null, slugIni
       else hilo.append(mensajeAgente(m.texto, { acciones: m.acciones, fecha: m.fecha }));
     }
     hilo.scrollTop = hilo.scrollHeight;
+    await refrescarSugerencias();
   }
 
   async function refrescarLista() {
-    const slug = slugInicial || contexto()?.id;
+    const slug = slugDe();
     let lista = [];
     try {
       lista = await obtener("/api/agente/conversaciones", slug ? { slug } : {});
-    } catch { /* sin listado: se sigue igual */ }
-    vaciar(selConversacion, h("option", { value: "", texto: lista.length ? "Conversación nueva" : "Sin conversaciones guardadas" }));
+    } catch { /* sin listado */ }
+    vaciar(selConversacion, h("option", { value: "", texto: lista.length ? "Conversación nueva" : "Sin conversaciones" }));
     for (const c of lista) {
       selConversacion.append(h("option", {
         value: String(c.id),
@@ -320,10 +362,10 @@ export async function chatAgente(contexto, { conversacionInicial = null, slugIni
     atajos.hidden = modo === "simulador";
     barraHistorial.hidden = modo === "simulador";
     pistaModo.textContent = modo === "simulador"
-      ? "Prueba cómo se comportaría un agente de IA que sigue este sistema al pie de la letra."
-      : "uxyn propone cambios; puedes corregirlos y aceptar o rechazar. El chat se guarda.";
+      ? "Prueba el sistema como lo seguiría un agente de IA."
+      : "Los cambios de uxyn salen en «Por revisar», arriba.";
     pregunta.setAttribute("aria-label", modo === "simulador" ? "Mensaje para el simulador" : "Mensaje para uxyn");
-    enviarBoton.textContent = modo === "simulador" ? "Enviar al simulador" : "Enviar a uxyn";
+    enviarBoton.textContent = "Enviar";
     pintarSaludo();
   }
   btnAsistente.addEventListener("click", () => aplicarModo("asistente"));
@@ -338,7 +380,7 @@ export async function chatAgente(contexto, { conversacionInicial = null, slugIni
     barraHistorial,
     atajos,
     hilo,
-    propuesta,
+    propuestaLocal,
     h("details", { class: "avanzado-ia" },
       h("summary", { texto: "Avanzado: qué IA usar" }),
       h("label", { class: "campo" }, "Proveedor o modelo", sel)),
@@ -361,41 +403,42 @@ export async function sincronizarBorrador(accion, slug, zona, alTerminar, conser
     return;
   }
   vaciar(zona);
-  avisar(accion === "subir" ? `Borrador «${slug}» guardado en la web (sigue siendo editable)` : r.accion === "al_dia" ? `«${slug}» ya estaba al día` : `«${slug}» está en tu catálogo local`);
+  avisar(accion === "subir" ? `Borrador «${slug}» guardado en la web` : r.accion === "al_dia" ? `«${slug}» ya estaba al día` : `«${slug}» está en tu catálogo local`);
   if (alTerminar) await alTerminar(r);
 }
 
-/** Tarjeta «Borradores en la web»: borradores de la cuenta y bajar/subir con control de conflictos. */
+/** Borradores de la cuenta (sincronizar web ↔ equipo). Va colapsado para no saturar. */
 export async function tarjetaCreador({ alTraer } = {}) {
-  const zona = h("div", { class: "tarjeta pila" });
+  const zona = h("div", { class: "pila" });
   const detalle = h("div", { class: "pila" });
 
   async function pintar() {
     const cuenta = await obtener("/api/cuenta");
-    const titulo = h("h3", { texto: "Borradores en la web" });
     if (!cuenta || cuenta.tipo !== "sesion") {
-      vaciar(zona, titulo, h("p", { class: "tenue", texto: "Inicia sesión en «Herramienta y ajustes» para traer a este equipo los borradores que creas en la web (y subir los tuyos)." }));
+      vaciar(zona, h("p", { class: "tenue", texto: "Inicia sesión en «Herramienta y ajustes» para sincronizar borradores con la web." }));
       return;
     }
     let filas = [];
     try {
       filas = await obtener("/api/creador/borradores");
     } catch (e) {
-      vaciar(zona, titulo, h("div", { class: "banda aviso", texto: `No se pudo consultar: ${e.message || e}` }));
+      vaciar(zona, h("div", { class: "banda aviso", texto: `No se pudo consultar: ${e.message || e}` }));
       return;
     }
-    vaciar(zona, titulo,
-      h("p", { class: "tenue", texto: "Traer copia el borrador a este equipo para editarlo aquí. Guardar en la web lleva tus cambios. Si cambió en los dos sitios te enseñamos las diferencias." }),
+    vaciar(zona,
+      h("p", { class: "tenue", texto: "Trae un borrador de la web a este equipo, o guarda aquí cambios en la web." }),
       filas.length ? h("ul", { class: "lista" }, filas.map((f) => h("li", { class: "fila separada" },
-        h("span", {}, h("b", { texto: f.titulo || f.slug }), h("span", { class: "tenue", texto: ` ${f.slug} · revisión ${f.revision}` })),
+        h("span", {}, h("b", { texto: f.titulo || f.slug }), h("span", { class: "tenue", texto: ` ${f.slug}` })),
         h("span", { class: "fila" },
-          f.en_equipo ? insignia(f.revision_equipo === f.revision ? "al día" : "en este equipo", "bien") : null,
+          f.en_equipo ? insignia(f.revision_equipo === f.revision ? "al día" : "aquí", "bien") : null,
           boton("Traer", () => sincronizarBorrador("bajar", f.slug, detalle, async (r) => { await pintar(); if (alTraer) await alTraer(r, f.slug); }), { clase: "pequeno" }),
-          f.en_equipo ? boton("Guardar en la web", () => sincronizarBorrador("subir", f.slug, detalle, pintar), { clase: "pequeno" }) : null))))
-        : h("p", { class: "tenue", texto: "No tienes borradores en el Creador web todavía." }),
+          f.en_equipo ? boton("Subir", () => sincronizarBorrador("subir", f.slug, detalle, pintar), { clase: "pequeno" }) : null))))
+        : h("p", { class: "tenue", texto: "No hay borradores en la web." }),
       detalle);
   }
 
-  await pintar().catch((e) => vaciar(zona, h("h3", { texto: "Borradores en la web" }), h("div", { class: "banda aviso", texto: String(e.message || e) })));
-  return zona;
+  await pintar().catch((e) => vaciar(zona, h("div", { class: "banda aviso", texto: String(e.message || e) })));
+  return h("details", { class: "creador-extra" },
+    h("summary", { texto: "Borradores en la web" }),
+    zona);
 }
