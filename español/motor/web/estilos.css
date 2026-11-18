@@ -290,15 +290,24 @@ pre { white-space: pre-wrap; background: var(--superficie-2); padding: 12px; bor
 .mensaje.tuyo { background: var(--acento-suave); align-self: flex-end; }
 .mensaje.ia { background: var(--superficie-2); }
 
-/* Creador de sistemas: crear (hero) vs editar (editor + un chat); zonas conmutables */
-main:has(.creador) { max-width: none; }
+/* Creador asistido: carril de estado + Editor | uxyn (+ Lista opcional) */
+main:has(.creador-puesto), main:has(.creador) { max-width: none; }
+.creador-puesto { display: flex; flex-direction: column; gap: 12px; }
+.creador-carril { margin-bottom: 0; }
+.carril-estado { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid var(--borde); border-radius: var(--radio); background: var(--superficie); }
+.carril-estado[data-estado="por_revisar"] { border-color: var(--aviso); background: var(--aviso-suave); }
+.carril-estado[data-estado="falta_nucleo"] { border-color: var(--aviso); }
+.carril-estado[data-estado="listo"] { border-color: var(--bien, var(--acento)); }
+.carril-estado-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+.carril-detalle { margin: 0; font-size: var(--font-size-sm); }
 .creador { display: grid; gap: 16px; align-items: start; grid-template-columns: 260px minmax(0, 1fr) 360px; }
-.creador[data-modo="crear"] { grid-template-columns: 240px minmax(0, 1fr); }
-.creador[data-modo="crear"][data-zonas="sistema"] { grid-template-columns: minmax(0, 1fr); max-width: 720px; margin-inline: auto; }
+.creador[data-modo="crear"] { grid-template-columns: minmax(0, 1fr) minmax(18rem, 26rem); }
+.creador[data-modo="crear"][data-zonas="lista sistema agente"] { grid-template-columns: 240px minmax(0, 1fr) minmax(18rem, 26rem); }
 .creador[data-zonas="lista sistema"] { grid-template-columns: 260px minmax(0, 1fr); }
 .creador[data-zonas="sistema agente"] { grid-template-columns: minmax(0, 1fr) 380px; }
 .creador[data-zonas="lista agente"] { grid-template-columns: 300px minmax(0, 1fr); }
 .creador[data-zonas="lista"], .creador[data-zonas="sistema"], .creador[data-zonas="agente"] { grid-template-columns: minmax(0, 1fr); }
+.editor-vacio { padding: 8px 0; }
 .inicio-ayuda { margin-top: 4px; }
 .modos-chat { gap: 6px; }
 .pista-modo { margin: 0; font-size: var(--font-size-sm); }

@@ -1,5 +1,11 @@
 # Cambios
 
+## 1.5.6
+
+- **Puesto asistido:** carril de estado (qué falta / qué revisar / siguiente paso), Editor a la
+  izquierda y uxyn a la derecha también al crear. Idea o zip van por uxyn; plantilla paso a paso
+  queda en Avanzado. Lista y sync como cajón.
+
 ## 1.5.5
 
 - **Creador más claro:** zonas Lista | Editor | uxyn; al crear, hero centrado sin chat lateral.

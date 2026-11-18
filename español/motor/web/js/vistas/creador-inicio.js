@@ -299,7 +299,7 @@ export function inicioConAgente({ alCrear, conBoton = true, cabecera = true } = 
     cabecera ? h("div", { class: "inicio-agente-cabecera" },
       h("span", { class: "inicio-agente-insignia", "aria-hidden": "true" }, icono("creador")),
       h("div", {}, h("h3", { texto: "Crea un sistema con uxyn" }),
-        h("p", { class: "tenue", texto: "Cuenta tu idea o sube lo que ya tienes. uxyn arma el sistema; tú aceptas en «Por revisar»." }))) : null,
+        h("p", { class: "tenue", texto: "Idea o archivos/zip → uxyn arma el núcleo → tú aceptas en «Por revisar». El editor a la izquierda es para retoques." }))) : null,
     respuestas, zonaEspera, caja.nodo, ejemplos);
   return { nodo, crear };
 }

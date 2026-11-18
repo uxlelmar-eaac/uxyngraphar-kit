@@ -156,13 +156,16 @@ export async function chatAgente(contexto, {
   conversacionInicial = null,
   slugInicial = null,
   sugerencias = null,
+  alEmpezarTurno = null,
+  alTerminarTurno = null,
+  alProponer = null,
 } = {}) {
   const { sel, elegido } = await selectorIA();
   const mensajes = [];
   let conversacion = conversacionInicial;
   let modo = "asistente";
   let adjuntos = null;
-  const saludoAsistente = "Hola, soy uxyn. Pídeme revisar, rellenar o mejorar este sistema. Si dejo cambios, aparecen arriba en «Por revisar».";
+  const saludoAsistente = "Hola, soy uxyn. Mira el carril de arriba: te dice qué falta y el siguiente paso. Si dejo cambios, salen en «Por revisar».";
   const saludoSimulador = "Simulador: actúo como el agente de IA que sigue este sistema. Pídeme algo que debería rechazar.";
   const hilo = h("div", { class: "pila conversacion", role: "log", "aria-live": "polite" },
     h("div", { class: "mensaje ia", texto: saludoAsistente }));
@@ -199,6 +202,7 @@ export async function chatAgente(contexto, {
 
   async function pedirTurno(cuerpo) {
     const c = contexto();
+    if (alEmpezarTurno) await alEmpezarTurno();
     const progreso = nuevoIdProgreso();
     const espera = trabajando();
     hilo.append(espera.nodo);
@@ -209,6 +213,7 @@ export async function chatAgente(contexto, {
       r = await enviar("/api/agente/turno", { ...cuerpo, conversacion, progreso });
     } catch (e) {
       espera.parar();
+      if (alTerminarTurno) await alTerminarTurno();
       const fallo = mensajeAgente(e.message || String(e), {
         error: true,
         extra: [h("div", { class: "fila" }, boton("Reintentar", async () => { fallo.remove(); await pedirTurno(cuerpo); }, { clase: "pequeno", icono: "deshacer" }))],
@@ -219,6 +224,7 @@ export async function chatAgente(contexto, {
     }
     espera.parar();
     if (r.conflicto) {
+      if (alTerminarTurno) await alTerminarTurno();
       decir("ia", "Tu sistema cambió en la web y en este equipo. Elige qué versión conservar y vuelve a enviar el mensaje.");
       vaciar(propuestaLocal, conflicto(r, (cual) => sincronizarBorrador("subir", r.slug, propuestaLocal, null, cual)));
       return;
@@ -232,9 +238,11 @@ export async function chatAgente(contexto, {
       if (pendientes?.length) {
         decir("ia", `Hay ${pendientes.length === 1 ? "1 sugerencia" : `${pendientes.length} sugerencias`} en «Por revisar» (arriba). Acéptala o corrígela ahí.`);
       }
+      if (alProponer) await alProponer(pendientes);
     } else {
       await refrescarSugerencias();
     }
+    if (alTerminarTurno) await alTerminarTurno();
   }
 
   async function mejorar() {
