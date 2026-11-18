@@ -407,6 +407,7 @@ GET = {
     "/api/avisos": lambda d: __import__("diagnostico").avisos(),
     "/api/diagnostico": lambda d: _diagnostico(d),  # noqa: PLW0108 - _diagnostico se define más abajo
     "/api/grupos": lambda d: __import__("grupos").listar(),
+    "/api/organizacion": lambda d: __import__("organizacion").leer(),
     "/api/grupos/matriz": lambda d: __import__("grupos").matriz(_campo(d, "nombre", str)),
     "/api/historial": lambda d: __import__("auditoria").leer(int(d.get("limite") or 100)),
 }
@@ -462,7 +463,16 @@ POST = {
     "/api/repo/deshacer": lambda d: transaccion.deshacer(_escribible(d, "deshacer", destructiva=True), d.get("respaldo") or None),
     # proyectos registrados
     "/api/proyectos/agregar": lambda d: _agregar(d),  # noqa: PLW0108 - _agregar se define más abajo
-    "/api/proyectos/quitar": lambda d: proyectos.quitar(_campo(d, "ruta")),
+    "/api/proyectos/quitar": lambda d: _quitar_proyecto(_campo(d, "ruta")),
+    # organización de «Mis proyectos»: carpetas, etiquetas y orden (solo la lista del panel)
+    "/api/organizacion/carpeta": lambda d: _carpeta(d),  # noqa: PLW0108 - _carpeta se define más abajo
+    "/api/organizacion/carpetas/ordenar": lambda d: __import__("organizacion").ordenar_carpetas(list(_campo(d, "ids", list))),
+    "/api/organizacion/mover": lambda d: __import__("organizacion").mover(list(_campo(d, "rutas", list)), d.get("carpeta") or None,
+                                                                         d.get("antes") or None),
+    "/api/organizacion/etiqueta": lambda d: _etiqueta(d),  # noqa: PLW0108 - _etiqueta se define más abajo
+    "/api/organizacion/etiquetar": lambda d: __import__("organizacion").etiquetar(list(_campo(d, "rutas", list)), _campo(d, "etiqueta", str),
+                                                                                 d.get("poner", True) is not False),
+    "/api/organizacion/etiquetas": lambda d: __import__("organizacion").poner_etiquetas(_campo(d, "ruta", str), list(_campo(d, "etiquetas", list))),
     # flujos guardados
     "/api/flujos/guardar": lambda d: guardados.guardar(_campo(d, "flujo")),
     "/api/flujos/desde-proyecto": lambda d: guardados.desde_proyecto(_raiz(d), _campo(d, "nombre", str), d.get("descripcion", "")),
@@ -535,3 +545,32 @@ def _agregar(d: dict) -> list[str]:
         if ruta.is_dir():
             comprobar_carpeta(ruta.resolve(), d if len(rutas) == 1 else None)
     return proyectos.agregar(rutas)
+
+
+def _quitar_proyecto(ruta: str) -> None:
+    proyectos.quitar(ruta)
+    __import__("organizacion").olvidar(ruta)
+
+
+def _carpeta(d: dict) -> dict:
+    org = __import__("organizacion")
+    accion = _campo(d, "accion", str)
+    if accion == "crear":
+        return org.crear_carpeta(_campo(d, "nombre", str), d.get("color"))
+    if accion == "cambiar":
+        return org.cambiar_carpeta(_campo(d, "id", str), d.get("nombre"), d.get("color"))
+    if accion == "borrar":
+        return org.borrar_carpeta(_campo(d, "id", str))
+    raise ValueError(f"acción desconocida «{accion}»: crear, cambiar o borrar")
+
+
+def _etiqueta(d: dict) -> dict:
+    org = __import__("organizacion")
+    accion = _campo(d, "accion", str)
+    if accion == "crear":
+        return org.crear_etiqueta(_campo(d, "nombre", str), d.get("color"))
+    if accion == "cambiar":
+        return org.cambiar_etiqueta(_campo(d, "nombre", str), d.get("nuevo"), d.get("color"))
+    if accion == "borrar":
+        return org.borrar_etiqueta(_campo(d, "nombre", str))
+    raise ValueError(f"acción desconocida «{accion}»: crear, cambiar o borrar")

@@ -44,6 +44,15 @@ const TRAZOS = {
   creador: "M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z",
   chat: "M4 5h16v11H9l-5 4z",
   conexiones: "M9 7a3 3 0 1 0 0 .01M15 17a3 3 0 1 0 0 .01M10.5 9.5l3 5M7 12H4M20 12h-3",
+  puntos: "M5 12h.01M12 12h.01M19 12h.01",
+  abajo: "M6 9l6 6 6-6",
+  etiqueta: "M3 12V4h8l10 10-8 8zM7.5 7.5h.01",
+  lista: "M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01",
+  rejilla: "M4 5h7v6H4zM13 5h7v6h-7zM4 13h7v6H4zM13 13h7v6h-7z",
+  asa: "M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01",
+  copiar: "M8 8h12v12H8zM4 16V4h12",
+  basura: "M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13",
+  cerrar: "M6 6l12 12M18 6L6 18",
 };
 
 export function icono(nombre) {
@@ -162,4 +171,54 @@ export function pestanas(nombres, alCambiar, inicial) {
   }
   barra.append(...botones);
   return barra;
+}
+
+// Menú desplegable junto a un botón. `opciones`: [{ texto, icono, accion, peligro }] o "-" para separar.
+// Se cierra al elegir, con Escape, al pulsar fuera o al desplazar la página; las flechas recorren las opciones.
+let menuAbierto = null;
+export function menu(ancla, opciones) {
+  const anterior = menuAbierto;
+  cerrarMenu();
+  if (anterior?.ancla === ancla) return;
+  const caja = h("div", { class: "menu-flotante", role: "menu" });
+  for (const o of opciones.filter(Boolean)) {
+    if (o === "-") { caja.append(h("hr", {})); continue; }
+    caja.append(h("button", { type: "button", role: "menuitem", class: o.peligro ? "peligro" : null,
+      onclick: () => { cerrarMenu(true); o.accion(); } }, o.icono ? icono(o.icono) : null, o.texto));
+  }
+  document.body.append(caja);
+  const r = ancla.getBoundingClientRect();
+  const ancho = caja.offsetWidth, alto = caja.offsetHeight;
+  caja.style.left = `${Math.max(8, Math.min(r.right - ancho, window.innerWidth - ancho - 8))}px`;
+  caja.style.top = `${r.bottom + 4 + alto > window.innerHeight ? Math.max(8, r.top - alto - 4) : r.bottom + 4}px`;
+  const fuera = (e) => { if (!caja.contains(e.target) && !ancla.contains(e.target)) cerrarMenu(); };
+  const tecla = (e) => {
+    const botones = [...caja.querySelectorAll("button")];
+    const i = botones.indexOf(document.activeElement);
+    if (e.key === "Escape") { e.preventDefault(); cerrarMenu(true); }
+    else if (e.key === "ArrowDown") { e.preventDefault(); botones[(i + 1) % botones.length]?.focus(); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); botones[(i - 1 + botones.length) % botones.length]?.focus(); }
+    else if (e.key === "Tab") cerrarMenu();
+  };
+  const desplazar = () => cerrarMenu();
+  document.addEventListener("pointerdown", fuera, true);
+  document.addEventListener("keydown", tecla, true);
+  window.addEventListener("scroll", desplazar, { capture: true, once: true });
+  menuAbierto = { caja, ancla, quitar: () => {
+    document.removeEventListener("pointerdown", fuera, true);
+    document.removeEventListener("keydown", tecla, true);
+    window.removeEventListener("scroll", desplazar, { capture: true });
+  } };
+  ancla.setAttribute("aria-expanded", "true");
+  caja.querySelector("button")?.focus();
+}
+
+export function cerrarMenu(devolverFoco = false) {
+  if (!menuAbierto) return;
+  const { caja, ancla, quitar } = menuAbierto;
+  menuAbierto = null;
+  quitar();
+  caja.remove();
+  ancla.setAttribute("aria-expanded", "false");
+  if (devolverFoco && ancla.isConnected) ancla.focus();
 }
