@@ -255,7 +255,7 @@ export async function crearSistema() {
     resultado);
   // El agente primero: es la forma principal de crear un sistema (igual que en el Creador web).
   let creado = null;
-  const conAgente = inicioConAgente({ conBoton: false, alCrear: (idNuevo, r) => { creado = { id: idNuevo, conversacion: r.conversacion }; } });
+  const conAgente = inicioConAgente({ conBoton: false, cabecera: false, alCrear: (idNuevo, r) => { creado = { id: idNuevo, conversacion: r.conversacion }; } });
   let modo = "agente";
   esqueleto.hidden = true;
   const barra = pestanas([["agente", "Con el agente"], ["esqueleto", "Paso a paso"], ["spec", "Desde especificación"]], (m) => {

@@ -3,7 +3,7 @@
 
 import { obtener, enviar } from "../api.js";
 import { h, vaciar, boton, avisar, insignia } from "../ui.js";
-import { selectorAdjuntos } from "./creador-inicio.js";
+import { cajaAgente } from "./creador-inicio.js";
 
 const MAX_LINEAS_LCS = 1500;
 
@@ -98,7 +98,7 @@ export async function chatAgente(contexto, { conversacionInicial = null, slugIni
   const { sel, elegido } = await selectorIA();
   const mensajes = [];
   let conversacion = conversacionInicial;
-  const adjuntos = selectorAdjuntos({ compacto: true });
+  let adjuntos = null;   // la caja del mensaje (texto + adjuntos), se crea cuando existe «pregunta»
   const hilo = h("div", { class: "pila conversacion", role: "log", "aria-live": "polite" },
     h("div", { class: "mensaje ia", texto: "Hola, soy el Asistente del Creador. Puedo revisar tu sistema, rellenar lo que falta o crear uno nuevo contigo. Todo lo que cambie te lo dejo como propuesta para que lo aceptes. ¿Por dónde empezamos?" }));
   const propuesta = h("div", { class: "pila" });
@@ -117,7 +117,7 @@ export async function chatAgente(contexto, { conversacionInicial = null, slugIni
 
   async function turnoAgente(texto) {
     const c = contexto();
-    const archivos = adjuntos.valor();
+    const archivos = adjuntos.adjuntos();
     decir("tuyo", texto, archivos.length ? h("div", { class: "tenue", texto: `Adjuntó: ${archivos.map((a) => a.nombre).slice(0, 5).join(", ")}${archivos.length > 5 ? "…" : ""}` }) : null);
     adjuntos.vaciar();
     const r = await enviar("/api/agente/turno", { mensaje: texto, conversacion, id: c?.id || null, adjuntos: archivos });
@@ -198,7 +198,8 @@ export async function chatAgente(contexto, { conversacionInicial = null, slugIni
     } catch { /* sin la conversación anterior: se empieza una nueva */ }
   }
   const enviarBoton = boton("Enviar", hablar, { clase: "pequeno primario" });
-  pregunta.addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); enviarBoton.click(); } });
+  adjuntos = cajaAgente({ etiqueta: "Mensaje para el agente", textarea: pregunta });
+  adjuntos.ponerAccion(enviarBoton);
   return h("div", { class: "chat-agente" },
     h("div", { class: "fila" }, h("label", { class: "campo espacio" }, "Con quién hablas", sel)),
     h("div", { class: "fila" },
@@ -207,9 +208,7 @@ export async function chatAgente(contexto, { conversacionInicial = null, slugIni
     hilo,
     propuesta,
     h("label", { class: "casilla" }, simulador, "Simulador: habla con el agente que usará este sistema"),
-    pregunta,
-    adjuntos.nodo,
-    h("div", { class: "fila" }, enviarBoton));
+    adjuntos.nodo);
 }
 
 function conflicto(r, alElegir) {

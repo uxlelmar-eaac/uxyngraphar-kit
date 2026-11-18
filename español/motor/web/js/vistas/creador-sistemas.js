@@ -100,7 +100,7 @@ export async function vista(params, { ir }) {
   async function pintarSistema() {
     if (!idAbierto) {
       const inicio = inicioConAgente({ alCrear: (id, r) => abrir(id, r.conversacion) });
-      vaciar(zonaSistema, h("div", { class: "tarjeta pila" }, inicio.nodo),
+      vaciar(zonaSistema, h("div", { class: "tarjeta pila inicio" }, inicio.nodo),
         h("p", { class: "tenue" }, "Un sistema reúne lo que tus agentes deben saber y seguir para resolver un tipo de problema. También puedes abrir uno desde «Mis sistemas» o ",
           boton("crearlo paso a paso", nuevo, { clase: "pequeno", icono: "mas" })));
       return;

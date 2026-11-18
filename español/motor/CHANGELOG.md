@@ -1,5 +1,13 @@
 # Cambios
 
+## Sin publicar
+
+- **Creador, más simple y moderno (igual que la web):** una sola caja para hablar con el agente con
+  el texto, los adjuntos y el botón; ejemplos cortos; el chat del agente usa la misma caja.
+- **Adjuntar un .zip:** se abre en el navegador y se toman sus archivos de texto, primero documentos
+  y configuración, hasta 80 archivos y 200 mil caracteres. Se explica qué se tomó y qué se omitió
+  (binarios, .git, node_modules, lo que no cabe).
+
 ## 1.4.0
 
 - **Creador de sistemas, igual que en la web:** «Crea un sistema con el agente» (cuenta tu idea y/o

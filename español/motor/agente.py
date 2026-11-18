@@ -16,7 +16,7 @@ import remoto
 SEGUNDOS_TURNO = 300
 SLUG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 # Archivos de referencia por mensaje (los mismos límites que el servidor).
-MAX_ADJUNTOS = 30
+MAX_ADJUNTOS = 80
 MAX_CARACTERES_ADJUNTO = 100_000
 MAX_CARACTERES_ADJUNTOS = 200_000
 
