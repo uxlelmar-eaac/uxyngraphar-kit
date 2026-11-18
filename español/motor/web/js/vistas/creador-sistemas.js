@@ -210,7 +210,13 @@ export async function vista(params, { ir }) {
           h("p", { class: "tenue", texto: "Los archivos del sistema aparecerán aquí." })));
       return;
     }
-    const meta = (await catalogo()).find((m) => m.id === idAbierto);
+    // Siempre recargar: tras crear/traer el caché del catálogo suele estar vacío y
+    // «No encuentro» era un falso negativo (el sistema ya estaba en el equipo).
+    let meta = (await catalogo(true)).find((m) => m.id === idAbierto);
+    if (!meta) {
+      await new Promise((r) => setTimeout(r, 400));
+      meta = (await catalogo(true)).find((m) => m.id === idAbierto);
+    }
     if (!meta) {
       anotar({
         nivel: "error", origen: "creador",
@@ -241,6 +247,7 @@ export async function vista(params, { ir }) {
         cabecera: false,
         alCrear: async (id, r) => {
           proponiendo = false;
+          await catalogo(true);
           await pintarCarril();
           abrir(id, r.conversacion);
         },

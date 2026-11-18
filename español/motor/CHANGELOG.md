@@ -1,5 +1,10 @@
 # Cambios
 
+## 1.5.9
+
+- **Creador:** tras crear/traer un sistema, el editor ya no dice «No encuentro» por
+  un catálogo en caché vacío. Recarga el catálogo (con un reintento corto) antes de abrir.
+
 ## 1.5.8
 
 - **Logs del panel:** cajón en el Creador y sección «Logs» en el menú. Registra API, turnos
