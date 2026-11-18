@@ -397,7 +397,10 @@ def validar_permisos(permisos) -> list[str]:
         if not isinstance(valor, list) or not all(
                 _texto(a) and script_de_accion(a).startswith("scripts/") and script_de_accion(a).endswith(".py")
                 and _relativa(script_de_accion(a)) for a in valor):
-            errores.append(f"permisos.acciones.{clave}: lista de «scripts/….py [subcomando]»")
+            errores.append(
+                f"permisos.acciones.{clave}: lista de «scripts/….py [subcomando]» "
+                f"(o []; texto libre no vale — va en LIMITES.md / PERMISOS.md «Por qué»)"
+            )
             continue
         for a in valor:
             normal = " ".join(a.split())
