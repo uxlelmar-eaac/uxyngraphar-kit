@@ -47,6 +47,32 @@ class PruebasAgente(unittest.TestCase):
             self.assertEqual(agente.conversacion(4)["borrador"], "pagos")
         self.assertEqual(llamadas[0][:3], ("/me/agente/conversaciones/4", None, "GET"))
 
+    def test_progreso_en_vivo(self):
+        parche, llamadas = self._con([
+            (200, {"conversacion": 5, "respuesta": "Listo"}),
+            (200, {"fase": "herramientas", "pasos": [{"herramienta": "leer_archivo", "etiqueta": "Leyendo SISTEMA.md",
+                                                     "estado": "running"}]}),
+        ])
+        with parche:
+            agente.turno("revisa", progreso_id="turno-123456")
+            r = agente.progreso("turno-123456")
+        self.assertEqual(llamadas[0][1]["progreso"], "turno-123456")
+        self.assertEqual(llamadas[1][:3], ("/me/agente/progreso/turno-123456", None, "GET"))
+        self.assertEqual(r["pasos"][0]["etiqueta"], "Leyendo SISTEMA.md")
+        with self.assertRaises(ValueError):
+            agente.progreso("../fuera")
+        with self.assertRaises(ValueError):
+            agente.turno("hola", progreso_id="mal id")
+
+    def test_panel_pasa_el_progreso_al_turno(self):
+        import creador
+        import rutas_panel
+        with mock.patch.object(agente, "turno", return_value={"respuesta": "ok"}) as turno, \
+                mock.patch.object(creador, "subir"):
+            rutas_panel._agente_turno({"mensaje": "hola", "progreso": "turno-123456"})
+        self.assertEqual(turno.call_args.args[5], "turno-123456")
+        self.assertIn("/api/agente/progreso", rutas_panel.GET)
+
     def test_turno_valida_entrada(self):
         with self.assertRaises(ValueError):
             agente.turno("   ")

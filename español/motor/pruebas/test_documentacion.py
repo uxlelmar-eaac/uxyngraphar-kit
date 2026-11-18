@@ -82,7 +82,9 @@ class TestDocumentacion(unittest.TestCase):
 
     def test_changelog_al_dia_con_version(self):   # M-20
         version = (MOTOR / "VERSION").read_text(encoding="utf-8").strip()
-        primera = re.search(r"^## (\S+)", (MOTOR / "CHANGELOG.md").read_text(encoding="utf-8"), re.M).group(1)
+        # «## Sin publicar» (cambios que irán en la próxima versión) puede ir antes de la última publicada.
+        primera = re.search(r"^## (?!Sin publicar)(\S+)", (MOTOR / "CHANGELOG.md").read_text(encoding="utf-8"),
+                            re.M).group(1)
         self.assertEqual(primera, version)
 
     def test_la_skill_crear_sistema_cita_comandos_que_existen(self):   # M-19

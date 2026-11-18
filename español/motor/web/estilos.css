@@ -466,3 +466,33 @@ label.casilla.carpeta-opcion input { margin-top: 0; }
 @media (prefers-reduced-motion: reduce) {
   .carpeta, .chevron, .proyecto { transition: none; }
 }
+
+/* Chat del Asistente del Creador (igual que la web, inspirado en Deo): avatar, texto con formato, pasos en vivo y pie. */
+.mensaje-agente { display: flex; gap: 8px; align-items: flex-start; }
+.mensaje-agente > .mensaje { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; white-space: normal; }
+.mensaje.ia.error { border: 1px solid var(--mal); background: var(--mal-suave); }
+.avatar-agente { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: var(--acento-suave); color: var(--acento); }
+.avatar-agente svg { width: 16px; height: 16px; }
+.mensaje .quien { color: var(--tenue); font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); }
+.texto-agente { display: flex; flex-direction: column; gap: 6px; line-height: var(--line-height-relaxed); overflow-wrap: anywhere; }
+.texto-agente p, .texto-agente ul, .texto-agente ol { margin: 0; }
+.texto-agente ul, .texto-agente ol { padding-left: 20px; }
+.texto-agente code { padding: 0 4px; border-radius: 4px; background: var(--superficie); font-family: var(--font-mono); font-size: var(--font-size-xs); }
+.pasos-agente { display: flex; flex-direction: column; gap: 3px; margin: 2px 0 0; padding: 0; list-style: none; color: var(--tenue); font-size: var(--font-size-xs); }
+.pasos-agente li { display: flex; gap: 6px; align-items: center; }
+.pasos-agente svg { width: 14px; height: 14px; flex-shrink: 0; }
+.pasos-agente .paso-ok svg { color: var(--bien); }
+.pasos-agente .paso-failed svg { color: var(--mal); }
+.giro.chico { width: 10px; height: 10px; border-width: 2px; flex-shrink: 0; }
+.trabajando > .mensaje { border: 1px dashed var(--borde); background: transparent; }
+.trabajando p { margin: 0; }
+.puntos { display: inline-flex; gap: 3px; align-items: center; }
+.puntos span { width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: .3; animation: puntos 1.2s infinite ease-in-out; }
+.puntos span:nth-child(2) { animation-delay: .2s; }
+.puntos span:nth-child(3) { animation-delay: .4s; }
+@keyframes puntos { 40% { opacity: 1; } }
+.pie-mensaje { display: flex; gap: 6px; align-items: center; justify-content: flex-end; color: var(--tenue); font-size: var(--font-size-xs); }
+.copiar-mensaje { display: inline-flex; padding: 3px; border: 0; border-radius: 4px; background: transparent; color: inherit; cursor: pointer; }
+.copiar-mensaje:hover, .copiar-mensaje:focus-visible { background: var(--superficie); color: var(--texto); }
+.copiar-mensaje svg { width: 14px; height: 14px; }
+@media (prefers-reduced-motion: reduce) { .puntos span { animation: none; } }

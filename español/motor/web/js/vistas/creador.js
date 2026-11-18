@@ -4,6 +4,7 @@
 import { obtener, enviar } from "../api.js";
 import { h, vaciar, boton, avisar, insignia } from "../ui.js";
 import { cajaAgente } from "./creador-inicio.js";
+import { mensajeAgente, nuevoIdProgreso, trabajando } from "./agente-chat.js";
 
 const MAX_LINEAS_LCS = 1500;
 
@@ -111,7 +112,9 @@ export async function chatAgente(contexto, { conversacionInicial = null, slugIni
     return c;
   };
   const decir = (quien, texto, ...extra) => {
-    hilo.append(h("div", { class: `mensaje ${quien}` }, h("div", { texto }), ...extra));
+    hilo.append(quien === "ia"
+      ? mensajeAgente(texto, { extra, quien: conAgente() ? "Asistente del Creador" : "IA" })
+      : h("div", { class: `mensaje ${quien}` }, h("div", { texto }), ...extra));
     hilo.scrollTop = hilo.scrollHeight;
   };
 
@@ -120,15 +123,39 @@ export async function chatAgente(contexto, { conversacionInicial = null, slugIni
     const archivos = adjuntos.adjuntos();
     decir("tuyo", texto, archivos.length ? h("div", { class: "tenue", texto: `Adjuntó: ${archivos.map((a) => a.nombre).slice(0, 5).join(", ")}${archivos.length > 5 ? "…" : ""}` }) : null);
     adjuntos.vaciar();
-    const r = await enviar("/api/agente/turno", { mensaje: texto, conversacion, id: c?.id || null, adjuntos: archivos });
+    await pedirTurno({ mensaje: texto, id: c?.id || null, adjuntos: archivos });
+  }
+
+  /** Envía un turno con el progreso en vivo; si falla, deja el error en el hilo con «Reintentar» (mismo envío). */
+  async function pedirTurno(cuerpo) {
+    const c = contexto();
+    const progreso = nuevoIdProgreso();
+    const espera = trabajando();
+    hilo.append(espera.nodo);
+    hilo.scrollTop = hilo.scrollHeight;
+    espera.seguir(progreso);
+    let r;
+    try {
+      r = await enviar("/api/agente/turno", { ...cuerpo, conversacion, progreso });
+    } catch (e) {
+      espera.parar();
+      const fallo = mensajeAgente(e.message || String(e), {
+        error: true,
+        extra: [h("div", { class: "fila" }, boton("Reintentar", async () => { fallo.remove(); await pedirTurno(cuerpo); }, { clase: "pequeno", icono: "deshacer" }))],
+      });
+      hilo.append(fallo);
+      hilo.scrollTop = hilo.scrollHeight;
+      return;
+    }
+    espera.parar();
     if (r.conflicto) {
       decir("ia", "Tu sistema cambió en la web y en este equipo. Elige qué versión conservar y vuelve a enviar el mensaje.");
       vaciar(propuesta, conflicto(r, (cual) => sincronizarBorrador("subir", r.slug, propuesta, null, cual)));
       return;
     }
     conversacion = r.conversacion;
-    const hechas = (r.acciones || []).map((a) => h("li", { class: a.ok ? "" : "tenue", texto: `${a.ok ? "✓" : "✗"} ${a.resumen}` }));
-    decir("ia", r.respuesta, hechas.length ? h("ul", { class: "acciones-agente" }, hechas) : null);
+    hilo.append(mensajeAgente(r.respuesta, { acciones: r.acciones }));
+    hilo.scrollTop = hilo.scrollHeight;
     const slug = r.borrador || c?.id;
     if (r.propuestas?.length && slug) {
       const todas = await obtener("/api/agente/propuestas", { slug });
@@ -186,9 +213,10 @@ export async function chatAgente(contexto, { conversacionInicial = null, slugIni
     try {
       const previa = await obtener("/api/agente/conversacion", { id: conversacionInicial });
       for (const m of previa.mensajes || []) {
-        const hechas = (m.acciones || []).map((a) => h("li", { class: a.ok ? "" : "tenue", texto: `${a.ok ? "✓" : "✗"} ${a.resumen}` }));
-        decir(m.rol === "user" ? "tuyo" : "ia", m.texto, hechas.length ? h("ul", { class: "acciones-agente" }, hechas) : null);
+        if (m.rol === "user") decir("tuyo", m.texto);
+        else hilo.append(mensajeAgente(m.texto, { acciones: m.acciones, fecha: m.fecha }));
       }
+      hilo.scrollTop = hilo.scrollHeight;
       const slug = slugInicial || previa.borrador;
       if (slug) {
         for (const p of (await obtener("/api/agente/propuestas", { slug })).filter((x) => (x.archivos || []).some((a) => a.estado === "pendiente"))) {

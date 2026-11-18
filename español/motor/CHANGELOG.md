@@ -7,6 +7,10 @@
 - **Adjuntar un .zip:** se abre en el navegador y se toman sus archivos de texto, primero documentos
   y configuración, hasta 80 archivos y 200 mil caracteres. Se explica qué se tomó y qué se omitió
   (binarios, .git, node_modules, lo que no cabe).
+- **Asistente del Creador inspirado en Deo (uxconstructar):** mientras trabaja se ven sus pasos en
+  vivo («Leyendo SISTEMA.md», «Proponiendo cambios…»); respuestas con formato (negritas, listas,
+  código), hora y copiar; los pasos hechos bajo cada respuesta y «Reintentar» si un turno falla.
+  Nueva ruta `GET /api/agente/progreso`; `POST /api/agente/turno` acepta `progreso`.
 
 ## 1.4.0
 

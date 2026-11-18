@@ -3,6 +3,7 @@
 
 import { enviar } from "../api.js";
 import { h, vaciar, boton, avisar, icono } from "../ui.js";
+import { mensajeAgente, nuevoIdProgreso, trabajando } from "./agente-chat.js";
 
 export const MAX_ADJUNTOS = 80;
 export const MAX_CARACTERES_ADJUNTO = 100_000;
@@ -248,7 +249,8 @@ export function inicioConAgente({ alCrear, conBoton = true, cabecera = true } = 
   const ejemplos = h("div", { class: "fila ejemplos", role: "group", "aria-label": "Prueba con" },
     h("span", { class: "tenue", texto: "Prueba con:" }),
     EJEMPLOS.map(([corto, texto]) => h("button", { type: "button", class: "ejemplo", texto: corto, title: texto, onclick: () => { idea.value = texto; idea.focus(); } })));
-  const espera = h("p", { class: "tenue", role: "status", hidden: true, texto: "El agente está creando tu sistema. Suele tardar menos de un minuto." });
+  const zonaEspera = h("div", {});
+  let fallo = null;
 
   async function crear() {
     const texto = idea.value.trim();
@@ -258,9 +260,21 @@ export function inicioConAgente({ alCrear, conBoton = true, cabecera = true } = 
       return false;
     }
     const mensaje = texto || DESDE_ARCHIVOS;
-    espera.hidden = false;
+    if (fallo) { fallo.remove(); fallo = null; }
+    const espera = trabajando({ pista: "El agente está creando tu sistema. Suele tardar menos de un minuto." });
+    const progreso = nuevoIdProgreso();
+    zonaEspera.append(espera.nodo);
+    espera.seguir(progreso);
     try {
-      const r = await enviar("/api/agente/turno", { mensaje: conversacion ? mensaje : `${PREFIJO_CREAR}\n\n${mensaje}`, conversacion, adjuntos: archivos });
+      let r;
+      try {
+        r = await enviar("/api/agente/turno", { mensaje: conversacion ? mensaje : `${PREFIJO_CREAR}\n\n${mensaje}`, conversacion, adjuntos: archivos, progreso });
+      } catch (e) {
+        // El texto y los adjuntos siguen en la caja: «Reintentar» repite el mismo envío.
+        fallo = mensajeAgente(e.message || String(e), { error: true, extra: [h("div", { class: "fila" }, boton("Reintentar", crear, { clase: "pequeno", icono: "deshacer" }))] });
+        zonaEspera.after(fallo);
+        return false;
+      }
       conversacion = r.conversacion;
       if (r.borrador) {
         if (r.error_al_traer || r.conflicto_al_traer) avisar(`El sistema se creó en tu cuenta, pero no se pudo traer a este equipo: ${r.error_al_traer || "cambió aquí también"}`, "mal");
@@ -269,7 +283,7 @@ export function inicioConAgente({ alCrear, conBoton = true, cabecera = true } = 
         return r.traido || r.borrador;
       }
       respuestas.hidden = false;
-      respuestas.append(h("div", { class: "mensaje tuyo", texto: mensaje }), h("div", { class: "mensaje ia", texto: r.respuesta }));
+      respuestas.append(h("div", { class: "mensaje tuyo", texto: mensaje }), mensajeAgente(r.respuesta, { acciones: r.acciones }));
       respuestas.scrollTop = respuestas.scrollHeight;
       idea.value = "";
       caja.vaciar();
@@ -277,7 +291,7 @@ export function inicioConAgente({ alCrear, conBoton = true, cabecera = true } = 
       ejemplos.hidden = true;
       return false;
     } finally {
-      espera.hidden = true;
+      espera.parar();
     }
   }
   if (conBoton) caja.ponerAccion(boton("Crear", crear, { clase: "primario", icono: "flecha" }));
@@ -286,6 +300,6 @@ export function inicioConAgente({ alCrear, conBoton = true, cabecera = true } = 
       h("span", { class: "inicio-agente-insignia", "aria-hidden": "true" }, icono("creador")),
       h("div", {}, h("h3", { texto: "Crea un sistema con el agente" }),
         h("p", { class: "tenue", texto: "Cuenta tu idea o sube lo que ya tienes. El agente arma el sistema y tú decides qué aceptar." }))) : null,
-    respuestas, caja.nodo, espera, ejemplos);
+    respuestas, zonaEspera, caja.nodo, ejemplos);
   return { nodo, crear };
 }

@@ -15,6 +15,8 @@ import remoto
 
 SEGUNDOS_TURNO = 300
 SLUG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+# Identificador del progreso en vivo de un turno (lo genera el panel; el mismo formato que exige el servidor).
+PROGRESO = re.compile(r"^[A-Za-z0-9-]{8,64}$")
 # Archivos de referencia por mensaje (los mismos límites que el servidor).
 MAX_ADJUNTOS = 80
 MAX_CARACTERES_ADJUNTO = 100_000
@@ -75,9 +77,23 @@ def conversacion(id_conversacion: int) -> dict:
     return _respuesta(codigo, r, "conversación")
 
 
+def _progreso(valor) -> str:
+    if not isinstance(valor, str) or not PROGRESO.match(valor):
+        raise ValueError("progreso: identificador no válido")
+    return valor
+
+
+def progreso(id_progreso: str) -> dict:
+    """Qué está haciendo el agente en un turno en curso: {fase, pasos: [{herramienta, etiqueta, estado}]}."""
+    codigo, r = remoto._pedir_json(f"/me/agente/progreso/{_progreso(id_progreso)}", metodo="GET", con_sesion=True,
+                                   segundos=10)
+    return _respuesta(codigo, r, "progreso")
+
+
 def turno(mensaje: str, conversacion: int | None = None, borrador: str | None = None, modelo: str = "",
-          adjuntos: list | None = None) -> dict:
-    """Un turno: {conversacion, respuesta, acciones, propuestas, borrador, modelo}. `adjuntos`: archivos de referencia."""
+          adjuntos: list | None = None, progreso_id: str | None = None) -> dict:
+    """Un turno: {conversacion, respuesta, acciones, propuestas, borrador, modelo}. `adjuntos`: archivos de referencia.
+    `progreso_id`: identificador para seguir en vivo lo que hace el agente (GET progreso)."""
     texto = str(mensaje or "").strip()
     if not texto:
         raise ValueError("escribe un mensaje")
@@ -91,6 +107,8 @@ def turno(mensaje: str, conversacion: int | None = None, borrador: str | None = 
     archivos = _adjuntos(adjuntos)
     if archivos:
         cuerpo["adjuntos"] = archivos
+    if progreso_id:
+        cuerpo["progreso"] = _progreso(progreso_id)
     codigo, r = remoto._pedir_json("/me/agente/turno", cuerpo, con_sesion=True, segundos=SEGUNDOS_TURNO)
     return _respuesta(codigo, r, "agente")
 
