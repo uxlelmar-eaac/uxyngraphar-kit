@@ -36,7 +36,9 @@ def sin_comentarios(css: str) -> str:
 
 class EstilosDelPanel(unittest.TestCase):
     def setUp(self):
-        self.css = sin_comentarios(ESTILOS.read_text(encoding="utf-8"))
+        # estilos.css y las hojas de cada sección (flujos.css…): todas siguen las mismas reglas
+        hojas = [ESTILOS] + sorted(p for p in WEB.glob("*.css") if p != ESTILOS)
+        self.css = sin_comentarios("\n".join(p.read_text(encoding="utf-8") for p in hojas))
         self.tokens = dict(DECLARACION.findall(self.css))
 
     def test_los_primitivos_coinciden_con_los_de_las_apps(self):
