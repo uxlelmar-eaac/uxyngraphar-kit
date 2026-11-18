@@ -380,6 +380,7 @@ GET = {
     "/api/catalogo/plantilla-spec": lambda d: generador.plantilla_spec(d.get("id") or "contratos-de-pago", d.get("familia") or "proceso"),
     # Creador local
     "/api/creador/modelos": lambda d: __import__("ia_local").modelos(),
+    "/api/ia/suscripciones": lambda d: __import__("ia_local").suscripciones(),
     "/api/creador/borradores": lambda d: __import__("creador").borradores(),
     "/api/agente/info": lambda d: __import__("agente").info(),
     "/api/conexiones": lambda d: {"agentes": __import__("conexiones").resumen(proyectos.listar()),

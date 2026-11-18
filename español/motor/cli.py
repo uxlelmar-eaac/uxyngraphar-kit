@@ -22,7 +22,7 @@ Creador (borradores de la web ↔ catálogo local; CREADOR en GENERADOR.md):
   creador bajar <borrador> [--conservar web|local] [--json]   trae el borrador al catálogo local
   creador subir <id> [--conservar web|local] [--json]         sube el sistema del catálogo local a su borrador web
                                              (ante un conflicto muestra las diferencias y no toca nada sin --conservar)
-  creador modelos [--json]                   modelos de IA locales (Ollama, LM Studio) que responden en este equipo
+  creador modelos [--json]                   IA de este equipo: Ollama, LM Studio y tus suscripciones (Claude Code, Codex, Copilot, Qwen)
   creador validar|nuevo|desde-spec|empaquetar --dir DIR …   puente del servidor: un sistema suelto en DIR (JSON)
 
 Servidor de sistemas de gobernanza (el instalador llega vacío: los sistemas se buscan y se traen de aquí):
@@ -226,9 +226,12 @@ def cmd_creador(a) -> int:
             if a.json:
                 _json(modelos)
             for m in [] if a.json else modelos:
-                print(f"{m['proveedor']}\t{m['modelo']}")
+                print(f"{m['proveedor']}\t{m['nombre'] + ' (tu suscripción)' if m.get('suscripcion') else m['modelo']}")
             if not modelos and not a.json:
-                print("Ningún modelo local responde (arranca Ollama o el servidor de LM Studio).")
+                print("Ningún modelo local responde (arranca Ollama o el servidor de LM Studio) "
+                      "ni hay CLI de suscripción instalada (claude, codex, copilot, qwen).")
+            if not a.json and any(m.get("suscripcion") for m in modelos):
+                print("Avisos de términos de cada suscripción: panel › Conexiones (o «ia_local.SUSCRIPCIONES»).")
             return 0
     except creador.Conflicto as e:
         if a.json:

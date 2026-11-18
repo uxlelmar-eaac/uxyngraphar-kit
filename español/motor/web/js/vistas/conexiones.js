@@ -5,10 +5,11 @@ import { obtener, enviar, nombreDe } from "../api.js";
 import { h, vaciar, cabecera, boton, insignia, avisar, dialogo, elegirVarios, confirmar } from "../ui.js";
 
 export async function vista(params, { recargar }) {
-  const [datos, lista, cuenta] = await Promise.all([
+  const [datos, lista, cuenta, subs] = await Promise.all([
     obtener("/api/conexiones"),
     obtener("/api/proyectos"),
     obtener("/api/cuenta").catch(() => null),
+    obtener("/api/ia/suscripciones").catch(() => null),
   ]);
   const existentes = lista.filter((p) => p.existe);
 
@@ -49,6 +50,27 @@ export async function vista(params, { recargar }) {
       boton("Conectar", () => elegir(a, "conectar"), { clase: "primario pequeno", icono: "mas" }),
       a.proyectos.length ? boton("Desconectar", () => elegir(a, "desconectar"), { clase: "pequeno" }) : null));
 
+  // Suscripciones en este equipo (ADR 0014): la CLI oficial de cada proveedor responde con tu sesión.
+  const tarjetaSuscripcion = (s) => h("div", { class: "tarjeta tarjeta-item" },
+    h("div", { class: "fila separada" }, h("h3", { texto: s.nombre }),
+      h("div", { class: "fila" },
+        insignia(`riesgo ${s.riesgo}`, s.riesgo === "bajo" ? "bien" : "nota"),
+        s.instalada ? insignia("en este equipo", "bien") : insignia("no instalada"))),
+    h("p", { class: "tenue", texto: s.planes }),
+    h("div", { class: s.riesgo === "bajo" ? "banda acento" : "banda aviso", style: "display:block" },
+      h("strong", { texto: s.riesgo === "bajo" ? "Cómo funciona: " : "Antes de usar tu suscripción: " }), s.aviso),
+    h("p", { class: "tenue", texto: `Inicia sesión en la CLI y elígela en «Creador de sistemas»: ${s.iniciar_sesion}` }),
+    h("div", { class: "acciones" },
+      boton("Copiar comando", async () => { await navigator.clipboard.writeText(s.iniciar_sesion.split("  ")[0]); avisar("Copiado"); }, { clase: "pequeno" })));
+
+  const seccionSuscripciones = subs ? h("div", { class: "pila" },
+    h("h2", { texto: "Tus suscripciones de IA" }),
+    h("p", { class: "tenue", texto: "Usa en el Creador el plan que ya pagas, sin claves: el kit le pide la respuesta a la CLI oficial del proveedor con tu sesión, en una carpeta vacía y sin herramientas. Tus tokens nunca salen de su CLI. Los proveedores recomiendan una clave de API para usar sus modelos desde otras aplicaciones; en cada una te decimos su riesgo. Las suscripciones que se inician en la web (ChatGPT, SuperGrok, planes con clave) se usan aquí con «Solo chat con mi clave o suscripción de la web (cuenta)»." }),
+    h("div", { class: "rejilla" }, subs.disponibles.map(tarjetaSuscripcion)),
+    subs.no_permitidas.map((n) => h("div", { class: "banda aviso", style: "display:block" },
+      h("strong", { texto: `${n.nombre}: no disponible. ` }), n.motivo)),
+    h("p", { class: "tenue", texto: `Términos revisados el ${subs.revisado}.` })) : null;
+
   const detectados = datos.agentes.filter((a) => a.detectado);
   const otros = datos.agentes.filter((a) => !a.detectado);
   const manual = JSON.stringify({ mcpServers: { uxyngraphar: datos.mcp_manual } }, null, 2);
@@ -60,7 +82,8 @@ export async function vista(params, { recargar }) {
         cuenta?.tipo === "sesion" ? insignia("conectado", "bien") : insignia("sin cuenta", "nota")),
       h("p", { class: "tenue", texto: cuenta?.tipo === "sesion"
         ? `Usa tu cuenta ${cuenta.usuario || ""}: tu clave de IA o la IA incluida. Lo encuentras en «Creador de sistemas».`
-        : "Inicia sesión en «Herramienta y ajustes» para usar el agente del Creador. Sin cuenta, el chat puede usar Ollama o LM Studio en este equipo." })),
+        : "Inicia sesión en «Herramienta y ajustes» para usar el agente del Creador. Sin cuenta, el chat puede usar Ollama, LM Studio o tus suscripciones de este equipo." })),
+    seccionSuscripciones,
     h("h2", { texto: "Tus agentes" }),
     detectados.length ? h("div", { class: "rejilla" }, detectados.map(tarjetaAgente))
       : h("p", { class: "tenue", texto: "No encontré agentes instalados en este equipo. Puedes conectarlos igualmente:" }),

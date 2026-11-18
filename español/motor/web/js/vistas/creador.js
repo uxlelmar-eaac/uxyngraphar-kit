@@ -41,15 +41,18 @@ export function vistaDiferencias(antes, despues) {
 async function selectorIA() {
   const sel = h("select", { "aria-label": "Qué IA usar" },
     h("option", { value: "agente|", texto: "Asistente del Creador (tu cuenta)" }),
-    h("option", { value: "servidor|", texto: "Solo chat con mi clave de IA (cuenta)" }));
+    h("option", { value: "servidor|", texto: "Solo chat con mi clave o suscripción de la web (cuenta)" }));
   try {
     for (const m of await obtener("/api/creador/modelos")) {
-      sel.append(h("option", { value: `${m.proveedor}|${m.modelo}`, texto: `${m.modelo} (${m.proveedor === "ollama" ? "Ollama" : "LM Studio"}, en este equipo)` }));
+      // Las suscripciones van al final y nunca se eligen solas: cada una tiene su aviso en «Conexiones».
+      sel.append(h("option", m.suscripcion
+        ? { value: `${m.proveedor}|`, "data-suscripcion": "1", texto: `${m.nombre} (tu suscripción, en este equipo${m.riesgo === "bajo" ? "" : " · lee el aviso en Conexiones"})` }
+        : { value: `${m.proveedor}|${m.modelo}`, texto: `${m.modelo} (${m.proveedor === "ollama" ? "Ollama" : "LM Studio"}, en este equipo)` }));
     }
   } catch { /* sin modelos locales: solo la cuenta */ }
   try {
     const cuenta = await obtener("/api/cuenta");
-    if (cuenta?.tipo !== "sesion" && sel.options.length > 2) sel.selectedIndex = 2;   // sin cuenta: un modelo de este equipo
+    if (cuenta?.tipo !== "sesion" && sel.options.length > 2 && !sel.options[2].dataset.suscripcion) sel.selectedIndex = 2;   // sin cuenta: un modelo de este equipo
   } catch { /* sin datos de cuenta */ }
   const elegido = () => { const [proveedor, modelo] = sel.value.split("|"); return { proveedor, modelo }; };
   return { sel, elegido };

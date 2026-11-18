@@ -252,10 +252,13 @@ class TestIaLocal(ConServidor):
         super().setUp()
         self.antes_ia = dict(ia_local.LOCALES)
         ia_local.LOCALES.update(ollama=self.url, lmstudio=self.url)
+        self.antes_subs = dict(ia_local.SUSCRIPCIONES)
+        ia_local.SUSCRIPCIONES.clear()   # que las CLI instaladas en este equipo no cambien los resultados
 
     def tearDown(self):
         ia_local.LOCALES.clear()
         ia_local.LOCALES.update(self.antes_ia)
+        ia_local.SUSCRIPCIONES.update(self.antes_subs)
         super().tearDown()
 
     def test_modelos_y_respuestas_locales(self):
