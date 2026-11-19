@@ -12,7 +12,7 @@ Catálogo (aquí se crean y editan los sistemas):
   indice-sistema [<id>…]                     regenera el bloque de entrada del README de cada sistema
   nomenclatura                               status heredados del catálogo pendientes de pasar al vocabulario
   nomenclatura migrar [--repo RUTA] [--aplicar]   fichas de un proyecto al vocabulario de NOMENCLATURA.md (por defecto simula)
-  version <id> mayor|menor|parche            sube la versión en el catálogo
+  version <id> mayor|menor|parche [--nota "…"]   sube la versión en el catálogo y añade su entrada al CHANGELOG.md
   construir <id>…|--todos --destino DIR      construye sistemas portátiles (con scripts/comun de _base e INTEGRIDAD.json)
   sincronizar-comun                          copia scripts/comun de _base en cada sistema (copias locales, no versionadas)
   empaquetar <id>…|--todos --destino DIR     artefacto de cada sistema (<id>-<version>.zip reproducible, el que se publica)
@@ -75,6 +75,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import andamiaje  # noqa: E402
+import casa  # noqa: E402
 import catalogo  # noqa: E402
 import remoto  # noqa: E402
 import generador  # noqa: E402
@@ -87,6 +88,21 @@ import transaccion  # noqa: E402
 
 def _lista(texto: str | None) -> list[str] | None:
     return None if texto is None else [x.strip() for x in texto.split(",") if x.strip()]
+
+
+# Comandos cuyo --repo tiene que existir: un error de dedo no puede pasar por «sin sistemas» ni crear una carpeta nueva.
+CON_REPO = {"instalar", "actualizar", "quitar", "estado", "verificar", "indice", "flujo", "retirar", "deshacer", "andamiar",
+            "integracion"}
+
+
+def _repo_inexistente(a) -> str:
+    """Mensaje de error si el --repo del comando no es una carpeta existente; vacío si vale."""
+    necesita = a.cmd in CON_REPO or (a.cmd == "nomenclatura" and a.accion == "migrar") or \
+        (a.cmd == "flujos-guardados" and a.accion == "guardar")
+    ruta = Path(str(getattr(a, "repo", "") or ".")).expanduser()
+    if not necesita or os.path.isdir(ruta):
+        return ""
+    return f"no existe la carpeta del proyecto: {ruta}" + (" (es un archivo)" if os.path.isfile(ruta) else "")
 
 
 def cmd_flujo(a) -> int:
@@ -125,6 +141,8 @@ def cmd_verificar(a) -> int:
     if a.formato == "json":   # formato estable: ESPECIFICACION.md, «verificar --formato json»
         _json({"formato": 1, "repo": str(raiz), "codigo": codigo, "resultados": resultados})
         return codigo
+    if not resultados:
+        print("No hay nada que verificar: ningún sistema instalado en este proyecto declara verificaciones.")
     for r in resultados:
         print(f"[{'ok' if r['codigo'] == 0 else 'FALLA'}] {r['sistema']} · {r['verificacion']}\n{r['salida']}\n")
     return codigo
@@ -133,8 +151,11 @@ def cmd_verificar(a) -> int:
 def cmd_andamiar(a) -> int:
     raiz = Path(a.repo).resolve()
     if not a.variante:
-        for nombre, d in andamiaje.variantes(raiz, a.id).items():
+        variantes = andamiaje.variantes(raiz, a.id)
+        for nombre, d in variantes.items():
             print(f"{nombre}\t{d['destino']}\t{d['descripcion']}")
+        if not variantes:
+            print(f"«{a.id}» no trae andamiaje: no hay variantes que crear en el proyecto.")
         return 0
     if not a.nombre:
         print("error: falta --nombre", file=sys.stderr)
@@ -178,7 +199,7 @@ def cmd_generar(a) -> int:
     try:
         spec = json.loads(texto)
     except json.JSONDecodeError as e:
-        raise ValueError(f"la especificación no es JSON válido: {e}") from e
+        raise ValueError(f"la especificación {casa.mensaje_de_error(e)}") from e
     r = generador.desde_spec(spec, aplicar=a.aplicar)
     if a.json:
         _json(r)
@@ -243,8 +264,9 @@ def cmd_creador(a) -> int:
         return 3
     carpeta = Path(a.dir)
     if a.accion == "validar":
-        _json(creador.validar(carpeta))
-        return 0
+        r = creador.validar(carpeta)
+        _json(r)
+        return 0 if r["valido"] else 1
     if a.accion == "nuevo":
         _json(creador.nuevo(carpeta, a.id, a.titulo, a.familia, a.descripcion))
         return 0
@@ -313,8 +335,11 @@ def cmd_grupos(a) -> int:
                 f.get("error") or (("con problemas" if f.get("codigo") else "bien") + (f" · contratos {f['contratos']}" if f.get("contratos") else ""))
             print(f"{f.get('nombre') or Path(f['ruta']).name}: {detalle}")
         return 1 if any(f.get("error") or f.get("codigo") for f in filas) else 0
-    for nombre, rutas in grupos.listar().items():
+    lista = grupos.listar()
+    for nombre, rutas in lista.items():
         print(f"{nombre}\t" + ", ".join(Path(r).name for r in rutas))
+    if not lista:
+        print("No tienes grupos. Crea uno con «uxyngraphar grupos guardar NOMBRE RUTA…».")
     return 0
 
 
@@ -335,21 +360,34 @@ def cmd_vocabulario(a) -> int:
 
 def cmd_proyectos(a) -> int:
     import proyectos
+    if a.accion in ("agregar", "quitar") and not a.rutas:
+        raise ValueError(f"proyectos {a.accion}: indica al menos una carpeta")
     if a.accion == "agregar":
-        print("\n".join(f"añadido: {r}" for r in proyectos.agregar(a.rutas)))
+        registrados = proyectos.listar()
+        ya = [os.path.isdir(Path(r).expanduser()) and proyectos.registrado(str(Path(r).expanduser()), registrados) for r in a.rutas]
+        for r, estaba in zip(proyectos.agregar(a.rutas), ya, strict=True):
+            print(f"ya estaba en la lista: {r}" if estaba else f"añadido: {r}")
     elif a.accion == "quitar":
         for r in a.rutas:
+            if not proyectos.registrado(str(Path(r).expanduser())):
+                raise ValueError(f"no está en la lista de proyectos: {r}")
             proyectos.quitar(str(Path(r).expanduser().resolve()))
             print(f"quitado de la lista: {r}")
     elif a.accion == "buscar":
-        for p in proyectos.buscar(a.rutas[0] if a.rutas else "."):
+        hallados = proyectos.buscar(a.rutas[0] if a.rutas else ".")
+        for p in hallados:
             print(f"{p['ruta']}" + (" (ya en la lista)" if p["registrado"] else ""))
+        if not hallados:
+            print(f"No encontré proyectos (repos git o carpetas con uxyngraphar) en {Path(a.rutas[0] if a.rutas else '.').resolve()}.")
     else:
-        for p in proyectos.resumenes():
+        lista = proyectos.resumenes()
+        for p in lista:
             marca = "NO EXISTE" if not p["existe"] else \
                 f"{len(p['sistemas'])} sistemas" + (f", {p['actualizables']} por actualizar" if p["actualizables"] else "") + \
                 (f", {p['alterados']} alterados" if p["alterados"] else "")
             print(f"{p['ruta']}\t{marca}")
+        if not lista:
+            print("No tienes proyectos en la lista. Añade uno con «uxyngraphar proyectos agregar RUTA» (o desde el panel).")
     return 0
 
 
@@ -374,8 +412,11 @@ def cmd_flujos_guardados(a) -> int:
     elif a.accion == "importar":
         print(guardados.importar(json.loads(Path(a.args[0]).read_text(encoding="utf-8"))))
     else:
-        for g in guardados.listar():
+        lista = guardados.listar()
+        for g in lista:
             print(f"{g['id']}\t{g.get('nombre', '')}\t{g.get('flujo', {}).get('modo', '')}\t{', '.join(g.get('sistemas', []))}")
+        if not lista:
+            print("No tienes flujos guardados. Guarda el de un proyecto con «uxyngraphar flujos-guardados guardar NOMBRE --repo RUTA».")
     return 0
 
 
@@ -383,6 +424,8 @@ def cmd_accesos(a) -> int:
     import herramienta
     if a.quitar or a.tipos is not None:
         tipos = [] if a.quitar else (_lista(a.tipos) or [])
+        if not a.quitar and not tipos:
+            raise ValueError("indica qué accesos quieres (menu, escritorio, barra) o --quitar para retirarlos todos")
         r = herramienta.cambiar_accesos(tipos)
         print("\n".join(r["avisos"]) or "accesos directos actualizados")
     else:
@@ -424,8 +467,9 @@ def cmd_conexiones(a) -> int:
 
 
 def analizador() -> argparse.ArgumentParser:
+    casa.ar.traducir_argparse()
     p = argparse.ArgumentParser(prog="uxyngraphar", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    sub = p.add_subparsers(dest="cmd", required=True)
+    sub = p.add_subparsers(dest="cmd", required=True, metavar="COMANDO", title="comandos")
     sub.add_parser("catalogo")
     sub.add_parser("sincronizar-comun")
     c = sub.add_parser("crear")
@@ -461,9 +505,11 @@ def analizador() -> argparse.ArgumentParser:
     pz.add_argument("pieza", choices=list(esp.base.PIEZAS))
     ip = sub.add_parser("indice-sistema")
     ip.add_argument("ids", nargs="*")
-    ve = sub.add_parser("version")
+    ve = sub.add_parser("version", description="Sube la versión de un sistema del catálogo y añade su entrada al CHANGELOG.md. "
+                                                "(Sin argumentos, «uxyngraphar version» dice la versión de la herramienta.)")
     ve.add_argument("id")
     ve.add_argument("nivel", choices=catalogo.NIVELES)
+    ve.add_argument("--nota", default="", help="qué cambió (la línea del CHANGELOG.md; si no, queda una para completar)")
     co = sub.add_parser("construir")
     co.add_argument("ids", nargs="*")
     co.add_argument("--todos", action="store_true")
@@ -599,6 +645,7 @@ def analizador() -> argparse.ArgumentParser:
     cx.add_argument("agente", nargs="?")
     cx.add_argument("proyectos", nargs="*")
     pa = sub.add_parser("panel")
+    p.comandos = list(sub.choices)
     pa.add_argument("--puerto", type=int, default=0)
     pa.add_argument("--no-abrir", "--fondo", dest="no_abrir", action="store_true")
     pa.add_argument("--bienvenida", action="store_true", help=argparse.SUPPRESS)
@@ -612,7 +659,7 @@ def cmd_servidor(a) -> int:
     import artefacto
     import remoto
     if a.cmd == "empaquetar":
-        for pid in ([m["id"] for m in catalogo.listar()] if a.todos else a.ids):
+        for pid in _ids_o_todos(a):
             z = artefacto.empaquetar(pid, Path(a.destino))
             print(f"{z}  sha256 {artefacto.sha256_de(z)}")
     elif a.cmd == "buscar":
@@ -789,8 +836,26 @@ def cmd_sesion_ver(a) -> int:
 CAMBIAN = {"instalar", "actualizar", "quitar", "retirar", "deshacer", "indice"}
 
 
+def _ids_o_todos(a) -> list[str]:
+    """Los ids pedidos o, con --todos, los del catálogo local; sin ninguno de los dos es un error (no un «hecho» vacío)."""
+    if not a.todos and not a.ids:
+        raise ValueError(f"{a.cmd}: indica los ids de los sistemas o --todos")
+    ids = [m["id"] for m in catalogo.listar()] if a.todos else list(a.ids)
+    if not ids:
+        raise ValueError(f"{a.cmd} --todos: el catálogo local está vacío ({catalogo.catalogo()})")
+    return ids
+
+
 def main(argv: list[str] | None = None) -> int:
-    a = analizador().parse_args(argv)
+    argv = list(sys.argv[1:] if argv is None else argv)
+    p = analizador()
+    if argv and not argv[0].startswith("-") and argv[0] not in p.comandos:
+        import difflib
+        parecidos = difflib.get_close_matches(argv[0], p.comandos, n=3)
+        print(f"error: comando desconocido «{argv[0]}»" + (f"; ¿quisiste decir {' o '.join(parecidos)}?" if parecidos else "")
+              + "\nLa lista de comandos: uxyngraphar --help", file=sys.stderr)
+        return 2
+    a = p.parse_args(argv)
     accion = ("nomenclatura migrar" if a.cmd == "nomenclatura" and getattr(a, "accion", None) == "migrar" and a.aplicar
               else "flujo" if a.cmd == "flujo" and (a.modo or a.leer or a.secuencia or a.trabajar_con)
               else a.cmd if a.cmd in CAMBIAN else "")
@@ -809,6 +874,10 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _main(a) -> int:
+    falta = _repo_inexistente(a)
+    if falta:
+        print(f"error: {falta}", file=sys.stderr)
+        return 2 if a.cmd == "verificar" else 1   # verificar: 2 es «no se pudo ejecutar» (ESPECIFICACION.md)
     try:
         if a.cmd in ("catalogo", "validar"):
             return cmd_validar(a)
@@ -837,10 +906,9 @@ def _main(a) -> int:
             cambiados = catalogo.sincronizar_comun()
             print(("scripts/comun al día en: " + ", ".join(cambiados)) if cambiados else "todas las copias de scripts/comun estaban al día")
         elif a.cmd == "version":
-            print(catalogo.versionar(a.id, a.nivel))
+            print(catalogo.versionar(a.id, a.nivel, nota=a.nota))
         elif a.cmd == "construir":
-            ids = [m["id"] for m in catalogo.listar()] if a.todos else a.ids
-            for pid in ids:
+            for pid in _ids_o_todos(a):
                 print(catalogo.construir(pid, Path(a.destino)))
         elif a.cmd in ("empaquetar", "buscar", "info", "traer", "publicar", "sesion", "cache", "iniciar-sesion", "cerrar-sesion",
                        "sincronizar"):
@@ -906,10 +974,10 @@ def _main(a) -> int:
                     "flujos-guardados": cmd_flujos_guardados, "accesos": cmd_accesos}[a.cmd](a)
     except (ValueError, FileNotFoundError, FileExistsError, transaccion.ProyectoOcupado,
             remoto.SinServidor, remoto.NoEncontrado) as e:
-        print(f"error: {e}", file=sys.stderr)
+        print(f"error: {casa.mensaje_de_error(e)}", file=sys.stderr)
         return 1
-    except OSError as e:   # permisos, disco lleno, sesión rechazada…: un mensaje, no un traceback
-        print(f"error: {e.strerror or e}" + (f": {e.filename}" if getattr(e, "filename", None) else ""), file=sys.stderr)
+    except OSError as e:   # permisos, disco lleno, sesión rechazada…: un mensaje en español, no un traceback
+        print(f"error: {casa.mensaje_de_error(e)}", file=sys.stderr)
         return 1
     return 0
 

@@ -455,7 +455,7 @@ POST = {
     "/api/catalogo/generar": lambda d: generador.desde_spec(_campo(d, "spec"), aplicar=bool(d.get("aplicar"))),
     "/api/catalogo/pieza": lambda d: (catalogo.agregar_pieza if _campo(d, "accion") == "agregar" else catalogo.quitar_pieza)(_campo(d, "id"), _campo(d, "pieza")),
     "/api/catalogo/archivo": lambda d: {"errores": catalogo.guardar_archivo(_campo(d, "id"), _campo(d, "rel"), _campo(d, "contenido"))},
-    "/api/catalogo/version": lambda d: catalogo.versionar(_campo(d, "id"), _campo(d, "nivel")),
+    "/api/catalogo/version": lambda d: catalogo.versionar(_campo(d, "id"), _campo(d, "nivel"), nota=str(d.get("nota") or "")),
     "/api/catalogo/instalar-en": lambda d: [_instalar_en(r, list(_campo(d, "ids", list))) for r in _campo(d, "repos", list)],
     "/api/catalogo/publicar": lambda d: publicacion.publicar_local(
         _campo(d, "id", str), simular=bool(d.get("simular")), alinear_editor=bool(d.get("alinear_editor"))),

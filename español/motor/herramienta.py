@@ -232,6 +232,9 @@ def accesos() -> dict:
 
 def cambiar_accesos(tipos: list[str]) -> dict:
     """Deja exactamente los accesos directos pedidos (crea los que falten y quita los demás)."""
+    malos = [t for t in tipos if t not in ar.ACCESO_TIPOS]
+    if malos:
+        raise ValueError(f"tipo de acceso no válido: {', '.join(malos)} (usa {', '.join(ar.ACCESO_TIPOS)}); no he cambiado nada")
     home = str(casa.carpeta())
     lanza = lanzador()
     if not lanza:

@@ -13,6 +13,49 @@ from arranque_descarga import *  # noqa: F401,F403
 from accesos import *  # noqa: F401,F403
 # </solo-repositorio>
 
+# Textos de argparse en español (uso, ayuda y errores): los usan el instalador y todos los comandos del kit.
+TRADUCCIONES_ARGPARSE = {
+    "usage: ": "uso: ",
+    "positional arguments": "argumentos",
+    "options": "opciones",
+    "optional arguments": "opciones",
+    "show this help message and exit": "muestra esta ayuda y termina",
+    "show program's version number and exit": "muestra la versión y termina",
+    "the following arguments are required: %s": "faltan argumentos obligatorios: %s",
+    "unrecognized arguments: %s": "opciones o argumentos no reconocidos: %s",
+    "invalid choice: %(value)r (choose from %(choices)s)": "valor no válido: %(value)r (elige entre %(choices)s)",
+    "invalid choice: %(value)r, maybe you meant %(closest)r?": "valor no válido: %(value)r; ¿quisiste decir %(closest)r?",
+    "argument %(argument_name)s: %(message)s": "%(argument_name)s: %(message)s",
+    "expected one argument": "falta su valor",
+    "expected at most one argument": "admite como mucho un valor",
+    "expected at least one argument": "necesita al menos un valor",
+    "invalid %(type)s value: %(value)r": "valor no válido (%(type)s): %(value)r",
+    "ambiguous option: %(option)s could match %(matches)s": "opción ambigua: %(option)s puede ser %(matches)s",
+    "not allowed with argument %s": "no se puede usar junto con %s",
+    "one of the arguments %s is required": "falta uno de estos argumentos: %s",
+    "ignored explicit argument %r": "valor no admitido: %r",
+    "unexpected option string: %s": "opción inesperada: %s",
+    "%(prog)s: error: %(message)s\n": "%(prog)s: error: %(message)s\n",
+}
+TRADUCCIONES_ARGPARSE_PLURAL = {"expected %s argument": "necesita %s valor", "expected %s arguments": "necesita %s valores"}
+
+
+def _traducir(texto):
+    return TRADUCCIONES_ARGPARSE.get(texto, texto)
+
+
+def _traducir_plural(uno, varios, n):
+    texto = uno if n == 1 else varios
+    return TRADUCCIONES_ARGPARSE_PLURAL.get(texto, texto)
+
+
+def traducir_argparse():
+    """Pone en español los textos de argparse (uso, ayuda y errores) en todo el proceso: argparse los pide a gettext en
+    el momento de mostrarlos, así que basta con cambiar sus funciones de traducción."""
+    argparse._ = _traducir
+    argparse.ngettext = _traducir_plural
+
+
 LANZADOR = '''#!__PYTHON__
 # __MARCA__: lo creó el instalador de uxyngraphar. Se quita con «uxyngraphar desinstalar».
 import json
@@ -422,6 +465,7 @@ def instalar(version, sin_path=False, con_panel=False, accesos=None, reparar=Fal
 
 def main(argv=None):
     preparar_consola()
+    traducir_argparse()
     ap = argparse.ArgumentParser(prog="instalar-uxyngraphar", description="Instala o actualiza la herramienta uxyngraphar en este equipo.")
     ap.add_argument("--version", default="", help="versión concreta (X.Y.Z); por defecto la de este instalador")
     ap.add_argument("--sin-path", action="store_true", help="no tocar el PATH ni los archivos de inicio de la terminal")

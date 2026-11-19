@@ -113,6 +113,8 @@ def texto(datos: dict) -> str:
     lineas += [f"Python {s['python']} ({s['ejecutable']}) en {s['so']}",
                f"comando: {datos['comando']['lanzador'] or '—'}; en el PATH: {'sí' if datos['comando']['en_path'] else 'no'}",
                f"panel: {datos['panel']}", "", "Proyectos:"]
+    if not datos["proyectos"]:
+        lineas.append("  (ninguno en la lista: añade uno con «uxyngraphar proyectos agregar RUTA»)")
     for p in datos["proyectos"]:
         if p.get("error") or not p.get("existe"):
             lineas.append(f"  {p['nombre']}: {p.get('error') or 'la carpeta ya no existe'}")

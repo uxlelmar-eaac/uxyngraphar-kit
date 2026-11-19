@@ -229,7 +229,27 @@ def borrar_archivo(pid: str, rel: str, raiz: Path | None = None) -> None:
     destino.unlink()
 
 
-def versionar(pid: str, nivel: str, raiz: Path | None = None) -> str:
+NOTA_POR_DEFECTO = "Describe aquí qué cambió en esta versión."
+
+
+def anotar_version(c: Path, version: str, nota: str = "") -> bool:
+    """Añade la entrada «## version» al CHANGELOG.md del sistema (si tiene esa pieza y aún no la tiene), encima de las
+    anteriores. True si lo cambió."""
+    ruta = c / "CHANGELOG.md"
+    if not ruta.is_file():
+        return False
+    texto = ruta.read_text(encoding="utf-8")
+    if any(linea.strip() == f"## {version}" for linea in texto.splitlines()):
+        return False
+    entrada = f"## {version}\n\n- {(nota or '').strip() or NOTA_POR_DEFECTO}\n\n"
+    i = texto.find("\n## ")
+    nuevo = texto[:i + 1] + entrada + texto[i + 1:] if i >= 0 else texto.rstrip("\n") + "\n\n" + entrada.rstrip("\n") + "\n"
+    ruta.write_text(nuevo, encoding="utf-8")
+    return True
+
+
+def versionar(pid: str, nivel: str, raiz: Path | None = None, nota: str = "") -> str:
+    """Sube la versión del sistema y deja su entrada en CHANGELOG.md (con `nota` o una línea para completar)."""
     if nivel not in NIVELES:
         raise ValueError(f"nivel: {', '.join(NIVELES)}")
     c = carpeta(pid, raiz)
@@ -238,6 +258,7 @@ def versionar(pid: str, nivel: str, raiz: Path | None = None) -> str:
     nueva = {"mayor": (mayor + 1, 0, 0), "menor": (mayor, menor + 1, 0), "parche": (mayor, menor, parche + 1)}[nivel]
     m["version"] = ".".join(map(str, nueva))
     (c / base.MANIFIESTO).write_text(json.dumps(m, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    anotar_version(c, m["version"], nota)
     return m["version"]
 
 
