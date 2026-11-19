@@ -39,7 +39,9 @@ export async function api(ruta, datos, metodo) {
   try {
     respuesta = await fetch(url, opciones);
   } catch {
-    alPerderConexion();
+    // Latido y otras rutas silenciosas no deben tapar la UI con «El panel se cerró»
+    // por un fallo de red puntual.
+    if (!silencioso) alPerderConexion();
     if (!silencioso) {
       anotar({
         nivel: "error", origen: "api", titulo: `${m} ${ruta} (sin conexión)`,

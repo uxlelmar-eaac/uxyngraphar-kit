@@ -79,7 +79,7 @@ export async function publicarEnMercado(id, zona) {
   const cuenta = await obtener("/api/cuenta");
   const usuario = (cuenta.usuario || "").replace(/^@/, "");
   if (!usuario || cuenta.tipo === "ninguna") {
-    avisar("Inicia sesión en «Herramienta y ajustes» antes de publicar en el Mercado.", "mal");
+    avisar("Inicia sesión en «Cuenta» antes de publicar en el Mercado.", "mal");
     return;
   }
   const previa = await enviar("/api/catalogo/publicar", { id, simular: true });
@@ -193,7 +193,12 @@ export async function editorSistema(id, { alCambiar = async () => {}, pestanaIni
   }
   async function cargarArchivos(elegido) {
     const lista = await obtener("/api/catalogo/archivos", { id });
-    vaciar(archivos, lista.map((a) => h("option", { value: a, texto: a, selected: a === elegido })));
+    const preferidos = ["sistema.json", "README.md", "SISTEMA.md"];
+    const inicial = elegido && lista.includes(elegido)
+      ? elegido
+      : (preferidos.find((p) => lista.includes(p)) || lista[0] || "");
+    vaciar(archivos, lista.map((a) => h("option", { value: a, texto: a, selected: a === inicial })));
+    if (inicial) archivos.value = inicial;
     await abrir();
   }
   async function abrir() {
@@ -220,12 +225,13 @@ export async function editorSistema(id, { alCambiar = async () => {}, pestanaIni
     avisar(`Versión ${v}. Actualiza tus proyectos para recibirla.`);
     await alCambiar();
   }
-  async function recargar() {
+  async function recargar({ notificar = true } = {}) {
     const meta = (await catalogo(true)).find((m) => m.id === id);
     version.textContent = meta?.version || "";
     vaciar(basico, await formularioBasico(id, recargar));
     await Promise.all([pintarPiezas(), cargarArchivos(archivos.value)]);
-    await alCambiar();
+    // Evita tormenta de pintados al montar el editor (lista + franjas en cascada).
+    if (notificar) await alCambiar();
   }
 
   async function abrirArchivo(rel) {
@@ -268,7 +274,7 @@ export async function editorSistema(id, { alCambiar = async () => {}, pestanaIni
   };
   for (const [k, nodo] of Object.entries(secciones)) nodo.hidden = k !== pestanaInicial;
 
-  await recargar();
+  await recargar({ notificar: false });
   const nodo = h("div", { class: "pila editor-taller" },
     h("div", { class: "tarjeta" }, barra, ...Object.values(secciones)));
   return {

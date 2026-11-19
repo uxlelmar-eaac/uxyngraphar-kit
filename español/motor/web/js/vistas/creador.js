@@ -60,6 +60,15 @@ async function selectorIA() {
   return { sel, elegido };
 }
 
+/** Propuestas aún abiertas (estado PENDING y al menos un archivo pendiente). */
+export function filtrarPropuestasPendientes(todas) {
+  return (todas || []).filter((x) => {
+    const estado = String(x.estado || "").toUpperCase();
+    if (estado && estado !== "PENDING" && estado !== "PENDIENTE") return false;
+    return (x.archivos || []).some((a) => String(a.estado || "").toLowerCase() === "pendiente");
+  });
+}
+
 /** Una sugerencia pendiente: ver cambios, corregir, aceptar o rechazar. */
 function tarjetaPropuesta(slug, p, alDecidir) {
   const pendientes = (p.archivos || []).filter((a) => a.estado === "pendiente");
@@ -127,7 +136,7 @@ export function panelSugerencias(slug, { alCambiar } = {}) {
       nodo.hidden = true;
       return [];
     }
-    const pendientes = (todas || []).filter((x) => (x.archivos || []).some((a) => a.estado === "pendiente"));
+    const pendientes = filtrarPropuestasPendientes(todas);
     if (!pendientes.length) {
       nodo.hidden = true;
       vaciar(nodo);

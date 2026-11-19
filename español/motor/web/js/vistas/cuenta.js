@@ -26,7 +26,7 @@ export async function vista(params, { ir }) {
     return h("div", {},
       cabecera("Borradores en la web", "Puente web ↔ este equipo.",
         boton("Volver a Cuenta", () => ir("cuenta"), { clase: "pequeno fantasma" })),
-      await tarjetaCreador({ alTraer: async (r, slug) => ir("creador", { id: r?.id || slug }) }));
+      await tarjetaCreador({ alTraer: async (r, slug) => ir("creador", { id: r?.slug || r?.id || slug }) }));
   }
 
   return h("div", {},

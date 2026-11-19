@@ -1,5 +1,22 @@
 # Cambios
 
+## 1.5.13
+
+- **Taller más usable:** al abrir un sistema ya no te deja 8+ s en «Cargando…»:
+  pinta el marco al instante y rellena lista/editor/franjas en segundo plano.
+- Menos llamadas repetidas (caché de catálogo, borradores y proyectos en la vista);
+  el editor no dispara un repintado en cascada al montarse.
+- El editor abre por defecto `sistema.json` (luego README / SISTEMA), no el primer
+  archivo alfabético (`CHANGELOG.md`).
+- «Por revisar» y el chat de uxyn se montan aparte: el cajón uxyn puede seguir
+  cerrado sin bloquear la carga; «Traer y Subir» cuando el sistema está en web y equipo.
+- Latidos fallidos ya no muestran «El panel se cerró»; al arrancar se oculta ese aviso.
+- Se cuentan solo propuestas realmente pendientes (`PENDING`).
+- Carril: «Validar» vuelve a validar (no llama a uxyn); «Que uxyn complete» abre el
+  archivo del hueco si lo hay. Inicio y Taller comparten la misma regla de `valido`.
+- Tras Subir se refresca la lista; sync usa `slug` de la API; textos apuntan a «Cuenta»;
+  `#/logs` redirige a Cuenta → Logs; el nombre del borrador se guarda en el origen.
+
 ## 1.5.12
 
 - **Taller de sistemas (ADR 0015):** el panel deja el Creador chat-first.

@@ -4,36 +4,30 @@ import { obtener, enviar, catalogo } from "../api.js";
 import { h, cabecera, boton, insignia, avisar } from "../ui.js";
 import { agregarProyectos } from "../explorador.js";
 import { tarjetaProyecto } from "./proyectos.js";
-import { resolverEstado, leerOrigen } from "./creador-estado.js";
+import { resolverEstado, leerOrigen, desdePendientes } from "./creador-estado.js";
+import { filtrarPropuestasPendientes } from "./creador.js";
 
 async function tarjetaSistemaEnCurso(m, ir, proyectos, publicado = false) {
   const enProyecto = (proyectos || [])
     .filter((p) => p.existe && (p.sistemas || []).includes(m.id))
     .map((p) => p.nombre);
-  let errores = [];
-  let marcadores = [];
-  let siguiente = null;
-  let listo = null;
+  let pendientes = desdePendientes(null);
   let propuestas = 0;
   try {
-    const p = await obtener("/api/catalogo/pendientes", { id: m.id });
-    errores = p.errores || [];
-    marcadores = p.marcadores || [];
-    siguiente = p.siguiente || null;
-    listo = !!p.listo;
+    pendientes = desdePendientes(await obtener("/api/catalogo/pendientes", { id: m.id }));
   } catch { /* */ }
   try {
     const todas = await obtener("/api/agente/propuestas", { slug: m.id });
-    propuestas = (todas || []).filter((x) => (x.archivos || []).some((a) => a.estado === "pendiente")).length;
+    propuestas = filtrarPropuestasPendientes(todas).length;
   } catch { /* */ }
   const estado = resolverEstado({
     tieneSistema: true,
     propuestas,
-    errores,
-    marcadores,
-    siguiente,
-    listo,
-    valido: listo || !(errores.length || marcadores.length) ? listo : (errores.length || marcadores.length ? false : true),
+    errores: pendientes.errores,
+    marcadores: pendientes.marcadores,
+    siguiente: pendientes.siguiente,
+    listo: pendientes.listo,
+    valido: pendientes.valido,
     alDia: true,
     enEquipo: true,
     enProyecto,

@@ -34,6 +34,29 @@ const ORIGEN_IDEA_MAX = 160;
  * (p. ej. permisos.acciones), pide corregir esos errores concretos.
  * @param {{ errores?: string[], marcadores?: object[], siguiente?: string|null }} entrada
  */
+/**
+ * Misma regla en Inicio y Taller a partir de `/api/catalogo/pendientes`.
+ * @param {{ listo?: boolean, errores?: string[], marcadores?: object[] }|null|undefined} p
+ * @returns {{ errores: string[], marcadores: object[], siguiente: string|null, listo: boolean|null, valido: boolean|null }}
+ */
+export function desdePendientes(p) {
+  if (!p) {
+    return { errores: [], marcadores: [], siguiente: null, listo: null, valido: null };
+  }
+  const errores = p.errores || [];
+  const marcadores = p.marcadores || [];
+  const listo = !!p.listo;
+  // Sin errores ni marcadores → válido; si los hay, coincide con listo (normalmente false).
+  const valido = !errores.length && !marcadores.length ? true : listo;
+  return {
+    errores,
+    marcadores,
+    siguiente: p.siguiente || null,
+    listo,
+    valido,
+  };
+}
+
 export function armarPromptCompletar(entrada = {}) {
   const errores = entrada.errores || [];
   const marcadores = entrada.marcadores || [];
@@ -253,6 +276,7 @@ export function guardarOrigen(id, origen) {
     sessionStorage.setItem(claveOrigen(id), JSON.stringify({
       idea: String(origen?.idea || "").slice(0, 4000),
       adjuntos: (origen?.adjuntos || []).map((a) => (typeof a === "string" ? a : a?.nombre || "")).filter(Boolean).slice(0, 40),
+      nombre: String(origen?.nombre || "").slice(0, 120),
     }));
   } catch { /* sin almacenamiento */ }
 }
@@ -260,11 +284,11 @@ export function guardarOrigen(id, origen) {
 export function leerOrigen(id) {
   try {
     const bruto = sessionStorage.getItem(claveOrigen(id));
-    if (!bruto) return { idea: "", adjuntos: [] };
+    if (!bruto) return { idea: "", adjuntos: [], nombre: "" };
     const d = JSON.parse(bruto);
-    return { idea: d.idea || "", adjuntos: d.adjuntos || [] };
+    return { idea: d.idea || "", adjuntos: d.adjuntos || [], nombre: d.nombre || "" };
   } catch {
-    return { idea: "", adjuntos: [] };
+    return { idea: "", adjuntos: [], nombre: "" };
   }
 }
 

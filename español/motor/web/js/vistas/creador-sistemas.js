@@ -6,12 +6,13 @@ import { h, vaciar, boton, cabecera, insignia, icono, avisar, dialogo } from "..
 import { anotar } from "../registro.js";
 import {
   editorSistema, crearSistema,
-  descargarZipSistema, instalarEnProyecto, proyectosConSistema, publicarEnMercado,
+  descargarZipSistema, instalarEnProyecto, publicarEnMercado,
 } from "./creador-editor.js";
-import { chatAgente, sincronizarBorrador, panelSugerencias } from "./creador.js";
+import { chatAgente, sincronizarBorrador, panelSugerencias, filtrarPropuestasPendientes } from "./creador.js";
 import { inicioConAgente } from "./creador-inicio.js";
 import {
   armarPromptCompletar, resolverEstado, leerOrigen, guardarOrigen, moverOrigen, resumenOrigen,
+  desdePendientes,
 } from "./creador-estado.js";
 
 const CLAVE = "uxyn-taller-zonas-v1";
@@ -93,6 +94,10 @@ export async function vista(params, { ir }) {
   let chatApi = null;
   let enWeb = false;
   let publicadoSesion = false;
+  let chatMontado = false;
+  let sugerenciasApi = null;
+  let pagina = null;
+  const cache = { cat: null, borradores: null, proyectos: null };
   const zonaSalidaDetalle = h("div", { class: "taller-salida-detalle" });
 
   const marco = h("div", { class: "taller-puesto" });
@@ -105,6 +110,8 @@ export async function vista(params, { ir }) {
   const zonaAgente = h("section", { class: "zona zona-agente", "aria-label": "uxyn" });
   const nodos = { lista: zonaLista, sistema: zonaSistema, agente: zonaAgente };
   const huecoSugerencias = h("div", { class: "taller-por-revisar" });
+  // Tras el primer tick el nodo ya está en el DOM; si el usuario navega, isConnected pasa a false.
+  const vivo = () => Boolean(pagina && pagina.isConnected);
 
   const interruptorLista = h("button", {
     type: "button", class: "boton pequeno conmutador",
@@ -117,7 +124,12 @@ export async function vista(params, { ir }) {
     title: "Mostrar u ocultar uxyn",
   }, "uxyn");
   interruptorLista.addEventListener("click", () => { zonas.lista = !zonas.lista; guardarZonas(zonas); aplicar(); });
-  interruptorAgente.addEventListener("click", () => { zonas.agente = !zonas.agente; guardarZonas(zonas); aplicar(); });
+  interruptorAgente.addEventListener("click", async () => {
+    zonas.agente = !zonas.agente;
+    guardarZonas(zonas);
+    aplicar();
+    if (zonas.agente && !chatMontado) await montarChat();
+  });
 
   function aplicar() {
     zonas.sistema = true;
@@ -133,14 +145,35 @@ export async function vista(params, { ir }) {
 
   const abrir = (id, conversacion) => ir("creador", id ? { id, ...(conversacion ? { conversacion } : {}) } : null);
 
+  async function catLocal(forzar = false) {
+    if (!cache.cat || forzar) cache.cat = await catalogo(true);
+    return cache.cat;
+  }
+  async function listaBorradores(forzar = false) {
+    if (!cache.borradores || forzar) {
+      try { cache.borradores = await obtener("/api/creador/borradores"); }
+      catch { cache.borradores = []; }
+    }
+    return cache.borradores || [];
+  }
+  async function listaProyectos(forzar = false) {
+    if (!cache.proyectos || forzar) {
+      cache.proyectos = await obtener("/api/proyectos").catch(() => []);
+    }
+    return cache.proyectos || [];
+  }
+
   async function dondeEsta(id) {
     if (!id) return { enEquipo: false, enProyecto: [], publicado: false, enWeb: false };
-    const local = (await catalogo(true)).some((m) => m.id === id);
-    const enProyecto = await proyectosConSistema(id);
+    const local = (await catLocal()).some((m) => m.id === id);
+    const proyectos = await listaProyectos();
+    const enProyecto = proyectos
+      .filter((p) => p.existe && (p.sistemas || []).includes(id))
+      .map((p) => p.nombre);
     let web = false;
     let publicado = publicadoSesion;
     try {
-      const borradores = await obtener("/api/creador/borradores");
+      const borradores = await listaBorradores();
       const b = (borradores || []).find((x) => x.slug === id);
       web = !!b;
       if (b && (b.version_publicada || b.publicado)) publicado = true;
@@ -155,23 +188,13 @@ export async function vista(params, { ir }) {
       return resolverEstado({ tieneSistema: false, proponiendo, origen });
     }
     const donde = await dondeEsta(idAbierto);
-    let errores = [];
-    let marcadores = [];
-    let siguiente = null;
-    let listo = null;
-    let valido = null;
+    let pendientes = desdePendientes(null);
     try {
-      const p = await obtener("/api/catalogo/pendientes", { id: idAbierto });
-      errores = p.errores || [];
-      marcadores = p.marcadores || [];
-      siguiente = p.siguiente || null;
-      listo = !!p.listo;
-      valido = listo || !(errores.length || marcadores.length) ? listo : false;
-      if (!errores.length && !marcadores.length) valido = true;
+      pendientes = desdePendientes(await obtener("/api/catalogo/pendientes", { id: idAbierto }));
     } catch { /* sin validador local */ }
     try {
       const todas = await obtener("/api/agente/propuestas", { slug: idAbierto });
-      propuestasPendientes = (todas || []).filter((x) => (x.archivos || []).some((a) => a.estado === "pendiente")).length;
+      propuestasPendientes = filtrarPropuestasPendientes(todas).length;
     } catch {
       propuestasPendientes = 0;
     }
@@ -179,11 +202,12 @@ export async function vista(params, { ir }) {
       tieneSistema: true,
       proponiendo,
       propuestas: propuestasPendientes,
-      errores,
-      marcadores,
-      siguiente,
-      listo,
-      valido,
+      errores: pendientes.errores,
+      marcadores: pendientes.marcadores,
+      siguiente: pendientes.siguiente,
+      listo: pendientes.listo,
+      valido: pendientes.valido,
+      // El catálogo local no expone al_dia; no fingimos «Validar» por desfase.
       alDia: true,
       enEquipo: donde.enEquipo,
       enProyecto: donde.enProyecto,
@@ -229,6 +253,7 @@ export async function vista(params, { ir }) {
           zonas.agente = true;
           guardarZonas(zonas);
           aplicar();
+          if (!chatMontado) await montarChat();
           zonaAgente.querySelector("textarea")?.focus();
           return;
         }
@@ -240,18 +265,29 @@ export async function vista(params, { ir }) {
           }
           return;
         }
-        if (estado.accion === "completar" || estado.accion === "validar") {
+        if (estado.accion === "validar") {
+          cache.cat = null;
+          if (abierto?.recargar) await abierto.recargar({ notificar: false });
+          await pintarFranjas();
+          await pintarLista();
+          avisar("Validación actualizada");
+          return;
+        }
+        if (estado.accion === "completar") {
+          if (estado.archivo && abierto?.abrirArchivo) {
+            try { await abierto.abrirArchivo(estado.archivo); } catch { /* */ }
+          }
           zonas.agente = true;
           guardarZonas(zonas);
           aplicar();
+          if (!chatMontado) await montarChat();
           if (chatApi?.pedirCompletar) await chatApi.pedirCompletar();
           else avisar("Escribe a uxyn: «Completa el núcleo».", "mal");
           return;
         }
-        if (estado.accion === "publicar" || estado.accion === "abrir_salida") {
+        if (estado.accion === "abrir_salida") {
           zonaSalida.scrollIntoView({ behavior: "smooth", block: "nearest" });
           try { zonaSalida.focus(); } catch { /* */ }
-          if (estado.accion === "publicar") enfocarSalidaPublicar();
         }
       }, { clase: "pequeno primario" });
       if (proponiendo) b.disabled = true;
@@ -265,21 +301,45 @@ export async function vista(params, { ir }) {
     const id = idAbierto;
     const donde = id ? await dondeEsta(id) : { enEquipo: false, enProyecto: [], publicado: false, enWeb: false };
     const syncBtns = [];
-    if (donde.enWeb) {
-      syncBtns.push(boton("Traer", async () => {
-        if (!id) return avisar("Abre un sistema primero.", "mal");
-        await sincronizarBorrador("bajar", id, zonaSalidaDetalle, async (r) => {
-          await catalogo(true);
-          await pintarFranjas();
-          abrir(r?.id || id);
+    const idDeSync = (r) => r?.slug || r?.id || id;
+    const traer = async () => {
+      if (!id) return avisar("Abre un sistema primero.", "mal");
+      cache.cat = null;
+      await sincronizarBorrador("bajar", id, zonaSalidaDetalle, async (r) => {
+        await catLocal(true);
+        await pintarLista();
+        await pintarFranjas();
+        abrir(idDeSync(r));
+      });
+    };
+    const subir = async () => {
+      if (!id) return avisar("Abre un sistema primero.", "mal");
+      cache.borradores = null;
+      await sincronizarBorrador("subir", id, zonaSalidaDetalle, async () => {
+        await pintarLista();
+        await pintarFranjas();
+      });
+    };
+    if (donde.enWeb && donde.enEquipo) {
+      syncBtns.push(boton("Traer y Subir", async () => {
+        await sincronizarBorrador("bajar", id, zonaSalidaDetalle, async () => {
+          cache.cat = null;
+          await catLocal(true);
+          await sincronizarBorrador("subir", id, zonaSalidaDetalle, async () => {
+            cache.borradores = null;
+            await pintarLista();
+            await pintarFranjas();
+          });
         });
-      }, { clase: "pequeno", icono: "descargar", titulo: "Bajar el borrador de la web a este equipo" }));
+      }, { clase: "pequeno", icono: "subir", titulo: "Bajar de la web y subir lo de este equipo" }));
+    }
+    if (donde.enWeb) {
+      syncBtns.push(boton("Traer", traer, { clase: "pequeno", icono: "descargar", titulo: "Bajar el borrador de la web a este equipo" }));
     }
     if (donde.enEquipo || !donde.enWeb) {
-      syncBtns.push(boton(donde.enWeb ? "Subir" : "Guardar en la web", async () => {
-        if (!id) return avisar("Abre un sistema primero.", "mal");
-        await sincronizarBorrador("subir", id, zonaSalidaDetalle, async () => { await pintarFranjas(); });
-      }, { clase: "pequeno", icono: "subir", titulo: "Subir el borrador de este equipo a la web" }));
+      syncBtns.push(boton(donde.enWeb ? "Subir" : "Guardar en la web", subir, {
+        clase: "pequeno", icono: "subir", titulo: "Subir el borrador de este equipo a la web",
+      }));
     }
     const acciones = h("div", { class: "fila taller-salida-acciones" },
       boton("Descargar .zip", async () => {
@@ -310,10 +370,9 @@ export async function vista(params, { ir }) {
   }
 
   async function pintarLista() {
-    const cat = await catalogo(true);
-    let borradores = [];
-    try { borradores = await obtener("/api/creador/borradores"); } catch { /* sin sesión */ }
-    const proyectos = await obtener("/api/proyectos").catch(() => []);
+    const cat = await catLocal(true);
+    const borradores = await listaBorradores(true);
+    const proyectos = await listaProyectos(true);
     const instalados = new Map();
     for (const p of proyectos) {
       for (const sid of p.sistemas || []) {
@@ -397,13 +456,12 @@ export async function vista(params, { ir }) {
       });
       return;
     }
-    let meta = (await catalogo(true)).find((m) => m.id === idAbierto);
+    let meta = (await catLocal()).find((m) => m.id === idAbierto);
     if (!meta) {
       await new Promise((r) => setTimeout(r, 400));
-      meta = (await catalogo(true)).find((m) => m.id === idAbierto);
+      meta = (await catLocal(true)).find((m) => m.id === idAbierto);
     }
     if (!meta) {
-      // Puede ser solo web: ofrecer Traer
       anotar({
         nivel: "aviso", origen: "creador",
         titulo: `«${idAbierto}» no está en el catálogo local`,
@@ -414,8 +472,9 @@ export async function vista(params, { ir }) {
         h("div", { class: "fila" },
           boton("Traer de la web", async () => {
             await sincronizarBorrador("bajar", idAbierto, zonaSalidaDetalle, async (r) => {
-              await catalogo(true);
-              abrir(r?.id || idAbierto);
+              cache.cat = null;
+              await catLocal(true);
+              abrir(r?.slug || r?.id || idAbierto);
             });
           }, { clase: "primario pequeno" }),
           boton("Nuevo sistema", () => abrir(""), { clase: "pequeno" })),
@@ -424,10 +483,12 @@ export async function vista(params, { ir }) {
     }
     abierto = await editorSistema(idAbierto, {
       alCambiar: async () => {
+        cache.cat = null;
         await pintarLista();
         await pintarFranjas();
       },
     });
+    if (pagina && !pagina.isConnected) return;
     vaciar(zonaSistema,
       h("div", { class: "fila separada" },
         h("div", {},
@@ -439,7 +500,26 @@ export async function vista(params, { ir }) {
       abierto.nodo);
   }
 
-  async function pintarAgente() {
+  async function montarSugerencias() {
+    if (!idAbierto) {
+      vaciar(huecoSugerencias);
+      sugerenciasApi = null;
+      return;
+    }
+    sugerenciasApi = panelSugerencias(idAbierto, {
+      alCambiar: async () => {
+        if (abierto?.recargar) await abierto.recargar();
+        await pintarLista();
+        await pintarFranjas();
+      },
+    });
+    vaciar(huecoSugerencias, sugerenciasApi.nodo);
+    await sugerenciasApi.refrescar();
+  }
+
+  async function montarChat() {
+    if (chatMontado || !vivo()) return;
+    chatMontado = true;
     if (!idAbierto) {
       const inicio = inicioConAgente({
         cabecera: true,
@@ -455,7 +535,8 @@ export async function vista(params, { ir }) {
         },
         alCrear: async (id, r) => {
           moverOrigen("_nuevo", id);
-          await catalogo(true);
+          cache.cat = null;
+          await catLocal(true);
           abrir(id, r.conversacion);
         },
       });
@@ -466,21 +547,13 @@ export async function vista(params, { ir }) {
       return;
     }
 
-    const sugerencias = panelSugerencias(idAbierto, {
-      alCambiar: async () => {
-        if (abierto?.recargar) await abierto.recargar();
-        await pintarLista();
-        await pintarFranjas();
-      },
-    });
-    vaciar(huecoSugerencias, sugerencias.nodo);
-
+    if (!sugerenciasApi) await montarSugerencias();
     const chat = await chatAgente(
       () => (abierto ? { id: idAbierto, rutaActual: abierto.rutaActual, textarea: abierto.textarea, recargar: abierto.recargar } : null),
       {
         conversacionInicial: Number(params.conversacion) || null,
         slugInicial: idAbierto || null,
-        sugerencias,
+        sugerencias: sugerenciasApi,
         alProponer: async () => {
           proponiendo = false;
           await pintarFranjas();
@@ -499,7 +572,13 @@ export async function vista(params, { ir }) {
     chatApi = {
       pedirCompletar: async () => {
         const area = zonaAgente.querySelector("textarea");
-        if (!area) return;
+        if (!area) {
+          zonas.agente = true;
+          guardarZonas(zonas);
+          aplicar();
+          if (!chatMontado) await montarChat();
+          return;
+        }
         let errores = [];
         let marcadores = [];
         let siguiente = null;
@@ -522,20 +601,69 @@ export async function vista(params, { ir }) {
       chat);
   }
 
+  async function pintarAgente() {
+    if (!idAbierto) {
+      // Al crear, uxyn es el camino principal: montarlo aunque el cajón empiece cerrado
+      // solo si el usuario lo abre, o si ya estaba abierto.
+      vaciar(zonaAgente,
+        h("h2", {}, icono("chat"), " uxyn"),
+        h("p", { class: "tenue", texto: "Abre uxyn (arriba) o pulsa «Crear con uxyn»." }));
+      if (zonas.agente) await montarChat();
+      return;
+    }
+    await montarSugerencias();
+    if (zonas.agente) await montarChat();
+    else {
+      vaciar(zonaAgente,
+        h("h2", {}, icono("chat"), " uxyn"),
+        h("p", { class: "tenue", texto: "Cajón cerrado. Ábrelo para hablar con uxyn." }));
+      chatMontado = false;
+      chatApi = {
+        pedirCompletar: async () => {
+          zonas.agente = true;
+          guardarZonas(zonas);
+          aplicar();
+          await montarChat();
+        },
+      };
+    }
+  }
+
   aplicar();
   cuerpo.append(zonaLista, zonaSistema, zonaAgente);
   marco.append(zonaOrigen, zonaCiclo, zonaSalida, cuerpo);
+  vaciar(zonaLista, h("p", { class: "tenue", texto: "Cargando sistemas…" }));
+  vaciar(zonaSistema, h("p", { class: "tenue", texto: idAbierto ? "Cargando sistema…" : "Preparando…" }));
+  vaciar(zonaOrigen, h("p", { class: "tenue", texto: "…" }));
+  vaciar(zonaCiclo, h("p", { class: "tenue", texto: "…" }));
+  vaciar(zonaSalida, h("p", { class: "tenue", texto: "…" }));
+
+  pagina = h("div", { class: "taller-pagina" },
+    cabecera("Taller", "Sistemas de gobernanza: archivos, origen, ciclo y salida. uxyn propone; tú decides.",
+      h("div", { class: "fila", role: "group", "aria-label": "Zonas" }, interruptorLista, interruptorAgente)),
+    marco);
+
   anotar({
     nivel: "info", origen: "creador",
     titulo: idAbierto ? `Taller abierto: ${idAbierto}` : "Taller abierto (nuevo sistema)",
     datos: { id: idAbierto || null, conversacion: params.conversacion || null },
   });
-  await Promise.all([pintarLista(), pintarSistema(), pintarFranjas()]);
-  await pintarAgente();
-  await pintarFranjas();
 
-  return h("div", { class: "taller-pagina" },
-    cabecera("Taller", "Sistemas de gobernanza: archivos, origen, ciclo y salida. uxyn propone; tú decides.",
-      h("div", { class: "fila", role: "group", "aria-label": "Zonas" }, interruptorLista, interruptorAgente)),
-    marco);
+  // Rellena en segundo plano: la UI deja de mostrar el «Cargando…» global al instante.
+  void (async () => {
+    await new Promise((r) => queueMicrotask(r));
+    if (!vivo()) return;
+    try {
+      await Promise.all([pintarLista(), pintarSistema(), pintarFranjas()]);
+      if (!vivo()) return;
+      await pintarAgente();
+      if (!vivo()) return;
+      await pintarFranjas();
+    } catch (e) {
+      if (!vivo()) return;
+      avisar(e.message || String(e), "mal");
+    }
+  })();
+
+  return pagina;
 }

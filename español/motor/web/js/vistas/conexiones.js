@@ -82,7 +82,7 @@ export async function vista(params, { recargar }) {
         cuenta?.tipo === "sesion" ? insignia("conectado", "bien") : insignia("sin cuenta", "nota")),
       h("p", { class: "tenue", texto: cuenta?.tipo === "sesion"
         ? `Usa tu cuenta ${cuenta.usuario || ""}: tu clave de IA o la IA incluida. uxyn está en «Creador de sistemas».`
-        : "Inicia sesión en «Herramienta y ajustes» para usar uxyn, el agente del Creador. Sin cuenta, el chat puede usar Ollama, LM Studio o tus suscripciones de este equipo." })),
+        : "Inicia sesión en «Cuenta» para usar uxyn, el agente del Creador. Sin cuenta, el chat puede usar Ollama, LM Studio o tus suscripciones de este equipo." })),
     seccionSuscripciones,
     h("h2", { texto: "Tus agentes" }),
     detectados.length ? h("div", { class: "rejilla" }, detectados.map(tarjetaAgente))

@@ -86,6 +86,7 @@ async function arrancar() {
     vaciar(main, h("div", { class: "banda mal" }, e.message));
     return;
   }
+  document.getElementById("desconectado").hidden = true;
   document.getElementById("version-lateral").textContent = "versión " + sesion.version;
   latir(Math.max(5, Math.min(20, Math.floor((sesion.inactividad || 60) / 4))));
   window.addEventListener("hashchange", pintar);
