@@ -227,15 +227,21 @@ def _reparar(raiz_app: Path, cat: Path | None) -> list[str]:
             except ValueError:
                 flujo_malo = True
         if flujo_malo:
-            copia = previo / "copia" / base.CARPETA_RAIZ / esp.FLUJO if previo else None
-            texto = copia.read_text(encoding="utf-8") if copia and copia.is_file() else ""
-            try:
-                bueno = json.loads(texto) if texto else None
-            except ValueError:
-                bueno = None
-            if bueno is not None and not esp.validar_flujo(bueno, {m["id"] for m in generar.instalados(raiz_app)}):
-                ruta.write_text(texto, encoding="utf-8")
-                hechos.append("FLUJO.json: inválido; restaurado del último respaldo")
+            # El último FLUJO.json que dejó un cambio terminado bien y, si no vale, el del último respaldo.
+            candidatas = [transaccion.carpeta_respaldos(raiz_app) / transaccion.FLUJO_BUENO]
+            if previo:
+                candidatas.append(previo / "copia" / base.CARPETA_RAIZ / esp.FLUJO)
+            ids_instalados = {m["id"] for m in generar.instalados(raiz_app)}
+            for copia in candidatas:
+                try:
+                    texto = copia.read_text(encoding="utf-8") if copia.is_file() else ""
+                    bueno = json.loads(texto) if texto else None
+                except (OSError, ValueError):
+                    bueno = None
+                if bueno is not None and not esp.validar_flujo(bueno, ids_instalados):
+                    ruta.write_text(texto, encoding="utf-8")
+                    hechos.append("FLUJO.json: inválido; restaurado del último respaldo")
+                    break
             else:
                 ruta.unlink()
                 hechos.append("FLUJO.json: inválido; vuelve a modo manual")

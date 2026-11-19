@@ -86,6 +86,45 @@ def _copiar(origen: Path, destino: Path, enlazar: bool = False) -> None:
         shutil.copy2(origen, destino)
 
 
+FLUJO_BUENO = "FLUJO-bueno.json"
+
+
+def guardar_flujo_bueno(raiz_app: Path) -> None:
+    """Copia, junto a los respaldos, el FLUJO.json que dejó un cambio terminado bien: «reparar» lo recupera si luego
+    se estropea, aunque el respaldo de ese cambio se haya borrado por no cambiar nada."""
+    raiz_app = Path(raiz_app).resolve()
+    ruta = raiz_app / base.CARPETA_RAIZ / esp.FLUJO
+    import generar
+    try:
+        texto = ruta.read_text(encoding="utf-8") if ruta.is_file() and not ruta.is_symlink() else ""
+        valido = bool(texto) and not esp.validar_flujo(json.loads(texto), {m["id"] for m in generar.instalados(raiz_app)})
+    except (OSError, ValueError):
+        return
+    if valido:
+        destino = carpeta_respaldos(raiz_app) / FLUJO_BUENO
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        destino.write_text(texto, encoding="utf-8")
+
+
+def huella(raiz_app: Path, sistemas: list[str] | None = None) -> str:
+    """Huella de lo que el motor puede tocar en el proyecto (las mismas rutas que guarda `respaldar`): si no cambia, el
+    cambio no hizo nada y su respaldo sobra."""
+    raiz_app = Path(raiz_app).resolve()
+    h = hashlib.sha256()
+    for rel in elementos():
+        origen = raiz_app / rel
+        raices = [origen / pid for pid in sistemas] if rel == base.CARPETA_SISTEMAS_DE_GOBERNANZA and sistemas is not None else [origen]
+        for r in raices:
+            if r.is_symlink() or not r.exists():
+                h.update(f"{'L' if r.is_symlink() else '-'} {r.relative_to(raiz_app).as_posix()}\0".encode())
+                continue
+            for p in [r, *sorted(r.rglob("*"))] if r.is_dir() else [r]:
+                h.update(p.relative_to(raiz_app).as_posix().encode("utf-8") + b"\0")
+                if p.is_file() and not p.is_symlink():
+                    h.update(hashlib.sha256(p.read_bytes()).digest())
+    return h.hexdigest()
+
+
 def respaldar(raiz_app: Path, motivo: str, sistemas: list[str] | None = None) -> Path:
     """Copia fuera del repo lo que el motor puede tocar. Con `sistemas`, de `uxyngraphar/sistemas-de-gobernanza/` solo esos (los que la
     operación va a cambiar): el resto no se respalda ni se toca al restaurar (M-10)."""
@@ -317,7 +356,8 @@ def candado(raiz_app: Path, motivo: str = ""):
 @contextmanager
 def transaccion(raiz_app: Path, motivo: str, sistemas: list[str] | None = None):
     """Respalda, ejecuta el bloque y, si lanza cualquier excepción, restaura el proyecto antes de propagarla. Toma el
-    candado del proyecto mientras dura."""
+    candado del proyecto mientras dura. Solo se guarda el respaldo de un cambio que cambió algo: el de un cambio que
+    falló (ya restaurado) o que no tocó nada se borra, así «deshacer --lista» nunca ofrece deshacer lo que no pasó."""
     clave = str(Path(raiz_app).resolve())
     activas = _de_este_hilo("transacciones")
     if clave in activas:   # anidada (p. ej. desinstalar llama a quitar): la exterior ya respalda
@@ -326,13 +366,19 @@ def transaccion(raiz_app: Path, motivo: str, sistemas: list[str] | None = None):
     with candado(raiz_app, motivo):
         activas[clave] = 1
         try:
+            antes = huella(raiz_app, sistemas)
             respaldo = respaldar(raiz_app, motivo, sistemas)
             try:
                 yield respaldo
             except BaseException:
                 restaurar(raiz_app, respaldo)
+                borrar(respaldo)   # el proyecto quedó como estaba: ese respaldo no deshace nada
                 raise
-            _cerrar(respaldo)
-            _podar(raiz_app)
+            if huella(raiz_app, sistemas) == antes:
+                borrar(respaldo)
+            else:
+                _cerrar(respaldo)
+                _podar(raiz_app)
+            guardar_flujo_bueno(raiz_app)
         finally:
             activas.pop(clave, None)

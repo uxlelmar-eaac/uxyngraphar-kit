@@ -130,6 +130,7 @@ def _pedir(url: str, cuerpo: dict | None, segundos: float) -> dict:
         with urllib.request.urlopen(pedido, timeout=segundos) as r:  # noqa: S310 - solo localhost
             return json.loads(r.read().decode("utf-8") or "{}")
     except urllib.error.HTTPError as e:
+        e.close()
         raise IaNoDisponible(f"{url}: HTTP {e.code}") from None
     except (urllib.error.URLError, OSError, ValueError) as e:
         raise IaNoDisponible(f"{url}: no responde ({getattr(e, 'reason', e)})") from None

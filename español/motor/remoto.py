@@ -93,6 +93,8 @@ def _pedir(ruta: str, datos: bytes | None = None, cabeceras: dict | None = None,
             detalle = "; ".join(detalle) if isinstance(detalle, list) else str(detalle)
         except (ValueError, AttributeError, OSError):
             pass
+        finally:
+            e.close()   # la respuesta de error también es un archivo abierto (ResourceWarning en Python 3.15)
         if e.code == 404:
             raise NoEncontrado(detalle or f"no existe: {ruta}") from None
         if e.code == 402:
@@ -470,6 +472,8 @@ def _pedir_json(ruta: str, cuerpo: dict | None = None, metodo: str = "POST", con
             return e.code, json.loads(e.read().decode("utf-8") or "{}")
         except (ValueError, OSError):
             return e.code, {}
+        finally:
+            e.close()
     except (urllib.error.URLError, OSError) as e:
         raise SinServidor(f"{url}: no responde ({getattr(e, 'reason', e)})") from None
 
