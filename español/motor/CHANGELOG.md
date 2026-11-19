@@ -7,6 +7,7 @@
 - Una opción desconocida en cualquier subcomando (`buscar --nada`, `creador modelos --x`…)
   muestra el error y el uso de ese subcomando, con la pista `uxyngraphar <comando> --help`,
   en vez de la ayuda general de uxyngraphar. Sale con código 2.
+- En Python 3.10 y 3.11 los errores de opciones ya no empiezan con «argument --x:» en inglés.
 
 ## 1.5.17
 

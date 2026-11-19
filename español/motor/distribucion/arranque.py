@@ -54,6 +54,16 @@ def traducir_argparse():
     el momento de mostrarlos, así que basta con cambiar sus funciones de traducción."""
     argparse._ = _traducir
     argparse.ngettext = _traducir_plural
+    # Python 3.10 y 3.11 escriben «argument --x: …» sin pasar por gettext.
+    if not getattr(argparse.ArgumentError.__str__, "_uxyngraphar", False):
+        original = argparse.ArgumentError.__str__
+
+        def _str(self):
+            texto = original(self)
+            return texto[len("argument "):] if texto.startswith("argument ") and self.argument_name else texto
+
+        _str._uxyngraphar = True
+        argparse.ArgumentError.__str__ = _str
 
 
 LANZADOR = '''#!__PYTHON__
