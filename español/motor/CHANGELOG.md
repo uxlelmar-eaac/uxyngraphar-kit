@@ -1,5 +1,19 @@
 # Cambios
 
+## 1.5.14
+
+- **Simulador:** con «uxyn (tu cuenta)» ya no envía un proveedor inválido; usa la IA de la cuenta.
+- Historial del chat simple separado por modo; «Nueva» limpia de verdad y se reanuda
+  la última conversación (como la web).
+- El editor ya no pisa los cambios sin guardar cuando uxyn termina o se acepta una
+  sugerencia; aviso al cambiar de archivo, Ctrl+S, «Siguiente hueco»; «Archivo nuevo»
+  lo crea al momento.
+- «Publicar» solo marca el sistema como publicado si se publicó de verdad.
+- Carril: el hueco se describe con archivo y línea, sin las llaves; «Siguiente en el
+  ciclo» solo cuando nada lo bloquea.
+- Sin sesión no se consulta a la web (borradores/propuestas): menos esperas.
+- Se quita «Traer y Subir» (bajaba la versión web y la volvía a subir).
+
 ## 1.5.13
 
 - **Taller más usable:** al abrir un sistema ya no te deja 8+ s en «Cargando…»:
