@@ -520,7 +520,7 @@ def analizador() -> argparse.ArgumentParser:
     em.add_argument("--destino", required=True)
     bu = sub.add_parser("buscar")
     bu.add_argument("texto", nargs="*")
-    bu.add_argument("--familia", default="")
+    bu.add_argument("--familia", default="", choices=nomenclatura.NORMA["familias"])
     bu.add_argument("--json", action="store_true")
     inf = sub.add_parser("info")
     inf.add_argument("ref")
@@ -846,6 +846,28 @@ def _ids_o_todos(a) -> list[str]:
     return ids
 
 
+def _subanalizador(p: argparse.ArgumentParser, a: argparse.Namespace) -> tuple[argparse.ArgumentParser, list[str]]:
+    """El analizador del (sub)comando que se pidió, p. ej. «creador modelos», y su ruta de nombres."""
+    ruta: list[str] = []
+    for dest in ("cmd", "accion"):
+        subs = next((x for x in p._actions if isinstance(x, argparse._SubParsersAction)), None)  # noqa: SLF001
+        nombre = getattr(a, dest, None)
+        if subs is None or subs.dest != dest or nombre not in subs.choices:
+            break
+        p, ruta = subs.choices[nombre], [*ruta, nombre]
+    return p, ruta
+
+
+def _no_reconocidos(p: argparse.ArgumentParser, a: argparse.Namespace, sobrantes: list[str]) -> int:
+    """Opciones de más: el error y el uso del subcomando (no la ayuda general de uxyngraphar)."""
+    sp, ruta = _subanalizador(p, a)
+    orden = " ".join(["uxyngraphar", *ruta])
+    sp.print_usage(sys.stderr)
+    tipo = "opción desconocida" if all(s.startswith("-") for s in sobrantes) else "opciones o argumentos no reconocidos"
+    print(f"{orden}: error: {tipo}: {' '.join(sobrantes)}\nLas opciones de «{orden}»: {orden} --help", file=sys.stderr)
+    return 2
+
+
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     p = analizador()
@@ -855,7 +877,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: comando desconocido «{argv[0]}»" + (f"; ¿quisiste decir {' o '.join(parecidos)}?" if parecidos else "")
               + "\nLa lista de comandos: uxyngraphar --help", file=sys.stderr)
         return 2
-    a = p.parse_args(argv)
+    a, sobrantes = p.parse_known_args(argv)
+    if sobrantes:
+        return _no_reconocidos(p, a, sobrantes)
     accion = ("nomenclatura migrar" if a.cmd == "nomenclatura" and getattr(a, "accion", None) == "migrar" and a.aplicar
               else "flujo" if a.cmd == "flujo" and (a.modo or a.leer or a.secuencia or a.trabajar_con)
               else a.cmd if a.cmd in CAMBIAN else "")

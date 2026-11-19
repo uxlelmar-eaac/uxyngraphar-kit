@@ -71,5 +71,33 @@ class TestMensajesVacios(SinCatalogoElegido):
         self.assertIn("se borrarían 2 sistemas que escribiste", salida(uxyngraphar.main, ["desinstalar", "--alcance", "herramienta", "--si"])[2])
 
 
+class TestOpcionesDeSubcomandos(unittest.TestCase):
+    def test_buscar_familia_inexistente(self):
+        codigo, out, err = salida(cli.main, ["buscar", "--familia", "nada"])
+        self.assertEqual(codigo, 2)
+        self.assertEqual(out, "")
+        self.assertIn("uxyngraphar buscar: error: --familia", err)
+        for familia in nomenclatura.NORMA["familias"]:
+            self.assertIn(familia, err)
+
+    def test_opcion_desconocida_da_el_uso_del_subcomando(self):
+        for args, orden in ((["buscar", "--nada"], "uxyngraphar buscar"), (["estado", "--zzz"], "uxyngraphar estado"),
+                            (["creador", "modelos", "--x"], "uxyngraphar creador modelos"),
+                            (["catalogo", "extra"], "uxyngraphar catalogo")):
+            codigo, out, err = salida(cli.main, args)
+            self.assertEqual(codigo, 2, args)
+            self.assertEqual(out, "", args)
+            self.assertIn(f"uso: {orden} [-h]", err, args)
+            self.assertIn(f"{orden}: error:", err, args)
+            self.assertIn(args[-1], err, args)
+            self.assertIn(f"{orden} --help", err, args)
+            self.assertNotIn("COMANDO ...", err, args)
+
+    def test_por_el_lanzador_tambien(self):
+        codigo, _, err = salida(uxyngraphar.main, ["buscar", "--nada"])
+        self.assertEqual(codigo, 2)
+        self.assertIn("uxyngraphar buscar: error: opción desconocida: --nada", err)
+
+
 if __name__ == "__main__":
     unittest.main()
