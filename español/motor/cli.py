@@ -180,6 +180,16 @@ def cmd_andamiar(a) -> int:
     return 0
 
 
+def _responde_si(pregunta: str, sin_respuesta: str) -> bool:
+    """Pregunta «[s/N]». Sin nadie que conteste (fin de la entrada: en Windows, NUL parece una terminal) no sigue: error
+    con `sin_respuesta`, que dice cómo confirmarlo sin preguntar."""
+    try:
+        return input(pregunta).strip().lower() in ("s", "si", "sí")
+    except EOFError:
+        print()
+        raise ValueError(sin_respuesta) from None
+
+
 def _json(datos) -> None:
     print(json.dumps(datos, ensure_ascii=False, indent=2))
 
@@ -395,7 +405,7 @@ def cmd_proyectos(a) -> int:
                 if not a.si:
                     if not sys.stdin.isatty():
                         raise ValueError("quitar todo cambia archivos del proyecto: añade --si para confirmarlo")
-                    if input("¿Lo quito todo? [s/N] ").strip().lower() not in ("s", "si", "sí"):
+                    if not _responde_si("¿Lo quito todo? [s/N] ", "quitar todo cambia archivos del proyecto: añade --si para confirmarlo"):
                         print("No he tocado nada.")
                         return 1
             res = qp.quitar(ruta, bool(getattr(a, "todo", False)))
@@ -814,7 +824,7 @@ def cmd_reportar(a) -> int:
         if not sys.stdin.isatty() or a.texto == "-":
             print("error: añade --si para enviarlo sin preguntar", file=sys.stderr)
             return 1
-        if input("¿Enviar esto al autor? [s/N] ").strip().lower() not in ("s", "si", "sí"):
+        if not _responde_si("¿Enviar esto al autor? [s/N] ", "añade --si para enviarlo sin preguntar"):
             print("no se envió nada")
             return 0
     r = reportes.enviar(datos)
@@ -914,7 +924,8 @@ def cmd_mis_sistemas(a) -> int:
         if instalados and not a.si:
             if not sys.stdin.isatty():
                 raise ValueError("está instalado en proyectos: añade --si para eliminarlo igualmente del catálogo local")
-            if input("¿Lo mueves a la papelera igualmente? [s/N] ").strip().lower() not in ("s", "si", "sí"):
+            if not _responde_si("¿Lo mueves a la papelera igualmente? [s/N] ",
+                                "está instalado en proyectos: añade --si para eliminarlo igualmente del catálogo local"):
                 print("No he tocado nada.")
                 return 1
         for h in ms.eliminar(a.ids):

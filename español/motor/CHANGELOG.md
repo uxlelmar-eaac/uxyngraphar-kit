@@ -11,6 +11,9 @@ Arreglos encontrados al instalar el kit desde cero y probarlo como un usuario nu
 - El resumen ya no dice «quitado de la lista del panel» cuando el proyecto no estaba en la lista.
 - La CLI escribe por líneas: con la salida redirigida a un archivo o a otro programa, el plan de
   `proyectos quitar --todo` sale antes del error que pide `--si` (antes salía al revés).
+- Las preguntas «[s/N]» de la CLI (`proyectos quitar --todo`, `eliminar`, `reportar`) ya no acaban en una traza
+  cuando nadie puede contestar y la entrada parece una terminal (en Windows, la entrada vacía o NUL): paran sin tocar
+  nada y dicen que se confirma con `--si`.
 
 ## 1.5.21
 

@@ -59,3 +59,21 @@ class TestQuitarSinRestos(ConProyecto):
         self.assertIn("añade --si", salida)
         self.assertLess(salida.index("Quitar todo lo de uxyngraphar"), salida.index("error:"), salida)
         self.assertTrue((r / SISTEMAS / "pruebas-demo").is_dir(), "sin --si no se toca nada")
+
+    def test_sin_respuesta_no_revienta_aunque_parezca_una_terminal(self):
+        # En Windows, la entrada NUL dice ser una terminal: input() acaba en EOFError y antes salía una traza.
+        import contextlib
+        import io
+        from unittest import mock
+
+        import cli
+        r = self.repo_git("windows")
+        repo.instalar(r, ["pruebas-demo"])
+        err = io.StringIO()
+        with mock.patch.object(cli.sys.stdin, "isatty", return_value=True), \
+                mock.patch("builtins.input", side_effect=EOFError), \
+                contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(err):
+            codigo = cli.main(["proyectos", "quitar", str(r), "--todo"])
+        self.assertNotEqual(codigo, 0)
+        self.assertIn("añade --si", err.getvalue())
+        self.assertTrue((r / SISTEMAS / "pruebas-demo").is_dir())
