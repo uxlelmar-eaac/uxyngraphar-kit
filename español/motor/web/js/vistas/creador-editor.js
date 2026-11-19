@@ -75,7 +75,7 @@ export async function proyectosConSistema(id) {
 }
 
 /** Publica el sistema en el Mercado (versión inmutable). Distinto de «Guardar borrador en la web». */
-export async function publicarEnMercado(id, zona) {
+export async function publicarEnMercado(id, zona, { alPublicar = null } = {}) {
   const cuenta = await obtener("/api/cuenta");
   const usuario = (cuenta.usuario || "").replace(/^@/, "");
   if (!usuario || cuenta.tipo === "ninguna") {
@@ -96,6 +96,7 @@ export async function publicarEnMercado(id, zona) {
     const r = await enviar("/api/catalogo/publicar", { id, simular: false, alinear_editor: !!marca?.checked });
     vaciar(destino);
     avisar(`Publicado ${r.editor}/${r.id}@${r.version}`);
+    if (alPublicar) await alPublicar(r);
   }
 
   vaciar(destino,
@@ -167,7 +168,14 @@ export async function editorSistema(id, { alCambiar = async () => {}, pestanaIni
   const basico = h("div", { class: "pila" });
   const sincronia = h("div", { class: "pila salida-panel", "aria-label": "Publicar en el Mercado" });
   const version = h("span", {});
+  const sinGuardar = h("span", { class: "insignia nota", texto: "sin guardar", hidden: true });
   let elegirPestana = () => {};
+  // Lo que hay en disco del archivo abierto: si el texto difiere, hay cambios sin guardar y no se pisan al recargar.
+  let enDisco = null;
+  let rutaAbierta = "";
+  const sucio = () => enDisco !== null && contenido.value !== enDisco;
+  const marcarSucio = () => { sinGuardar.hidden = !sucio(); };
+  contenido.addEventListener("input", marcarSucio);
 
   async function pintarPiezas() {
     const c = await obtener("/api/catalogo/completitud", { id });
@@ -194,20 +202,67 @@ export async function editorSistema(id, { alCambiar = async () => {}, pestanaIni
   async function cargarArchivos(elegido) {
     const lista = await obtener("/api/catalogo/archivos", { id });
     const preferidos = ["sistema.json", "README.md", "SISTEMA.md"];
-    const inicial = elegido && lista.includes(elegido)
+    // Un archivo nuevo aún sin guardar no está en disco: se conserva mientras tenga cambios.
+    const conservarNuevo = elegido && !lista.includes(elegido) && sucio() && rutaAbierta === elegido;
+    const inicial = elegido && (lista.includes(elegido) || conservarNuevo)
       ? elegido
       : (preferidos.find((p) => lista.includes(p)) || lista[0] || "");
-    vaciar(archivos, lista.map((a) => h("option", { value: a, texto: a, selected: a === inicial })));
+    const rutas = conservarNuevo ? [...lista, elegido] : lista;
+    vaciar(archivos, rutas.map((a) => h("option", { value: a, texto: a, selected: a === inicial })));
     if (inicial) archivos.value = inicial;
-    await abrir();
+    await abrir({ recargando: true });
   }
-  async function abrir() {
-    if (!archivos.value) return;
-    contenido.value = (await obtener("/api/catalogo/archivo", { id, rel: archivos.value })).contenido;
+  async function abrir({ recargando = false } = {}) {
+    if (!archivos.value) {
+      contenido.value = "";
+      enDisco = null;
+      rutaAbierta = "";
+      marcarSucio();
+      return;
+    }
+    const rel = archivos.value;
+    if (recargando && rel === rutaAbierta && sucio()) {
+      // uxyn u otra acción recargó el sistema: no se pierden los cambios sin guardar de la persona.
+      let actual = null;
+      try { actual = (await obtener("/api/catalogo/archivo", { id, rel })).contenido; } catch { /* archivo nuevo */ }
+      if (actual !== null && actual !== enDisco) {
+        errores.textContent = `${rel} cambió mientras lo editabas. Tus cambios siguen aquí; al guardar sustituyes la versión nueva.`;
+        enDisco = actual;
+      }
+      marcarSucio();
+      return;
+    }
+    if (!recargando && rutaAbierta && rel !== rutaAbierta && sucio()) {
+      const seguir = await confirmar({
+        titulo: "Cambios sin guardar",
+        texto: `Tienes cambios sin guardar en ${rutaAbierta}. Si cambias de archivo, se pierden.`,
+        si: "Descartar y cambiar",
+        peligro: true,
+      });
+      if (!seguir) {
+        if (![...archivos.options].some((o) => o.value === rutaAbierta)) archivos.append(h("option", { value: rutaAbierta, texto: rutaAbierta }));
+        archivos.value = rutaAbierta;
+        return;
+      }
+    }
+    let texto = "";
+    try {
+      texto = (await obtener("/api/catalogo/archivo", { id, rel })).contenido;
+    } catch (e) {
+      if (rel !== rutaAbierta || !recargando) throw e;
+    }
+    contenido.value = texto;
+    enDisco = texto;
+    rutaAbierta = rel;
     errores.textContent = "";
+    marcarSucio();
   }
   async function guardarArchivo() {
+    if (!archivos.value) return avisar("Elige o crea un archivo primero.", "mal");
     const r = await enviar("/api/catalogo/archivo", { id, rel: archivos.value, contenido: contenido.value });
+    enDisco = contenido.value;
+    rutaAbierta = archivos.value;
+    marcarSucio();
     errores.textContent = r.errores.join("; ");
     avisar(r.errores.length ? "Guardado, pero aún falta algo" : "Guardado", r.errores.length ? "mal" : "");
     if (archivos.value === "sistema.json") vaciar(basico, await formularioBasico(id, recargar));
@@ -215,9 +270,22 @@ export async function editorSistema(id, { alCambiar = async () => {}, pestanaIni
   }
   async function nuevoArchivo() {
     const r = await pedirDatos({ titulo: "Archivo nuevo", explicacion: "Ruta dentro del sistema, por ejemplo ejemplos/caso.md", campos: [{ nombre: "rel", etiqueta: "Ruta" }], si: "Crear" });
-    if (!r?.rel) return;
-    archivos.append(h("option", { value: r.rel, texto: r.rel, selected: true }));
-    contenido.value = "";
+    const rel = String(r?.rel || "").trim().replace(/^\/+/, "");
+    if (!rel) return;
+    if ([...archivos.options].some((o) => o.value === rel)) {
+      archivos.value = rel;
+      await abrir();
+      return;
+    }
+    if (sucio() && !(await confirmar({ titulo: "Cambios sin guardar", texto: `Tienes cambios sin guardar en ${rutaAbierta}. Si creas otro archivo, se pierden.`, si: "Descartar y crear", peligro: true }))) return;
+    // Igual que la web: el archivo se crea al momento (un .md con su título) para que no se pierda.
+    const inicial = rel.endsWith(".md") ? `# ${rel.split("/").pop().replace(/\.md$/, "")}\n` : "";
+    const g = await enviar("/api/catalogo/archivo", { id, rel, contenido: inicial });
+    enDisco = null;
+    await cargarArchivos(rel);
+    errores.textContent = (g.errores || []).join("; ");
+    contenido.focus();
+    await alCambiar();
   }
   async function subirVersion(nivel) {
     const v = await enviar("/api/catalogo/version", { id, nivel });
@@ -234,6 +302,18 @@ export async function editorSistema(id, { alCambiar = async () => {}, pestanaIni
     if (notificar) await alCambiar();
   }
 
+  /** Selecciona el siguiente marcador {{…}} desde el cursor (vuelve al principio al llegar al final), como en la web. */
+  function saltarAMarcador() {
+    const texto = contenido.value;
+    const patron = /\{\{[^{}]*\}\}/g;
+    patron.lastIndex = contenido.selectionEnd || 0;
+    let m = patron.exec(texto);
+    if (!m) { patron.lastIndex = 0; m = patron.exec(texto); }
+    if (!m) return avisar("Este archivo no tiene huecos {{…}} por rellenar.");
+    contenido.focus();
+    contenido.setSelectionRange(m.index, m.index + m[0].length);
+  }
+
   async function abrirArchivo(rel) {
     elegirPestana("archivos");
     if (rel && [...archivos.options].some((o) => o.value === rel)) {
@@ -243,12 +323,22 @@ export async function editorSistema(id, { alCambiar = async () => {}, pestanaIni
     }
   }
 
-  archivos.addEventListener("change", abrir);
+  archivos.addEventListener("change", () => abrir().catch((e) => avisar(e.message || String(e), "mal")));
+  contenido.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+      e.preventDefault();
+      guardarArchivo().catch((err) => avisar(err.message || String(err), "mal"));
+    }
+  });
+  window.addEventListener("beforeunload", (e) => { if (contenido.isConnected && sucio()) { e.preventDefault(); e.returnValue = ""; } });
   const secciones = {
     archivos: h("div", { class: "pila" },
-      h("div", { class: "fila" }, h("div", { class: "espacio" }, archivos), boton("Archivo nuevo", nuevoArchivo, { clase: "pequeno", icono: "mas" })),
+      h("div", { class: "fila" }, h("div", { class: "espacio" }, archivos), sinGuardar, boton("Archivo nuevo", nuevoArchivo, { clase: "pequeno", icono: "mas" })),
       contenido, errores,
-      h("div", { class: "fila" }, boton("Guardar archivo", guardarArchivo, { clase: "primario pequeno", icono: "check" }))),
+      h("div", { class: "fila" },
+        boton("Guardar archivo", guardarArchivo, { clase: "primario pequeno", icono: "check" }),
+        boton("Siguiente hueco", () => saltarAMarcador(), { clase: "pequeno fantasma", titulo: "Selecciona el siguiente {{…}} por rellenar" }),
+        h("span", { class: "tenue", texto: "Ctrl+S guarda" }))),
     basico: h("div", { class: "pila" }, basico),
     piezas: h("div", { class: "pila" }, h("p", { class: "tenue", texto: "Activa las partes que necesita tu sistema. Las marcadas como recomendadas suelen hacer falta." }), piezas),
     version: h("div", { class: "pila" },

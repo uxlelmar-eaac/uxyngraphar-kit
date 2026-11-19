@@ -4,7 +4,7 @@
 import { obtener, enviar } from "../api.js";
 import { h, vaciar, boton, avisar, insignia } from "../ui.js";
 import { anotar } from "../registro.js";
-import { cajaAgente } from "./creador-inicio.js";
+import { cajaAgente, PREFIJO_CREAR } from "./creador-inicio.js";
 import { mensajeAgente, nuevoIdProgreso, trabajando } from "./agente-chat.js";
 
 const MAX_LINEAS_LCS = 1500;
@@ -39,6 +39,12 @@ export function vistaDiferencias(antes, despues) {
   const lineas = diferenciasLineas(antes, despues);
   return h("pre", { class: "diferencias", "aria-label": "Diferencias" },
     lineas.map((l) => h("div", { class: `dif-${l.tipo}`, texto: `${l.tipo === "nueva" ? "+ " : l.tipo === "quitada" ? "− " : "  "}${l.texto}` })));
+}
+
+/** Lo que escribió la persona, sin la instrucción fija de «crear» (igual que la web). */
+function textoMostrado(texto) {
+  const limpio = String(texto || "").trim();
+  return limpio.startsWith(PREFIJO_CREAR) ? limpio.slice(PREFIJO_CREAR.length).trim() || limpio : limpio;
 }
 
 async function selectorIA() {
@@ -171,7 +177,8 @@ export async function chatAgente(contexto, {
   alProponer = null,
 } = {}) {
   const { sel, elegido } = await selectorIA();
-  const mensajes = [];
+  // Historial del chat simple (sin agente): uno por modo, para no mezclar el simulador con el asistente.
+  const historiales = { asistente: [], simulador: [] };
   let conversacion = conversacionInicial;
   let modo = "asistente";
   let adjuntos = null;
@@ -299,18 +306,19 @@ export async function chatAgente(contexto, {
       return turnoAgente(texto);
     }
     const c = abierto();
+    const mensajes = historiales[modo];
     mensajes.push({ role: "user", content: texto });
     decir("tuyo", texto);
     pregunta.value = "";
     try {
-      const datos = (modo === "asistente" && elegido().proveedor === "agente")
-        ? { proveedor: "servidor", modelo: "" }
-        : elegido();
+      // «uxyn (tu cuenta)» no es un proveedor de chat: el simulador (y el chat simple) usan la IA de la cuenta.
+      const datos = elegido().proveedor === "agente" ? { proveedor: "servidor", modelo: "" } : elegido();
       const r = await enviar("/api/creador/chat", { id: c.id, mensajes, simulador: enSimulador(), ...datos });
       mensajes.push({ role: "assistant", content: r.texto });
       decir("ia", r.texto);
     } catch (e) {
       mensajes.pop();
+      pregunta.value = pregunta.value || texto;
       throw e;
     }
   }
@@ -319,7 +327,7 @@ export async function chatAgente(contexto, {
       const previa = await obtener("/api/agente/conversacion", { id: conversacionInicial });
       vaciar(hilo);
       for (const m of previa.mensajes || []) {
-        if (m.rol === "user") decir("tuyo", m.texto);
+        if (m.rol === "user") decir("tuyo", textoMostrado(m.texto));
         else hilo.append(mensajeAgente(m.texto, { acciones: m.acciones, fecha: m.fecha }));
       }
       hilo.scrollTop = hilo.scrollHeight;
@@ -335,28 +343,41 @@ export async function chatAgente(contexto, {
   const pistaModo = h("p", { class: "tenue pista-modo", texto: "Los cambios de uxyn salen en «Por revisar», arriba." });
   const enviarBoton = boton("Enviar", hablar, { clase: "pequeno primario" });
   const selConversacion = h("select", { "aria-label": "Conversación guardada", class: "breve" });
+  const empezarDeNuevo = () => {
+    conversacion = null;
+    historiales[modo] = [];
+    selConversacion.value = "";
+    vaciar(hilo, h("div", { class: "mensaje ia", texto: enSimulador() ? saludoSimulador : saludoAsistente }));
+  };
   const barraHistorial = h("div", { class: "fila atajos-chat" },
     selConversacion,
-    boton("Nueva", () => { conversacion = null; vaciar(hilo, h("div", { class: "mensaje ia", texto: saludoAsistente })); }, { clase: "pequeno" }));
+    boton("Nueva", empezarDeNuevo, { clase: "pequeno" }));
 
   async function cargarHistorial(id) {
     const previa = await obtener("/api/agente/conversacion", { id });
     conversacion = previa.id || id;
     vaciar(hilo);
     for (const m of previa.mensajes || []) {
-      if (m.rol === "user") decir("tuyo", m.texto);
+      if (m.rol === "user") decir("tuyo", textoMostrado(m.texto));
       else hilo.append(mensajeAgente(m.texto, { acciones: m.acciones, fecha: m.fecha }));
     }
     hilo.scrollTop = hilo.scrollHeight;
     await refrescarSugerencias();
   }
 
+  let reanudada = Boolean(conversacionInicial);
   async function refrescarLista() {
     const slug = slugDe();
     let lista = [];
     try {
       lista = await obtener("/api/agente/conversaciones", slug ? { slug } : {});
     } catch { /* sin listado */ }
+    // Como en la web: sin conversación pedida, se reanuda la más reciente de este sistema.
+    if (!reanudada && !conversacion && slug && lista.length && hilo.children.length <= 1) {
+      reanudada = true;
+      try { await cargarHistorial(lista[0].id); } catch { /* se empieza una nueva */ }
+    }
+    reanudada = true;
     vaciar(selConversacion, h("option", { value: "", texto: lista.length ? "Conversación nueva" : "Sin conversaciones" }));
     for (const c of lista) {
       selConversacion.append(h("option", {
@@ -373,8 +394,7 @@ export async function chatAgente(contexto, {
   selConversacion.addEventListener("change", async () => {
     const id = Number(selConversacion.value);
     if (!id) {
-      conversacion = null;
-      vaciar(hilo, h("div", { class: "mensaje ia", texto: saludoAsistente }));
+      empezarDeNuevo();
       return;
     }
     try {

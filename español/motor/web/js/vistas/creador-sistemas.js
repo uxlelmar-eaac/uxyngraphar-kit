@@ -97,7 +97,7 @@ export async function vista(params, { ir }) {
   let chatMontado = false;
   let sugerenciasApi = null;
   let pagina = null;
-  const cache = { cat: null, borradores: null, proyectos: null };
+  const cache = { cat: null, borradores: null, proyectos: null, sesion: null };
   const zonaSalidaDetalle = h("div", { class: "taller-salida-detalle" });
 
   const marco = h("div", { class: "taller-puesto" });
@@ -149,10 +149,21 @@ export async function vista(params, { ir }) {
     if (!cache.cat || forzar) cache.cat = await catalogo(true);
     return cache.cat;
   }
+  /** ¿Hay sesión de la cuenta? Sin ella, los borradores web y uxyn no responden: no se les pregunta. */
+  async function conSesion() {
+    if (cache.sesion === null) {
+      try { cache.sesion = (await obtener("/api/cuenta"))?.tipo === "sesion"; }
+      catch { cache.sesion = false; }
+    }
+    return cache.sesion;
+  }
   async function listaBorradores(forzar = false) {
     if (!cache.borradores || forzar) {
-      try { cache.borradores = await obtener("/api/creador/borradores"); }
-      catch { cache.borradores = []; }
+      if (!(await conSesion())) cache.borradores = [];
+      else {
+        try { cache.borradores = await obtener("/api/creador/borradores"); }
+        catch { cache.borradores = []; }
+      }
     }
     return cache.borradores || [];
   }
@@ -193,7 +204,7 @@ export async function vista(params, { ir }) {
       pendientes = desdePendientes(await obtener("/api/catalogo/pendientes", { id: idAbierto }));
     } catch { /* sin validador local */ }
     try {
-      const todas = await obtener("/api/agente/propuestas", { slug: idAbierto });
+      const todas = (await conSesion()) ? await obtener("/api/agente/propuestas", { slug: idAbierto }) : [];
       propuestasPendientes = filtrarPropuestasPendientes(todas).length;
     } catch {
       propuestasPendientes = 0;
@@ -221,10 +232,14 @@ export async function vista(params, { ir }) {
     zonaSalida.scrollIntoView({ behavior: "smooth", block: "nearest" });
     if (idAbierto) {
       vaciar(zonaSalidaDetalle);
-      void publicarEnMercado(idAbierto, zonaSalidaDetalle).then(() => {
-        publicadoSesion = true;
-        void pintarFranjas();
-      });
+      // Solo cuenta como publicado cuando la publicación termina de verdad (no al abrir el aviso).
+      publicarEnMercado(idAbierto, zonaSalidaDetalle, {
+        alPublicar: async () => {
+          publicadoSesion = true;
+          await pintarFranjas();
+          await pintarLista();
+        },
+      }).catch((e) => avisar(e.message || String(e), "mal"));
     }
   }
 
@@ -320,19 +335,6 @@ export async function vista(params, { ir }) {
         await pintarFranjas();
       });
     };
-    if (donde.enWeb && donde.enEquipo) {
-      syncBtns.push(boton("Traer y Subir", async () => {
-        await sincronizarBorrador("bajar", id, zonaSalidaDetalle, async () => {
-          cache.cat = null;
-          await catLocal(true);
-          await sincronizarBorrador("subir", id, zonaSalidaDetalle, async () => {
-            cache.borradores = null;
-            await pintarLista();
-            await pintarFranjas();
-          });
-        });
-      }, { clase: "pequeno", icono: "subir", titulo: "Bajar de la web y subir lo de este equipo" }));
-    }
     if (donde.enWeb) {
       syncBtns.push(boton("Traer", traer, { clase: "pequeno", icono: "descargar", titulo: "Bajar el borrador de la web a este equipo" }));
     }

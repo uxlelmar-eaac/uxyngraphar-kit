@@ -82,15 +82,29 @@ export function armarPromptCompletar(entrada = {}) {
   return PROMPT_MARCADORES;
 }
 
+/**
+ * Un marcador {{…}} en lenguaje llano: «Falta rellenar en SISTEMA.md (línea 3): Una o dos frases… (y 7 huecos más)».
+ * Antes se enseñaba la línea cruda con las llaves, que no decía ni el archivo.
+ */
+export function describirMarcador(m, total = 1) {
+  const archivo = m.archivo || m.file || "";
+  const linea = m.linea || m.line;
+  const bruto = String(m.marcador || m.marker || m.texto || m.text || "").trim();
+  const que = bruto.replace(/^\{\{\s*|\s*\}\}$/g, "").trim();
+  const donde = archivo ? ` en ${archivo}${linea ? ` (línea ${linea})` : ""}` : "";
+  const resto = total > 1 ? ` (y ${total - 1} ${total - 1 === 1 ? "hueco más" : "huecos más"})` : "";
+  return `Falta rellenar${donde}${que ? `: ${que}` : ""}${resto}`;
+}
+
 function huecoNucleo({ errores = [], marcadores = [] }) {
   const m = marcadores.find((x) => NUCLEO_SET.has(x.archivo || x.file));
-  if (m) return { archivo: m.archivo || m.file, texto: m.texto || m.text || m.marcador || m.marker };
+  if (m) return { archivo: m.archivo || m.file, texto: describirMarcador(m, marcadores.length) };
   const err = errores.find((e) => NUCLEO.some((f) => String(e).includes(f))
     || /marcador|núcleo|nucleo|SISTEMA|LIMITES|PERMISOS|MEMORIAS|README|sistema\.json/i.test(String(e)));
   if (err) return { archivo: null, texto: String(err) };
   if (marcadores.length) {
     const x = marcadores[0];
-    return { archivo: x.archivo || x.file, texto: x.texto || x.text || x.marcador || x.marker };
+    return { archivo: x.archivo || x.file, texto: describirMarcador(x, marcadores.length) };
   }
   if (errores.length) return { archivo: null, texto: String(errores[0]) };
   return null;
@@ -162,6 +176,14 @@ export function resolverCiclo(entrada = {}) {
  *   origen?: { idea?: string, adjuntos?: string[]|object[] } }} entrada
  */
 export function resolverEstado(entrada) {
+  const estado = resolverEstadoBase(entrada);
+  // El siguiente paso del ciclo (instalar, publicar…) solo cuando nada lo bloquea: con sugerencias por revisar,
+  // uxyn trabajando o el núcleo a medias, decía «Instálalo en un proyecto» y confundía.
+  if (estado.id !== "listo" && estado.id !== "ajustar") estado.ciclo = { ...estado.ciclo, siguienteCiclo: null };
+  return estado;
+}
+
+function resolverEstadoBase(entrada) {
   const origen = resumenOrigen(entrada.origen || {});
   const ciclo = resolverCiclo({
     tieneSistema: !!entrada.tieneSistema,
@@ -220,6 +242,7 @@ export function resolverEstado(entrada) {
     || entrada.valido === false;
   if (hayNucleo || (hueco && entrada.valido !== true)) {
     return {
+      ...base,
       id: "falta_nucleo",
       etiqueta: ETIQUETAS.falta_nucleo,
       detalle: hueco?.texto || entrada.siguiente || "Quedan huecos o errores en los archivos núcleo.",
@@ -227,7 +250,6 @@ export function resolverEstado(entrada) {
       cta: "Que uxyn complete",
       accion: "completar",
       archivo: hueco?.archivo || null,
-      ...base,
     };
   }
   if (entrada.valido === true && entrada.listo === true && entrada.alDia !== false) {
