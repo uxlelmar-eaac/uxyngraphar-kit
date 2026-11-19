@@ -1,5 +1,36 @@
 # Cambios
 
+## 1.5.16
+
+Arreglos del informe de QA de la 1.5.15.
+
+- **Tus sistemas ya no se pierden:** `crear`, `generar desde --aplicar` y el Taller
+  escriben en `~/.uxyngraphar/catalogo/` (o `UXYNGRAPHAR_CATALOGO` / `catalogo_local`),
+  fuera de `versiones/`. Reparar, actualizar, cambiar de versión y podar versiones ya no
+  los borran; los que quedaban dentro de `versiones/` se mueven solos (si un id choca,
+  se queda la versión más alta y la otra va a `respaldos/catalogo/`). `desinstalar` de
+  la herramienta los lista y pide `--con-catalogo` (en el panel, una casilla).
+- `--help` nunca ejecuta nada (`autoactualizar --help` ya no actualiza) y las opciones
+  desconocidas se rechazan en español; toda la ayuda de argparse está en español.
+- `estado`, `verificar` e `instalar` con un `--repo` que no existe fallan con un mensaje
+  claro (y `instalar` no crea la carpeta).
+- **Conexiones:** Codex ya no se da por instalado por la carpeta que creamos nosotros, no
+  queda un `config.toml` vacío al desconectar y Claude Code de Claude Desktop se detecta.
+  Desinstalar un proyecto retira sus conexiones (MCP, instrucciones, bloque global de
+  Codex) y la comprobación final dice la verdad.
+- `accesos` con un tipo mal escrito ya no borra los accesos existentes.
+- `construir`/`empaquetar` sin ids, `andamiar` sin variantes y `creador validar` con un
+  borrador inválido ya no callan ni salen con 0.
+- `reparar --proyectos` ya no dice «todo estaba bien» después de reconstruir algo.
+- **Panel:** sin desbordes en móvil (390 px); Inicio no pide borradores ni propuestas sin
+  sesión; errores JSON en español con 401/402/403/404/405 en vez de 400 o páginas HTML.
+- Se cierran las respuestas de error HTTP (sin ResourceWarning en Python 3.15).
+- Mensajes cuando no hay proyectos, grupos o flujos guardados; errores del sistema y de
+  JSON en español, sin «[Errno 2]» ni «Expecting property name».
+- Menores: el instalador pide Python 3.10 también en macOS; `version <id> parche` añade
+  la entrada al CHANGELOG del sistema (`--nota`); `proyectos agregar` avisa si la ruta ya
+  estaba; `deshacer --lista` ya no guarda respaldos de cambios fallidos o sin cambios.
+
 ## 1.5.15
 
 - **Creador:** encuentra Claude Code aunque solo tengas Claude Desktop (lo instala en
