@@ -94,7 +94,7 @@ class TestPlanYQuitar(ConProyecto):
 
     def test_carpeta_que_ya_no_existe_solo_se_desvincula(self):
         r = self.proyecto()
-        shutil.rmtree(r)
+        repo.borrar_arbol(r)
         p = qp.plan(str(r))
         self.assertFalse(p["existe"])
         self.assertEqual(p["borrar"], [])
