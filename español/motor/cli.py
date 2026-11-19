@@ -529,6 +529,13 @@ def analizador() -> argparse.ArgumentParser:
     c.add_argument("--familia", required=True, choices=nomenclatura.NORMA["familias"])
     c.add_argument("--piezas", help=f"piezas estándar separadas por comas (por defecto: {','.join(catalogo.PIEZAS_AL_CREAR)})")
     c.add_argument("--json", action="store_true", help="ruta y pendientes en JSON")
+    im = sub.add_parser("importar", help="sistema nuevo con el esqueleto completo a partir de un zip, archivos o una carpeta, sin perder nada")
+    im.add_argument("origen", nargs="+", help="un .zip, una carpeta o uno o varios archivos")
+    im.add_argument("--id", default="")
+    im.add_argument("--titulo", default="")
+    im.add_argument("--familia", default="", choices=["", *nomenclatura.NORMA["familias"]])
+    im.add_argument("--comprobar", action="store_true", help="solo muestra el resumen; no crea nada")
+    im.add_argument("--json", action="store_true")
     g = sub.add_parser("generar")
     gs = g.add_subparsers(dest="accion", required=True)
     gp = gs.add_parser("plantilla")
@@ -1013,6 +1020,40 @@ def _no_reconocidos(p: argparse.ArgumentParser, a: argparse.Namespace, sobrantes
     return 2
 
 
+def cmd_importar(a) -> int:
+    import importar
+    rutas = [Path(o).expanduser() for o in a.origen]
+    if len(rutas) == 1 and rutas[0].is_dir():
+        archivos = importar.desde_carpeta(rutas[0])
+    elif len(rutas) == 1 and rutas[0].suffix.lower() == ".zip":
+        archivos = importar.desde_zip(rutas[0].read_bytes())
+    else:
+        archivos = {r.name: r.read_bytes() for r in rutas}
+    r = importar.importar(archivos, pid=a.id, titulo=a.titulo, familia=a.familia, aplicar=not a.comprobar,
+                          nombre_origen=rutas[0].name)
+    if a.json:
+        _json(r)
+        return 0
+    print(f"{r['id']}: {'creado en ' + r['ruta'] if r['aplicado'] else 'vista previa (no se creó nada)'}")
+    for clave, titulo in (("mapeados", "Colocados en su sitio"), ("fusionados", "Fusionados (tus valores mandan)"),
+                          ("conservados", "Conservados tal cual")):
+        if r[clave]:
+            print(f"{titulo}:")
+            for x in r[clave]:
+                print(f"  {x['de']} → {x['a']}" + (f"  ({x['motivo']})" if x["motivo"] else ""))
+    if r["de_la_base"]:
+        print(f"Añadidos desde la base ({len(r['de_la_base'])}): {', '.join(r['de_la_base'])}")
+    for x in r["renombrados"]:
+        print(f"  renombrado: {x['de']} → {x['a']}")
+    for x in r["ignorados"]:
+        print(f"  ignorado (archivo de sistema): {x}")
+    for x in r["avisos"]:
+        print(f"  aviso: {x}")
+    if r["errores"]:
+        print(f"Pendiente de completar ({len(r['errores'])}); «uxyngraphar generar pendientes {r['id']}» dice dónde.")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     p = analizador()
@@ -1057,6 +1098,8 @@ def _main(a) -> int:
             else:
                 print(ruta)
                 print(f"Rellena los marcadores {{{{…}}}}; «uxyngraphar generar pendientes {a.id}» dice dónde y qué sigue.")
+        elif a.cmd == "importar":
+            return cmd_importar(a)
         elif a.cmd == "pieza":
             hacer = catalogo.agregar_pieza if a.accion == "agregar" else catalogo.quitar_pieza
             errores = hacer(a.id, a.pieza)

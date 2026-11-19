@@ -1,5 +1,36 @@
 # Cambios
 
+## 1.5.26
+
+Taller y Mis sistemas con una sola lista, esqueleto completo en todos los caminos de creación, importación que no
+descarta nada, editor con todos los archivos y un panel con los colores de la web.
+
+- Colores: la capa semántica del panel se reconstruye solo a partir de los primitivos de la web
+  (`uxyngraphar-frontend/src/common/theme/palette.ts`): fondo `ink`, texto `edge`, bordes `edge` al 12/20/34 %,
+  botón principal dorado `brand` con texto `on-brand`, anillo de foco naranja `tone`, estados desde `affirm`,
+  `tone` y `signal`. El panel es oscuro siempre, como la web (se quita el tema claro).
+- Estética: iconos con tamaño fijo (16–24 px en línea, 36 px en cabeceras de tarjeta; antes podían salir enormes),
+  tokens de espaciado, radios, sombras y duraciones, botones primario/secundario/fantasma/peligro que no se estiran,
+  foco visible, insignias, pestañas, diálogos y avisos coherentes, estados vacíos con icono, esqueletos de carga,
+  navegación móvil en fila deslizable y `prefers-reduced-motion` global.
+- Mis sistemas = Taller: las dos vistas salen de la misma fuente (`/api/mis-sistemas`): sistemas del equipo,
+  borradores solo en la web, archivados e instalados propios, cada uno con su insignia de estado; carpetas y arrastre
+  por id también para los borradores web; «Traer para editar» y «Restaurar».
+- Esqueleto completo al crear (desde cero, zip, archivos, carpeta o especificación): núcleo, `prompts/` y `config/`
+  con contenido de arranque, proceso por fases, skills, herramientas, plantillas, referencia, ejemplos, pruebas e
+  historial de cambios.
+- Importar sin perder nada: nuevo asistente «Nuevo sistema de gobernanza» (Desde cero / Subir zip o archivos / Con
+  uxyn / Desde especificación) con arrastrar y soltar archivos o carpetas, vista previa y un resumen de lo colocado,
+  fusionado, conservado tal cual y añadido desde la base. Los archivos reconocibles van a su sitio (`docs/` →
+  `referencia/`, `templates/` → `plantillas/`, sueltos `.json/.yaml` → `config/`…), las configuraciones JSON se
+  fusionan con las de la base (tus valores mandan) y lo desconocido se conserva y se declara en `extensiones`.
+  También por CLI: `uxyngraphar importar ORIGEN… [--id --titulo --familia --comprobar --json]`.
+- Editor: muestra todos los archivos, en cualquier carpeta y con cualquier extensión; binarios e imágenes en vista
+  previa de solo lectura. Los borradores que solo están en la web enseñan su árbol completo antes de traerlos.
+- Arreglado: un binario en el sistema hacía fallar «Guardar en la web» entero; «Traer» borraba binarios locales que
+  la web no guarda; abrir un binario en el editor daba error; la página «Nuevo» solo enseñaba los archivos del núcleo.
+- Arreglado: Proyectos ya no se queda en «sin sesión» si la sesión caducó (las versiones remotas son un extra).
+
 ## 1.5.25
 
 Arreglos encontrados probando el kit como usuario nuevo tras una actualización.

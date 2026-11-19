@@ -21,7 +21,7 @@ class Base(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.cat = Path(self.tmp.name)
-        self.c = completar(catalogo.crear("pruebas-piezas", "Pruebas piezas", "", self.cat))
+        self.c = completar(catalogo.crear("pruebas-piezas", "Pruebas piezas", "", self.cat, piezas=catalogo.PIEZAS_MINIMAS))
 
     def tearDown(self):
         self.tmp.cleanup()
@@ -93,9 +93,10 @@ class TestEstructura(Base):
         (self.c / "diagramas").mkdir()
         (self.c / "diagramas" / "flujo.md").write_text("# Flujo\n", encoding="utf-8")
         self.assertTrue(any(e.startswith("diagramas:") for e in self.errores()))
-        self.manifiesto(extensiones={"diagramas/": "diagramas del flujo"})
+        de_serie = catalogo.base.leer_manifiesto(self.c)["extensiones"]   # prompts/ y config/ (esqueleto de 1.5.26)
+        self.manifiesto(extensiones={**de_serie, "diagramas/": "diagramas del flujo"})
         self.assertEqual(self.errores(), [])
-        self.manifiesto(extensiones={"diagramas/": "diagramas del flujo", "otra/": "no existe"})
+        self.manifiesto(extensiones={**de_serie, "diagramas/": "diagramas del flujo", "otra/": "no existe"})
         self.assertTrue(any("extensiones.otra/" in e for e in self.errores()))
 
     def test_pieza_declarada_sin_ruta_y_ruta_sin_declarar(self):

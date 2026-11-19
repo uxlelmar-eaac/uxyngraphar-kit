@@ -74,17 +74,33 @@ def validar(carpeta: Path) -> dict:
 
 
 def leer(carpeta: Path, pid: str) -> dict[str, str]:
-    """Archivos de texto del sistema (sin los reservados): {ruta: contenido}."""
+    """Archivos de texto del sistema (sin los reservados): {ruta: contenido}. Todas las carpetas y extensiones; los
+    binarios (imágenes, PDF…) no caben en el borrador web: se quedan en el equipo y `binarios()` dice cuáles."""
     c = catalogo.carpeta(pid, carpeta)
     salida = {}
     for rel in base.archivos_del_sistema(c):
         if reservado(rel):
             continue
-        try:
-            salida[rel] = (c / rel).read_text(encoding="utf-8")
-        except UnicodeDecodeError:
-            raise ValueError(f"{rel}: el Creador solo admite archivos de texto UTF-8") from None
+        texto = _texto(c / rel)
+        if texto is not None:
+            salida[rel] = texto
     return salida
+
+
+def binarios(carpeta: Path, pid: str) -> list[str]:
+    """Archivos del sistema que no son texto UTF-8: se conservan en el equipo pero no viajan al borrador web."""
+    c = catalogo.carpeta(pid, carpeta)
+    return [rel for rel in base.archivos_del_sistema(c) if not reservado(rel) and _texto(c / rel) is None]
+
+
+def _texto(ruta: Path) -> str | None:
+    datos = ruta.read_bytes()
+    if b"\x00" in datos:
+        return None
+    try:
+        return datos.decode("utf-8")
+    except UnicodeDecodeError:
+        return None
 
 
 def escribir(carpeta: Path, pid: str, archivos: dict[str, str]) -> Path:
@@ -99,6 +115,8 @@ def escribir(carpeta: Path, pid: str, archivos: dict[str, str]) -> Path:
     if destino.exists():
         for p in sorted(destino.rglob("*"), reverse=True):
             rel = p.relative_to(destino).as_posix()
+            if p.is_file() and not rel.startswith(RESERVADOS) and rel not in archivos and _texto(p) is None:
+                continue   # binario que solo vive en el equipo: la web no lo tiene, pero tampoco lo pide borrar
             if p.is_file() and not rel.startswith(RESERVADOS):
                 p.unlink()
             elif p.is_dir() and not any(p.iterdir()):
@@ -274,7 +292,8 @@ def subir(slug: str, conservar: str | None = None, cat: Path | None = None) -> d
     if not revision:
         raise remoto.SinServidor("el servidor no confirmó la revisión del borrador: no se ha dado por subido")
     _guardar_estado(slug, revision, local)
-    return {"slug": slug, "revision": revision, "accion": "subido", "archivos": len(local)}
+    return {"slug": slug, "revision": revision, "accion": "subido", "archivos": len(local),
+            "solo_en_equipo": binarios(catalogo.catalogo(cat), slug)}
 
 
 def con_carpeta_temporal(funcion, *args):

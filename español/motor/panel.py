@@ -34,6 +34,7 @@ WEB = Path(__file__).resolve().parent / "web"
 ESTADO = "panel.json"
 INACTIVIDAD = 120
 MAX_CUERPO = 1024 * 1024
+MAX_CUERPO_IMPORTAR = 28 * 1024 * 1024   # un zip de hasta 20 MB en base64
 CODIGO_SEGUNDOS = 60
 COOKIE = "uxyn_sesion"
 CABECERAS_SEGURIDAD = {
@@ -232,7 +233,7 @@ def manejador(servidor_ref: dict):
                 self.close_connection = True
                 return self._error(400, "content_length_invalido", "Content-Length no válido")
             largo = int(texto)
-            if largo > MAX_CUERPO:
+            if largo > (MAX_CUERPO_IMPORTAR if self.path.split("?")[0] == "/api/catalogo/importar" else MAX_CUERPO):
                 self.close_connection = True
                 return self._error(413, "pedido_demasiado_grande", f"pedido demasiado grande (máximo {MAX_CUERPO // 1024} KiB)")
             try:

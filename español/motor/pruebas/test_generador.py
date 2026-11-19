@@ -32,7 +32,7 @@ class Base(unittest.TestCase):
     def setUp(self):
         self._t = tempfile.TemporaryDirectory()
         self.cat = Path(self._t.name)
-        completar(catalogo.crear("pruebas-demo", "Pruebas demo", "Sistema de prueba", self.cat))
+        completar(catalogo.crear("pruebas-demo", "Pruebas demo", "Sistema de prueba", self.cat, piezas=catalogo.PIEZAS_MINIMAS))
 
     def tearDown(self):
         self._t.cleanup()

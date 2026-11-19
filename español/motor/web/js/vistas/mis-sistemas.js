@@ -1,4 +1,5 @@
-// Mis sistemas: los sistemas de tu catálogo local, en carpetas que tú ordenas (arrastrando o con «Mover a…»), con sus
+// Mis sistemas: TODOS tus sistemas (la misma lista que el Taller: catálogo local, borradores web, papelera y
+// archivados, de GET /api/mis-sistemas), en carpetas que tú ordenas (arrastrando o con «Mover a…»), con sus
 // herramientas: abrir en el Taller, instalar, descargar, duplicar, cambiar el nombre y eliminar (a la papelera).
 //
 // Las carpetas solo ordenan esta vista (.organizacion.json en la carpeta del catálogo): no mueven nada en el disco, la
@@ -88,7 +89,10 @@ export async function vista(params, { ir }) {
     while (pendientes.length) for (const c of hijas(pendientes.pop())) if (!salida.has(c.id)) { salida.add(c.id); pendientes.push(c.id); }
     return salida;
   };
-  const instaladoEn = (id) => proyectos.filter((p) => p.existe && (p.sistemas || []).includes(id)).map((p) => p.nombre);
+  const instaladoEn = (id) => {
+    const lista = proyectos.filter((p) => p.existe && (p.sistemas || []).includes(id)).map((p) => p.nombre);
+    return lista.length ? lista : (datos.sistemas.find((s) => s.id === id)?.instalado || []);
+  };
   const nombreCarpeta = (id) => (id ? `«${ruta(id).join(" / ")}»` : "«Sin carpeta»");
 
   async function recargar(nuevos) {
@@ -239,7 +243,9 @@ export async function vista(params, { ir }) {
   }
 
   async function eliminar(ids) {
-    const sistemas = ids.map((id) => datos.sistemas.find((s) => s.id === id)).filter(Boolean);
+    // Solo se elimina (a la papelera) lo que está en este equipo: un borrador web o algo ya en la papelera no.
+    const sistemas = ids.map((id) => datos.sistemas.find((s) => s.id === id)).filter((s) => s && s.estado === "local");
+    if (!sistemas.length) { avisar("Solo se pueden eliminar sistemas que están en este equipo.", "mal"); return; }
     const hechos = await eliminarSistemas(sistemas, { instaladoEn, web: await consultarBorradores(), alCambiar: recargar });
     if (hechos) for (const id of ids) elegidos.delete(id);
   }
@@ -295,7 +301,35 @@ export async function vista(params, { ir }) {
     } else avisar("Título cambiado");
   }
 
-  const opcionesSistema = (s) => [
+  // Traer a este equipo un borrador que solo está en la web (para editarlo) y restaurar uno de la papelera.
+  async function traer(s) {
+    const r = await enviar("/api/creador/bajar", { slug: s.id });
+    if (r?.conflicto) { ir("creador", { id: s.id }); return; }
+    await recargar();
+    avisarConAccion(`«${s.titulo}» está ahora en este equipo`, "Abrir en el Taller", () => ir("creador", { id: s.id }));
+  }
+  async function restaurar(s) {
+    await enviar("/api/mis-sistemas/restaurar", { entrada: s.entrada });
+    await recargar();
+    avisar(`«${s.titulo}» restaurado de la papelera`);
+  }
+  const accionPrincipal = (s) => (s.estado === "web"
+    ? boton("Traer para editar", () => traer(s).catch((e) => avisar(e.message, "mal")), { clase: "primario pequeno", icono: "descargar" })
+    : s.estado === "papelera"
+      ? boton("Restaurar", () => restaurar(s).catch((e) => avisar(e.message, "mal")), { clase: "primario pequeno", icono: "deshacer" })
+      : boton("Abrir en el Taller", () => ir("creador", { id: s.id }), { clase: "primario pequeno" }));
+
+  const opcionesSistema = (s) => s.estado !== "local" ? [
+    s.estado === "web"
+      ? { texto: "Traer para editar", icono: "descargar", accion: () => traer(s).catch((e) => avisar(e.message, "mal")) }
+      : { texto: "Restaurar de la papelera", icono: "deshacer", accion: () => restaurar(s).catch((e) => avisar(e.message, "mal")) },
+    { texto: "Ver en el Taller", icono: "creador", accion: () => ir("creador", { id: s.id }) },
+    "-",
+    { texto: "Mover a…", icono: "carpeta", accion: () => moverDialogo([s.id]) },
+    s.archivado
+      ? { texto: "Volver al Taller", icono: "deshacer", accion: () => archivar([s.id], false).catch((e) => avisar(e.message, "mal")) }
+      : { texto: "Archivar (ocultar del Taller)", icono: "lista", accion: () => archivar([s.id], true).catch((e) => avisar(e.message, "mal")) },
+  ] : [
     { texto: "Abrir en el Taller", icono: "creador", accion: () => ir("creador", { id: s.id }) },
     { texto: "Instalar en un proyecto…", icono: "proyectos", accion: async () => { await instalarEnProyecto(s.id, s.titulo); proyectos = await obtener("/api/proyectos").catch(() => proyectos); pintar(); } },
     { texto: "Descargar como zip", icono: "descargar", accion: () => descargarZipSistema(s.id).catch((e) => avisar(e.message, "mal")) },
@@ -362,6 +396,8 @@ export async function vista(params, { ir }) {
 
   // Tarjetas --------------------------------------------------------------------------------------------------------
   function estado(s) {
+    if (s.estado === "web") return insignia("solo en la web", "acento");
+    if (s.estado === "papelera") return insignia("en la papelera", "mal");
     if (s.errores.length) return insignia(`${s.errores.length} pendiente(s) de validar`, "aviso");
     return insignia("valida", "bien");
   }
@@ -376,16 +412,20 @@ export async function vista(params, { ir }) {
         h("div", { class: "proyecto-titulo" }, h("h3", { texto: s.titulo }), h("code", { class: "tenue", texto: s.id })),
         botonIcono("puntos", `Opciones de ${s.titulo}`, (b) => menu(b, opcionesSistema(s)))),
       h("div", { class: "proyecto-estado" }, estado(s),
+        s.estado === "local" ? insignia("local", "bien") : null,
+        s.web && s.estado !== "web" ? insignia("web", "acento") : null,
+        s.publicado ? insignia("mercado", "acento") : null,
         s.archivado ? insignia("archivado", "nota") : null,
         s.familia ? insignia(FAMILIAS[s.familia] || s.familia) : null,
-        h("span", { class: "tenue", texto: `v${s.version}` })),
+        s.version ? h("span", { class: "tenue", texto: `v${s.version}` }) : null),
       s.descripcion ? h("p", { class: "tenue descripcion-corta", texto: s.descripcion }) : null,
       h("div", { class: "tenue detalle-sistema" },
         actual === TODOS || filtros.texto ? h("span", {}, icono("carpeta"), s.carpeta ? ruta(s.carpeta).join(" / ") : "Sin carpeta") : null,
         donde.length ? h("span", { title: donde.join(", ") }, icono("proyectos"), `Instalado en ${donde.length} proyecto(s)`) : null),
       h("div", { class: "acciones" },
-        boton("Abrir en el Taller", () => ir("creador", { id: s.id }), { clase: "primario pequeno" }),
+        accionPrincipal(s),
         boton("Mover a…", () => moverDialogo([s.id]), { clase: "pequeno", icono: "carpeta" })));
+    el.dataset.estado = s.estado || "local";
     el.addEventListener("dblclick", (e) => { if (!e.target.closest("button, input, label")) ir("creador", { id: s.id }); });
     arrastrable(el, "sistema", s.id);
     if (enOrdenManual) {
@@ -405,7 +445,7 @@ export async function vista(params, { ir }) {
       .map(([v, t]) => h("option", { value: v, selected: v === pref.orden, texto: t })));
   orden.addEventListener("change", () => { pref.orden = orden.value; guardarPreferencias(pref); pintar(); });
   const archivo = h("select", { "aria-label": "Filtrar por archivados" },
-    [["", "Todos (también archivados)"], ["taller", "Solo los del Taller"], ["archivados", "Solo archivados"]].map(([v, t]) => h("option", { value: v, texto: t })));
+    [["", "Todos (también archivados)"], ["taller", "Solo los del Taller"], ["archivados", "Solo archivados"], ["local", "Solo en este equipo"], ["web", "Solo en la web"], ["papelera", "En la papelera"]].map(([v, t]) => h("option", { value: v, texto: t })));
   archivo.addEventListener("change", () => { filtros.archivo = archivo.value; pintar(); });
   const herramientas = h("div", { class: "herramientas-proyectos" }, buscar, familia, archivo, orden,
     boton("Nueva carpeta", () => nuevaCarpeta(carpeta(actual) ? actual : null), { clase: "pequeno", icono: "carpeta" }));
@@ -422,7 +462,10 @@ export async function vista(params, { ir }) {
   }
 
   const pasa = (s) => (!filtros.familia || s.familia === filtros.familia)
-    && (!filtros.archivo || (filtros.archivo === "archivados") === Boolean(s.archivado))
+    && (!filtros.archivo
+      || (filtros.archivo === "archivados" && s.archivado)
+      || (filtros.archivo === "taller" && !s.archivado && s.estado !== "papelera")
+      || (["local", "web", "papelera"].includes(filtros.archivo) && s.estado === filtros.archivo))
     && (!filtros.texto || `${s.titulo} ${sinTildes(s.titulo)} ${s.id} ${s.descripcion}`.toLowerCase().includes(filtros.texto));
   function ordenar(lista) {
     if (pref.orden === "titulo") return [...lista].sort(porTitulo);
@@ -510,6 +553,6 @@ export async function vista(params, { ir }) {
   }
 
   pintar();
-  return h("div", {}, cabecera("Mis sistemas", "Tus sistemas del catálogo local, ordenados en carpetas. Las carpetas solo ordenan esta vista: no mueven nada en el disco ni tocan el servidor.",
+  return h("div", {}, cabecera("Mis sistemas", "Todo lo que desarrollas: en tu equipo, solo en la web, archivado o instalado. Es la misma lista que el Taller. Las carpetas solo ordenan esta vista: no mueven nada en el disco ni tocan el servidor.",
     boton("Crear sistema", () => ir("creador"), { clase: "primario", icono: "mas" })), zona);
 }

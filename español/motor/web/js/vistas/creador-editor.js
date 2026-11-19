@@ -2,10 +2,11 @@
 // viven en la barra de salida del taller; aquí quedan los retoques de versión.
 
 import { obtener, enviar, catalogo, nombreDe } from "../api.js";
-import { h, vaciar, boton, avisar, dialogo, pestanas, confirmar, pedirDatos, insignia, elegirVarios } from "../ui.js";
+import { h, vaciar, boton, avisar, dialogo, pestanas, confirmar, pedirDatos, insignia, elegirVarios, icono } from "../ui.js";
 import { inicioConAgente } from "./creador-inicio.js";
 import { construirZip, descargarBlob } from "./sistema-zip.js";
 import { explorador } from "./editor-archivos.js";
+import { modoImportar } from "./importar-sistema.js";
 
 export const PIEZAS = {
   proceso: "Proceso por fases", skills: "Habilidades del agente", componentes: "Componentes", herramientas: "Herramientas",
@@ -279,18 +280,18 @@ export async function editorSistema(id, { alCambiar = async () => {}, pestanaIni
 
 /** Diálogo para crear un sistema: con lo mínimo (esqueleto) o desde una especificación. Devuelve el id creado. */
 /** Diálogo «Crear sistema». Devuelve el id creado, o { id, conversacion } si lo creó el agente; null si se cancela. */
-export async function crearSistema() {
+export async function crearSistema(modoInicial = "esqueleto") {
   const id = h("input", { type: "text", placeholder: "por ejemplo: revision-de-seguridad", "aria-label": "Identificador" });
   const titulo = h("input", { type: "text", "aria-label": "Título" });
   const descripcion = h("input", { type: "text", "aria-label": "Qué resuelve" });
   const familia = h("select", { "aria-label": "Tipo" }, Object.entries(FAMILIAS).map(([v, t]) => h("option", { value: v, texto: t })));
-  const casillas = Object.keys(PIEZAS).map((p) => h("input", { type: "checkbox", value: p, checked: p === "plantillas" || p === "cambios" }));
+  const casillas = Object.keys(PIEZAS).map((p) => h("input", { type: "checkbox", value: p, checked: !["andamiaje", "componentes"].includes(p) }));
   const esqueleto = h("div", { class: "pila" },
     h("label", { class: "campo" }, "Título", titulo),
     h("label", { class: "campo" }, "Identificador (minúsculas y guiones)", id),
     h("label", { class: "campo" }, "Qué resuelve", descripcion), h("label", { class: "campo" }, "Tipo", familia),
     h("div", {}, h("b", { texto: "Piezas" }), h("div", { class: "fila" }, Object.values(PIEZAS).map((nombre, i) => h("label", { class: "casilla" }, casillas[i], nombre)))),
-    h("p", { class: "tenue", texto: "Después, «Lo que falta» te lleva a cada cosa por rellenar. También puedes pedírselo al agente." }));
+    h("p", { class: "tenue", texto: "Sale con el esqueleto completo: núcleo, prompts/, config/ y las piezas marcadas, cada una con contenido de arranque. Después, «Lo que falta» te lleva a cada hueco por rellenar." }));
   titulo.addEventListener("input", () => {
     if (id.dataset.tocado) return;
     id.value = titulo.value.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -313,17 +314,35 @@ export async function crearSistema() {
   let creado = null;
   const conAgente = inicioConAgente({ conBoton: false, cabecera: false, alCrear: (idNuevo, r) => { creado = { id: idNuevo, conversacion: r.conversacion }; } });
   let modo = "esqueleto";
+  const importar = modoImportar();
   conAgente.nodo.hidden = true;
+  importar.nodo.hidden = true;
   esqueleto.hidden = false;
-  const barra = pestanas([["esqueleto", "Paso a paso"], ["agente", "Con uxyn"], ["spec", "Desde especificación"]], (m) => {
+  // Asistente (1.5.26): cuatro caminos como tarjetas grandes; todos acaban en el mismo esqueleto completo.
+  const MODOS = [
+    ["esqueleto", "Desde cero", "Rellena título y tipo; sale con todo el esqueleto.", "mas"],
+    ["importar", "Subir zip o archivos", "Arrastra tu material: se adapta sin perder nada.", "subirArchivo"],
+    ["agente", "Con uxyn", "Descríbelo y uxyn propone el contenido.", "chat"],
+    ["spec", "Desde especificación", "Para quien ya tiene el JSON del generador.", "editar"],
+  ];
+  const tarjetasModo = MODOS.map(([m, titulo, texto, ic]) => h("button", { type: "button", class: `modo-crear${m === modo ? " activo" : ""}`, "aria-pressed": String(m === modo), "data-modo": m,
+    onclick: () => elegir(m) }, h("span", { class: "modo-crear-icono", "aria-hidden": "true" }, icono(ic)), h("b", { texto: titulo }), h("span", { class: "tenue", texto })));
+  const elegir = (m) => {
     modo = m;
+    for (const b of tarjetasModo) { b.classList.toggle("activo", b.dataset.modo === m); b.setAttribute("aria-pressed", String(b.dataset.modo === m)); }
     conAgente.nodo.hidden = m !== "agente";
     esqueleto.hidden = m !== "esqueleto";
     desdeSpec.hidden = m !== "spec";
-  }, "esqueleto");
-  return dialogo({ titulo: "Nueva plantilla", contenido: h("div", { class: "pila" },
-    h("p", { class: "tenue", texto: "Plantilla a mano, con uxyn, o desde una especificación JSON." }),
-    barra, esqueleto, conAgente.nodo, desdeSpec), acciones: [{ texto: "Crear", clase: "primario", accion: async () => {
+    importar.nodo.hidden = m !== "importar";
+  };
+  const barra = h("div", { class: "modos-crear", role: "group", "aria-label": "Cómo quieres empezar" }, tarjetasModo);
+  if (modoInicial !== "esqueleto") elegir(modoInicial);
+  return dialogo({ titulo: "Nuevo sistema de gobernanza", contenido: h("div", { class: "pila asistente-crear" },
+    barra, esqueleto, importar.nodo, conAgente.nodo, desdeSpec), acciones: [{ texto: "Crear sistema", clase: "primario", accion: async () => {
+    if (modo === "importar") {
+      if (!importar.hayAlgo()) { avisar("Elige o suelta primero un .zip, archivos o una carpeta", "mal"); return false; }
+      return importar.crear();
+    }
     if (modo === "agente") {
       const r = await conAgente.crear();
       return r && creado ? creado : false;   // si el agente pregunta algo, el diálogo sigue abierto para responder

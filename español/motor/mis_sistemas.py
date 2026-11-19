@@ -1,4 +1,8 @@
-"""«Mis sistemas»: organizar y gestionar los sistemas que escribe la persona (el catálogo local).
+"""«Mis sistemas»: organizar y gestionar los sistemas que escribe la persona.
+
+Una sola fuente para el Taller y Mis sistemas (`vista()`): la unión de los sistemas del catálogo local, los borradores
+web de la cuenta (aunque no estén en este equipo), los de la papelera y los archivados, cada uno con su estado
+(«local», «web», «papelera»), si está archivado y en qué proyectos está instalado. Las dos vistas enseñan los mismos ids.
 
 Organizar: carpetas (anidadas) y orden manual. Es solo una vista: se guarda en `.organizacion.json` dentro de la
 carpeta del catálogo y no mueve ni cambia las carpetas de los sistemas, así que la CLI, el Taller y una versión
@@ -89,7 +93,21 @@ def _limpia(datos, ids: list[str]) -> dict:
 
 
 def _ids(raiz: Path | None) -> list[str]:
+    """Sistemas del catálogo local (los que existen en disco)."""
     return list(catalogo._sistemas(raiz))  # noqa: SLF001
+
+
+def _ids_mios(raiz: Path | None) -> list[str]:
+    """Todo lo que «Mis sistemas» puede ordenar: catálogo local, borradores web recordados, papelera y archivados.
+    Sin red no se olvida la carpeta de un borrador web: se usa la última lista conocida."""
+    ids = dict.fromkeys(_ids(raiz))
+    for b in _borradores_recordados():
+        ids.setdefault(str(b.get("slug")), None)
+    for e in papelera(raiz):
+        ids.setdefault(str(e.get("id")), None)
+    for a in archivados():
+        ids.setdefault(a, None)
+    return [i for i in ids if i and ID_ARCHIVABLE.match(i)]
 
 
 def leer(raiz: Path | None = None) -> dict:
@@ -99,34 +117,111 @@ def leer(raiz: Path | None = None) -> dict:
         datos = json.loads(ruta.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         datos = {}
-    org = _limpia(datos, _ids(raiz))
+    org = _limpia(datos, _ids_mios(raiz))
     if ruta.is_file() and datos != org:
         _escribir(raiz, org)
     return org
 
 
 def _guardar(raiz: Path | None, org: dict) -> dict:
-    org = _limpia(org, _ids(raiz))
+    org = _limpia(org, _ids_mios(raiz))
     _escribir(raiz, org)
     return org
 
 
-def vista(raiz: Path | None = None) -> dict:
-    """Carpetas, orden y sistemas (con su carpeta y si validan) para la sección «Mis sistemas»."""
+# Borradores web de la cuenta ---------------------------------------------------------------------------------------
+
+BORRADORES_WEB = "borradores-web.json"
+
+
+def _borradores_recordados() -> list[dict]:
+    """La última lista de borradores web que se leyó con sesión (de este servidor)."""
+    import remoto
+    datos = casa.leer_json(BORRADORES_WEB, {})
+    filas = (datos.get(remoto.servidor() or "") or {}).get("borradores", []) if isinstance(datos, dict) else []
+    return [f for f in filas if isinstance(f, dict) and isinstance(f.get("slug"), str) and ID_ARCHIVABLE.match(f["slug"])]
+
+
+def borradores_web() -> tuple[list[dict], str]:
+    """(borradores, estado): «al_dia» si se leyeron ahora, «recordados» si el servidor no respondió y se usa la última
+    lista conocida, «sin_sesion» si no hay sesión (entonces no hay borradores que enseñar)."""
+    import creador
+    import remoto
+    try:
+        filas = creador.borradores()
+    except PermissionError:
+        return [], "sin_sesion"
+    except (remoto.SinServidor, remoto.NoEncontrado, OSError, ValueError):
+        return _borradores_recordados(), "recordados"
+    limpias = [{"slug": f["slug"], "titulo": str(f.get("titulo") or f["slug"]),
+                "publicado": bool(f.get("version_publicada") or f.get("publicado"))}
+               for f in filas if isinstance(f, dict) and isinstance(f.get("slug"), str) and ID_ARCHIVABLE.match(f["slug"])]
+    datos = casa.leer_json(BORRADORES_WEB, {})
+    datos = datos if isinstance(datos, dict) else {}
+    datos[remoto.servidor() or ""] = {"cuando": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "borradores": limpias}
+    casa.escribir_json(BORRADORES_WEB, datos)
+    return limpias, "al_dia"
+
+
+def _instalados_por_sistema() -> dict[str, list[str]]:
+    """id → nombres de los proyectos registrados que lo tienen instalado (lectura ligera, sin comprobar integridad)."""
+    import generar
+    import proyectos
+    salida: dict[str, list[str]] = {}
+    for r in proyectos.listar():
+        carpeta = Path(r)
+        if not carpeta.is_dir():
+            continue
+        try:
+            for m in generar.instalados(carpeta):
+                salida.setdefault(str(m.get("id")), []).append(carpeta.name)
+        except (OSError, ValueError):
+            continue
+    return salida
+
+
+def vista(raiz: Path | None = None, con_web: bool = True) -> dict:
+    """Carpetas, orden y TODOS mis sistemas para el Taller y «Mis sistemas» (la misma lista en las dos vistas).
+
+    Cada sistema: id, título, «estado» (local: en el catálogo de este equipo; web: solo en la web; papelera: eliminado
+    en este equipo y recuperable), «web» (tiene borrador en la cuenta), «publicado», «archivado» (oculto en el Taller),
+    «instalado» (proyectos), su carpeta y, si está en la papelera, la «entrada» para restaurarlo."""
     org = leer(raiz)
     posicion = {pid: i for i, pid in enumerate(org["orden"])}
-    sistemas = []
-    for m in catalogo.listar(raiz):
-        sistemas.append({"id": m["id"], "titulo": m.get("titulo") or m["id"], "descripcion": m.get("descripcion", ""),
-                         "familia": m.get("familia", ""), "version": m.get("version", ""),
-                         "errores": m.get("errores", []), "avisos": m.get("avisos", []),
-                         "carpeta": (org["sistemas"].get(m["id"]) or {}).get("carpeta")})
-    sistemas.sort(key=lambda s: (posicion.get(s["id"], len(posicion)), s["titulo"].lower()))
+    web, estado_web = borradores_web() if con_web else (_borradores_recordados(), "recordados")
+    por_web = {b["slug"]: b for b in web}
     ocultos = set(archivados())
-    for s in sistemas:
-        s["archivado"] = s["id"] in ocultos
-    return {"carpetas": org["carpetas"], "orden": [s["id"] for s in sistemas], "sistemas": sistemas, "archivados": sorted(ocultos),
-            "catalogo": str(catalogo.catalogo(raiz)), "papelera": len(papelera())}
+    instalados = _instalados_por_sistema()
+    sistemas: list[dict] = []
+
+    def agregar(pid: str, estado: str, **datos) -> None:
+        b = por_web.get(pid)
+        sistemas.append({"id": pid, "titulo": datos.get("titulo") or (b or {}).get("titulo") or pid,
+                         "descripcion": datos.get("descripcion", ""), "familia": datos.get("familia", ""),
+                         "version": datos.get("version", ""), "errores": datos.get("errores", []),
+                         "avisos": datos.get("avisos", []), "estado": estado, "local": estado == "local",
+                         "web": b is not None, "publicado": bool(b and b.get("publicado")),
+                         "archivado": pid in ocultos, "instalado": instalados.get(pid, []),
+                         "entrada": datos.get("entrada"),
+                         "carpeta": (org["sistemas"].get(pid) or {}).get("carpeta")})
+
+    vistos: set[str] = set()
+    for m in catalogo.listar(raiz):
+        vistos.add(m["id"])
+        agregar(m["id"], "local", titulo=m.get("titulo"), descripcion=m.get("descripcion", ""), familia=m.get("familia", ""),
+                version=m.get("version", ""), errores=m.get("errores", []), avisos=m.get("avisos", []))
+    for e in papelera(raiz):   # lo más reciente primero: una entrada por id
+        if e["id"] not in vistos:
+            vistos.add(e["id"])
+            agregar(e["id"], "papelera", titulo=e.get("titulo"), familia=e.get("familia", ""), version=e.get("version", ""),
+                    entrada=e["entrada"])
+    for b in web:
+        if b["slug"] not in vistos:
+            vistos.add(b["slug"])
+            agregar(b["slug"], "web")
+    sistemas.sort(key=lambda x: (posicion.get(x["id"], len(posicion)), x["titulo"].lower()))
+    return {"carpetas": org["carpetas"], "orden": [x["id"] for x in sistemas], "sistemas": sistemas, "archivados": sorted(ocultos),
+            "catalogo": str(catalogo.catalogo(raiz)), "papelera": len(papelera(raiz)), "web": estado_web}
 
 
 def _carpeta(org: dict, cid) -> dict:
@@ -223,7 +318,7 @@ def mover(ids: list, carpeta=None, antes=None, raiz: Path | None = None) -> dict
     """Mete los sistemas en `carpeta` (None: la raíz) y, con `antes`, los coloca delante de ese sistema; si no, al final
     de la carpeta."""
     org = leer(raiz)
-    existentes = _ids(raiz)
+    existentes = _ids_mios(raiz)
     if carpeta:
         _carpeta(org, carpeta)
     limpios = list(dict.fromkeys(str(i) for i in ids))
@@ -231,7 +326,7 @@ def mover(ids: list, carpeta=None, antes=None, raiz: Path | None = None) -> dict
         raise ValueError("no hay sistemas que mover")
     for pid in limpios:
         if pid not in existentes:
-            raise FileNotFoundError(f"el catálogo no tiene el sistema «{pid}»")
+            raise FileNotFoundError(f"«{pid}» no está entre tus sistemas (catálogo, borradores web, papelera)")
         if carpeta:
             org["sistemas"][pid] = {"carpeta": carpeta}
         else:
@@ -257,7 +352,8 @@ def arbol(raiz: Path | None = None) -> list[str]:
             lineas.append(f"{'  ' * nivel}{c['nombre']}/")
             pintar(c["id"], nivel + 1)
         for s in [s for s in v["sistemas"] if s["carpeta"] == padre]:
-            estado = ("valida" if not s["errores"] else f"{len(s['errores'])} error(es)") + (", archivado" if s["archivado"] else "")
+            estado = {"web": "solo en la web", "papelera": "en la papelera"}.get(
+                s["estado"], "valida" if not s["errores"] else f"{len(s['errores'])} error(es)") + (", archivado" if s["archivado"] else "")
             lineas.append(f"{'  ' * nivel}- {s['id']}  {s['version']}  {s['titulo']}  ({estado})")
 
     pintar(None, 0)

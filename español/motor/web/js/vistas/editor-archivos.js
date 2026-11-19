@@ -29,6 +29,24 @@ export function arbolDeRutas(rutas, extras = []) {
   return raiz;
 }
 
+/** «12,4 KB»: tamaño legible para la vista de binarios. */
+export function tamanoLegible(n) {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1).replace(".", ",")} KB`;
+  return `${(n / (1024 * 1024)).toFixed(1).replace(".", ",")} MB`;
+}
+
+/** Vista de solo lectura de un archivo que no es texto: la imagen si se puede mostrar, si no su tipo y tamaño. */
+export function vistaBinaria(rel, info) {
+  const nombre = rel.split("/").pop();
+  return h("div", { class: "ide-binario-cuerpo" },
+    info.datos
+      ? h("img", { class: "ide-binario-imagen", src: `data:${info.tipo};base64,${info.datos}`, alt: `Vista previa de ${nombre}` })
+      : h("div", { class: "ide-binario-icono" }, icono("lista")),
+    h("p", {}, h("b", { texto: nombre })),
+    h("p", { class: "tenue", texto: `${info.tipo} · ${tamanoLegible(info.tamano)}. Archivo binario: se ve aquí en solo lectura, se conserva en el sistema y viaja en el .zip; el borrador web solo guarda texto.` }));
+}
+
 /** Errores de validación agrupados por archivo: Map(rel → [{linea, texto}]) + los generales. */
 export function erroresPorArchivo(pendientes, rutas) {
   const mapa = new Map();
@@ -76,7 +94,8 @@ export async function explorador(id, { alGuardado = async () => {}, alCambiarArc
   const problemas = h("details", { class: "ide-problemas" });
   const selPrevia = h("select", { "aria-label": "Vista previa de Markdown", class: "ide-sel-previa" },
     [["editor", "Solo editor"], ["dividido", "Editor y vista previa"], ["previa", "Solo vista previa"]].map(([v, t]) => h("option", { value: v, texto: t, selected: v === modoPrevia })));
-  const trabajo = h("div", { class: "ide-trabajo" }, editor.nodo, zonaDiff, vacio);
+  const zonaBinaria = h("div", { class: "ide-binario", hidden: true });
+  const trabajo = h("div", { class: "ide-trabajo" }, editor.nodo, zonaDiff, zonaBinaria, vacio);
   const divPrevia = divisor(trabajo, "--ancho-previa", "uxyn-editor-ancho-previa", { minimo: 200, maximo: 900, inicial: 420, invertir: true });
   divPrevia.classList.add("ide-div-previa");
   // El divisor de la vista previa mide desde la derecha: arrastrar a la izquierda la ensancha.
@@ -208,10 +227,14 @@ export async function explorador(id, { alGuardado = async () => {}, alCambiarArc
     if (activa?.tipo === "archivo") { activa.texto = editor.valor(); activa.vista = editor.estado(); }
   }
   async function abrirArchivo(rel, { linea = null } = {}) {
-    let p = pestanas.find((x) => x.tipo === "archivo" && x.rel === rel);
+    let p = pestanas.find((x) => (x.tipo === "archivo" || x.tipo === "binario") && x.rel === rel);
     if (!p) {
-      const contenido = (await obtener("/api/catalogo/archivo", { id, rel })).contenido;
-      p = { clave: `archivo:${rel}`, tipo: "archivo", rel, texto: contenido, enDisco: contenido, lenguaje: lenguajeDe(rel), vista: null, nota: "" };
+      const r = await obtener("/api/catalogo/archivo", { id, rel });
+      if (r.binario) {
+        p = { clave: `binario:${rel}`, tipo: "binario", rel, info: r };
+      } else {
+        p = { clave: `archivo:${rel}`, tipo: "archivo", rel, texto: r.contenido, enDisco: r.contenido, lenguaje: lenguajeDe(rel), vista: null, nota: "" };
+      }
       pestanas.push(p);
     }
     activar(p);
@@ -238,6 +261,8 @@ export async function explorador(id, { alGuardado = async () => {}, alCambiarArc
     vacio.hidden = Boolean(p);
     editor.nodo.hidden = p?.tipo !== "archivo";
     zonaDiff.hidden = p?.tipo !== "diff";
+    zonaBinaria.hidden = p?.tipo !== "binario";
+    if (p?.tipo === "binario") vaciar(zonaBinaria, vistaBinaria(p.rel, p.info));
     selPrevia.hidden = !(p?.tipo === "archivo" && p.lenguaje === "md");
     if (p?.tipo === "archivo") {
       editor.fijar(p.texto, p.lenguaje);
@@ -318,6 +343,7 @@ export async function explorador(id, { alGuardado = async () => {}, alCambiarArc
     pintarEstado();
   }
   function pintarEstado() {
+    if (activa?.tipo === "binario") { vaciar(estado, h("span", { texto: activa.rel }), h("span", { texto: `${activa.info.tipo} · ${tamanoLegible(activa.info.tamano)} · solo lectura` })); return; }
     if (activa?.tipo !== "archivo") { vaciar(estado, activa ? h("span", { texto: `Diferencias · ${activa.rel}` }) : null); return; }
     const pos = editor.posicion();
     vaciar(estado,
@@ -469,4 +495,55 @@ export async function explorador(id, { alGuardado = async () => {}, alCambiarArc
     haySinGuardar,
     guardar,
   };
+}
+
+/** Todos los archivos de un borrador que solo está en la web, en solo lectura: árbol con carpetas + visor.
+ *  Así un sistema «solo en la web» enseña lo mismo que uno local (no solo el núcleo) antes de traerlo. */
+export async function visorBorradorWeb(slug, { alTraer = null } = {}) {
+  const cuerpo = h("div", { class: "ide visor-web" }, h("div", { class: "cargando" }, h("div", { class: "giro" }), "Leyendo el borrador de la web…"));
+  let datos;
+  try {
+    datos = await obtener("/api/creador/borrador", { slug });
+  } catch (e) {
+    vaciar(cuerpo, h("p", { class: "tenue", texto: `No se pudieron leer sus archivos: ${e.message || e}` }));
+    return cuerpo;
+  }
+  const rutas = datos.rutas || Object.keys(datos.archivos || {}).sort();
+  const plegadas = new Set();
+  let activa = rutas.find((r) => r === "SISTEMA.md") || rutas[0] || null;
+  const arbol = h("ul", { class: "ide-arbol-lista", role: "tree", "aria-label": `Archivos de ${slug} en la web` });
+  const visor = h("div", { class: "visor-web-contenido" });
+  const pintar = () => {
+    const items = [];
+    const recorrer = (nodo, prefijo, nivel) => {
+      for (const nombre of [...nodo.carpetas.keys()].sort((a, b) => a.localeCompare(b))) {
+        const rel = prefijo ? `${prefijo}/${nombre}` : nombre;
+        items.push(h("li", { role: "treeitem", class: "ide-nodo es-carpeta", "aria-expanded": String(!plegadas.has(rel)) },
+          h("div", { class: "ide-nodo-fila", style: `--nivel:${nivel}` },
+            h("button", { type: "button", class: "ide-nodo-nombre", onclick: () => { if (plegadas.has(rel)) plegadas.delete(rel); else plegadas.add(rel); pintar(); } },
+              h("span", { class: "ide-flecha", texto: plegadas.has(rel) ? "▸" : "▾" }), icono("carpeta"), h("span", { class: "ide-nodo-texto", texto: nombre })))));
+        if (!plegadas.has(rel)) recorrer(nodo.carpetas.get(nombre), rel, nivel + 1);
+      }
+      for (const rel of [...nodo.archivos].sort((a, b) => a.localeCompare(b))) {
+        items.push(h("li", { role: "treeitem", class: `ide-nodo es-archivo${rel === activa ? " activo" : ""}` },
+          h("div", { class: "ide-nodo-fila", style: `--nivel:${nivel}` },
+            h("button", { type: "button", class: "ide-nodo-nombre", title: rel, onclick: () => { activa = rel; pintar(); } },
+              h("span", { class: "ide-flecha" }), icono("lista"), h("span", { class: "ide-nodo-texto", texto: rel.split("/").pop() })))));
+      }
+    };
+    recorrer(arbolDeRutas(rutas), "", 0);
+    vaciar(arbol, items.length ? items : h("li", { class: "tenue", texto: "El borrador no tiene archivos." }));
+    vaciar(visor, activa
+      ? [h("div", { class: "fila separada ide-diff-cabeza" }, h("b", { texto: activa }), h("span", { class: "insignia", texto: "solo lectura" })),
+        h("pre", { class: "visor-web-texto", tabindex: "0", texto: datos.archivos[activa] ?? "" })]
+      : h("p", { class: "tenue", texto: "Elige un archivo." }));
+  };
+  pintar();
+  vaciar(cuerpo,
+    h("div", { class: "visor-web-cabeza fila separada" },
+      h("div", {}, h("b", { texto: `Archivos en la web (${rutas.length})` }),
+        h("div", { class: "tenue", texto: `Revisión ${datos.revision}. Todas las carpetas y tipos de archivo; para editarlos, tráelo a este equipo.` })),
+      alTraer ? boton("Traer para editar", alTraer, { clase: "primario pequeno", icono: "descargar" }) : null),
+    h("div", { class: "visor-web-cuerpo" }, h("div", { class: "ide-arbol" }, arbol), visor));
+  return cuerpo;
 }

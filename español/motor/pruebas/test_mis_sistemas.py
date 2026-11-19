@@ -101,7 +101,10 @@ class TestPapelera(Entorno):
         self.assertTrue((entrada / "pruebas-demo" / "sistema.json").is_file())
         (e,) = ms.papelera()
         self.assertEqual((e["id"], e["nombre_carpeta"], e["choca"]), ("pruebas-demo", "Pruebas", False))
-        self.assertNotIn("pruebas-demo", ms.leer()["sistemas"])
+        # 1.5.26: lo que está en la papelera sigue entre «mis sistemas» (en su carpeta, con estado «papelera»)
+        self.assertEqual(ms.leer()["sistemas"]["pruebas-demo"]["carpeta"], a)
+        (enpap,) = [s for s in ms.vista(con_web=False)["sistemas"] if s["id"] == "pruebas-demo"]
+        self.assertEqual((enpap["estado"], enpap["entrada"]), ("papelera", hecho["entrada"]))
         r = ms.restaurar(hecho["entrada"])
         self.assertEqual(r["carpeta"], "Pruebas")
         self.assertEqual(ms.leer()["sistemas"]["pruebas-demo"]["carpeta"], a, "vuelve a su carpeta")
@@ -212,7 +215,8 @@ class TestDuplicarYRenombrar(Entorno):
         m = catalogo.base.leer_manifiesto(self.cat / "ensayos-de-demo")
         self.assertEqual({t: d["prefijo"] for t, d in m["fichas"].items()}, {t: d["prefijo"] for t, d in antes["fichas"].items()})
         self.assertEqual(_errores("ensayos-de-demo"), [])
-        self.assertEqual([s["id"] for s in ms.vista()["sistemas"] if s["carpeta"] == a], ["ensayos-de-demo", "pruebas-otras"])
+        self.assertEqual([s["id"] for s in ms.vista()["sistemas"] if s["carpeta"] == a and s["estado"] == "local"], ["ensayos-de-demo", "pruebas-otras"])
+        self.assertIn(("pruebas-demo", "papelera"), [(s["id"], s["estado"]) for s in ms.vista()["sistemas"]], "el id anterior queda en la papelera")
         self.assertEqual(ms.papelera()[0]["id"], "pruebas-demo")
         self.assertEqual(r["anterior"]["id"], "pruebas-demo")
 

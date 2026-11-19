@@ -5,7 +5,7 @@
  *   2. 20 PRIMITIVOS de color  ← únicos hex del archivo; idénticos a
  *      src/common/styles/globals.css de las apps (pruebas/test_estilos.py)
  *   3. TIPOGRAFÍA: familias, tamaños, pesos y alturas de línea
- *   4. CAPA SEMÁNTICA (claro y oscuro): todo deriva de los primitivos con
+ *   4. CAPA SEMÁNTICA (oscura, como la app web): todo deriva de los primitivos con
  *      var() y color-mix(); el resto del archivo solo usa estas variables.
  * ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -74,57 +74,90 @@
   --line-height-relaxed: 1.65;
   --line-height-loose: 1.9;
 
-  /* Capa semántica — tema claro. Los tonos de texto se oscurecen con tinta para pasar AA sobre blanco. */
-  --fondo: var(--color-canvas);
-  --superficie: var(--color-edge);
-  --superficie-2: color-mix(in srgb, var(--color-canvas) 50%, var(--color-edge));
-  --texto: var(--color-ink);
-  --tenue: color-mix(in srgb, var(--color-brand-alt) 70%, var(--color-ink));
-  --borde: var(--color-surface);
-  --acento: var(--color-brand);
-  --acento-suave: color-mix(in srgb, var(--color-brand) 9%, var(--color-edge));
+  /* ═══ Capa semántica (1.5.26) — la MISMA que src/common/styles/globals.css de la app web: la app es oscura
+   *     siempre (fondo = tinta), el oro es la marca y los botones principales («la IA ejecuta»), el naranja es el
+   *     foco y lo que espera una decisión («la persona decide»), el verde es lo comprobado. Nada de hex aquí. */
+  color-scheme: dark;
+  /* Fondos (= --bg-app, --bg-surface, --bg-raised, --bg-sunken, --bg-input, --bg-hover de la web) */
+  --fondo: var(--color-ink);
+  --superficie: color-mix(in srgb, var(--color-edge) 5%, var(--color-ink));
+  --superficie-2: color-mix(in srgb, var(--color-edge) 9%, var(--color-ink));
+  --hundido: var(--color-depth);
+  --entrada: color-mix(in srgb, var(--color-edge) 7%, var(--color-depth));
+  --flotar: color-mix(in srgb, var(--color-edge) 8%, transparent);
+  /* Textos (= --text-primary/secondary/muted, --text-brand, --text-accent) */
+  --texto: var(--color-edge);
+  --texto-2: color-mix(in srgb, var(--color-edge) 76%, transparent);
+  --tenue: color-mix(in srgb, var(--color-edge) 62%, transparent);
+  --texto-marca: color-mix(in srgb, var(--color-brand) 60%, var(--color-edge));
+  /* Bordes (= --border-subtle/default/strong) */
+  --borde: color-mix(in srgb, var(--color-edge) 12%, transparent);
+  --borde-2: color-mix(in srgb, var(--color-edge) 20%, transparent);
+  --borde-fuerte: color-mix(in srgb, var(--color-edge) 34%, transparent);
+  /* Marca: superficies de oro (botón principal) y su texto */
+  --marca: var(--color-brand);
+  --sobre-marca: var(--color-on-brand);
+  --marca-hover: color-mix(in srgb, var(--color-brand) 82%, var(--color-tone));
+  /* Acento de lectura (enlaces, activo, pestañas): el oro aclarado que pasa AA sobre tinta */
+  --acento: var(--texto-marca);
+  --acento-suave: color-mix(in srgb, var(--color-brand) 16%, transparent);
   --sobre-acento: var(--color-on-brand);
-  --bien: color-mix(in srgb, var(--color-affirm) 55%, var(--color-ink));
-  --bien-suave: color-mix(in srgb, var(--color-affirm) 12%, var(--color-edge));
-  --aviso: color-mix(in srgb, var(--color-tone) 70%, var(--color-ink));
-  --aviso-suave: color-mix(in srgb, var(--color-tone) 10%, var(--color-edge));
-  --mal: color-mix(in srgb, var(--color-signal) 85%, var(--color-ink));
-  --mal-suave: color-mix(in srgb, var(--color-signal) 10%, var(--color-edge));
+  /* Decisión y foco (= --border-focus, --focus-ring-color, --sidebar-accent) */
+  --decide: var(--color-tone);
+  --decide-texto: color-mix(in srgb, var(--color-edge) 30%, var(--color-tone));
+  --decide-suave: color-mix(in srgb, var(--color-tone) 16%, transparent);
+  --foco: var(--color-tone);
+  /* Estados (= --color-success / --surface-success …) */
+  --bien: color-mix(in srgb, var(--color-affirm) 80%, var(--color-edge));
+  --bien-suave: color-mix(in srgb, var(--color-affirm) 18%, transparent);
+  --sobre-bien: var(--color-on-affirm);
+  --aviso: var(--decide-texto);
+  --aviso-suave: color-mix(in srgb, var(--color-tone) 18%, transparent);
+  --mal: color-mix(in srgb, var(--color-signal) 55%, var(--color-edge));
+  --mal-suave: color-mix(in srgb, var(--color-signal) 20%, transparent);
+  --mal-lleno: var(--color-signal);
   --sobre-mal: var(--color-on-signal);
+  /* Franja de marca (= --gradient-signal) */
+  --franja: linear-gradient(90deg, var(--color-brand) 0 33.33%, var(--color-tone) 33.33% 66.66%, var(--color-affirm) 66.66% 100%);
+  /* Radios, sombras, velos (= --radius-*, --shadow-*, --overlay-scrim) */
+  --radio-xs: 4px;
+  --radio-sm: 8px;
   --radio: 12px;
-  --sombra: 0 1px 2px color-mix(in srgb, var(--color-ink) 6%, transparent), 0 2px 8px color-mix(in srgb, var(--color-ink) 5%, transparent);
-  --sombra-flotante: 0 6px 24px color-mix(in srgb, var(--color-depth) 20%, transparent);
-  --sombra-dialogo: 0 20px 60px color-mix(in srgb, var(--color-depth) 30%, transparent);
-  --velo: color-mix(in srgb, var(--color-depth) 50%, transparent);
-  --velo-fuerte: color-mix(in srgb, var(--color-depth) 60%, transparent);
+  --radio-lg: 16px;
+  --radio-pildora: 999px;
+  --sombra: 0 2px 8px color-mix(in srgb, var(--color-depth) 35%, transparent);
+  --sombra-flotante: 0 8px 20px color-mix(in srgb, var(--color-depth) 45%, transparent);
+  --sombra-dialogo: 0 16px 32px color-mix(in srgb, var(--color-depth) 55%, transparent);
+  --velo: color-mix(in srgb, var(--color-depth) 78%, transparent);
+  --velo-fuerte: color-mix(in srgb, var(--color-depth) 85%, transparent);
+  /* Espaciado (= --space-*), movimiento (= --duration-*, --ease-*), foco y objetivos táctiles */
+  --esp-1: 0.25rem;
+  --esp-2: 0.5rem;
+  --esp-3: 0.75rem;
+  --esp-4: 1rem;
+  --esp-5: 1.25rem;
+  --esp-6: 1.5rem;
+  --esp-8: 2rem;
+  --esp-10: 2.5rem;
+  --dur-rapida: 150ms;
+  --dur-normal: 250ms;
+  --curva: cubic-bezier(0.2, 0, 0, 1);
+  --anillo: 2px;
+  --anillo-sep: 2px;
+  --toque: 40px;
+  --icono-sm: 16px;
+  --icono: 18px;
+  --icono-md: 20px;
+  --icono-lg: 24px;
+  --icono-tarjeta: 36px;
+  --ancho-contenido: 1200px;
   /* Colores de carpetas y etiquetas de «Mis proyectos»: los mismos primitivos de la marca. */
   --etq-oro: var(--color-brand);
   --etq-naranja: var(--color-tone);
   --etq-verde: var(--color-affirm);
   --etq-rojo: var(--color-signal);
   --etq-arena: var(--color-brand-alt);
-  --etq-gris: color-mix(in srgb, var(--color-ink) 40%, var(--color-edge));
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --fondo: var(--color-ink);
-    --superficie: color-mix(in srgb, var(--color-edge) 5%, var(--color-ink));
-    --superficie-2: color-mix(in srgb, var(--color-edge) 9%, var(--color-ink));
-    --texto: var(--color-on-ink);
-    --tenue: var(--color-brand-alt);
-    --borde: color-mix(in srgb, var(--color-edge) 14%, var(--color-ink));
-    --acento: color-mix(in srgb, var(--color-brand) 60%, var(--color-edge));
-    --acento-suave: color-mix(in srgb, var(--color-brand) 22%, var(--color-ink));
-    --sobre-acento: var(--color-on-canvas);
-    --bien: var(--color-affirm);
-    --bien-suave: color-mix(in srgb, var(--color-affirm) 14%, var(--color-ink));
-    --aviso: var(--color-tone);
-    --aviso-suave: color-mix(in srgb, var(--color-tone) 18%, var(--color-ink));
-    --mal: color-mix(in srgb, var(--color-signal) 55%, var(--color-edge));
-    --mal-suave: color-mix(in srgb, var(--color-signal) 20%, var(--color-ink));
-    --sobre-mal: var(--color-on-canvas);
-    --sombra: none;
-  }
+  --etq-gris: color-mix(in srgb, var(--color-edge) 40%, var(--color-ink));
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -747,3 +780,219 @@ label.casilla.carpeta-opcion input { margin-top: 0; }
 .quitar-opcion.peligro:has(input:checked) { border-color: var(--mal); background: var(--mal-suave); }
 .quitar-lista { max-height: 260px; overflow: auto; margin: 0; padding-left: 18px; font-family: var(--font-mono); font-size: var(--font-size-xs); }
 .quitar-grupo h4 { margin: 10px 0 4px; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 1.5.26 — PULIDO VISUAL. Mismos tokens que la app web: tinta de fondo, oro para
+ * la marca y el botón principal, naranja para el foco. Va al final para mandar
+ * sobre las reglas anteriores sin reescribir cada vista.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Base */
+html { background: var(--fondo); }
+body { font-size: var(--font-size-md); -webkit-font-smoothing: antialiased; }
+::selection { background: color-mix(in srgb, var(--color-brand) 40%, transparent); color: var(--texto); }
+a { color: var(--acento); text-underline-offset: 2px; }
+a:hover { color: var(--texto); }
+h1 { letter-spacing: -0.01em; }
+.tenue { color: var(--tenue); }
+code { background: var(--superficie-2); border: 1px solid var(--borde); border-radius: var(--radio-xs); }
+hr { border: none; border-top: 1px solid var(--borde); }
+
+/* Iconos: un único tamaño por contexto y trazo uniforme (ui.js les pone width/height 18 por defecto). */
+svg.icono { width: var(--icono); height: var(--icono); flex: none; stroke-width: 2; }
+.boton.pequeno svg.icono, .insignia svg.icono, .chip svg.icono, .menu-flotante svg.icono { width: var(--icono-sm); height: var(--icono-sm); }
+h2 > svg.icono, h3 > svg.icono { width: var(--icono-md); height: var(--icono-md); vertical-align: -3px; color: var(--acento); margin-right: var(--esp-1); }
+
+/* Barra lateral y navegación (como la de la web: hundida, activo con barra de marca) */
+.lateral { background: var(--hundido); border-right: 1px solid var(--borde); position: sticky; }
+.lateral::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--franja); }
+.marca b { font-family: var(--font-heading); font-weight: var(--font-weight-semibold); letter-spacing: 0.01em; }
+nav a { color: var(--texto-2); border-radius: var(--radio-sm); padding: var(--esp-2) var(--esp-3); min-height: var(--toque); position: relative;
+  transition: background-color var(--dur-rapida) var(--curva), color var(--dur-rapida) var(--curva); }
+nav a:hover { background: var(--flotar); color: var(--texto); }
+nav a.activo { background: var(--acento-suave); color: var(--texto); font-weight: var(--font-weight-semibold); }
+nav a.activo::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: var(--radio-pildora); background: var(--marca); }
+nav a.activo svg.icono { color: var(--acento); }
+
+/* Contenido: ancho de lectura y cabeceras */
+main { max-width: var(--ancho-contenido); margin-inline: auto; padding: var(--esp-8) var(--esp-10) var(--esp-10); }
+.cabecera { margin-bottom: var(--esp-6); padding-bottom: var(--esp-4); border-bottom: 1px solid var(--borde); }
+.cabecera h1 { margin-bottom: var(--esp-1); }
+
+/* Tarjetas */
+.tarjeta { background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio); box-shadow: none; padding: var(--esp-5); }
+.tarjeta-item { transition: border-color var(--dur-rapida) var(--curva), background-color var(--dur-rapida) var(--curva); }
+.tarjeta-item:hover { border-color: var(--borde-2); }
+.tarjeta-item.elegido { outline: var(--anillo) solid var(--marca); }
+.tarjeta-acceso { gap: var(--esp-3); }
+.tarjeta-acceso-cabeza { display: flex; align-items: center; gap: var(--esp-3); }
+.tarjeta-acceso-cabeza h3 { margin: 0; font-size: var(--font-size-md); }
+.tarjeta-icono { display: inline-flex; align-items: center; justify-content: center; flex: none; width: var(--icono-tarjeta); height: var(--icono-tarjeta);
+  border-radius: var(--radio-sm); background: var(--acento-suave); color: var(--acento); }
+.tarjeta-icono svg.icono { width: var(--icono-md); height: var(--icono-md); }
+.tarjeta-item .acciones { margin-top: auto; }
+
+/* Botones: principal (oro), secundario (borde), fantasma, peligro. Ancho según su texto, nunca a todo lo ancho. */
+.boton { min-height: var(--toque); padding: var(--esp-2) var(--esp-4); border-radius: var(--radio-sm); border: 1px solid var(--borde-2);
+  background: transparent; color: var(--texto); font-family: var(--font-heading); font-weight: var(--font-weight-medium); font-size: var(--font-size-sm);
+  line-height: var(--line-height-tight); justify-content: center; gap: var(--esp-2); white-space: nowrap;
+  transition: background-color var(--dur-rapida) var(--curva), border-color var(--dur-rapida) var(--curva), color var(--dur-rapida) var(--curva), transform var(--dur-rapida) var(--curva); }
+.boton:hover { background: var(--flotar); border-color: var(--borde-fuerte); }
+.boton:active:not([disabled]) { transform: translateY(1px); }
+.boton.primario { background: var(--marca); border-color: color-mix(in srgb, var(--color-edge) 14%, transparent); color: var(--sobre-marca); font-weight: var(--font-weight-semibold); }
+.boton.primario:hover { background: var(--marca-hover); filter: none; }
+.boton.fantasma { border-color: transparent; background: transparent; color: var(--texto-2); }
+.boton.fantasma:hover { background: var(--flotar); color: var(--texto); }
+.boton.peligro { color: var(--mal); border-color: color-mix(in srgb, var(--color-signal) 55%, transparent); background: transparent; }
+.boton.peligro:hover { background: var(--mal-suave); }
+.boton.peligro.lleno { background: var(--mal-lleno); border-color: var(--mal-lleno); color: var(--sobre-mal); }
+.boton.pequeno { min-height: 32px; padding: var(--esp-1) var(--esp-3); font-size: var(--font-size-sm); }
+.boton.grande { min-height: 48px; justify-content: flex-start; white-space: normal; }
+.boton.solo-icono { min-height: 32px; min-width: 32px; padding: var(--esp-1); }
+.boton[disabled] { opacity: 0.55; cursor: not-allowed; transform: none; }
+.pila > .boton:not(.grande), .tarjeta-item > .boton, .tarjeta > .boton { align-self: flex-start; }
+
+/* Foco visible y consistente: anillo naranja («la persona decide»), como en la web */
+:focus-visible { outline: var(--anillo) solid var(--foco); outline-offset: var(--anillo-sep); }
+.boton:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, nav a:focus-visible,
+.pastilla:focus-visible, .ejemplo:focus-visible, .enlace:focus-visible, .chip.pulsable:focus-visible { outline: var(--anillo) solid var(--foco); outline-offset: var(--anillo-sep); }
+
+/* Campos */
+input[type=text], input[type=search], input[type=email], input[type=password], input[type=number], select, textarea {
+  background: var(--entrada); border: 1px solid var(--borde-2); border-radius: var(--radio-sm); color: var(--texto); min-height: var(--toque);
+  transition: border-color var(--dur-rapida) var(--curva); }
+input::placeholder, textarea::placeholder { color: color-mix(in srgb, var(--color-edge) 45%, transparent); }
+input[type=text]:hover, input[type=search]:hover, select:hover, textarea:hover { border-color: var(--borde-fuerte); }
+input[type=text]:focus, input[type=search]:focus, select:focus, textarea:focus { border-color: var(--foco); }
+input[type=checkbox], input[type=radio] { accent-color: var(--marca); }
+label.campo { color: var(--texto-2); font-size: var(--font-size-sm); }
+
+/* Insignias, bandas, pestañas */
+.insignia { background: var(--superficie-2); color: var(--texto-2); border: 1px solid var(--borde); }
+.insignia.bien { border-color: transparent; }
+.insignia.aviso, .insignia.mal, .insignia.acento, .insignia.nota { border-color: transparent; }
+.banda { border: 1px solid var(--borde); }
+.banda.aviso { border-color: color-mix(in srgb, var(--color-tone) 35%, transparent); }
+.banda.mal { border-color: color-mix(in srgb, var(--color-signal) 40%, transparent); }
+.banda.bien { border-color: color-mix(in srgb, var(--color-affirm) 35%, transparent); }
+.pestanas button { border-bottom-width: 2px; transition: color var(--dur-rapida) var(--curva); }
+.pestanas button:hover { color: var(--texto); }
+.pestanas button[aria-selected=true] { color: var(--texto); border-bottom-color: var(--marca); }
+
+/* Diálogos, menús y avisos */
+dialog { background: var(--superficie); border: 1px solid var(--borde-2); border-radius: var(--radio-lg); }
+dialog::backdrop { background: var(--velo); }
+dialog:has(.asistente-crear) { width: min(880px, 96vw); }
+.dialogo-pie { background: var(--hundido); border-top: 1px solid var(--borde); }
+.menu-flotante { background: var(--superficie-2); border: 1px solid var(--borde-2); border-radius: var(--radio); }
+.menu-flotante button:hover, .menu-flotante button:focus-visible { background: var(--flotar); }
+.aviso { background: var(--superficie-2); color: var(--texto); border: 1px solid var(--borde-2); border-left: 3px solid var(--marca); border-radius: var(--radio-sm); }
+.aviso.mal { background: var(--superficie-2); color: var(--texto); border-left-color: var(--mal-lleno); }
+
+/* Estados vacíos, carga y esqueletos */
+.vacio { display: flex; flex-direction: column; align-items: center; gap: var(--esp-2); padding: var(--esp-10) var(--esp-5); }
+.vacio p { max-width: 46ch; margin: 0 auto; }
+.vacio-icono { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: var(--radio-pildora);
+  background: var(--acento-suave); color: var(--acento); margin-bottom: var(--esp-1); }
+.vacio-icono svg.icono { width: var(--icono-lg); height: var(--icono-lg); }
+.vacio-acciones { justify-content: center; }
+.giro { border-color: var(--borde-2); border-top-color: var(--marca); }
+.esqueleto-carga { display: flex; flex-direction: column; gap: var(--esp-2); }
+.esqueleto-carga > span { display: block; height: 14px; border-radius: var(--radio-xs);
+  background: linear-gradient(90deg, var(--superficie) 0%, var(--superficie-2) 50%, var(--superficie) 100%); background-size: 200% 100%; animation: brillo 1.4s ease-in-out infinite; }
+.esqueleto-carga > span:nth-child(2) { width: 80%; }
+.esqueleto-carga > span:nth-child(3) { width: 60%; }
+@keyframes brillo { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* Taller: piezas del puesto de trabajo con el mismo lenguaje */
+.taller-origen, .taller-ciclo, .taller-salida { background: var(--superficie); border-color: var(--borde); }
+.taller-origen.vacio { background: var(--superficie); }
+.ciclo-paso { background: transparent; border-color: var(--borde-2); color: var(--texto-2); }
+.ciclo-paso.hecho { border-color: color-mix(in srgb, var(--color-affirm) 50%, transparent); color: var(--bien); }
+.ciclo-paso.activo { border-color: var(--marca); color: var(--texto); background: var(--acento-suave); }
+.enlace-mis-sistemas { font-size: var(--font-size-sm); color: var(--acento); text-decoration: none; padding: var(--esp-1) 0; display: inline-block; }
+.enlace-mis-sistemas:hover { text-decoration: underline; }
+[data-estado="web"] { border-style: dashed; }
+[data-estado="papelera"] { opacity: 0.75; }
+
+/* Editor de archivos: superficies del IDE con los tokens de la app */
+.ide-arbol { background: var(--hundido); }
+.ide-pestanas, .ide-estado, .ec-numeros, .ec-buscar, .ec-diff-n { background: var(--hundido); }
+.ide-pestana.activa { background: var(--superficie); box-shadow: inset 0 -2px 0 var(--marca); }
+.ide-nodo-nombre:hover { background: var(--flotar); }
+.ide-nodo.activo > .ide-nodo-fila .ide-nodo-nombre { background: var(--acento-suave); color: var(--texto); }
+.ide-nodo.es-carpeta > .ide-nodo-fila svg.icono { color: var(--acento); }
+.ec-texto::selection { background: color-mix(in srgb, var(--color-brand) 35%, transparent); }
+.t-clave { color: var(--texto-marca); }
+.t-propiedad { color: var(--decide-texto); }
+.ide-binario { display: flex; align-items: center; justify-content: center; padding: var(--esp-6); min-height: 380px; }
+.ide-binario-cuerpo { display: flex; flex-direction: column; align-items: center; gap: var(--esp-2); text-align: center; max-width: 60ch; }
+.ide-binario-imagen { max-width: 100%; max-height: 50vh; border-radius: var(--radio-sm); border: 1px solid var(--borde);
+  background: repeating-conic-gradient(var(--superficie) 0 25%, var(--superficie-2) 0 50%) 50% / 16px 16px; }
+.ide-binario-icono { display: inline-flex; width: 64px; height: 64px; align-items: center; justify-content: center; border-radius: var(--radio); background: var(--superficie-2); color: var(--tenue); }
+.ide-binario-icono svg.icono { width: 32px; height: 32px; }
+
+/* Borrador solo en la web: árbol + visor de solo lectura */
+.visor-web, .ide.visor-web { display: block; min-height: 0; border: 1px solid var(--borde); border-radius: var(--radio); background: var(--superficie); overflow: hidden; margin-top: var(--esp-4); }
+.visor-web-cabeza { padding: var(--esp-3) var(--esp-4); border-bottom: 1px solid var(--borde); gap: var(--esp-3); }
+.visor-web-cuerpo { display: grid; grid-template-columns: minmax(180px, 260px) minmax(0, 1fr); min-height: 320px; }
+.visor-web-contenido { min-width: 0; display: flex; flex-direction: column; }
+.visor-web-texto { margin: 0; padding: var(--esp-3) var(--esp-4); overflow: auto; max-height: 60vh; font-family: var(--font-mono); font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal); white-space: pre-wrap; overflow-wrap: anywhere; color: var(--texto); }
+
+/* Asistente «Nuevo sistema»: caminos como tarjetas */
+.modos-crear { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--esp-3); }
+.modo-crear { display: flex; flex-direction: column; align-items: flex-start; gap: var(--esp-1); text-align: left; padding: var(--esp-4); cursor: pointer;
+  background: var(--superficie-2); color: var(--texto); border: 1px solid var(--borde); border-radius: var(--radio); font: inherit;
+  transition: border-color var(--dur-rapida) var(--curva), background-color var(--dur-rapida) var(--curva); }
+.modo-crear:hover { border-color: var(--borde-fuerte); }
+.modo-crear.activo { border-color: var(--marca); background: var(--acento-suave); box-shadow: inset 0 0 0 1px var(--marca); }
+.modo-crear b { font-family: var(--font-heading); font-weight: var(--font-weight-semibold); }
+.modo-crear .tenue { font-size: var(--font-size-sm); }
+.modo-crear-icono { display: inline-flex; width: 32px; height: 32px; align-items: center; justify-content: center; border-radius: var(--radio-sm); background: var(--acento-suave); color: var(--acento); margin-bottom: var(--esp-1); }
+.zona-soltar { display: flex; flex-direction: column; align-items: center; gap: var(--esp-2); text-align: center; padding: var(--esp-8) var(--esp-5);
+  border: 2px dashed var(--borde-2); border-radius: var(--radio); background: var(--hundido); cursor: pointer;
+  transition: border-color var(--dur-rapida) var(--curva), background-color var(--dur-rapida) var(--curva); }
+.zona-soltar:hover, .zona-soltar.encima { border-color: var(--marca); background: var(--acento-suave); }
+.zona-soltar-icono { display: inline-flex; width: 48px; height: 48px; align-items: center; justify-content: center; border-radius: var(--radio-pildora); background: var(--acento-suave); color: var(--acento); }
+.zona-soltar-icono svg.icono { width: var(--icono-lg); height: var(--icono-lg); }
+.zona-soltar-lista { font-size: var(--font-size-sm); }
+.resumen-import-cifras { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--esp-2); }
+.cifra-mini { display: flex; flex-direction: column; gap: 2px; padding: var(--esp-3); border: 1px solid var(--borde); border-radius: var(--radio-sm); background: var(--superficie-2); }
+.cifra-mini b { font-family: var(--font-heading); font-size: var(--font-size-xl); color: var(--acento); }
+.cifra-mini span { font-size: var(--font-size-sm); color: var(--tenue); }
+.resumen-import-seccion { border: 1px solid var(--borde); border-radius: var(--radio-sm); padding: var(--esp-2) var(--esp-3); background: var(--superficie); }
+.resumen-import-seccion summary { display: flex; align-items: center; justify-content: space-between; gap: var(--esp-2); cursor: pointer; font-weight: var(--font-weight-semibold); }
+.resumen-import-lista { margin: var(--esp-2) 0 0; padding-left: var(--esp-5); display: flex; flex-direction: column; gap: var(--esp-1); font-size: var(--font-size-sm); max-height: 220px; overflow: auto; }
+.resumen-import-avisos { flex-direction: column; align-items: flex-start; margin: 0; padding-left: var(--esp-8); }
+
+/* Página «Nuevo sistema» del Taller: el esqueleto completo agrupado */
+.plantilla-nuevo { gap: var(--esp-4); }
+.esqueleto-grupos { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--esp-3); }
+.esqueleto-grupo { display: flex; flex-direction: column; gap: var(--esp-2); padding: var(--esp-3); border: 1px solid var(--borde); border-radius: var(--radio-sm); background: var(--hundido); }
+.esqueleto-grupo b { font-family: var(--font-heading); font-size: var(--font-size-sm); color: var(--texto-2); }
+.esqueleto-grupo .esqueleto-archivos { grid-template-columns: 1fr; gap: var(--esp-1); }
+.esqueleto-archivo { border-style: solid; border-color: var(--borde); background: var(--superficie); padding: var(--esp-1) var(--esp-2); }
+.ide { --ancho-arbol: 260px; }
+
+/* Móvil: navegación como barra desplazable de iconos + texto, sin desbordes */
+@media (max-width: 820px) {
+  main { padding: var(--esp-5) var(--esp-4) var(--esp-10); }
+  .lateral { padding: var(--esp-3); gap: var(--esp-2); border-right: 0; border-bottom: 1px solid var(--borde); }
+  nav { flex-wrap: nowrap; overflow-x: auto; gap: var(--esp-1); scrollbar-width: thin; }
+  nav a { flex: none; white-space: nowrap; padding: var(--esp-2) var(--esp-3); }
+  nav a.activo::before { left: 10px; right: 10px; top: auto; bottom: 2px; width: auto; height: 3px; }
+  .pie-lateral { display: none; }
+  .visor-web-cuerpo { grid-template-columns: minmax(0, 1fr); }
+  .visor-web-cuerpo .ide-arbol { max-height: 30vh; overflow: auto; border-right: 0; border-bottom: 1px solid var(--borde); }
+  .cabecera { padding-bottom: var(--esp-3); margin-bottom: var(--esp-4); }
+}
+
+/* Menos movimiento si la persona lo pide */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
+
+/* `.aviso` también es la clase de los toasts: que no se cuele en insignias ni bandas de aviso. */
+.insignia.aviso { padding: 2px 10px; border-radius: 999px; box-shadow: none; }
+.banda.aviso { box-shadow: none; }

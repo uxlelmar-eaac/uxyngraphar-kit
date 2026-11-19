@@ -52,6 +52,8 @@ const TRAZOS = {
   asa: "M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01",
   copiar: "M8 8h12v12H8zM4 16V4h12",
   basura: "M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13",
+  subirArchivo: "M12 15V4M7 9l5-5 5 5M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4",
+  zip: "M6 3h9l4 4v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM11 4v2M11 8v2M11 12v2M10 16h2v2h-2z",
   cerrar: "M6 6l12 12M18 6L6 18",
 };
 
@@ -64,6 +66,10 @@ export function icono(nombre) {
   svg.setAttribute("stroke-linecap", "round");
   svg.setAttribute("stroke-linejoin", "round");
   svg.setAttribute("aria-hidden", "true");
+  // Tamaño propio (1.5.26): sin él, un SVG sin reglas de CSS se estira al ancho de su caja (iconos de 200 px).
+  svg.setAttribute("width", "18");
+  svg.setAttribute("height", "18");
+  svg.setAttribute("class", `icono icono-${nombre}`);
   const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
   p.setAttribute("d", TRAZOS[nombre] || "");
   svg.append(p);
@@ -111,7 +117,9 @@ export function avisarConAccion(texto, textoBoton, accion, { segundos = 10 } = {
 
 export const insignia = (texto, tipo = "") => h("span", { class: `insignia ${tipo}`, texto });
 export const cargando = (texto = "Cargando…") => h("div", { class: "cargando" }, h("span", { class: "giro" }), texto);
-export const vacio = (titulo, texto, ...acciones) => h("div", { class: "vacio" }, h("h3", { texto: titulo }), h("p", { texto }), h("div", { class: "fila", style: "justify-content:center" }, acciones));
+export const vacio = (titulo, texto, ...acciones) => h("div", { class: "vacio" },
+  h("span", { class: "vacio-icono", "aria-hidden": "true" }, icono("carpeta")),
+  h("h3", { texto: titulo }), h("p", { texto }), h("div", { class: "fila vacio-acciones" }, acciones));
 
 export function cabecera(titulo, descripcion, ...acciones) {
   return h("div", { class: "cabecera" }, h("div", {}, h("h1", { texto: titulo }), descripcion ? h("p", { texto: descripcion }) : null),

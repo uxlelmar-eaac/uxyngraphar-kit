@@ -5,10 +5,10 @@ import { panelLogs } from "./logs-ui.js";
 import { tarjetaCreador } from "./creador.js";
 
 function tarjetaCuenta(titulo, iconoNombre, texto, accion) {
-  return h("div", { class: "tarjeta tarjeta-item" },
-    h("h3", {}, icono(iconoNombre), ` ${titulo}`),
+  return h("div", { class: "tarjeta tarjeta-item tarjeta-acceso" },
+    h("div", { class: "tarjeta-acceso-cabeza" }, h("span", { class: "tarjeta-icono" }, icono(iconoNombre)), h("h3", { texto: titulo })),
     h("p", { class: "tenue", texto }),
-    boton("Abrir", accion, { clase: "primario pequeno" }));
+    h("div", { class: "acciones" }, boton("Abrir", accion, { clase: "pequeno", icono: "flecha" })));
 }
 
 export async function vista(params, { ir }) {

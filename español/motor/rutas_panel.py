@@ -45,7 +45,8 @@ AUDITADAS = {"/api/repo/instalar": "instalar", "/api/sistemas/traer": "traer del
              "/api/mis-sistemas/vaciar": "vaciar papelera", "/api/mis-sistemas/duplicar": "duplicar sistema",
              "/api/mis-sistemas/renombrar": "cambiar el nombre de un sistema", "/api/proyectos/quitar": "quitar proyecto del panel",
              "/api/mis-sistemas/archivar": "archivar en el Taller", "/api/catalogo/archivo/borrar": "borrar archivo de un sistema",
-             "/api/catalogo/archivo/renombrar": "renombrar archivo de un sistema"}
+             "/api/catalogo/archivo/renombrar": "renombrar archivo de un sistema",
+             "/api/catalogo/importar": "importar sistema (zip, archivos o carpeta)"}
 
 
 class FaltaCampo(ValueError):
@@ -423,6 +424,35 @@ def _agente_decidir(d: dict) -> dict:
     return {"propuesta": r, "traido": bool(aceptar)}
 
 
+def _borrador_web(slug: str) -> dict:
+    """Un borrador de la web con TODOS sus archivos, para verlo en el Taller sin traerlo (solo lectura)."""
+    import creador
+    if not __import__("uxyn_base").ID_VALIDO.match(slug):
+        raise ValueError(f"borrador inválido «{slug}»")
+    revision, archivos = creador._web(slug)
+    return {"slug": slug, "revision": revision, "rutas": sorted(archivos), "archivos": archivos}
+
+
+def _importar(d: dict) -> dict:
+    """Crea un sistema con el esqueleto completo a partir de un zip, varios archivos o una carpeta del equipo."""
+    import base64
+    import importar
+    if d.get("zip"):
+        try:
+            archivos = importar.desde_zip(base64.b64decode(str(d["zip"]), validate=True))
+        except ValueError as e:
+            raise ValueError(f"zip: {e}") from None
+    elif d.get("archivos"):
+        archivos = importar.desde_lista(_campo(d, "archivos", list))
+    elif d.get("carpeta"):
+        archivos = importar.desde_carpeta(Path(_campo(d, "carpeta", str)))
+    else:
+        raise ValueError("manda «zip», «archivos» o «carpeta»")
+    return importar.importar(archivos, pid=str(d.get("id") or "").strip(), titulo=str(d.get("titulo") or "").strip(),
+                             descripcion=str(d.get("descripcion") or "").strip(), familia=str(d.get("familia") or ""),
+                             aplicar=d.get("aplicar", True) is not False, nombre_origen=str(d.get("nombre") or ""))
+
+
 GET = {
     # cuenta (sesión del kit en este equipo)
     "/api/cuenta": _cuenta,
@@ -432,7 +462,8 @@ GET = {
     # catálogo
     "/api/catalogo": lambda d: catalogo.listar(),
     "/api/catalogo/archivos": lambda d: catalogo.archivos(_campo(d, "id")),
-    "/api/catalogo/archivo": lambda d: {"contenido": catalogo.leer_archivo(_campo(d, "id"), _campo(d, "rel"))},
+    "/api/catalogo/archivo": lambda d: catalogo.abrir_archivo(_campo(d, "id"), _campo(d, "rel")),
+    "/api/creador/borrador": lambda d: _borrador_web(_campo(d, "slug", str)),
     "/api/catalogo/completitud": lambda d: catalogo.completitud(_campo(d, "id")),
     "/api/catalogo/pendientes": lambda d: generador.pendientes(_campo(d, "id")),
     "/api/catalogo/plantilla-spec": lambda d: generador.plantilla_spec(d.get("id") or "contratos-de-pago", d.get("familia") or "proceso"),
@@ -504,6 +535,7 @@ POST = {
     # catálogo y Creador de sistemas
     "/api/catalogo/crear": lambda d: str(catalogo.crear(_campo(d, "id"), _campo(d, "titulo"), d.get("descripcion", ""), familia=d.get("familia", "proceso"),
                                                         piezas=d.get("piezas"))),
+    "/api/catalogo/importar": lambda d: _importar(d),  # noqa: PLW0108 - se define más abajo
     "/api/catalogo/generar": lambda d: generador.desde_spec(_campo(d, "spec"), aplicar=bool(d.get("aplicar"))),
     "/api/catalogo/pieza": lambda d: (catalogo.agregar_pieza if _campo(d, "accion") == "agregar" else catalogo.quitar_pieza)(_campo(d, "id"), _campo(d, "pieza")),
     "/api/catalogo/archivo": lambda d: {"errores": catalogo.guardar_archivo(_campo(d, "id"), _campo(d, "rel"), _campo(d, "contenido"))},

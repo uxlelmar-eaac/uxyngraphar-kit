@@ -38,5 +38,9 @@
     }
   },
   "piezas": [],
-  "ajustes": {}
+  "ajustes": {},
+  "extensiones": {
+    "prompts": "Prompts listos para el agente de IA que trabaja con este sistema",
+    "config": "Ajustes propios del sistema que leen sus prompts, scripts o fases"
+  }
 }

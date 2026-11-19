@@ -93,7 +93,7 @@ def catalogo_de_prueba(carpeta: Path, *ids: str) -> Path:
     carpeta = Path(carpeta)
     carpeta.mkdir(parents=True, exist_ok=True)
     for pid in ids:
-        completar(catalogo.crear(pid, pid.replace("-", " ").capitalize(), "Sistema de prueba", carpeta))
+        completar(catalogo.crear(pid, pid.replace("-", " ").capitalize(), "Sistema de prueba", carpeta, piezas=catalogo.PIEZAS_MINIMAS))
     return carpeta
 
 

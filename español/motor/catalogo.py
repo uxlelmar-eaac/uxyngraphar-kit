@@ -70,7 +70,10 @@ def carpeta(pid: str, raiz: Path | None = None) -> Path:
     return c
 
 
-PIEZAS_AL_CREAR = ("plantillas", "pruebas", "cambios")   # pruebas de serie (M-07)
+# Esqueleto completo de serie (1.5.26): núcleo + prompts/ + config/ (vienen de `_base`) y estas piezas, cada una con
+# contenido de arranque. «andamiaje» y «componentes» solo tienen sentido en algunos sistemas: se añaden a mano.
+PIEZAS_AL_CREAR = ("proceso", "skills", "herramientas", "plantillas", "referencia", "ejemplos", "pruebas", "cambios")
+PIEZAS_MINIMAS = ("plantillas", "pruebas", "cambios")   # pruebas de serie (M-07)
 SEMILLAS = esp.PLANTILLA / "piezas"
 FRAGMENTO = "manifiesto.json"
 
@@ -208,6 +211,29 @@ def archivos(pid: str, raiz: Path | None = None) -> list[str]:
 
 def leer_archivo(pid: str, rel: str, raiz: Path | None = None) -> str:
     return _ruta_segura(pid, rel, raiz).read_text(encoding="utf-8")
+
+
+MAX_VISTA_BINARIO = 3 * 1024 * 1024
+IMAGENES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp",
+            ".svg": "image/svg+xml", ".ico": "image/x-icon", ".bmp": "image/bmp"}
+
+
+def abrir_archivo(pid: str, rel: str, raiz: Path | None = None) -> dict:
+    """Lo que el editor necesita para abrir un archivo: su texto, o si es binario, una vista de solo lectura
+    (tamaño y, para imágenes no muy grandes, los datos en base64). Ningún tipo de archivo se queda sin abrir."""
+    import base64
+    ruta = _ruta_segura(pid, rel, raiz)
+    datos = ruta.read_bytes()
+    if b"\x00" not in datos:
+        try:
+            return {"contenido": datos.decode("utf-8")}
+        except UnicodeDecodeError:
+            pass
+    tipo = IMAGENES.get(ruta.suffix.lower(), "application/octet-stream")
+    salida = {"binario": True, "tamano": len(datos), "tipo": tipo}
+    if tipo.startswith("image/") and tipo != "image/svg+xml" and len(datos) <= MAX_VISTA_BINARIO:
+        salida["datos"] = base64.b64encode(datos).decode("ascii")
+    return salida
 
 
 def guardar_archivo(pid: str, rel: str, contenido: str, raiz: Path | None = None) -> list[str]:

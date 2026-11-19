@@ -27,8 +27,8 @@ class Entorno(unittest.TestCase):
         self.t = Path(self._t.name).resolve()
         self.cat = self.t / "catalogo"
         self.cat.mkdir()
-        completar(catalogo.crear("pruebas-demo", "Pruebas demo", "Sistema de prueba", self.cat))
-        completar(catalogo.crear("pruebas-otras", "Pruebas otras", "Segundo sistema", self.cat))
+        completar(catalogo.crear("pruebas-demo", "Pruebas demo", "Sistema de prueba", self.cat, piezas=catalogo.PIEZAS_MINIMAS))
+        completar(catalogo.crear("pruebas-otras", "Pruebas otras", "Segundo sistema", self.cat, piezas=catalogo.PIEZAS_MINIMAS))
         self.parches = [mock.patch.dict(os.environ, {"UXYNGRAPHAR_HOME": str(self.t / "casa")}),
                         mock.patch.object(catalogo.esp, "CATALOGO", self.cat)]
         for p in self.parches:

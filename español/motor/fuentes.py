@@ -37,7 +37,7 @@ def locales(cat: Path | None = None) -> dict[str, str]:
 def remotas() -> dict[str, dict]:
     try:
         return remoto.versiones_disponibles()
-    except (remoto.SinServidor, ValueError):
+    except (remoto.SinServidor, ValueError, PermissionError):   # sesión caducada: las versiones remotas son un extra
         return {}
 
 
