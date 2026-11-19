@@ -268,7 +268,11 @@ pre { white-space: pre-wrap; background: var(--superficie-2); padding: 12px; bor
 .desconectado .tarjeta { max-width: 640px; max-height: 85vh; overflow: auto; }
 .desconectado p { white-space: pre-wrap; }
 @media (max-width: 820px) {
-  .marco { grid-template-columns: 1fr; }
+  /* minmax(0, 1fr): con 1fr a secas la columna crece hasta el ancho mínimo del contenido y en un móvil (390 px)
+     la página entera se desbordaba hacia la derecha. */
+  .marco { grid-template-columns: minmax(0, 1fr); }
+  .marco > main, .marco > .lateral { min-width: 0; }
+  .pestanas { flex-wrap: wrap; overflow-x: visible; }
   .lateral { position: static; height: auto; }
   nav { flex-direction: row; flex-wrap: wrap; }
   main { padding: 20px; }
@@ -508,7 +512,9 @@ label.casilla.carpeta-opcion input { margin-top: 0; }
 .fila-etiqueta .casilla input { margin-top: 0; }
 .grupo h3 svg { width: 18px; height: 18px; color: var(--acento); }
 @media (max-width: 820px) {
-  .herramientas-proyectos { grid-template-columns: 1fr 1fr; }
+  .herramientas-proyectos { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .herramientas-proyectos > * { min-width: 0; max-width: 100%; }
+  .herramientas-proyectos select { width: 100%; }
   .herramientas-proyectos input[type=search] { grid-column: 1 / -1; }
   .resumen-proyectos .pista { display: none; }
 }

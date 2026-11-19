@@ -7,7 +7,10 @@ import { tarjetaProyecto } from "./proyectos.js";
 import { resolverEstado, leerOrigen, desdePendientes } from "./creador-estado.js";
 import { filtrarPropuestasPendientes } from "./creador.js";
 
-async function tarjetaSistemaEnCurso(m, ir, proyectos, publicado = false) {
+// Con sesión de la cuenta (o token de automatización): sin ella, las rutas de la web (borradores, propuestas) no se piden.
+export const conSesion = (cuenta) => Boolean(cuenta && cuenta.tipo && cuenta.tipo !== "ninguna");
+
+async function tarjetaSistemaEnCurso(m, ir, proyectos, publicado = false, sesion = false) {
   const enProyecto = (proyectos || [])
     .filter((p) => p.existe && (p.sistemas || []).includes(m.id))
     .map((p) => p.nombre);
@@ -16,10 +19,12 @@ async function tarjetaSistemaEnCurso(m, ir, proyectos, publicado = false) {
   try {
     pendientes = desdePendientes(await obtener("/api/catalogo/pendientes", { id: m.id }));
   } catch { /* */ }
-  try {
-    const todas = await obtener("/api/agente/propuestas", { slug: m.id });
-    propuestas = filtrarPropuestasPendientes(todas).length;
-  } catch { /* */ }
+  if (sesion) {
+    try {
+      const todas = await obtener("/api/agente/propuestas", { slug: m.id });
+      propuestas = filtrarPropuestasPendientes(todas).length;
+    } catch { /* */ }
+  }
   const estado = resolverEstado({
     tieneSistema: true,
     propuestas,
@@ -49,13 +54,17 @@ async function tarjetaSistemaEnCurso(m, ir, proyectos, publicado = false) {
 }
 
 export async function vista(_params, { ir }) {
-  const [lista, cat, herramienta] = await Promise.all([
+  const [lista, cat, herramienta, cuenta] = await Promise.all([
     obtener("/api/proyectos"),
     catalogo(true).catch(() => []),
     obtener("/api/herramienta"),
+    obtener("/api/cuenta").catch(() => null),
   ]);
+  const sesion = conSesion(cuenta);
   let borradores = [];
-  try { borradores = await obtener("/api/creador/borradores"); } catch { /* sin sesión */ }
+  if (sesion) {
+    try { borradores = await obtener("/api/creador/borradores"); } catch { /* sin red o sesión caducada */ }
+  }
 
   const conActualizacion = lista.filter((p) => p.actualizables > 0);
   const alterados = lista.filter((p) => p.alterados > 0);
@@ -104,7 +113,7 @@ export async function vista(_params, { ir }) {
           h("div", { class: "acciones" },
             boton("Abrir en el taller", () => ir("creador", { id: m.id }), { clase: "primario pequeno" })));
       }
-      return tarjetaSistemaEnCurso(m, ir, lista, publicadoDe(m.id));
+      return tarjetaSistemaEnCurso(m, ir, lista, publicadoDe(m.id), sesion);
     }));
     rejillaSistemas.append(...tarjetas);
   }

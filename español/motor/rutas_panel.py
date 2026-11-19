@@ -62,11 +62,16 @@ CODIGOS = [
     (FaltaConfirmacion, "falta_confirmacion", "confirmar"),
     (transaccion.ProyectoOcupado, "proyecto_ocupado", "reintentar"),
     (remoto.DePago, "de_pago", "comprar"),
-    (PermissionError, "sin_permiso", ""),
+    (remoto.NoEncontrado, "no_encontrado", ""),
     (FileNotFoundError, "no_encontrado", ""),
     (FileExistsError, "ya_existe", ""),
     (ValueError, "pedido_invalido", ""),
 ]
+
+
+def _sin_sesion(e: BaseException) -> bool:
+    """PermissionError del kit por falta de sesión con la cuenta (no un permiso del sistema de archivos, que trae errno)."""
+    return isinstance(e, PermissionError) and not isinstance(e, remoto.DePago) and e.errno is None
 
 
 def codigo_error(e: BaseException) -> tuple[str, str]:
@@ -74,7 +79,40 @@ def codigo_error(e: BaseException) -> tuple[str, str]:
     import protecciones
     if isinstance(e, protecciones.AjustesClaudeInvalidos):
         return "ajustes_claude_invalidos", "corregir_ajustes"
+    if _sin_sesion(e):
+        return "sin_sesion_cuenta", "iniciar_sesion"
+    if isinstance(e, PermissionError) and not isinstance(e, remoto.DePago):
+        return "sin_permiso", ""
     return next(((c, a) for tipo, c, a in CODIGOS if isinstance(e, tipo)), ("pedido_invalido", ""))
+
+
+def estado_http(e: BaseException) -> int:
+    """Estado HTTP de un error de usuario: 401 sin sesión con la cuenta, 402 de pago, 403 sin permiso en el sistema de
+    archivos, 404 lo pedido no existe, 409 conflicto y 400 el resto (pedido mal hecho)."""
+    if isinstance(e, ERRORES_CONFLICTO):
+        return 409
+    if isinstance(e, remoto.DePago):
+        return 402
+    if isinstance(e, PermissionError):
+        return 401 if _sin_sesion(e) else 403
+    if isinstance(e, (FileNotFoundError, remoto.NoEncontrado)):
+        return 404
+    return 400
+
+
+def _entero(datos: dict, nombre: str, defecto: int | None = None) -> int:
+    """Número entero de un campo del pedido (de la URL llega como texto); si no lo es, un error en español."""
+    valor = datos.get(nombre) if isinstance(datos, dict) else None
+    if valor in (None, ""):
+        if defecto is None:
+            raise FaltaCampo(f"falta el campo «{nombre}»")
+        return defecto
+    try:
+        if isinstance(valor, bool):
+            raise ValueError
+        return int(valor)
+    except (TypeError, ValueError):
+        raise ValueError(f"el campo «{nombre}» debe ser un número entero (llegó «{valor}»)") from None
 
 
 def _campo(datos: dict, nombre: str, tipo: type | tuple[type, ...] | None = None):
@@ -347,7 +385,7 @@ def _agente_turno(d: dict) -> dict:
         except creador.Conflicto as e:
             return _conflicto(e)
     conversacion = d.get("conversacion")
-    r = agente.turno(_campo(d, "mensaje", str), int(conversacion) if conversacion else None, pid,
+    r = agente.turno(_campo(d, "mensaje", str), _entero(d, "conversacion") if conversacion else None, pid,
                      str(d.get("modelo") or ""), d.get("adjuntos") or None, d.get("progreso") or None)
     nuevo = r.get("borrador") if isinstance(r, dict) else None
     if nuevo and nuevo != pid:
@@ -367,7 +405,7 @@ def _agente_decidir(d: dict) -> dict:
     import creador
     slug = _campo(d, "slug", str)
     aceptar = [str(x) for x in d.get("aceptar") or []]
-    r = agente.decidir(slug, int(_campo(d, "propuesta", int)), aceptar, [str(x) for x in d.get("rechazar") or []])
+    r = agente.decidir(slug, _entero(d, "propuesta"), aceptar, [str(x) for x in d.get("rechazar") or []])
     if aceptar:
         try:
             creador.bajar(slug)
@@ -400,7 +438,7 @@ GET = {
     "/api/agente/progreso": lambda d: __import__("agente").progreso(_campo(d, "id", str)),
     "/api/agente/conversaciones": lambda d: __import__("agente").conversaciones(
         str(d["slug"]).strip() if d.get("slug") else None),
-    "/api/agente/conversacion": lambda d: __import__("agente").conversacion(int(_campo(d, "id", str))),
+    "/api/agente/conversacion": lambda d: __import__("agente").conversacion(_entero(d, "id")),
     # un proyecto
     "/api/repo/estado": _estado_repo,
     "/api/repo/flujo": lambda d: _flujo_sin_escribir(_raiz(d)),
@@ -425,8 +463,8 @@ GET = {
     "/api/grupos": lambda d: __import__("grupos").listar(),
     "/api/organizacion": lambda d: __import__("organizacion").leer(),
     "/api/grupos/matriz": lambda d: __import__("grupos").matriz(_campo(d, "nombre", str)),
-    "/api/historial": lambda d: __import__("auditoria").leer(int(d.get("limite") or 100)),
-    "/api/registros": lambda d: __import__("registros_panel").listar(int(d.get("desde") or 0)),
+    "/api/historial": lambda d: __import__("auditoria").leer(_entero(d, "limite", 100)),
+    "/api/registros": lambda d: __import__("registros_panel").listar(_entero(d, "desde", 0)),
 }
 
 POST = {
@@ -444,7 +482,7 @@ POST = {
     "/api/conexiones/desconectar": lambda d: __import__("conexiones").desconectar(_campo(d, "agente", str), list(_campo(d, "proyectos", list))),
     "/api/agente/decidir": _agente_decidir,
     "/api/agente/corregir": lambda d: __import__("agente").corregir(
-        _campo(d, "slug", str), int(_campo(d, "propuesta")), _campo(d, "ruta", str),
+        _campo(d, "slug", str), _entero(d, "propuesta"), _campo(d, "ruta", str),
         str(d.get("contenido") if d.get("contenido") is not None else "")),
     "/api/reportes/vista-previa": lambda d: _reporte(d, enviar=False),
     "/api/reportes/enviar": lambda d: _reporte(d, enviar=True),

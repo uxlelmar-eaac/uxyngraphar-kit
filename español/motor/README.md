@@ -128,15 +128,17 @@ Todo error responde `{"error": {"codigo", "mensaje", "accion"}}`; `accion` dice 
 | `proyecto_no_registrado` | 400 | `registrar` | se quiere cambiar una carpeta que no está en «Mis proyectos» |
 | `falta_confirmacion` | 400 | `confirmar` | acción que borra o mueve trabajo sin `confirmar` |
 | `ajustes_claude_invalidos` | 400 | `corregir_ajustes` | `.claude/settings.json` no es JSON válido |
-| `de_pago` | 400 | `comprar` | el sistema es de pago y tu cuenta no lo tiene: cómpralo en el Mercado |
-| `sin_permiso` | 400 | — | el sistema no deja leer o escribir |
-| `no_encontrado` | 400 | — | no existe lo pedido |
+| `sin_sesion_cuenta` | 401 | `iniciar_sesion` | hace falta la sesión con tu cuenta (Cuenta › Conectar) |
+| `de_pago` | 402 | `comprar` | el sistema es de pago y tu cuenta no lo tiene: cómpralo en el Mercado |
+| `sin_permiso` | 403 | — | el sistema de archivos no deja leer o escribir |
+| `no_encontrado` | 404 | — | no existe lo pedido (proyecto, sistema, archivo…) |
 | `ya_existe` | 400 | — | ya existe lo que se quería crear |
 | `pedido_invalido` | 400 | — | otro dato del pedido no vale |
 | `json_invalido` · `content_length_invalido` | 400 | — | el cuerpo del pedido está mal formado |
 | `sin_sesion` · `codigo_caducado` | 403 | `abrir_de_nuevo` | pestaña sin cookie válida, o enlace ya usado o caducado |
 | `host_no_permitido` · `origen_no_permitido` | 403 | — | `Host` u `Origin` que no son del panel |
 | `ruta_desconocida` | 404 | — | la ruta de la API no existe |
+| `metodo_no_permitido` | 405 | — | otro método que GET o POST (cabecera `Allow`) |
 | `proyecto_ocupado` | 409 | `reintentar` | otro proceso está cambiando el proyecto |
 | `pedido_demasiado_grande` | 413 | — | cuerpo de más de 1 MiB |
 | `error_interno` | 500 | `ver_registro` | fallo no previsto; `detalle` y `registro` dicen dónde mirar |

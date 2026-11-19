@@ -52,7 +52,16 @@ TIPOS = {".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8",
 
 def _codigo_y_mensaje(e: BaseException) -> tuple[str, str, str]:
     codigo, accion = rutas_panel.codigo_error(e)
-    return codigo, str(e).strip("'\""), accion
+    return codigo, casa.mensaje_de_error(e), accion
+
+
+METODOS = "GET, POST"
+ERRORES_HTTP = {400: ("pedido_invalido", "pedido mal formado"), 404: ("no_encontrado", "no encontrado"),
+                405: ("metodo_no_permitido", "método no permitido: el panel solo acepta GET y POST"),
+                408: ("tiempo_agotado", "el pedido tardó demasiado"), 413: ("pedido_demasiado_grande", "pedido demasiado grande"),
+                414: ("ruta_demasiado_larga", "la dirección es demasiado larga"),
+                431: ("cabeceras_demasiado_grandes", "las cabeceras son demasiado grandes"),
+                505: ("version_http_no_admitida", "versión de HTTP no admitida")}
 
 
 def registrar_error(contexto: str) -> str:
@@ -160,14 +169,11 @@ def manejador(servidor_ref: dict):
                                         **({"repos": datos["repos"]} if isinstance(datos.get("repos"), list) else {}))
             try:
                 resultado = funcion(datos)
-            except rutas_panel.ERRORES_CONFLICTO as e:
+            except rutas_panel.ERRORES_CONFLICTO + rutas_panel.ERRORES_USUARIO as e:
+                estado = rutas_panel.estado_http(e)
                 auditar(str(e))
-                _log(409, str(e))
-                return self._error(409, *_codigo_y_mensaje(e))
-            except rutas_panel.ERRORES_USUARIO as e:
-                auditar(str(e))
-                _log(400, str(e))
-                return self._error(400, *_codigo_y_mensaje(e))
+                _log(estado, str(e))
+                return self._error(estado, *_codigo_y_mensaje(e))
             except Exception as e:  # noqa: BLE001 - un fallo no previsto responde 500 con JSON y queda en el registro
                 auditar(f"{type(e).__name__}: {e}")
                 registro = registrar_error(f"{metodo} {ruta}")
@@ -189,6 +195,33 @@ def manejador(servidor_ref: dict):
             if not archivo:
                 return self._responder(404, b"no encontrado", "text/plain; charset=utf-8")
             self._responder(200, archivo.read_bytes(), TIPOS[archivo.suffix])
+
+        def send_error(self, code, message=None, explain=None):
+            """Los errores que produce el propio servidor HTTP (método no admitido, petición mal formada…) también en
+            JSON y en español, como los de la API, en vez de la página HTML en inglés de http.server."""
+            estado = 405 if code == 501 else code
+            codigo, mensaje = ERRORES_HTTP.get(estado, ("error_http", f"error HTTP {estado}"))
+            cuerpo = json.dumps({"error": {"codigo": codigo, "mensaje": mensaje, "accion": ""}}, ensure_ascii=False).encode("utf-8")
+            try:
+                self.send_response(estado)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(cuerpo)))
+                self.send_header("Connection", "close")
+                if estado == 405:
+                    self.send_header("Allow", METODOS)
+                for clave, valor in CABECERAS_SEGURIDAD.items():
+                    self.send_header(clave, valor)
+                self.end_headers()
+                if getattr(self, "command", "") != "HEAD" and estado >= 200 and estado not in (204, 304):
+                    self.wfile.write(cuerpo)
+            except OSError:
+                pass
+            self.close_connection = True
+
+        def _no_permitido(self):
+            self.send_error(405)
+
+        do_HEAD = do_PUT = do_DELETE = do_PATCH = do_OPTIONS = do_TRACE = do_CONNECT = _no_permitido
 
         def do_POST(self):  # noqa: N802
             if not self._host_valido() or not self._origen_valido():
