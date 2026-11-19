@@ -1,5 +1,18 @@
 # Cambios
 
+## 1.5.19
+
+Arreglos de crear un sistema desde el panel (Taller), paso a paso, como una persona normal.
+
+- Un sistema nuevo ya no se cita a sí mismo en «Sistemas complementarios» de SISTEMA.md:
+  queda un hueco para otro sistema del catálogo (o «ninguno por ahora»).
+- «Lo básico»: los ids de los problemas se cortan entre palabras (máx. 40 caracteres) en
+  vez de a mitad de palabra, y las palabras de activación se guardan en minúsculas, sin
+  tildes ni signos, como pide la nomenclatura (antes «revisar un PR» dejaba el sistema sin
+  validar).
+- Tras «Instalar en proyecto», la franja del ciclo y la barra de salida muestran el
+  proyecto instalado sin recargar la página.
+
 ## 1.5.18
 
 - `buscar --familia` con una familia que no existe falla con un error en español que lista
