@@ -39,8 +39,9 @@ público), comprueba cada sha256 y nunca toca los repos. Cada repo avisa «Actua
 cuando lo decides (`uxyngraphar actualizar` o el botón del panel, con respaldo para `deshacer`). Sin sesión o sin red,
 todo sigue funcionando con la caché.
 
-Quien escribe sistemas trabaja con un catálogo local (este `sistemas-de-gobernanza/`, `UXYNGRAPHAR_CATALOGO` o
-`catalogo_local` en `casa.json`), conecta el equipo una vez con `uxyngraphar iniciar-sesion` (apruebas el código en la
+Quien escribe sistemas trabaja con un catálogo local (`UXYNGRAPHAR_CATALOGO`, `catalogo_local` en `casa.json` o, si
+no, `~/.uxyngraphar/catalogo/` con la herramienta instalada y este `sistemas-de-gobernanza/` en el repositorio; fuera de
+`versiones/`, así que reparar, actualizar o cambiar de versión no lo tocan), conecta el equipo una vez con `uxyngraphar iniciar-sesion` (apruebas el código en la
 web; `uxyngraphar sesion` dice con qué cuenta y `cerrar-sesion` lo desconecta) y publica con `uxyngraphar publicar <id>`
 (o `--todos`, `--simular`). En CI, `UXYNGRAPHAR_TOKEN` con un token de automatización. Si un id está en local y en el servidor, se instala la versión más alta; a igual, la local.
 `UXYNGRAPHAR_SIN_RED=1` trabaja solo en local.

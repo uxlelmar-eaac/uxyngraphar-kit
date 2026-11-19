@@ -52,7 +52,9 @@ Las actualizaciones nunca dejan la herramienta rota: cada versión se descarga, 
 | Si ni siquiera arranca | la línea de instalación con `--reparar` al final: `… \| python3 - --reparar` |
 | Desinstalar | `uxyngraphar desinstalar`: pregunta qué quitar (todo, solo la herramienta, uxyngraphar de tus proyectos o solo los accesos directos), enseña la lista exacta y pide confirmación |
 
-Al desinstalar, el trabajo de cada proyecto (`uxyngraphar/trabajo/`) se conserva salvo que pidas borrarlo (`--con-trabajo`). Sin terminal: `uxyngraphar desinstalar --alcance todo|herramienta|proyectos|accesos [--proyectos RUTA,RUTA] [--con-trabajo] [--simular] --si`.
+Los sistemas que escribes (`crear`, el Taller) se guardan en `~/.uxyngraphar/catalogo/`, fuera de las versiones: reparar, actualizar, volver atrás o podar versiones antiguas no los tocan (los que crearon versiones anteriores dentro de `versiones/` se mueven ahí solos). Desinstalar la herramienta los lista y no los borra salvo que lo confirmes (`--con-catalogo`; en el panel, la casilla).
+
+Al desinstalar, el trabajo de cada proyecto (`uxyngraphar/trabajo/`) se conserva salvo que pidas borrarlo (`--con-trabajo`). Sin terminal: `uxyngraphar desinstalar --alcance todo|herramienta|proyectos|accesos [--proyectos RUTA,RUTA] [--con-trabajo] [--con-catalogo] [--simular] --si`.
 
 ## Para quien contribuye
 
