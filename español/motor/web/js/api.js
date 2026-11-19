@@ -27,6 +27,10 @@ export class ErrorApi extends Error {
 let alPerderConexion = () => {};
 export function cuandoSeDesconecte(funcion) { alPerderConexion = funcion; }
 
+// La pestaña perdió el permiso (403 «abrir_de_nuevo»): el panel se reinició con otra sesión, p. ej. tras actualizar.
+let alPerderSesion = () => {};
+export function cuandoPierdaSesion(funcion) { alPerderSesion = funcion; }
+
 export async function api(ruta, datos, metodo) {
   const m = metodo || (datos ? "POST" : "GET");
   let url = ruta;
@@ -73,6 +77,7 @@ export async function api(ruta, datos, metodo) {
     });
   }
   if (respuesta.status === 403 && e.accion === "abrir_de_nuevo") {
+    alPerderSesion();
     throw new ErrorApi("Esta pestaña no tiene permiso. Abre el panel de nuevo con el comando uxyngraphar o su acceso directo.", e.codigo, e.accion);
   }
   if (respuesta.status === 500) {
@@ -92,8 +97,62 @@ export async function api(ruta, datos, metodo) {
 export const obtener = (ruta, datos) => api(ruta, datos, "GET");
 export const enviar = (ruta, datos) => api(ruta, datos || {}, "POST");
 
-export function latir(segundos = 20) {
-  const latido = () => enviar("/api/latido").catch(() => {});
+// Clasifica la respuesta de un latido: "ok" (con el estado del servidor), "sin_sesion" (403: otra sesión) o "caido".
+export async function latidoUnaVez() {
+  try {
+    const r = await fetch("/api/latido", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: "{}", credentials: "same-origin" });
+    if (r.ok) {
+      let cuerpo = {};
+      try { cuerpo = await r.json(); } catch { /* sin cuerpo */ }
+      return { tipo: "ok", estado: (cuerpo && typeof cuerpo.ok === "object" && cuerpo.ok) || {} };
+    }
+    return { tipo: r.status === 403 ? "sin_sesion" : "caido" };
+  } catch {
+    return { tipo: "caido" };
+  }
+}
+
+// Decide qué hacer con un latido. Puro (sin DOM) para poder probarlo:
+//  · "recargar": volvió el panel tras una caída o un permiso perdido (la cookie nueva de otra pestaña vale aquí
+//    también) o el proceso cambió de versión → se recarga la página con el código nuevo.
+//  · "sin_sesion" / "caido": se muestra el aviso correspondiente y se sigue latiendo para reconectar sola.
+//  · "version_nueva": autoactualizar instaló otra versión mientras este panel seguía abierto.
+export function decidirLatido(resultado, memoria) {
+  if (resultado.tipo === "sin_sesion") { memoria.perdida = true; memoria.fallos = 0; return "sin_sesion"; }
+  if (resultado.tipo === "caido") {
+    memoria.fallos = (memoria.fallos || 0) + 1;
+    if (memoria.fallos >= 2) { memoria.perdida = true; return "caido"; }
+    return "esperar";
+  }
+  memoria.fallos = 0;
+  const e = resultado.estado || {};
+  if (memoria.perdida) return "recargar";
+  if (e.version && memoria.version && e.version !== memoria.version) return "recargar";
+  if (e.activa && e.version && e.activa !== e.version && memoria.avisadaActiva !== e.activa) {
+    memoria.avisadaActiva = e.activa;
+    return "version_nueva";
+  }
+  return "nada";
+}
+
+// Latido: el servidor sabe que hay una pestaña abierta y la pestaña nota reinicios, permisos perdidos y versiones nuevas.
+export function latir(segundos = 20, versionCargada = "", acciones = {}) {
+  const memoria = { version: versionCargada, fallos: 0, perdida: false, avisadaActiva: "" };
+  let ocupado = false;
+  const latido = async () => {
+    if (ocupado) return;
+    ocupado = true;
+    try {
+      const decision = decidirLatido(await latidoUnaVez(), memoria);
+      if (decision === "sin_sesion") alPerderSesion();
+      else if (decision === "caido") alPerderConexion();
+      else if (decision === "recargar") location.reload();
+      else if (decision === "version_nueva") acciones.versionNueva?.(memoria.avisadaActiva, memoria.version);
+    } finally {
+      ocupado = false;
+    }
+  };
   latido();
   setInterval(latido, segundos * 1000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) latido(); });

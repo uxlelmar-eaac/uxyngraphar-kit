@@ -394,7 +394,8 @@ def cmd_proyectos(a) -> int:
         import quitar_proyecto as qp
         for r in a.rutas:
             ruta = str(Path(r).expanduser().resolve())
-            if not proyectos.registrado(ruta) and not getattr(a, "todo", False):
+            estaba = proyectos.registrado(ruta)
+            if not estaba and not getattr(a, "todo", False):
                 raise ValueError(f"no está en la lista de proyectos: {r}")
             if getattr(a, "todo", False):
                 p = qp.plan(ruta)
@@ -420,7 +421,8 @@ def cmd_proyectos(a) -> int:
                 print(f"  grupo «{g}» borrado (se quedaba con un solo proyecto)")
             for g in res["grupos_actualizados"]:
                 print(f"  sale del grupo «{g}»")
-            print(f"quitado de la lista: {r}")
+            # La última línea dice lo que pasó de verdad: una carpeta que nunca estuvo en la lista no se «quita» de ella.
+            print(f"quitado de la lista: {r}" if estaba else f"limpiado (no estaba en la lista): {r}")
     elif a.accion == "buscar":
         hallados = proyectos.buscar(a.rutas[0] if a.rutas else ".")
         for p in hallados:
@@ -1148,12 +1150,22 @@ def _main(a) -> int:
                     "flujos-guardados": cmd_flujos_guardados, "accesos": cmd_accesos}[a.cmd](a)
     except (ValueError, FileNotFoundError, FileExistsError, transaccion.ProyectoOcupado,
             remoto.SinServidor, remoto.NoEncontrado) as e:
-        print(f"error: {casa.mensaje_de_error(e)}", file=sys.stderr)
+        _imprimir_error(e)
         return 1
     except OSError as e:   # permisos, disco lleno, sesión rechazada…: un mensaje en español, no un traceback
-        print(f"error: {casa.mensaje_de_error(e)}", file=sys.stderr)
+        _imprimir_error(e)
         return 1
     return 0
+
+
+def _imprimir_error(e: BaseException) -> None:
+    """`error: …` y, si lo que falta es una IA, qué opciones hay y dónde se configuran."""
+    import ia_local
+    mensaje = casa.mensaje_de_error(e)
+    print(f"error: {mensaje}", file=sys.stderr)
+    ayuda = ia_local.ayuda_sin_ia(mensaje)
+    if ayuda:
+        print(ayuda, file=sys.stderr)
 
 
 if __name__ == "__main__":

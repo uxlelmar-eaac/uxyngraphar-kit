@@ -5,6 +5,30 @@ import { obtener } from "../api.js";
 import { h, vaciar, icono } from "../ui.js";
 import { anotar } from "../registro.js";
 
+/** El servidor (o el kit) dice que no hay ninguna IA con la que trabajar: sin clave en la cuenta ni plataforma. */
+export const RE_SIN_IA = /a[ñn]ade una clave de ia|sin (ninguna )?clave de ia|no hay ninguna ia/i;
+
+/**
+ * Qué hacer cuando falta una IA, con opciones concretas (null si el error es otro). No compra ni guarda nada: solo
+ * explica dónde añadir una clave y qué opciones locales admite el kit.
+ */
+export function ayudaSinIA(mensaje) {
+  if (!RE_SIN_IA.test(String(mensaje || ""))) return null;
+  const item = (titulo, texto) => h("li", {}, h("b", { texto: titulo }), " ", texto);
+  return h("div", { class: "pila banda aviso", role: "note", "data-ayuda": "sin-ia" },
+    h("b", { texto: "uxyn necesita una IA para proponer cambios. Elige una de estas opciones:" }),
+    h("ul", {},
+      item("Clave de IA en tu cuenta (para «uxyn (tu cuenta)»):",
+        "en la web de uxyngraphar, Cuenta → IA y conexiones → añade la clave de tu proveedor (OpenAI, Anthropic, Google AI Studio…). Se guarda cifrada en el servidor y nunca llega a este equipo."),
+      item("Un modelo en este equipo, sin clave:",
+        "Ollama (http://127.0.0.1:11434) o LM Studio con su servidor local activo (http://127.0.0.1:1234) y al menos un modelo descargado."),
+      item("Tu suscripción, con su CLI oficial instalada y la sesión iniciada:",
+        "Claude Code, Codex, GitHub Copilot CLI o Qwen Code.")),
+    h("p", {},
+      "Con un modelo local o una suscripción, elígelo en «Qué IA usar» y vuelve a intentarlo (Mejorar, Revisar y el chat lo usan). Detalles y avisos de cada suscripción en ",
+      h("a", { href: "#/conexiones", texto: "Conexiones" }), "."));
+}
+
 /** Cada cuánto se pregunta por el progreso mientras el agente trabaja (igual que la web). */
 export const SONDEO_MS = 900;
 

@@ -5,7 +5,7 @@ import { obtener, enviar } from "../api.js";
 import { h, vaciar, boton, avisar, insignia } from "../ui.js";
 import { anotar } from "../registro.js";
 import { cajaAgente, PREFIJO_CREAR } from "./creador-inicio.js";
-import { mensajeAgente, nuevoIdProgreso, trabajando } from "./agente-chat.js";
+import { ayudaSinIA, mensajeAgente, nuevoIdProgreso, trabajando } from "./agente-chat.js";
 
 const MAX_LINEAS_LCS = 1500;
 
@@ -338,7 +338,7 @@ export async function chatAgente(contexto, {
       if (alTerminarTurno) await alTerminarTurno();
       const fallo = mensajeAgente(e.message || String(e), {
         error: true,
-        extra: [h("div", { class: "fila" }, boton("Reintentar", async () => { fallo.remove(); await pedirTurno(cuerpo); }, { clase: "pequeno", icono: "deshacer" }))],
+        extra: [ayudaSinIA(e.message), h("div", { class: "fila" }, boton("Reintentar", async () => { fallo.remove(); await pedirTurno(cuerpo); }, { clase: "pequeno", icono: "deshacer" }))],
       });
       hilo.append(fallo);
       hilo.scrollTop = hilo.scrollHeight;
@@ -373,6 +373,15 @@ export async function chatAgente(contexto, {
     if (alTerminarTurno) await alTerminarTurno();
   }
 
+  /** Si el error es «no hay IA», lo explica en el hilo con opciones concretas (y no solo un aviso fugaz). */
+  function explicarSiFaltaIA(e) {
+    const ayuda = ayudaSinIA(e?.message);
+    if (!ayuda) return false;
+    hilo.append(mensajeAgente(e.message, { error: true, extra: [ayuda] }));
+    hilo.scrollTop = hilo.scrollHeight;
+    return true;
+  }
+
   async function mejorar() {
     const c = abierto();
     if (conAgente()) {
@@ -380,7 +389,13 @@ export async function chatAgente(contexto, {
       pregunta.value = "";
       return;
     }
-    const r = await enviar("/api/creador/mejorar", { id: c.id, rel: c.rutaActual(), contenido: c.textarea.value, instruccion: pregunta.value.trim(), ...elegido() });
+    let r;
+    try {
+      r = await enviar("/api/creador/mejorar", { id: c.id, rel: c.rutaActual(), contenido: c.textarea.value, instruccion: pregunta.value.trim(), ...elegido() });
+    } catch (e) {
+      if (explicarSiFaltaIA(e)) return;
+      throw e;
+    }
     pregunta.value = "";
     vaciar(propuestaLocal, h("div", { class: "fila separada" }, h("b", { texto: `Propuesta para ${r.rel}` }), insignia(r.modelo)),
       vistaDiferencias(c.textarea.value, r.propuesta),
@@ -391,8 +406,12 @@ export async function chatAgente(contexto, {
   async function revisar() {
     const c = abierto();
     if (conAgente()) return turnoAgente("Revisa el sistema completo y dime, en lenguaje sencillo, qué le falta o qué mejorarías.");
-    const r = await enviar("/api/creador/revisar", { id: c.id, ...elegido() });
-    decir("ia", r.texto);
+    try {
+      const r = await enviar("/api/creador/revisar", { id: c.id, ...elegido() });
+      decir("ia", r.texto);
+    } catch (e) {
+      if (!explicarSiFaltaIA(e)) throw e;
+    }
   }
   async function hablar() {
     const texto = pregunta.value.trim();
@@ -419,7 +438,7 @@ export async function chatAgente(contexto, {
     } catch (e) {
       mensajes.pop();
       pregunta.value = pregunta.value || texto;
-      throw e;
+      if (!explicarSiFaltaIA(e)) throw e;
     }
   }
   if (conversacionInicial) {

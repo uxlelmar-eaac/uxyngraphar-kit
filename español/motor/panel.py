@@ -154,7 +154,7 @@ def manejador(servidor_ref: dict):
                 _log(403, "sin_sesion")
                 return self._error(403, "sin_sesion", "token inválido", "abrir_de_nuevo")
             srv.latido = time.time()
-            propias = {"GET /api/sesion": lambda d: srv.sesion(), "POST /api/latido": lambda d: True,
+            propias = {"GET /api/sesion": lambda d: srv.sesion(), "POST /api/latido": lambda d: srv.estado_latido(),
                        "POST /api/codigo": lambda d: {"codigo": srv.nuevo_codigo()},
                        "POST /api/cerrar": lambda d: srv.cerrar(), "POST /api/reiniciar": lambda d: srv.cerrar(reiniciar=True)}
             funcion = propias.get(f"{metodo} {ruta}") or (rutas_panel.GET if metodo == "GET" else rutas_panel.POST).get(ruta)
@@ -283,6 +283,18 @@ class Servidor(ThreadingHTTPServer):
     def url(self) -> str:
         """URL para una pestaña nueva (cada llamada da un código nuevo)."""
         return f"http://127.0.0.1:{self.server_address[1]}/#c={self.nuevo_codigo()}"
+
+    def estado_latido(self) -> dict:
+        """Lo que la pestaña necesita para notar un reinicio o una versión nueva: el pid y la versión de este proceso, y
+        la versión activa instalada (si `autoactualizar` instaló otra mientras el panel seguía abierto, difieren)."""
+        actual = rutas_panel.herramienta.version()
+        activa = actual
+        if rutas_panel.herramienta.instalada():
+            try:
+                activa = rutas_panel.herramienta.ar.version_activa(str(casa.carpeta())) or actual
+            except (OSError, ValueError):
+                activa = actual
+        return {"pid": os.getpid(), "version": actual, "activa": activa}
 
     def sesion(self) -> dict:
         return {"bienvenida": self.bienvenida, "inactividad": self.inactividad, "pid": os.getpid(), **rutas_panel.version()}

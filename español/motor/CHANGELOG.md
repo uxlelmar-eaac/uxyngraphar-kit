@@ -1,5 +1,23 @@
 # Cambios
 
+## 1.5.25
+
+Arreglos encontrados probando el kit como usuario nuevo tras una actualización.
+
+- Arreglado: una pestaña del panel abierta desde antes de actualizar (o de volver a abrir el panel) se quedaba en
+  «Cargando sistemas…» sin decir nada. Ahora el latido de la pestaña distingue tres casos y lo dice con claridad:
+  el panel se cerró o se está reiniciando, el panel se reinició con otro permiso («esta pestaña quedó con un permiso
+  viejo») o se instaló una versión nueva mientras este panel seguía abierto (con un botón «Reiniciar el panel con la
+  X»). La pestaña sigue latiendo y se reconecta sola en cuanto el panel vuelve o se abre de nuevo (la pestaña nueva
+  deja un permiso que vale también para las antiguas); si el proceso cambió de versión, recarga con el código nuevo.
+- En el Taller ninguna zona se queda en «Cargando…» para siempre: si la carga falla lo dice y ofrece «Reintentar».
+- `proyectos quitar --todo` de una carpeta que nunca estuvo en la lista termina con «limpiado (no estaba en la
+  lista)» en vez de «quitado de la lista».
+- «Mejorar con uxyn» (y Mejorar, Revisar y el chat) sin ninguna IA configurada explica qué hacer en lugar de un
+  error suelto: dónde añadir una clave (web › Cuenta › IA y conexiones), qué modelos locales admite el kit sin clave
+  (Ollama y LM Studio) y qué suscripciones con su CLI oficial (Claude Code, Codex, GitHub Copilot CLI y Qwen Code).
+  La CLI añade la misma ayuda al error.
+
 ## 1.5.24
 
 Arreglos encontrados probando el kit con una cuenta real (borradores del Creador web).

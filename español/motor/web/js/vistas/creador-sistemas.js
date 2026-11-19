@@ -87,7 +87,7 @@ function plantillaNuevo({ proponiendo, idea, nombreInput }) {
     idea ? h("p", { class: "tenue", texto: `Idea: ${resumenOrigen({ idea }).idea}` }) : null);
 }
 
-export async function vista(params, { ir }) {
+export async function vista(params, { ir, recargar }) {
   const idAbierto = params.id || "";
   const zonas = leerZonas();
   let abierto = null;
@@ -713,11 +713,12 @@ export async function vista(params, { ir }) {
   aplicar();
   cuerpo.append(zonaLista, zonaSistema, zonaAgente);
   marco.append(zonaOrigen, zonaCiclo, zonaSalida, cuerpo);
-  vaciar(zonaLista, h("p", { class: "tenue", texto: "Cargando sistemas…" }));
-  vaciar(zonaSistema, h("p", { class: "tenue", texto: idAbierto ? "Cargando sistema…" : "Preparando…" }));
-  vaciar(zonaOrigen, h("p", { class: "tenue", texto: "…" }));
-  vaciar(zonaCiclo, h("p", { class: "tenue", texto: "…" }));
-  vaciar(zonaSalida, h("p", { class: "tenue", texto: "…" }));
+  const sigueCargando = (zona) => zona.childElementCount === 1 && zona.firstElementChild?.dataset.cargando === "1";
+  vaciar(zonaLista, h("p", { class: "tenue", "data-cargando": "1", texto: "Cargando sistemas…" }));
+  vaciar(zonaSistema, h("p", { class: "tenue", "data-cargando": "1", texto: idAbierto ? "Cargando sistema…" : "Preparando…" }));
+  vaciar(zonaOrigen, h("p", { class: "tenue", "data-cargando": "1", texto: "…" }));
+  vaciar(zonaCiclo, h("p", { class: "tenue", "data-cargando": "1", texto: "…" }));
+  vaciar(zonaSalida, h("p", { class: "tenue", "data-cargando": "1", texto: "…" }));
 
   pagina = h("div", { class: "taller-pagina" },
     cabecera("Taller", "Sistemas de gobernanza: archivos, origen, ciclo y salida. uxyn propone; tú decides.",
@@ -742,7 +743,15 @@ export async function vista(params, { ir }) {
       await pintarFranjas();
     } catch (e) {
       if (!vivo()) return;
-      avisar(e.message || String(e), "mal");
+      const mensaje = e.message || String(e);
+      avisar(mensaje, "mal");
+      // Ninguna zona se queda en «Cargando…» para siempre: si la carga falló, lo dice y deja reintentar.
+      for (const zona of [zonaLista, zonaSistema, zonaOrigen, zonaCiclo, zonaSalida]) {
+        if (!sigueCargando(zona)) continue;
+        vaciar(zona, h("div", { class: "banda mal", role: "alert" },
+          h("span", { texto: `No se pudo cargar: ${mensaje} ` }),
+          h("button", { type: "button", class: "secundario", texto: "Reintentar", onclick: () => recargar?.() })));
+      }
     }
   })();
 

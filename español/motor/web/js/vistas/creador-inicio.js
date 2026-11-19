@@ -4,7 +4,7 @@
 import { enviar } from "../api.js";
 import { h, vaciar, boton, avisar, icono } from "../ui.js";
 import { anotar } from "../registro.js";
-import { mensajeAgente, nuevoIdProgreso, trabajando } from "./agente-chat.js";
+import { ayudaSinIA, mensajeAgente, nuevoIdProgreso, trabajando } from "./agente-chat.js";
 
 export const MAX_ADJUNTOS = 80;
 export const MAX_CARACTERES_ADJUNTO = 100_000;
@@ -278,7 +278,7 @@ export function inicioConAgente({ alCrear, alAntesDeCrear = null, alDespuesDeCre
       } catch (e) {
         anotar({ nivel: "error", origen: "agente", titulo: "Turno uxyn falló al crear", detalle: e.message || String(e) });
         // El texto y los adjuntos siguen en la caja: «Reintentar» repite el mismo envío.
-        fallo = mensajeAgente(e.message || String(e), { error: true, extra: [h("div", { class: "fila" }, boton("Reintentar", crear, { clase: "pequeno", icono: "deshacer" }))] });
+        fallo = mensajeAgente(e.message || String(e), { error: true, extra: [ayudaSinIA(e.message), h("div", { class: "fila" }, boton("Reintentar", crear, { clase: "pequeno", icono: "deshacer" }))] });
         zonaEspera.after(fallo);
         return false;
       }

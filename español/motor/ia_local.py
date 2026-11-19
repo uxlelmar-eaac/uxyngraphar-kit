@@ -89,6 +89,22 @@ SEGUNDOS_CLI = 300
 MAX_ARGUMENTO = 100_000
 
 
+_SIN_IA = re.compile(r"a[ñn]ade una clave de ia|sin (ninguna )?clave de ia|no hay ninguna ia", re.IGNORECASE)
+AYUDA_SIN_IA = (
+    "uxyn necesita una IA. Opciones (no se compra ni se guarda nada desde aquí):\n"
+    "  · Clave de IA en tu cuenta: en la web de uxyngraphar, Cuenta → IA y conexiones (se guarda cifrada en el servidor).\n"
+    "  · Un modelo en este equipo, sin clave: Ollama (http://127.0.0.1:11434) o LM Studio (http://127.0.0.1:1234) "
+    "con un modelo descargado.\n"
+    "  · Tu suscripción con su CLI oficial instalada y la sesión iniciada: Claude Code, Codex, GitHub Copilot CLI o "
+    "Qwen Code.\n"
+    "Qué hay disponible ahora en este equipo: «uxyngraphar creador modelos» (y, en el panel, Conexiones).")
+
+
+def ayuda_sin_ia(mensaje: str) -> str:
+    """Las opciones concretas cuando el error es que no hay ninguna IA; vacío si el error es otro."""
+    return AYUDA_SIN_IA if _SIN_IA.search(str(mensaje or "")) else ""
+
+
 class IaNoDisponible(remoto.SinServidor):
     """El proveedor elegido no responde o rechazó la petición."""
 
