@@ -238,7 +238,7 @@ class TestTodosLosArchivos(ConCatalogo):
         z = artefacto.empaquetar("contratos-de-pago", self.t / "dist", self.cat)
         with zipfile.ZipFile(z) as zz:
             nombres = set(zz.namelist())
-            self.assertEqual(zz.read("contratos-de-pago/kits/datos/anidado/tabla.yaml"), b"clave: 2\n")
+            self.assertEqual(zz.read("contratos-de-pago/kits/datos/anidado/tabla.yaml").replace(b"\r\n", b"\n"), b"clave: 2\n")
         for rel in ("kits/bin/script.sh", "plantillas/nueva/carta.txt", "referencia/logo.png", "prompts/base.md", "config/ajustes.json"):
             self.assertIn(f"contratos-de-pago/{rel}", nombres)
 

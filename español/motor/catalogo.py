@@ -226,7 +226,7 @@ def abrir_archivo(pid: str, rel: str, raiz: Path | None = None) -> dict:
     datos = ruta.read_bytes()
     if b"\x00" not in datos:
         try:
-            return {"contenido": datos.decode("utf-8")}
+            return {"contenido": datos.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")}
         except UnicodeDecodeError:
             pass
     tipo = IMAGENES.get(ruta.suffix.lower(), "application/octet-stream")

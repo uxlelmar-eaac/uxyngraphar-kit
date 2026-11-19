@@ -98,9 +98,10 @@ def _texto(ruta: Path) -> str | None:
     if b"\x00" in datos:
         return None
     try:
-        return datos.decode("utf-8")
+        texto = datos.decode("utf-8")
     except UnicodeDecodeError:
         return None
+    return texto.replace("\r\n", "\n").replace("\r", "\n")   # como read_text: saltos de línea universales (Windows)
 
 
 def escribir(carpeta: Path, pid: str, archivos: dict[str, str]) -> Path:
