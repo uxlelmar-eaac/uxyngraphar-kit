@@ -17,6 +17,14 @@ Catálogo (aquí se crean y editan los sistemas):
   sincronizar-comun                          copia scripts/comun de _base en cada sistema (copias locales, no versionadas)
   empaquetar <id>…|--todos --destino DIR     artefacto de cada sistema (<id>-<version>.zip reproducible, el que se publica)
 
+Mis sistemas (los de tu catálogo local; nada de esto toca el servidor ni lo publicado):
+  mis-sistemas [--json]                      tus sistemas por carpetas (las carpetas se organizan en el panel)
+  eliminar <id>… [--si]                      los mueve a la papelera (recuperables); avisa si están instalados en proyectos
+  papelera [vaciar [ENTRADA] --si] [--json]  lo que hay en la papelera; vaciar: lo borra para siempre
+  restaurar <entrada|id>                     devuelve un sistema de la papelera al catálogo (y a su carpeta)
+  duplicar <id> <nuevo-id> --titulo "…"      copia con otro id (prefijos de fichas nuevos)
+  renombrar <id> [<nuevo-id>] --titulo "…"   cambia el título; con otro id, crea el nuevo y el anterior va a la papelera
+
 Creador (borradores de la web ↔ catálogo local; CREADOR en GENERADOR.md):
   creador borradores [--json]                tus borradores del Creador web y si ya están en este equipo
   creador bajar <borrador> [--conservar web|local] [--json]   trae el borrador al catálogo local
@@ -510,6 +518,24 @@ def analizador() -> argparse.ArgumentParser:
     ve.add_argument("id")
     ve.add_argument("nivel", choices=catalogo.NIVELES)
     ve.add_argument("--nota", default="", help="qué cambió (la línea del CHANGELOG.md; si no, queda una para completar)")
+    sub.add_parser("mis-sistemas").add_argument("--json", action="store_true")
+    el = sub.add_parser("eliminar")
+    el.add_argument("ids", nargs="+")
+    el.add_argument("--si", action="store_true", help="no preguntar (aunque esté instalado en proyectos)")
+    pa = sub.add_parser("papelera")
+    pa.add_argument("accion", nargs="?", choices=("ver", "vaciar"), default="ver")
+    pa.add_argument("entrada", nargs="?", help="con «vaciar»: solo esa entrada (por defecto, toda la papelera)")
+    pa.add_argument("--si", action="store_true", help="confirma que «vaciar» borra para siempre")
+    pa.add_argument("--json", action="store_true")
+    sub.add_parser("restaurar").add_argument("entrada", help="nombre de la entrada (uxyngraphar papelera) o id del sistema")
+    du = sub.add_parser("duplicar")
+    du.add_argument("id")
+    du.add_argument("nuevo_id", metavar="nuevo-id")
+    du.add_argument("--titulo", required=True)
+    rn = sub.add_parser("renombrar")
+    rn.add_argument("id")
+    rn.add_argument("nuevo_id", metavar="nuevo-id", nargs="?")
+    rn.add_argument("--titulo", required=True)
     co = sub.add_parser("construir")
     co.add_argument("ids", nargs="*")
     co.add_argument("--todos", action="store_true")
@@ -836,6 +862,67 @@ def cmd_sesion_ver(a) -> int:
 CAMBIAN = {"instalar", "actualizar", "quitar", "retirar", "deshacer", "indice"}
 
 
+def cmd_mis_sistemas(a) -> int:
+    import mis_sistemas as ms
+    if a.cmd == "mis-sistemas":
+        if a.json:
+            _json(ms.vista())
+            return 0
+        lineas = ms.arbol()
+        print("\n".join(lineas) if lineas else f"Tu catálogo local está vacío ({catalogo.catalogo()}).")
+        n = len(ms.papelera())
+        if n:
+            print(f"\nEn la papelera: {n} (uxyngraphar papelera)")
+    elif a.cmd == "eliminar":
+        for pid in a.ids:
+            catalogo.carpeta(pid)   # todos existen antes de preguntar ni mover nada
+        instalados = {pid: ms.instalado_en(pid) for pid in a.ids}
+        instalados = {k: v for k, v in instalados.items() if v}
+        for pid, donde in instalados.items():
+            print(f"aviso: {pid} está instalado en {', '.join(donde)}; esos proyectos lo conservan (quítalo allí si quieres).")
+        if instalados and not a.si:
+            if not sys.stdin.isatty():
+                raise ValueError("está instalado en proyectos: añade --si para eliminarlo igualmente del catálogo local")
+            if input("¿Lo mueves a la papelera igualmente? [s/N] ").strip().lower() not in ("s", "si", "sí"):
+                print("No he tocado nada.")
+                return 1
+        for h in ms.eliminar(a.ids):
+            print(f"{h['id']}: en la papelera ({h['entrada']}). Para recuperarlo: uxyngraphar restaurar {h['id']}")
+        print("Un borrador web o lo publicado en el servidor no se tocan.")
+    elif a.cmd == "papelera" and a.accion == "vaciar":
+        if not a.si:
+            raise ValueError("vaciar la papelera borra para siempre: añade --si para confirmarlo")
+        n = ms.vaciar(a.entrada)
+        print(f"Borrado para siempre: {n} {'entrada' if n == 1 else 'entradas'} de la papelera.")
+    elif a.cmd == "papelera":
+        entradas = ms.papelera()
+        if a.json:
+            _json(entradas)
+            return 0
+        for e in entradas:
+            print(f"{e['entrada']}  {e['id']} {e.get('version', '')}  {e.get('titulo', '')}  (eliminado {e.get('eliminado', '')[:16]})"
+                  + ("  · ya hay otro sistema con ese id" if e["choca"] else ""))
+        print("Restaurar: uxyngraphar restaurar <entrada|id> · vaciar: uxyngraphar papelera vaciar [ENTRADA] --si"
+              if entradas else f"La papelera está vacía ({ms.carpeta_papelera()}).")
+    elif a.cmd == "restaurar":
+        r = ms.restaurar(ms.resolver_entrada(a.entrada))
+        print(f"{r['id']}: de vuelta en el catálogo" + (f" (carpeta «{r['carpeta']}»)" if r.get("carpeta") else ""))
+    elif a.cmd == "duplicar":
+        r = ms.duplicar(a.id, a.nuevo_id, a.titulo)
+        print(f"{r['id']}: copia de {a.id} con prefijos {', '.join(r['prefijos'].values()) or '(sin fichas)'}")
+        if r["frases_quitadas"]:
+            print(f"Frases de activación que no se copian porque chocarían con {a.id}: {', '.join(r['frases_quitadas'])}")
+    elif a.cmd == "renombrar":
+        r = ms.renombrar(a.id, a.titulo, a.nuevo_id)
+        if not r["anterior"]:
+            print(f"{a.id}: título cambiado a «{r['titulo']}»")
+        else:
+            print(f"{r['id']}: nombre nuevo de {a.id}; el anterior está en la papelera ({r['anterior']['entrada']}).")
+            print("Los proyectos que tenían instalado el anterior lo conservan con su id hasta que instales el nuevo;"
+                  " un borrador web o lo publicado siguen con el id anterior.")
+    return 0
+
+
 def _ids_o_todos(a) -> list[str]:
     """Los ids pedidos o, con --todos, los del catálogo local; sin ninguno de los dos es un error (no un «hecho» vacío)."""
     if not a.todos and not a.ids:
@@ -933,6 +1020,8 @@ def _main(a) -> int:
             print(("scripts/comun al día en: " + ", ".join(cambiados)) if cambiados else "todas las copias de scripts/comun estaban al día")
         elif a.cmd == "version":
             print(catalogo.versionar(a.id, a.nivel, nota=a.nota))
+        elif a.cmd in ("mis-sistemas", "eliminar", "papelera", "restaurar", "duplicar", "renombrar"):
+            return cmd_mis_sistemas(a)
         elif a.cmd == "construir":
             for pid in _ids_o_todos(a):
                 print(catalogo.construir(pid, Path(a.destino)))

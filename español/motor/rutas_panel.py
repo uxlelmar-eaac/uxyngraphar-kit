@@ -40,7 +40,10 @@ AUDITADAS = {"/api/repo/instalar": "instalar", "/api/sistemas/traer": "traer del
              "/api/creador/bajar": "bajar borrador del Creador", "/api/creador/subir": "subir borrador al Creador",
              "/api/catalogo/publicar": "publicar sistema", "/api/agente/decidir": "decidir propuesta del agente",
              "/api/conexiones/conectar": "conectar agente", "/api/conexiones/desconectar": "desconectar agente",
-             "/api/reportes/enviar": "reportar al autor"}
+             "/api/reportes/enviar": "reportar al autor",
+             "/api/mis-sistemas/eliminar": "eliminar sistema (a la papelera)", "/api/mis-sistemas/restaurar": "restaurar de la papelera",
+             "/api/mis-sistemas/vaciar": "vaciar papelera", "/api/mis-sistemas/duplicar": "duplicar sistema",
+             "/api/mis-sistemas/renombrar": "cambiar el nombre de un sistema"}
 
 
 class FaltaCampo(ValueError):
@@ -462,6 +465,9 @@ GET = {
     "/api/diagnostico": lambda d: _diagnostico(d),  # noqa: PLW0108 - _diagnostico se define más abajo
     "/api/grupos": lambda d: __import__("grupos").listar(),
     "/api/organizacion": lambda d: __import__("organizacion").leer(),
+    "/api/mis-sistemas": lambda d: __import__("mis_sistemas").vista(),
+    "/api/mis-sistemas/papelera": lambda d: __import__("mis_sistemas").papelera(),
+    "/api/mis-sistemas/avisos": lambda d: __import__("mis_sistemas").avisos_eliminar(_campo(d, "id", str)),
     "/api/grupos/matriz": lambda d: __import__("grupos").matriz(_campo(d, "nombre", str)),
     "/api/historial": lambda d: __import__("auditoria").leer(_entero(d, "limite", 100)),
     "/api/registros": lambda d: __import__("registros_panel").listar(_entero(d, "desde", 0)),
@@ -531,6 +537,17 @@ POST = {
     "/api/organizacion/etiquetar": lambda d: __import__("organizacion").etiquetar(list(_campo(d, "rutas", list)), _campo(d, "etiqueta", str),
                                                                                  d.get("poner", True) is not False),
     "/api/organizacion/etiquetas": lambda d: __import__("organizacion").poner_etiquetas(_campo(d, "ruta", str), list(_campo(d, "etiquetas", list))),
+    # «Mis sistemas»: carpetas y orden del catálogo local (solo vista) y papelera, duplicar y cambiar el nombre
+    "/api/mis-sistemas/carpeta": lambda d: _carpeta_sistemas(d),  # noqa: PLW0108 - se define más abajo
+    "/api/mis-sistemas/mover": lambda d: __import__("mis_sistemas").mover(list(_campo(d, "ids", list)), d.get("carpeta") or None,
+                                                                         d.get("antes") or None),
+    "/api/mis-sistemas/eliminar": lambda d: __import__("mis_sistemas").eliminar(list(_campo(d, "ids", list))),
+    "/api/mis-sistemas/restaurar": lambda d: __import__("mis_sistemas").restaurar(_campo(d, "entrada", str)),
+    "/api/mis-sistemas/vaciar": lambda d: {"borradas": _vaciar_papelera(d)},
+    "/api/mis-sistemas/duplicar": lambda d: __import__("mis_sistemas").duplicar(_campo(d, "id", str), _campo(d, "nuevo_id", str),
+                                                                               _campo(d, "titulo", str)),
+    "/api/mis-sistemas/renombrar": lambda d: __import__("mis_sistemas").renombrar(_campo(d, "id", str), _campo(d, "titulo", str),
+                                                                                 d.get("nuevo_id") or None),
     # flujos guardados
     "/api/flujos/guardar": lambda d: guardados.guardar(_campo(d, "flujo")),
     "/api/flujos/desde-proyecto": lambda d: guardados.desde_proyecto(_raiz(d), _campo(d, "nombre", str), d.get("descripcion", "")),
@@ -620,6 +637,30 @@ def _carpeta(d: dict) -> dict:
     if accion == "borrar":
         return org.borrar_carpeta(_campo(d, "id", str))
     raise ValueError(f"acción desconocida «{accion}»: crear, cambiar o borrar")
+
+
+def _carpeta_sistemas(d: dict) -> dict:
+    ms = __import__("mis_sistemas")
+    accion = _campo(d, "accion", str)
+    if accion == "crear":
+        return ms.crear_carpeta(_campo(d, "nombre", str), d.get("padre") or None)
+    if accion == "renombrar":
+        return ms.renombrar_carpeta(_campo(d, "id", str), _campo(d, "nombre", str))
+    if accion == "mover":
+        return ms.mover_carpeta(_campo(d, "id", str), d.get("padre") or None, d.get("antes") or None)
+    if accion == "borrar":
+        dentro = ms.contenido_carpeta(_campo(d, "id", str))
+        if (dentro["sistemas"] or dentro["carpetas"]) and d.get("confirmar") is not True:
+            raise FaltaConfirmacion(f"la carpeta tiene {len(dentro['sistemas'])} sistema(s) y {dentro['carpetas']} subcarpeta(s); "
+                                    "confírmalo: los sistemas pasan a la raíz y no se borra ninguno")
+        return ms.borrar_carpeta(d["id"], confirmar=True)
+    raise ValueError(f"acción desconocida «{accion}»: crear, renombrar, mover o borrar")
+
+
+def _vaciar_papelera(d: dict) -> int:
+    if d.get("confirmar") is not True:
+        raise FaltaConfirmacion("vaciar la papelera borra para siempre: confírmalo")
+    return __import__("mis_sistemas").vaciar(d.get("entrada") or None)
 
 
 def _etiqueta(d: dict) -> dict:

@@ -103,7 +103,8 @@ def perfiles_con_bloque() -> list[str]:
 
 def sistemas_de_autor(home: str) -> list[str]:
     """Sistemas que escribió la persona y que se borrarían con la carpeta de uxyngraphar: los del catálogo del autor si
-    está dentro de esa carpeta, los que sigan dentro de versiones/ y las copias apartadas en respaldos/catalogo/."""
+    está dentro de esa carpeta, los que sigan dentro de versiones/, las copias apartadas en respaldos/catalogo/ y los
+    que están en la papelera de «Mis sistemas»."""
     casa_real = os.path.normcase(os.path.realpath(home))
     rutas: list[str] = []
     cat = Path(ar.carpeta_catalogo_autor(home))
@@ -111,6 +112,10 @@ def sistemas_de_autor(home: str) -> list[str]:
     for carpeta in ([cat] if dentro else []) + [Path(home) / "respaldos" / "catalogo"]:
         if carpeta.is_dir():
             rutas += [str(c) for c in sorted(carpeta.iterdir()) if c.is_dir() and (c / base.MANIFIESTO).is_file()]
+    papelera = Path(home) / "papelera"   # lo eliminado desde «Mis sistemas» sigue siendo de la persona
+    for entrada in sorted(papelera.iterdir()) if papelera.is_dir() else []:
+        if entrada.is_dir():
+            rutas += [str(c) for c in sorted(entrada.iterdir()) if c.is_dir() and (c / base.MANIFIESTO).is_file()]
     rutas += [r for _, _, r in ar.sistemas_de_autor_en_versiones(home)]
     return rutas
 
