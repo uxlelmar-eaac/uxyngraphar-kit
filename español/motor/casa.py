@@ -7,6 +7,7 @@ de respaldarlos: hacia delante aplica MIGRACIONES; hacia atrás restaura el resp
 
 from __future__ import annotations
 
+import errno
 import json
 import os
 import sys
@@ -121,5 +122,36 @@ def migrar() -> tuple[int, str]:
     for destino in range(actual + 1, FORMATO_CASA + 1):
         MIGRACIONES[destino]()
         mensaje = f"datos migrados al formato {destino}"
-    escribir_json(ARCHIVO_FORMATO, {"formato": FORMATO_CASA})
+    ajustes = leer_json(ARCHIVO_FORMATO, {})   # «catalogo_local», «servidor»…: son de la persona y se conservan
+    escribir_json(ARCHIVO_FORMATO, {**(ajustes if isinstance(ajustes, dict) else {}), "formato": FORMATO_CASA})
+    hechos, fallos = ar.rescatar_catalogo(str(carpeta()))
+    if hechos or fallos:
+        mensaje += "; " + "; ".join(hechos + fallos)
     return 0, mensaje
+
+
+ERRNO_ES = {errno.ENOENT: "no existe", errno.EACCES: "sin permiso", errno.EPERM: "operación no permitida",
+            errno.EEXIST: "ya existe", errno.ENOTDIR: "no es una carpeta", errno.EISDIR: "es una carpeta, no un archivo",
+            errno.ENOSPC: "no queda espacio en el disco", errno.EROFS: "el disco es de solo lectura",
+            errno.ENOTEMPTY: "la carpeta no está vacía", errno.EBUSY: "está en uso", errno.ENAMETOOLONG: "el nombre es demasiado largo",
+            errno.ELOOP: "hay un bucle de enlaces simbólicos", errno.EXDEV: "no se puede mover entre discos"}
+JSON_ES = {"Expecting value": "se esperaba un valor", "Expecting property name enclosed in double quotes":
+           "se esperaba el nombre de una clave entre comillas dobles", "Expecting ',' delimiter": "falta una coma",
+           "Expecting ':' delimiter": "faltan los dos puntos", "Extra data": "sobra texto después del JSON",
+           "Unterminated string starting at": "hay un texto sin cerrar", "Invalid control character at": "hay un carácter de control no válido",
+           "Invalid \\escape": "hay un escape \\ no válido", "Illegal trailing comma before end of object": "sobra una coma al final del objeto",
+           "Illegal trailing comma before end of array": "sobra una coma al final de la lista"}
+
+
+def mensaje_de_error(e: BaseException) -> str:
+    """El error en español y sin jerga de Python: los OSError del sistema («[Errno 2] No such file…») y los de JSON
+    («Expecting property name…») pasan a una frase clara; los del kit ya vienen en español y se dejan tal cual."""
+    if isinstance(e, json.JSONDecodeError):
+        motivo = JSON_ES.get(e.msg, "formato no válido")
+        return f"no es JSON válido: {motivo} (línea {e.lineno}, columna {e.colno})"
+    if isinstance(e, UnicodeDecodeError):
+        return "el archivo no es texto UTF-8"
+    if isinstance(e, OSError) and e.errno is not None:
+        texto = ERRNO_ES.get(e.errno) or e.strerror or str(e)
+        return f"{texto}: {e.filename}" if e.filename else texto
+    return str(e).strip("'\"")

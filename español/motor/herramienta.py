@@ -253,8 +253,10 @@ def agregar_path() -> str:
 
 
 def desinstalar(alcance: str = "herramienta", rutas: list[str] | None = None, con_trabajo: bool = False,
-                simular: bool = False) -> dict:
-    """Desinstala por alcance (ver desinstalacion.py). Con `simular`, solo dice qué se quitaría."""
+                simular: bool = False, con_catalogo: bool = False) -> dict:
+    """Desinstala por alcance (ver desinstalacion.py). Con `simular`, solo dice qué se quitaría; los sistemas que
+    escribió la persona solo se borran con `con_catalogo`."""
     import desinstalacion
-    informe = desinstalacion.ejecutar(alcance, rutas or None, con_trabajo, simular, desde_panel_pid=os.getpid())
+    informe = desinstalacion.ejecutar(alcance, rutas or None, con_trabajo, simular, desde_panel_pid=os.getpid(),
+                                      con_catalogo=con_catalogo)
     return {**informe, "texto": desinstalacion.texto_informe(informe)}

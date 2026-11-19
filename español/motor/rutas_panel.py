@@ -508,7 +508,7 @@ POST = {
     "/api/herramienta/reparar": lambda d: herramienta.reparar(bool(d.get("proyectos"))),
     "/api/herramienta/desinstalar": lambda d: herramienta.desinstalar(str(d.get("alcance") or "herramienta"),
                                                                       list(d.get("rutas") or []), bool(d.get("con_trabajo")),
-                                                                      bool(d.get("simular"))),
+                                                                      bool(d.get("simular")), bool(d.get("con_catalogo"))),
     "/api/herramienta/path": lambda d: herramienta.agregar_path(),
     "/api/accesos": lambda d: herramienta.cambiar_accesos(list(d.get("tipos") or [])),
 }

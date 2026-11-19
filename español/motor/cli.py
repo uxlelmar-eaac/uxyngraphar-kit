@@ -270,7 +270,7 @@ def cmd_validar(a) -> int:
         print("El catálogo local está vacío: crea un sistema con «uxyngraphar crear <id> --titulo … --familia …» "
               "o trae uno con «uxyngraphar creador bajar <borrador>».")
     for m in filas:
-        print(f"{m['id']}\t{m['version']}\t{m['titulo']}" + ("" if not m["errores"] else "\n  ERRORES: " + "; ".join(m["errores"]))
+        print(f"{m['id']}\t{m.get('version') or '—'}\t{m.get('titulo') or '(sin título)'}" + ("" if not m["errores"] else "\n  ERRORES: " + "; ".join(m["errores"]))
               + "".join(f"\n  aviso: {x}" for x in m.get("avisos", [])))
         if getattr(a, "completitud", False):
             c = catalogo.completitud(m["id"])

@@ -476,6 +476,7 @@ def desde_spec(spec: dict, aplicar: bool = False, raiz: Path | None = None) -> d
     if r["errores"]:
         return salida
     destino = catalogo.catalogo(raiz) / pid
+    catalogo.catalogo(raiz).mkdir(parents=True, exist_ok=True)
     temporal = Path(tempfile.mkdtemp(prefix=OCULTA, dir=catalogo.catalogo(raiz)))
     try:
         extra = [p for p in piezas_de(spec) if p not in GENERADAS and p != "pruebas"] + ["pruebas", "cambios"]   # pruebas de serie (M-07)

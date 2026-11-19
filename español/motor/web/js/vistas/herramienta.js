@@ -128,9 +128,18 @@ export async function vista() {
     if (!pedido) return;
     if (pedido.alcance === "proyectos" && !pedido.rutas.length) return avisar("No elegiste ningún proyecto.", "mal");
     const plan = await enviar("/api/herramienta/desinstalar", { ...pedido, simular: true });
-    const seguro = await dialogo({ titulo: "Esto es lo que se quitará", contenido: h("pre", { texto: plan.texto, style: "max-height:50vh;overflow:auto" }),
+    const propios = plan.catalogo || [];
+    const borrarPropios = h("input", { type: "checkbox" });
+    const seguro = await dialogo({ titulo: "Esto es lo que se quitará", contenido: h("div", { class: "pila" },
+      h("pre", { texto: plan.texto, style: "max-height:50vh;overflow:auto" }),
+      propios.length ? h("label", { class: "casilla" }, borrarPropios,
+        h("span", { texto: `Borrar también los ${propios.length} sistemas que escribiste (si no, no se desinstala nada)` })) : null),
       acciones: [{ texto: "Desinstalar", clase: "peligro lleno" }] });
     if (!seguro) return;
+    if (propios.length && !borrarPropios.checked) {
+      return avisar("No se desinstaló nada: tus sistemas siguen donde estaban. Muévelos fuera de la carpeta de uxyngraphar o marca la casilla.", "mal");
+    }
+    pedido.con_catalogo = propios.length > 0;
     const informe = await enviar("/api/herramienta/desinstalar", pedido);
     if (["todo", "herramienta"].includes(pedido.alcance)) {
       document.querySelector("#desconectado h2").textContent = informe.pendiente.length ? "Desinstalación con avisos" : "uxyngraphar se desinstaló";

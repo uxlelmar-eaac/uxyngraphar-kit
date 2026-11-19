@@ -38,6 +38,7 @@ LINEA = "uxyngraphar"        # marca de las versiones de esta línea; las del le
 FORMATO_MARCA = 1
 ARCHIVOS = "ARCHIVOS.sha256"  # huellas de cada archivo de la versión (dentro del zip)
 CASA_DATOS = ("proyectos.json", "instalacion.json", "casa.json", "flujos")   # lo que se respalda antes de cambiar de versión
+CATALOGO_AUTOR = "catalogo"   # sistemas que escribe la persona (crear, generar, Taller): en la casa, nunca dentro de versiones/
 RESPALDOS_CASA = 5
 PRIMERA_ATESTADA = (1, 3, 0)  # desde esta versión, cada release lleva atestación de procedencia (actions/attest-build-provenance)
 OPCIONES = {"sin_firma": False}   # --sin-firma: no comprobar la procedencia (solo la huella SHA256)
@@ -126,7 +127,7 @@ def problema_python(info=None):
     if v >= PYTHON_MINIMO:
         return ""
     if sys.platform == "darwin":
-        como = "Instala Python 3.12 o superior desde https://www.python.org/downloads/ (o con: brew install python) y repite el comando."
+        como = "Instala Python 3.10 o superior desde https://www.python.org/downloads/ (o con: brew install python) y repite el comando."
     elif ES_WINDOWS:
         como = "Instala Python desde https://www.python.org/downloads/ (marca «Add python.exe to PATH») y repite el comando."
     else:
@@ -190,6 +191,7 @@ def descargar(url, destino, intentos=3, espera=60):
                 shutil.copyfileobj(r, f)
             return
         except urllib.error.HTTPError as exc:
+            exc.close()
             if exc.code == 404:
                 raise ErrorInstalacion("No existe {} (404). Comprueba que esa versión esté publicada y que el repositorio sea público.".format(url)) from None
             ultimo = exc
@@ -488,6 +490,10 @@ def instalar_version(home, version, forzar=False):
     la descarta y vuelve a bajar: el número de versión solo no basta.
     """
     final = os.path.join(home, "versiones", version)
+    _, fallos = rescatar_catalogo(home)   # lo que la persona escribió dentro de versiones/ sale antes de tocar nada
+    if fallos and os.path.exists(final) and any(v == version for v, _, _ in sistemas_de_autor_en_versiones(home)):
+        raise ErrorInstalacion("No pude poner a salvo los sistemas que escribiste dentro de {}: {}. No toco esa versión; "
+                               "muévelos a {} y vuelve a intentarlo.".format(final, "; ".join(fallos), carpeta_catalogo_autor(home)))
     if version_completa(final) and not forzar:
         if coincide_con_publicada(final, version):
             return False
@@ -538,9 +544,106 @@ def instalar_version(home, version, forzar=False):
     return True
 
 
+def carpeta_catalogo_autor(home, por_defecto=None):
+    """Carpeta del catálogo de quien escribe sistemas: UXYNGRAPHAR_CATALOGO, «catalogo_local» de casa.json o, si no,
+    `por_defecto` (<home>/catalogo/). Vive fuera de versiones/: reparar, actualizar, cambiar de versión o podar no la tocan."""
+    elegida = os.environ.get("UXYNGRAPHAR_CATALOGO", "")
+    if not elegida:
+        try:
+            with open(os.path.join(home, "casa.json"), encoding="utf-8") as f:
+                datos = json.load(f)
+        except (OSError, ValueError):
+            datos = {}
+        valor = datos.get("catalogo_local") if isinstance(datos, dict) else None
+        elegida = valor if isinstance(valor, str) else ""
+    if elegida:
+        return os.path.abspath(os.path.expanduser(elegida))
+    return por_defecto or os.path.join(home, CATALOGO_AUTOR)
+
+
+def sistemas_de_autor_en_versiones(home):
+    """[(versión, id, ruta)] de los sistemas escritos por la persona dentro de versiones/*/sistemas-de-gobernanza/ (donde
+    los guardaban «crear» y el Taller hasta la 1.5.15). No cuenta lo que trae la propia versión: _base y lo que figure en
+    su ARCHIVOS.sha256."""
+    raiz = os.path.join(home, "versiones")
+    salida = []  # type: list
+    for version in sorted(os.listdir(raiz)) if os.path.isdir(raiz) else []:
+        cat = os.path.join(raiz, version, "sistemas-de-gobernanza")
+        if not os.path.isdir(cat):
+            continue
+        lista = os.path.join(raiz, version, ARCHIVOS)
+        try:
+            propios = leer_huellas(lista) if os.path.isfile(lista) else {}
+        except (OSError, ValueError):
+            propios = {}
+        for pid in sorted(os.listdir(cat)):
+            ruta = os.path.join(cat, pid)
+            if pid.startswith(("_", ".", "!")) or not os.path.isfile(os.path.join(ruta, "sistema.json")):
+                continue
+            if "sistemas-de-gobernanza/{}/sistema.json".format(pid) in propios:
+                continue
+            salida.append((version, pid, ruta))
+    return salida
+
+
+def _version_sistema(ruta):
+    try:
+        with open(os.path.join(ruta, "sistema.json"), encoding="utf-8") as f:
+            return tuple(int(x) for x in str(json.load(f).get("version", "")).split("."))
+    except (OSError, ValueError, AttributeError):
+        return ()
+
+
+def _ruta_libre(ruta):
+    destino, n = ruta, 1
+    while os.path.exists(destino):
+        n += 1
+        destino = "{}-{}".format(ruta, n)
+    return destino
+
+
+def rescatar_catalogo(home):
+    """Pone a salvo, en el catálogo del autor (carpeta_catalogo_autor), los sistemas escritos dentro de versiones/ antes
+    de que reparar, actualizar o podar borren esa carpeta. Si el id ya está en el catálogo, se queda la versión más alta
+    y la otra va a respaldos/catalogo/: nunca se pierde ninguna. Devuelve (hechos, fallos): textos para la persona."""
+    hechos = []  # type: list
+    fallos = []  # type: list
+    encontrados = sistemas_de_autor_en_versiones(home)
+    if not encontrados:
+        return hechos, fallos
+    destino_raiz = carpeta_catalogo_autor(home)
+    apartados = os.path.join(home, "respaldos", "catalogo")
+    for version, pid, ruta in encontrados:
+        destino = os.path.join(destino_raiz, pid)
+        try:
+            os.makedirs(destino_raiz, exist_ok=True)
+            if not os.path.exists(destino):
+                shutil.move(ruta, destino)
+                hechos.append("{}: rescatado de versiones/{} a {}".format(pid, version, destino))
+                continue
+            os.makedirs(apartados, exist_ok=True)
+            if _version_sistema(ruta) > _version_sistema(destino):
+                otro = _ruta_libre(os.path.join(apartados, pid))
+                shutil.move(destino, otro)
+                shutil.move(ruta, destino)
+                hechos.append("{}: la copia de versiones/{} era más nueva; queda en {} (la anterior, en {})".format(pid, version, destino, otro))
+            else:
+                otro = _ruta_libre(os.path.join(apartados, "{}-{}".format(pid, version)))
+                shutil.move(ruta, otro)
+                hechos.append("{}: ya estaba en {}; la copia de versiones/{} queda en {}".format(pid, destino, version, otro))
+        except OSError as exc:
+            fallos.append("{}: no pude ponerlo a salvo desde versiones/{} ({})".format(pid, version, exc))
+    for h in hechos:
+        decir("  Tu sistema " + h + ".", "paso")
+    return hechos, fallos
+
+
 def podar_versiones(home, protegidas):
-    """Deja como mucho VERSIONES_GUARDADAS versiones; nunca borra las protegidas (activa, anterior, última buena)."""
+    """Deja como mucho VERSIONES_GUARDADAS versiones; nunca borra las protegidas (activa, anterior, última buena) ni
+    una versión que aún guarde sistemas escritos por la persona (si no se pudieron poner a salvo)."""
+    rescatar_catalogo(home)
     protegidas = set(v for v in protegidas if v)
+    protegidas |= set(v for v, _, _ in sistemas_de_autor_en_versiones(home))
     candidatas = [v for v in versiones_guardadas(home) if v not in protegidas]
     sobran = max(0, len(candidatas) + len(protegidas) - VERSIONES_GUARDADAS)
     for v in candidatas[:sobran]:

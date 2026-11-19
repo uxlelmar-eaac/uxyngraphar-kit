@@ -1,20 +1,19 @@
 """De dónde salen los sistemas que se instalan: el catálogo local (si lo hay) y el servidor.
 
 El instalador llega vacío: `sistemas-de-gobernanza/` solo trae `_base`. Los sistemas se buscan y se traen del servidor
-(`remoto`). Quien escribe sistemas tiene además un catálogo local con fuentes (`UXYNGRAPHAR_CATALOGO`, la clave
-«catalogo_local» de `casa.json`, o el propio `sistemas-de-gobernanza/` del kit cuando trae sistemas, como en el repo de
-desarrollo). Si un id está en los dos, se usa la versión más alta; a igual versión, la local.
+(`remoto`). Quien escribe sistemas tiene además un catálogo local con fuentes (`catalogo.catalogo()`: `UXYNGRAPHAR_CATALOGO`,
+la clave «catalogo_local» de `casa.json`, `catalogo/` en la carpeta de uxyngraphar de una instalación, o el propio
+`sistemas-de-gobernanza/` en el repo de desarrollo). Si un id está en los dos, se usa la versión más alta; a igual
+versión, la local.
 
 Con un `cat` explícito (las pruebas, `--catalogo`) solo se usa esa carpeta.
 """
 
 from __future__ import annotations
 
-import os
 import shutil
 from pathlib import Path
 
-import casa
 import catalogo
 import especificacion as esp
 import remoto
@@ -23,11 +22,10 @@ base = esp.base
 
 
 def carpeta_local(cat: Path | None = None) -> Path | None:
+    """La carpeta del catálogo local (la misma en la que escribe `crear`), o None si no existe."""
     if cat:
         return Path(cat)
-    ajustes = casa.leer_json(casa.ARCHIVO_FORMATO, {})
-    elegida = os.environ.get("UXYNGRAPHAR_CATALOGO") or (ajustes.get("catalogo_local") if isinstance(ajustes, dict) else None)
-    c = Path(elegida).expanduser() if elegida else esp.CATALOGO
+    c = catalogo.catalogo()
     return c if c.is_dir() else None
 
 

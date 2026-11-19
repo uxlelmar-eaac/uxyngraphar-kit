@@ -100,6 +100,24 @@ def perfiles_con_bloque() -> list[str]:
     return salida
 
 
+def sistemas_de_autor(home: str) -> list[str]:
+    """Sistemas que escribió la persona y que se borrarían con la carpeta de uxyngraphar: los del catálogo del autor si
+    está dentro de esa carpeta, los que sigan dentro de versiones/ y las copias apartadas en respaldos/catalogo/."""
+    casa_real = os.path.normcase(os.path.realpath(home))
+    rutas: list[str] = []
+    cat = Path(ar.carpeta_catalogo_autor(home))
+    dentro = os.path.normcase(os.path.realpath(cat)).startswith(casa_real + os.sep)
+    for carpeta in ([cat] if dentro else []) + [Path(home) / "respaldos" / "catalogo"]:
+        if carpeta.is_dir():
+            rutas += [str(c) for c in sorted(carpeta.iterdir()) if c.is_dir() and (c / base.MANIFIESTO).is_file()]
+    rutas += [r for _, _, r in ar.sistemas_de_autor_en_versiones(home)]
+    return rutas
+
+
+class CatalogoSinConfirmar(ValueError):
+    """Desinstalar la herramienta borraría sistemas que escribió la persona y no lo ha confirmado."""
+
+
 def planificar(alcance: str, rutas: list[str] | None = None, con_trabajo: bool = False) -> dict:
     """Lo que se quitaría con ese alcance. `rutas`: proyectos elegidos (solo con «proyectos»; por defecto, todos)."""
     if alcance not in ALCANCES:
@@ -111,6 +129,7 @@ def planificar(alcance: str, rutas: list[str] | None = None, con_trabajo: bool =
     if alcance in ("todo", "proyectos"):
         elegidos = [str(Path(r).expanduser().resolve()) for r in rutas] if (alcance == "proyectos" and rutas) else proyectos.listar()
         plan["proyectos"] = [_plan_proyecto(r, con_trabajo) for r in elegidos]
+    plan["catalogo"] = sistemas_de_autor(home) if alcance in ("todo", "herramienta") else []
     if alcance in ("todo", "herramienta"):
         plan["herramienta"] = [home] + candidatos_lanzador(home) + [f"bloque PATH en {p}" for p in perfiles_con_bloque()]
         if registro.get("path_windows"):
@@ -164,10 +183,17 @@ def _borrar_casa(home: str) -> str:
 
 
 def ejecutar(alcance: str, rutas: list[str] | None = None, con_trabajo: bool = False, simular: bool = False,
-             desde_panel_pid: int | None = None) -> dict:
+             desde_panel_pid: int | None = None, con_catalogo: bool = False) -> dict:
+    """Desinstala según el plan. Si se borrarían sistemas que escribió la persona (`plan["catalogo"]`), exige
+    `con_catalogo` (lanza CatalogoSinConfirmar sin tocar nada)."""
     plan = planificar(alcance, rutas, con_trabajo)
     if simular:
         return {**plan, "simulado": True}
+    if plan["catalogo"] and not con_catalogo:
+        nombres = ", ".join(Path(r).name for r in plan["catalogo"][:8]) + (" …" if len(plan["catalogo"]) > 8 else "")
+        raise CatalogoSinConfirmar(
+            f"se borrarían {len(plan['catalogo'])} sistemas que escribiste ({nombres}); no he tocado nada. Muévelos antes "
+            "fuera de la carpeta de uxyngraphar o confirma que quieres borrarlos (--con-catalogo; en el panel, la casilla)")
     home = str(casa.carpeta())
     informe = {**plan, "simulado": False, "resultados": [], "hechos": [], "pendiente": []}
     if alcance in ("todo", "herramienta"):
@@ -223,6 +249,11 @@ def texto_informe(informe: dict) -> str:
         lineas += [f"    {h}" for h in f.get("hechos", [])]
         if f.get("error"):
             lineas.append(f"    ERROR: {f['error']}")
+    if informe.get("catalogo"):
+        lineas.append(f"\nSistemas que escribiste ({len(informe['catalogo'])}): " + (
+            "se borrarían con la carpeta de uxyngraphar; muévelos antes o confirma que quieres borrarlos"
+            if informe.get("simulado") else "borrados con la carpeta de uxyngraphar"))
+        lineas += [f"  ! {r}" for r in informe["catalogo"]]
     if informe.get("herramienta"):
         lineas.append("\nHerramienta:" if informe.get("simulado") else "\nHerramienta quitada:")
         lineas += [f"  - {h}" for h in informe["herramienta"]]

@@ -9,6 +9,7 @@ import json
 import shutil
 from pathlib import Path
 
+import casa
 import entrada
 import especificacion as esp
 import nomenclatura
@@ -17,13 +18,28 @@ base = esp.base
 NIVELES = ("mayor", "menor", "parche")
 
 
+def kit_instalado() -> bool:
+    """True si este motor es una versión instalada (versiones/X.Y.Z/ con su marca), no el repositorio del kit."""
+    return esp.KIT.parent.name == "versiones" and (esp.KIT / ".completa").is_file()
+
+
 def catalogo(raiz: Path | None = None) -> Path:
-    return Path(raiz) if raiz else esp.CATALOGO
+    """Carpeta del catálogo local, donde escriben `crear`, `generar desde --aplicar`, el Creador y el Taller: `raiz` si
+    se da; si no, UXYNGRAPHAR_CATALOGO o «catalogo_local» de casa.json; si no, en una versión instalada,
+    `<carpeta de uxyngraphar>/catalogo/` (fuera de versiones/: sobrevive a reparar, actualizar y cambiar de versión) y,
+    en el repositorio del kit, su `sistemas-de-gobernanza/`."""
+    if raiz:
+        return Path(raiz)
+    home = str(casa.carpeta())
+    return Path(casa.ar.carpeta_catalogo_autor(home, None if kit_instalado() else str(esp.CATALOGO)))
 
 
 def _sistemas(raiz: Path | None) -> dict[str, tuple[Path, dict]]:
-    return {c.name: (c, base.leer_manifiesto(c)) for c in sorted(catalogo(raiz).iterdir())
-            if c.is_dir() and not c.name.startswith(("_", ".", "!")) and (c / base.MANIFIESTO).is_file()}
+    c = catalogo(raiz)
+    if not c.is_dir():
+        return {}
+    return {d.name: (d, base.leer_manifiesto(d)) for d in sorted(c.iterdir())
+            if d.is_dir() and not d.name.startswith(("_", ".", "!")) and (d / base.MANIFIESTO).is_file()}
 
 
 def versiones(raiz: Path | None = None) -> dict[str, str]:
