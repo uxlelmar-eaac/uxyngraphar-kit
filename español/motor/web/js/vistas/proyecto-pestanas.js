@@ -2,6 +2,7 @@
 
 import { obtener, enviar } from "../api.js";
 import { h, vaciar, boton, insignia, confirmar, avisar, pedirDatos } from "../ui.js";
+import { quitarProyecto } from "./quitar-proyecto.js";
 import { editorFlujo } from "../flujo.js";
 
 export function pestanaFlujo({ ruta, estado, ir, recargar }) {
@@ -72,11 +73,8 @@ export function pestanaSalud({ ruta, estado }) {
 
 export function pestanaOpciones({ ruta, estado, ir, recargar }) {
   const quitarLista = async () => {
-    const r = await confirmar({ titulo: "Quitar de mi lista", texto: "El proyecto deja de aparecer en el panel. No se borra nada de su carpeta.", si: "Quitar de la lista" });
-    if (!r) return;
-    await enviar("/api/proyectos/quitar", { ruta });
-    avisar("Quitado de la lista");
-    ir("proyectos");
+    const r = await quitarProyecto({ ruta, nombre: estado?.nombre });
+    if (r) ir("proyectos");
   };
   const desinstalar = async () => {
     const r = await confirmar({ titulo: "Quitar uxyngraphar de este proyecto",
@@ -105,7 +103,7 @@ export function pestanaOpciones({ ruta, estado, ir, recargar }) {
     h("div", { class: "tarjeta" }, h("h3", { texto: "Carpeta del proyecto" }), h("p", {}, h("code", { texto: estado.ruta })),
       boton("Copiar ruta", async () => { await navigator.clipboard.writeText(estado.ruta); avisar("Ruta copiada"); }, { clase: "pequeno" })),
     estado.registrado ? h("div", { class: "tarjeta" }, h("h3", { texto: "Quitar de mi lista" }),
-      h("p", { class: "tenue", texto: "Deja de mostrarlo en el panel sin tocar sus archivos." }), boton("Quitar de mi lista", quitarLista)) : null,
+      h("p", { class: "tenue", texto: "Solo desvincularlo del panel (sin tocar sus archivos) o quitar también todo lo que puso uxyngraphar: eliges y ves la lista antes." }), boton("Quitar del panel…", quitarLista)) : null,
     estado.registrado ? h("div", { class: "tarjeta" }, h("h3", { texto: "Deshacer el último cambio" }),
       h("p", { class: "tenue", texto: "Vuelve a como estaba antes de la última instalación, actualización o retirada de sistemas. No toca tu trabajo." }),
       boton("Deshacer…", deshacer)) : null,

@@ -1,5 +1,47 @@
 # Cambios
 
+## 1.5.21
+
+**«Por revisar» ya no atasca** (urgente), un editor de código para los archivos del Taller, archivar sistemas y
+quitar un proyecto eligiendo entre desvincular o quitarlo todo.
+
+- Arreglado: las sugerencias de uxyn que se quedaban «por revisar» sin salida. Causa: si un archivo cambió después de
+  la sugerencia (por ejemplo, porque otra sugerencia posterior ya lo había aplicado), el servidor no la aplica
+  (HTTP 409) salvo que se pida expresamente; el kit no lo pedía nunca y convertía esa respuesta en un error genérico,
+  así que «Aceptar» fallaba siempre. Además, si el sistema solo estaba en la web, el Taller no enseñaba editor y el
+  aviso decía que había que decidir «antes de seguir». Ahora cada archivo pendiente dice si ya está aplicado (basta con
+  descartarlo) o si cambió después; al aceptar uno desfasado se elige entre «Aceptar igualmente (sobrescribe)»,
+  «Aceptar solo los que no chocan» o descartarlos. Hay «Aceptar todo», «Descartar todo» y «Descartar lo ya aplicado»,
+  el panel se puede plegar y el texto ya no bloquea.
+- Un sistema que solo está en la web enseña «Traer de la web para editar» (copia a tu catálogo; la web no cambia),
+  «Mejorar con uxyn» y, si lo eliminaste de este equipo, «Restaurar de la papelera». Al aceptar una sugerencia se trae
+  solo y se abre el editor. uxyn ya puede mejorar un borrador que solo está en la web (antes fallaba al intentar
+  subir una copia local que no existía).
+- Editor de código en «Archivos» del Taller: árbol con carpetas (crear, renombrar o mover y borrar archivos y
+  carpetas), pestañas con aviso de cambios sin guardar (también al cerrar la pestaña o la página), resaltado de
+  Markdown, JSON, Python, YAML y shell, números de línea, buscar y reemplazar (Ctrl+F, Ctrl+H), Ctrl+S y «Guardar
+  todo», sangría con Tab (Esc y Tab para salir), vista previa de Markdown (solo editor, dividido o solo vista
+  previa), divisores arrastrables, «Ampliar» a toda la ventana y una versión para el móvil (el árbol se abre con
+  «Archivos»). Los errores de validación salen por archivo en el árbol, por línea en el margen y en «Problemas» (un
+  clic lleva a la línea). Las sugerencias de uxyn se abren en el editor como diferencias («Abrir en el editor») y se
+  pueden llevar al archivo para retocarlas antes de guardar. Hecho en casa, sin dependencias ni CDN (cumple la CSP).
+- Archivar en el Taller: menú «…» por sistema con «Archivar» (o «Olvidar en el Taller» para un borrador solo web) y
+  «Eliminar…» (a la papelera, con «Deshacer»). Archivar no borra nada: el sistema sigue en el catálogo, en Mis
+  sistemas (insignia «archivado» y filtro), en tus proyectos y en la web. «Mostrar archivados» y «Volver al Taller»
+  lo deshacen. Se guarda en `archivados.json` de la carpeta de uxyngraphar. CLI: `archivar <id>…` y
+  `desarchivar <id>…`.
+- Quitar un proyecto: «Solo desvincular» (sale de la lista y de sus grupos; un grupo que se queda con un solo proyecto
+  se borra) o «Quitar todo», que además retira sistemas, `INDICE.md`, `FLUJO.json`, el bloque de AGENTES.md/AGENTS.md/
+  CLAUDE.md, las protecciones, la integración y las conexiones de los agentes. Antes se ve la lista exacta y hay una
+  segunda confirmación. Los archivos de sistemas que modificaste se copian a `respaldos/quitados/`, lo que no creó
+  uxyngraphar (también dentro de la carpeta de sistemas) se queda donde estaba, `uxyngraphar/trabajo/` se conserva y
+  una carpeta que ya no existe solo se desvincula. Al terminar, un resumen. CLI:
+  `uxyngraphar proyectos quitar RUTA [--todo] [--si]`.
+- API del panel: `GET /api/proyectos/plan-quitar`, `POST /api/proyectos/quitar` con `{todo, confirmar}`,
+  `GET /api/mis-sistemas/archivados`, `POST /api/mis-sistemas/archivar`, `POST /api/catalogo/archivo/renombrar` y
+  `POST /api/catalogo/archivo/borrar`; `/api/agente/decidir` acepta `forzar` y devuelve `{desfasada, rutas}` en vez
+  de un error.
+
 ## 1.5.20
 
 Nueva sección **Mis sistemas** en el panel para ver, ordenar y gestionar los sistemas que escribes.

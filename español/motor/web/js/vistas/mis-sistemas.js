@@ -30,13 +30,41 @@ const botonIcono = (nombre, etiqueta, accion) => {
   return b;
 };
 
+/**
+ * Diálogo «Eliminar» (a la papelera) con avisos de proyectos y borradores web, y «Deshacer» en el aviso. Lo usan Mis
+ * sistemas y el Taller. `sistemas`: [{id, titulo}]. Devuelve lo eliminado o null si se cancela.
+ */
+export async function eliminarSistemas(sistemas, { instaladoEn = () => [], web = [], alCambiar = async () => {} } = {}) {
+  if (!sistemas.length) return null;
+  const filas = sistemas.map((s) => {
+    const donde = instaladoEn(s.id);
+    const b = (web || []).find((x) => x.slug === s.id);
+    return h("li", {}, h("div", {}, h("b", { texto: s.titulo }), " ", h("code", { texto: s.id })),
+      donde.length ? h("div", { class: "aviso-linea", texto: `Instalado en ${donde.join(", ")}: esos proyectos lo conservan.` }) : null,
+      b ? h("div", { class: "aviso-linea", texto: `Tiene borrador en la web${b.version_publicada || b.publicado ? " y está publicado en el Mercado" : ""}: allí sigue igual.` }) : null);
+  });
+  const ok = await dialogo({ titulo: sistemas.length === 1 ? `¿Eliminar «${sistemas[0].titulo}»?` : `¿Eliminar ${sistemas.length} sistemas?`,
+    contenido: h("div", { class: "pila" }, h("ul", { class: "lista eliminar-lista" }, filas),
+      h("p", { texto: "Se mueve a la papelera de este equipo y puedes recuperarlo. No se borra nada del servidor: tu borrador web y lo publicado siguen igual." })),
+    acciones: [{ texto: "Mover a la papelera", clase: "peligro lleno", accion: () => true }] });
+  if (!ok) return null;
+  const hechos = await enviar("/api/mis-sistemas/eliminar", { ids: sistemas.map((s) => s.id) });
+  await alCambiar();
+  avisarConAccion(hechos.length === 1 ? `«${hechos[0].titulo}» está en la papelera` : `${hechos.length} sistemas en la papelera`, "Deshacer", async () => {
+    for (const x of hechos) await enviar("/api/mis-sistemas/restaurar", { entrada: x.entrada });
+    await alCambiar();
+    avisar(hechos.length === 1 ? `«${hechos[0].titulo}» restaurado` : `${hechos.length} sistemas restaurados`);
+  });
+  return hechos;
+}
+
 export async function vista(params, { ir }) {
   let datos = await obtener("/api/mis-sistemas");
   let proyectos = [];
   let borradores = null;   // null: sin consultar; [] sin sesión o sin borradores
   const pref = { orden: "manual", plegadas: [], ...leerPreferencias() };
   let actual = params.carpeta || pref.carpeta || TODOS;
-  const filtros = { texto: "", familia: "" };
+  const filtros = { texto: "", familia: "", archivo: "" };
   const elegidos = new Set();
   let arrastre = null;   // { tipo: "sistema" | "carpeta", valor }: dataTransfer no se puede leer durante dragover
 
@@ -212,27 +240,14 @@ export async function vista(params, { ir }) {
 
   async function eliminar(ids) {
     const sistemas = ids.map((id) => datos.sistemas.find((s) => s.id === id)).filter(Boolean);
-    const web = await consultarBorradores();
-    const filas = sistemas.map((s) => {
-      const donde = instaladoEn(s.id);
-      const b = web.find((x) => x.slug === s.id);
-      return h("li", {}, h("div", {}, h("b", { texto: s.titulo }), " ", h("code", { texto: s.id })),
-        donde.length ? h("div", { class: "aviso-linea", texto: `Instalado en ${donde.join(", ")}: esos proyectos lo conservan.` }) : null,
-        b ? h("div", { class: "aviso-linea", texto: `Tiene borrador en la web${b.version_publicada || b.publicado ? " y está publicado en el Mercado" : ""}: allí sigue igual.` }) : null);
-    });
-    const ok = await dialogo({ titulo: sistemas.length === 1 ? `¿Eliminar «${sistemas[0].titulo}»?` : `¿Eliminar ${sistemas.length} sistemas?`,
-      contenido: h("div", { class: "pila" }, h("ul", { class: "lista eliminar-lista" }, filas),
-        h("p", { texto: "Se mueve a la papelera de este equipo y puedes recuperarlo. No se borra nada del servidor: tu borrador web y lo publicado siguen igual." })),
-      acciones: [{ texto: "Mover a la papelera", clase: "peligro lleno", accion: () => true }] });
-    if (!ok) return;
-    const hechos = await enviar("/api/mis-sistemas/eliminar", { ids: sistemas.map((s) => s.id) });
-    for (const id of ids) elegidos.delete(id);
+    const hechos = await eliminarSistemas(sistemas, { instaladoEn, web: await consultarBorradores(), alCambiar: recargar });
+    if (hechos) for (const id of ids) elegidos.delete(id);
+  }
+  async function archivar(ids, si) {
+    await enviar("/api/mis-sistemas/archivar", { ids, archivar: si });
     await recargar();
-    avisarConAccion(hechos.length === 1 ? `«${hechos[0].titulo}» está en la papelera` : `${hechos.length} sistemas en la papelera`, "Deshacer", async () => {
-      for (const x of hechos) await enviar("/api/mis-sistemas/restaurar", { entrada: x.entrada });
-      await recargar();
-      avisar(hechos.length === 1 ? `«${hechos[0].titulo}» restaurado` : `${hechos.length} sistemas restaurados`);
-    });
+    avisarConAccion(si ? `${ids.length === 1 ? `«${ids[0]}»` : `${ids.length} sistemas`} archivado(s): ya no salen en el Taller` : "De vuelta en el Taller",
+      "Deshacer", async () => { await enviar("/api/mis-sistemas/archivar", { ids, archivar: !si }); await recargar(); });
   }
 
   function campoIdDesdeTitulo(tituloInicial, idInicial) {
@@ -288,6 +303,9 @@ export async function vista(params, { ir }) {
     { texto: "Mover a…", icono: "carpeta", accion: () => moverDialogo([s.id]) },
     { texto: "Duplicar…", icono: "copiar", accion: () => duplicar(s).catch((e) => avisar(e.message, "mal")) },
     { texto: "Cambiar el nombre…", icono: "editar", accion: () => renombrar(s).catch((e) => avisar(e.message, "mal")) },
+    s.archivado
+      ? { texto: "Volver al Taller", icono: "deshacer", accion: () => archivar([s.id], false).catch((e) => avisar(e.message, "mal")) }
+      : { texto: "Archivar (ocultar del Taller)", icono: "lista", accion: () => archivar([s.id], true).catch((e) => avisar(e.message, "mal")) },
     "-",
     { texto: "Eliminar…", icono: "basura", peligro: true, accion: () => eliminar([s.id]).catch((e) => avisar(e.message, "mal")) },
   ];
@@ -358,6 +376,7 @@ export async function vista(params, { ir }) {
         h("div", { class: "proyecto-titulo" }, h("h3", { texto: s.titulo }), h("code", { class: "tenue", texto: s.id })),
         botonIcono("puntos", `Opciones de ${s.titulo}`, (b) => menu(b, opcionesSistema(s)))),
       h("div", { class: "proyecto-estado" }, estado(s),
+        s.archivado ? insignia("archivado", "nota") : null,
         s.familia ? insignia(FAMILIAS[s.familia] || s.familia) : null,
         h("span", { class: "tenue", texto: `v${s.version}` })),
       s.descripcion ? h("p", { class: "tenue descripcion-corta", texto: s.descripcion }) : null,
@@ -385,7 +404,10 @@ export async function vista(params, { ir }) {
     [["manual", "Orden: el mío (arrastrando)"], ["titulo", "Orden: por título"], ["estado", "Orden: primero lo pendiente"], ["familia", "Orden: por familia"]]
       .map(([v, t]) => h("option", { value: v, selected: v === pref.orden, texto: t })));
   orden.addEventListener("change", () => { pref.orden = orden.value; guardarPreferencias(pref); pintar(); });
-  const herramientas = h("div", { class: "herramientas-proyectos" }, buscar, familia, orden,
+  const archivo = h("select", { "aria-label": "Filtrar por archivados" },
+    [["", "Todos (también archivados)"], ["taller", "Solo los del Taller"], ["archivados", "Solo archivados"]].map(([v, t]) => h("option", { value: v, texto: t })));
+  archivo.addEventListener("change", () => { filtros.archivo = archivo.value; pintar(); });
+  const herramientas = h("div", { class: "herramientas-proyectos" }, buscar, familia, archivo, orden,
     boton("Nueva carpeta", () => nuevaCarpeta(carpeta(actual) ? actual : null), { clase: "pequeno", icono: "carpeta" }));
 
   const barraSeleccion = h("div", { class: "barra-seleccion", hidden: true });
@@ -394,11 +416,13 @@ export async function vista(params, { ir }) {
     if (!elegidos.size) return;
     vaciar(barraSeleccion, h("b", { texto: `${elegidos.size} elegido(s)` }),
       boton("Mover a…", () => moverDialogo([...elegidos]), { clase: "pequeno", icono: "carpeta" }),
+      boton("Archivar", () => archivar([...elegidos], true), { clase: "pequeno", icono: "lista", titulo: "Ocultarlos del Taller sin borrar nada" }),
       boton("Eliminar…", () => eliminar([...elegidos]), { clase: "pequeno peligro", icono: "basura" }),
       boton("Quitar la selección", () => { elegidos.clear(); pintar(); }, { clase: "fantasma pequeno" }));
   }
 
   const pasa = (s) => (!filtros.familia || s.familia === filtros.familia)
+    && (!filtros.archivo || (filtros.archivo === "archivados") === Boolean(s.archivado))
     && (!filtros.texto || `${s.titulo} ${sinTildes(s.titulo)} ${s.id} ${s.descripcion}`.toLowerCase().includes(filtros.texto));
   function ordenar(lista) {
     if (pref.orden === "titulo") return [...lista].sort(porTitulo);
@@ -457,7 +481,7 @@ export async function vista(params, { ir }) {
       pintarPapelera(cuerpo).catch((e) => vaciar(cuerpo, h("div", { class: "banda mal", texto: e.message })));
       return;
     }
-    const filtrando = Boolean(filtros.texto || filtros.familia);
+    const filtrando = Boolean(filtros.texto || filtros.familia || filtros.archivo);
     const enCarpeta = actual === RAIZ ? null : actual;
     const lista = ordenar(datos.sistemas.filter((s) => pasa(s) && (filtrando || actual === TODOS || (s.carpeta || null) === enCarpeta)));
     const manual = pref.orden === "manual" && !filtrando && actual !== TODOS;

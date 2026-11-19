@@ -5,6 +5,7 @@ import { obtener, enviar, catalogo, nombreDe } from "../api.js";
 import { h, vaciar, boton, avisar, dialogo, pestanas, confirmar, pedirDatos, insignia, elegirVarios } from "../ui.js";
 import { inicioConAgente } from "./creador-inicio.js";
 import { construirZip, descargarBlob } from "./sistema-zip.js";
+import { explorador } from "./editor-archivos.js";
 
 export const PIEZAS = {
   proceso: "Proceso por fases", skills: "Habilidades del agente", componentes: "Componentes", herramientas: "Herramientas",
@@ -173,21 +174,11 @@ async function formularioBasico(id, alGuardar) {
  * Devuelve { nodo, rutaActual, textarea, recargar, abrirPestana, panelPublicar }.
  */
 export async function editorSistema(id, { alCambiar = async () => {}, pestanaInicial = "archivos" } = {}) {
-  const archivos = h("select", { "aria-label": "Archivo del sistema" });
-  const contenido = h("textarea", { "aria-label": "Contenido del archivo", spellcheck: "false", class: "editor-texto" });
-  const errores = h("div", { class: "tenue" });
   const piezas = h("div", { class: "piezas" });
   const basico = h("div", { class: "pila" });
   const sincronia = h("div", { class: "pila salida-panel", "aria-label": "Publicar en el Mercado" });
   const version = h("span", {});
-  const sinGuardar = h("span", { class: "insignia nota", texto: "sin guardar", hidden: true });
   let elegirPestana = () => {};
-  // Lo que hay en disco del archivo abierto: si el texto difiere, hay cambios sin guardar y no se pisan al recargar.
-  let enDisco = null;
-  let rutaAbierta = "";
-  const sucio = () => enDisco !== null && contenido.value !== enDisco;
-  const marcarSucio = () => { sinGuardar.hidden = !sucio(); };
-  contenido.addEventListener("input", marcarSucio);
 
   async function pintarPiezas() {
     const c = await obtener("/api/catalogo/completitud", { id });
@@ -211,146 +202,41 @@ export async function editorSistema(id, { alCambiar = async () => {}, pestanaIni
         recomendadas.has(p) ? insignia("recomendada", "nota") : null);
     }));
   }
-  async function cargarArchivos(elegido) {
-    const lista = await obtener("/api/catalogo/archivos", { id });
-    const preferidos = ["sistema.json", "README.md", "SISTEMA.md"];
-    // Un archivo nuevo aún sin guardar no está en disco: se conserva mientras tenga cambios.
-    const conservarNuevo = elegido && !lista.includes(elegido) && sucio() && rutaAbierta === elegido;
-    const inicial = elegido && (lista.includes(elegido) || conservarNuevo)
-      ? elegido
-      : (preferidos.find((p) => lista.includes(p)) || lista[0] || "");
-    const rutas = conservarNuevo ? [...lista, elegido] : lista;
-    vaciar(archivos, rutas.map((a) => h("option", { value: a, texto: a, selected: a === inicial })));
-    if (inicial) archivos.value = inicial;
-    await abrir({ recargando: true });
-  }
-  async function abrir({ recargando = false } = {}) {
-    if (!archivos.value) {
-      contenido.value = "";
-      enDisco = null;
-      rutaAbierta = "";
-      marcarSucio();
-      return;
-    }
-    const rel = archivos.value;
-    if (recargando && rel === rutaAbierta && sucio()) {
-      // uxyn u otra acción recargó el sistema: no se pierden los cambios sin guardar de la persona.
-      let actual = null;
-      try { actual = (await obtener("/api/catalogo/archivo", { id, rel })).contenido; } catch { /* archivo nuevo */ }
-      if (actual !== null && actual !== enDisco) {
-        errores.textContent = `${rel} cambió mientras lo editabas. Tus cambios siguen aquí; al guardar sustituyes la versión nueva.`;
-        enDisco = actual;
-      }
-      marcarSucio();
-      return;
-    }
-    if (!recargando && rutaAbierta && rel !== rutaAbierta && sucio()) {
-      const seguir = await confirmar({
-        titulo: "Cambios sin guardar",
-        texto: `Tienes cambios sin guardar en ${rutaAbierta}. Si cambias de archivo, se pierden.`,
-        si: "Descartar y cambiar",
-        peligro: true,
-      });
-      if (!seguir) {
-        if (![...archivos.options].some((o) => o.value === rutaAbierta)) archivos.append(h("option", { value: rutaAbierta, texto: rutaAbierta }));
-        archivos.value = rutaAbierta;
-        return;
-      }
-    }
-    let texto = "";
-    try {
-      texto = (await obtener("/api/catalogo/archivo", { id, rel })).contenido;
-    } catch (e) {
-      if (rel !== rutaAbierta || !recargando) throw e;
-    }
-    contenido.value = texto;
-    enDisco = texto;
-    rutaAbierta = rel;
-    errores.textContent = "";
-    marcarSucio();
-  }
-  async function guardarArchivo() {
-    if (!archivos.value) return avisar("Elige o crea un archivo primero.", "mal");
-    const r = await enviar("/api/catalogo/archivo", { id, rel: archivos.value, contenido: contenido.value });
-    enDisco = contenido.value;
-    rutaAbierta = archivos.value;
-    marcarSucio();
-    errores.textContent = r.errores.join("; ");
-    avisar(r.errores.length ? "Guardado, pero aún falta algo" : "Guardado", r.errores.length ? "mal" : "");
-    if (archivos.value === "sistema.json") vaciar(basico, await formularioBasico(id, recargar));
-    await alCambiar();
-  }
-  async function nuevoArchivo() {
-    const r = await pedirDatos({ titulo: "Archivo nuevo", explicacion: "Ruta dentro del sistema, por ejemplo ejemplos/caso.md", campos: [{ nombre: "rel", etiqueta: "Ruta" }], si: "Crear" });
-    const rel = String(r?.rel || "").trim().replace(/^\/+/, "");
-    if (!rel) return;
-    if ([...archivos.options].some((o) => o.value === rel)) {
-      archivos.value = rel;
-      await abrir();
-      return;
-    }
-    if (sucio() && !(await confirmar({ titulo: "Cambios sin guardar", texto: `Tienes cambios sin guardar en ${rutaAbierta}. Si creas otro archivo, se pierden.`, si: "Descartar y crear", peligro: true }))) return;
-    // Igual que la web: el archivo se crea al momento (un .md con su título) para que no se pierda.
-    const inicial = rel.endsWith(".md") ? `# ${rel.split("/").pop().replace(/\.md$/, "")}\n` : "";
-    const g = await enviar("/api/catalogo/archivo", { id, rel, contenido: inicial });
-    enDisco = null;
-    await cargarArchivos(rel);
-    errores.textContent = (g.errores || []).join("; ");
-    contenido.focus();
-    await alCambiar();
-  }
+  const archivos = await explorador(id, {
+    alGuardado: async (rel) => {
+      if (rel === "sistema.json") vaciar(basico, await formularioBasico(id, recargar));
+      await alCambiar();
+    },
+    alCambiarArchivos: async () => { await pintarPiezas(); await alCambiar(); },
+  });
   async function subirVersion(nivel) {
     const v = await enviar("/api/catalogo/version", { id, nivel });
     version.textContent = v;
     avisar(`Versión ${v}. Actualiza tus proyectos para recibirla.`);
     await alCambiar();
   }
+  let primera = true;
   async function recargar({ notificar = true } = {}) {
     const meta = (await catalogo(true)).find((m) => m.id === id);
     version.textContent = meta?.version || "";
     vaciar(basico, await formularioBasico(id, recargar));
-    await Promise.all([pintarPiezas(), cargarArchivos(archivos.value)]);
+    // El explorador ya cargó al crearse: la primera vez no hace falta volver a leer los archivos.
+    await Promise.all([pintarPiezas(), primera ? null : archivos.recargar()]);
+    primera = false;
     // Evita tormenta de pintados al montar el editor (lista + franjas en cascada).
     if (notificar) await alCambiar();
   }
-
-  /** Selecciona el siguiente marcador {{…}} desde el cursor (vuelve al principio al llegar al final), como en la web. */
-  function saltarAMarcador() {
-    const texto = contenido.value;
-    const patron = /\{\{[^{}]*\}\}/g;
-    patron.lastIndex = contenido.selectionEnd || 0;
-    let m = patron.exec(texto);
-    if (!m) { patron.lastIndex = 0; m = patron.exec(texto); }
-    if (!m) return avisar("Este archivo no tiene huecos {{…}} por rellenar.");
-    contenido.focus();
-    contenido.setSelectionRange(m.index, m.index + m[0].length);
-  }
-
-  async function abrirArchivo(rel) {
+  async function abrirArchivo(rel, opciones) {
     elegirPestana("archivos");
-    if (rel && [...archivos.options].some((o) => o.value === rel)) {
-      archivos.value = rel;
-      await abrir();
-      contenido.focus();
-    }
+    if (rel) await archivos.abrirArchivo(rel, opciones);
+  }
+  function abrirDiferencias(...args) {
+    elegirPestana("archivos");
+    archivos.abrirDiferencias(...args);
   }
 
-  archivos.addEventListener("change", () => abrir().catch((e) => avisar(e.message || String(e), "mal")));
-  contenido.addEventListener("keydown", (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === "s") {
-      e.preventDefault();
-      guardarArchivo().catch((err) => avisar(err.message || String(err), "mal"));
-    }
-  });
-  window.addEventListener("beforeunload", (e) => { if (contenido.isConnected && sucio()) { e.preventDefault(); e.returnValue = ""; } });
   const secciones = {
-    archivos: h("div", { class: "pila" },
-      h("div", { class: "fila" }, h("div", { class: "espacio" }, archivos), sinGuardar, boton("Archivo nuevo", nuevoArchivo, { clase: "pequeno", icono: "mas" })),
-      contenido, errores,
-      h("div", { class: "fila" },
-        boton("Guardar archivo", guardarArchivo, { clase: "primario pequeno", icono: "check" }),
-        boton("Siguiente hueco", () => saltarAMarcador(), { clase: "pequeno fantasma", titulo: "Selecciona el siguiente {{…}} por rellenar" }),
-        h("span", { class: "tenue", texto: "Ctrl+S guarda" }))),
+    archivos: h("div", { class: "pila" }, archivos.nodo),
     basico: h("div", { class: "pila" }, basico),
     piezas: h("div", { class: "pila" }, h("p", { class: "tenue", texto: "Activa las partes que necesita tu sistema. Las marcadas como recomendadas suelen hacer falta." }), piezas),
     version: h("div", { class: "pila" },
@@ -360,6 +246,7 @@ export async function editorSistema(id, { alCambiar = async () => {}, pestanaIni
         boton("Cambio grande", () => subirVersion("mayor"), { clase: "pequeno", titulo: "+ mayor" })),
       h("p", { class: "tenue", texto: "Publicar y sincronizar están en la barra de salida del taller." })),
   };
+  const ids = ["archivos", "basico", "piezas", "version"];
   const barra = pestanas(
     [["archivos", "Archivos"], ["basico", "Lo básico"], ["piezas", "Piezas"], ["version", "Versión"]],
     (s) => {
@@ -369,10 +256,7 @@ export async function editorSistema(id, { alCambiar = async () => {}, pestanaIni
   );
   elegirPestana = (s) => {
     for (const [k, nodo] of Object.entries(secciones)) nodo.hidden = k !== s;
-    [...barra.querySelectorAll("[role=tab]")].forEach((b, i) => {
-      const ids = ["archivos", "basico", "piezas", "version"];
-      b.setAttribute("aria-selected", String(ids[i] === s));
-    });
+    [...barra.querySelectorAll("[role=tab]")].forEach((b, i) => b.setAttribute("aria-selected", String(ids[i] === s)));
   };
   for (const [k, nodo] of Object.entries(secciones)) nodo.hidden = k !== pestanaInicial;
 
@@ -381,11 +265,13 @@ export async function editorSistema(id, { alCambiar = async () => {}, pestanaIni
     h("div", { class: "tarjeta" }, barra, ...Object.values(secciones)));
   return {
     nodo,
-    rutaActual: () => archivos.value,
-    textarea: contenido,
+    rutaActual: () => archivos.rutaActual(),
+    textarea: archivos.area,
     recargar,
     abrirPestana: elegirPestana,
     abrirArchivo,
+    abrirDiferencias,
+    haySinGuardar: archivos.haySinGuardar,
     panelPublicar: sincronia,
     mostrarPublicar: () => publicarEnMercado(id, sincronia),
   };

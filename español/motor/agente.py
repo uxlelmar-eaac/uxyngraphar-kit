@@ -137,13 +137,49 @@ def turno(mensaje: str, conversacion: int | None = None, borrador: str | None = 
     return _respuesta(codigo, r, "agente")
 
 
-def propuestas(borrador: str) -> list[dict]:
+def propuestas(borrador: str, con_situacion: bool = False) -> list[dict]:
+    """Propuestas del borrador. Con `con_situacion`, cada archivo pendiente lleva su «situacion» frente al borrador actual de la web:
+    «aplicable», «ya_aplicado» (el borrador ya tiene ese contenido: basta con descartarla) o «desfasado» (el archivo
+    cambió después de la propuesta: aceptarla pisaría esos cambios)."""
     slug = urllib.parse.quote(_slug(borrador))
     codigo, r = remoto._pedir_json(f"/me/creador/borradores/{slug}/propuestas", metodo="GET", con_sesion=True)
     if codigo == 404:
         return []
     _respuesta(codigo, r if isinstance(r, dict) else {}, "propuestas")
-    return r if isinstance(r, list) else []
+    lista: list = r if isinstance(r, list) else []
+    if con_situacion and any(a.get("estado") == "pendiente" for p in lista if isinstance(p, dict) for a in p.get("archivos") or [] if isinstance(a, dict)):
+        try:
+            import creador
+            _, actual = creador._web(borrador)
+        except Exception:  # noqa: BLE001 - sin el borrador actual, las propuestas se enseñan igual (sin situación)
+            actual = None
+        if actual is not None:
+            for p in lista:
+                for a in (p.get("archivos") or []) if isinstance(p, dict) else []:
+                    if isinstance(a, dict) and a.get("estado") == "pendiente":
+                        a["situacion"] = situacion(a, actual)
+    return lista
+
+
+def situacion(archivo: dict, actual: dict[str, str]) -> str:
+    hoy = actual.get(str(archivo.get("ruta")))
+    if hoy == archivo.get("despues"):
+        return "ya_aplicado"
+    if hoy != archivo.get("antes"):
+        return "desfasado"
+    return "aplicable"
+
+
+def _rutas_en(cuerpo) -> list[str]:
+    """Las rutas que el servidor dice que cambiaron (las busca en «details»/«detalles», donde vengan)."""
+    if isinstance(cuerpo, dict):
+        if isinstance(cuerpo.get("rutas"), list):
+            return [str(x) for x in cuerpo["rutas"]]
+        for v in cuerpo.values():
+            r = _rutas_en(v)
+            if r:
+                return r
+    return []
 
 
 def corregir(borrador: str, propuesta: int, ruta: str, contenido: str) -> dict:
@@ -159,8 +195,16 @@ def corregir(borrador: str, propuesta: int, ruta: str, contenido: str) -> dict:
     return _respuesta(codigo, r, "corregir propuesta")
 
 
-def decidir(borrador: str, propuesta: int, aceptar: list[str], rechazar: list[str]) -> dict:
+def decidir(borrador: str, propuesta: int, aceptar: list[str], rechazar: list[str], forzar: bool = False) -> dict:
+    """Acepta o rechaza archivos de una propuesta. Si alguno cambió después de la propuesta, el servidor no la aplica:
+    se devuelve {"desfasada": True, "rutas": [...]} para que la persona elija (aceptar igualmente, rechazar o corregir)
+    en vez de un error sin salida."""
     slug = urllib.parse.quote(_slug(borrador))
-    cuerpo = {"aceptar": [str(x) for x in aceptar], "rechazar": [str(x) for x in rechazar]}
+    cuerpo: dict[str, object] = {"aceptar": [str(x) for x in aceptar], "rechazar": [str(x) for x in rechazar]}
+    if forzar:
+        cuerpo["forzar"] = True
     codigo, r = remoto._pedir_json(f"/me/creador/borradores/{slug}/propuestas/{int(propuesta)}", cuerpo, con_sesion=True)
+    if codigo == 409:
+        return {"desfasada": True, "rutas": _rutas_en(r) or [str(x) for x in aceptar],
+                "mensaje": remoto._mensaje(r if isinstance(r, dict) else {}, "estos archivos cambiaron después de la propuesta")}
     return _respuesta(codigo, r, "propuesta")

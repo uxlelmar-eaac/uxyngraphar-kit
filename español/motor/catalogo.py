@@ -228,9 +228,66 @@ def guardar_archivo(pid: str, rel: str, contenido: str, raiz: Path | None = None
 
 def borrar_archivo(pid: str, rel: str, raiz: Path | None = None) -> None:
     destino = _ruta_segura(pid, rel, raiz)
-    if destino.name in (base.MANIFIESTO, *esp.OBLIGATORIOS) and destino.parent == carpeta(pid, raiz).resolve():
+    if _protegido(pid, destino, raiz):
         raise ValueError(f"{destino.name} es obligatorio")
     destino.unlink()
+
+
+def _protegido(pid: str, destino: Path, raiz: Path | None) -> bool:
+    return destino.name in (base.MANIFIESTO, *esp.OBLIGATORIOS) and destino.parent == carpeta(pid, raiz).resolve()
+
+
+def renombrar_archivo(pid: str, de: str, a: str, raiz: Path | None = None) -> list[str]:
+    """Renombra o mueve un archivo, o una carpeta entera (todo lo que cuelga de `de/`), dentro del sistema. No pisa
+    nada que ya exista y no mueve los obligatorios. Devuelve las rutas nuevas."""
+    de, a = str(de).strip().strip("/"), str(a).strip().strip("/")
+    if not de or not a or de == a:
+        raise ValueError("indica la ruta actual y la nueva")
+    if not a.isascii() or " " in a:
+        raise ValueError("nombre de archivo: ASCII y sin espacios")
+    origen = _ruta_segura(pid, de, raiz)
+    _ruta_segura(pid, a, raiz)
+    todos = archivos(pid, raiz)
+    if origen.is_file():
+        pares = [(de, a)]
+    else:
+        pares = [(r, a + r[len(de):]) for r in todos if r.startswith(de + "/")]
+        if not pares:
+            raise FileNotFoundError(f"no existe {de} en el sistema")
+    for viejo, nuevo in pares:
+        if _protegido(pid, _ruta_segura(pid, viejo, raiz), raiz):
+            raise ValueError(f"{viejo} es obligatorio: no se mueve ni se renombra")
+        if nuevo in todos or _ruta_segura(pid, nuevo, raiz).exists():
+            raise FileExistsError(f"ya existe {nuevo}")
+    for viejo, nuevo in pares:
+        destino = _ruta_segura(pid, nuevo, raiz)
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        _ruta_segura(pid, viejo, raiz).rename(destino)
+    c = carpeta(pid, raiz).resolve()
+    for padre in sorted({_ruta_segura(pid, v, raiz).parent for v, _ in pares}, key=lambda x: len(x.parts), reverse=True):
+        d = padre
+        while d != c and d.is_dir() and not any(d.iterdir()):
+            d.rmdir()
+            d = d.parent
+    return [n for _, n in pares]
+
+
+def borrar_carpeta_de_sistema(pid: str, rel: str, raiz: Path | None = None) -> list[str]:
+    """Borra todos los archivos de una carpeta del sistema (salvo que haya obligatorios). Devuelve los borrados."""
+    rel = str(rel).strip().strip("/")
+    _ruta_segura(pid, rel, raiz)
+    dentro = [r for r in archivos(pid, raiz) if r.startswith(rel + "/")]
+    if not dentro:
+        raise FileNotFoundError(f"no existe la carpeta {rel} en el sistema")
+    for r in dentro:
+        if _protegido(pid, _ruta_segura(pid, r, raiz), raiz):
+            raise ValueError(f"{r} es obligatorio")
+    for r in dentro:
+        _ruta_segura(pid, r, raiz).unlink()
+    d = _ruta_segura(pid, rel, raiz)
+    if d.is_dir():
+        shutil.rmtree(d, ignore_errors=True)
+    return dentro
 
 
 NOTA_POR_DEFECTO = "Describe aquí qué cambió en esta versión."

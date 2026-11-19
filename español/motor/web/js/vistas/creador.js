@@ -75,22 +75,61 @@ export function filtrarPropuestasPendientes(todas) {
   });
 }
 
-/** Una sugerencia pendiente: ver cambios, corregir, aceptar o rechazar. */
-function tarjetaPropuesta(slug, p, alDecidir) {
-  const pendientes = (p.archivos || []).filter((a) => a.estado === "pendiente");
-  const casillas = pendientes.map((a) => h("input", { type: "checkbox", checked: true, value: a.ruta, "aria-label": `Aceptar ${a.ruta}` }));
+const SITUACION = {
+  ya_aplicado: ["ya aplicado", "bien", "El sistema ya tiene este contenido: basta con descartarlo."],
+  desfasado: ["cambió después", "mal", "Este archivo cambió después de la sugerencia: si la aceptas, se pierden esos cambios."],
+};
+
+/** Archivos pendientes de una propuesta. */
+const pendientesDe = (p) => (p.archivos || []).filter((a) => String(a.estado || "").toLowerCase() === "pendiente");
+
+/** Banda que explica qué archivos chocan y deja elegir, en vez de un error sin salida. */
+function avisoDesfasada(r, { aceptar, rechazar, alElegir }) {
+  const rutas = r.rutas || [];
+  const resto = aceptar.filter((x) => !rutas.includes(x));
+  return h("div", { class: "pila banda aviso", role: "alert" },
+    h("b", { texto: "Algunos archivos cambiaron después de esta sugerencia" }),
+    h("p", { texto: `${rutas.join(", ")}: si la aceptas igualmente, esos cambios posteriores se sustituyen por los de la sugerencia.` }),
+    h("div", { class: "fila" },
+      boton("Aceptar igualmente (sobrescribe)", () => alElegir({ aceptar, rechazar, forzar: true }), { clase: "pequeno peligro" }),
+      resto.length ? boton(`Aceptar solo ${resto.length === 1 ? "el que no choca" : `los ${resto.length} que no chocan`}`,
+        () => alElegir({ aceptar: resto, rechazar: [...rechazar, ...rutas] }), { clase: "pequeno primario" }) : null,
+      boton("Descartar los que chocan", () => alElegir({ aceptar: resto, rechazar: [...rechazar, ...rutas] }), { clase: "pequeno" }),
+      boton("Cancelar", () => alElegir(null), { clase: "pequeno fantasma" })));
+}
+
+/** Una sugerencia pendiente: ver cambios, corregir, abrir en el editor, aceptar o rechazar (nunca deja atascado). */
+function tarjetaPropuesta(slug, p, alDecidir, { alAbrirEnEditor } = {}) {
+  const pendientes = pendientesDe(p);
+  const casillas = pendientes.map((a) => h("input", {
+    type: "checkbox", checked: a.situacion !== "ya_aplicado", value: a.ruta, "aria-label": `Aceptar ${a.ruta}`,
+  }));
   const zona = h("div", { class: "pila" });
-  async function decidir(aceptarMarcados) {
-    const marcados = casillas.filter((c) => c.checked).map((c) => c.value);
-    const aceptar = aceptarMarcados ? marcados : [];
-    const rechazar = aceptarMarcados ? pendientes.map((a) => a.ruta).filter((r) => !marcados.includes(r)) : pendientes.map((a) => a.ruta);
-    const r = await enviar("/api/agente/decidir", { slug, propuesta: p.id, aceptar, rechazar });
+  async function enviarDecision({ aceptar, rechazar, forzar = false }) {
+    const r = await enviar("/api/agente/decidir", { slug, propuesta: p.id, aceptar, rechazar, ...(forzar ? { forzar: true } : {}) });
+    if (r.desfasada) {
+      vaciar(zona, avisoDesfasada(r, {
+        aceptar, rechazar,
+        alElegir: (eleccion) => {
+          if (!eleccion) return vaciar(zona);
+          return enviarDecision(eleccion).catch((e) => avisar(e.message || String(e), "mal"));
+        },
+      }));
+      return;
+    }
     if (r.conflicto) {
       vaciar(zona, conflicto(r, (c) => sincronizarBorrador("bajar", slug, zona, alDecidir, c)));
       return;
     }
-    avisar(aceptar.length ? `Cambios aceptados (${aceptar.length})` : "Sugerencia rechazada");
+    avisar(aceptar.length ? `Cambios aceptados (${aceptar.length})${rechazar.length ? `, descartados ${rechazar.length}` : ""}` : "Sugerencia descartada");
     if (alDecidir) await alDecidir();
+  }
+  async function decidir(aceptarMarcados) {
+    const marcados = casillas.filter((c) => c.checked).map((c) => c.value);
+    const todas = pendientes.map((a) => a.ruta);
+    const aceptar = aceptarMarcados ? marcados : [];
+    const rechazar = aceptarMarcados ? todas.filter((r) => !marcados.includes(r)) : todas;
+    await enviarDecision({ aceptar, rechazar });
   }
   function editarArchivo(a) {
     if (a.despues === null) return;
@@ -113,22 +152,61 @@ function tarjetaPropuesta(slug, p, alDecidir) {
       h("b", { texto: p.titulo || "Sugerencia" }),
       insignia(pendientes.length ? "por revisar" : (p.estado || "").toLowerCase(), pendientes.length ? "nota" : "")),
     p.resumen ? h("p", { class: "tenue", texto: p.resumen }) : null,
-    pendientes.map((a, i) => h("details", { open: pendientes.length === 1 },
-      h("summary", {}, casillas[i], ` ${a.ruta}${a.despues === null ? " (borrar)" : a.antes === null ? " (nuevo)" : ""}`),
-      vistaDiferencias(a.antes || "", a.despues || ""),
-      a.despues !== null ? h("div", { class: "fila" }, boton("Corregir", () => editarArchivo(a), { clase: "pequeno" })) : null)),
+    pendientes.map((a, i) => {
+      const s = SITUACION[a.situacion];
+      return h("details", { open: pendientes.length === 1 },
+        h("summary", {}, casillas[i], ` ${a.ruta}${a.despues === null ? " (borrar)" : a.antes === null ? " (nuevo)" : ""} `,
+          s ? insignia(s[0], s[1]) : null),
+        s ? h("p", { class: "tenue", texto: s[2] }) : null,
+        vistaDiferencias(a.antes || "", a.despues || ""),
+        h("div", { class: "fila" },
+          a.despues !== null ? boton("Corregir", () => editarArchivo(a), { clase: "pequeno" }) : null,
+          alAbrirEnEditor ? boton("Abrir en el editor", () => alAbrirEnEditor(a, p), { clase: "pequeno", icono: "editar" }) : null));
+    }),
     pendientes.length ? h("div", { class: "fila" },
-      boton("Aceptar", () => decidir(true), { clase: "pequeno primario", icono: "check" }),
-      boton("Rechazar", () => decidir(false), { clase: "pequeno" })) : null,
+      boton("Aceptar marcados", () => decidir(true), { clase: "pequeno primario", icono: "check" }),
+      boton("Descartar sugerencia", () => decidir(false), { clase: "pequeno" })) : null,
     zona);
 }
 
+/** Decide todas las propuestas a la vez: «aceptar», «rechazar» o «obsoletas» (descarta solo lo ya aplicado). */
+export async function decidirTodas(slug, propuestas, modo) {
+  let aceptados = 0;
+  let descartados = 0;
+  const chocan = [];
+  // De la más antigua a la más reciente: lo último que propuso uxyn es lo que queda.
+  for (const p of [...propuestas].sort((x, y) => Number(x.id) - Number(y.id))) {
+    const pend = pendientesDe(p);
+    const yaAplicados = pend.filter((a) => a.situacion === "ya_aplicado").map((a) => a.ruta);
+    let aceptar = [];
+    let rechazar = [];
+    if (modo === "rechazar") rechazar = pend.map((a) => a.ruta);
+    else if (modo === "obsoletas") rechazar = yaAplicados;
+    else { rechazar = yaAplicados; aceptar = pend.map((a) => a.ruta).filter((r) => !yaAplicados.includes(r)); }
+    if (!aceptar.length && !rechazar.length) continue;
+    let r = await enviar("/api/agente/decidir", { slug, propuesta: p.id, aceptar, rechazar });
+    if (r.desfasada) {
+      // Los que chocan quedan pendientes (la persona decide en su tarjeta); lo demás se aplica.
+      chocan.push(...(r.rutas || []));
+      aceptar = aceptar.filter((x) => !(r.rutas || []).includes(x));
+      if (!aceptar.length && !rechazar.length) continue;
+      r = await enviar("/api/agente/decidir", { slug, propuesta: p.id, aceptar, rechazar });
+      if (r.desfasada) { chocan.push(...aceptar); continue; }
+    }
+    aceptados += aceptar.length;
+    descartados += rechazar.length;
+  }
+  return { aceptados, descartados, chocan: [...new Set(chocan)] };
+}
+
 /**
- * Bloque fijo «Por revisar»: aquí viven las sugerencias de uxyn (no en el hilo del chat).
+ * Bloque fijo «Por revisar»: aquí viven las sugerencias de uxyn (no en el hilo del chat). No bloquea nada: se puede
+ * seguir editando y hablando con uxyn, plegarlo, y decidir una a una o todas a la vez.
  * Devuelve { nodo, refrescar }.
  */
-export function panelSugerencias(slug, { alCambiar } = {}) {
+export function panelSugerencias(slug, { alCambiar, alAbrirEnEditor, soloWeb = false } = {}) {
   const nodo = h("section", { class: "sugerencias-panel", "aria-label": "Por revisar", hidden: true });
+  let plegado = false;
   async function refrescar() {
     if (!slug) {
       nodo.hidden = true;
@@ -149,16 +227,38 @@ export function panelSugerencias(slug, { alCambiar } = {}) {
       return [];
     }
     nodo.hidden = false;
+    const archivos = pendientes.flatMap(pendientesDe);
+    const obsoletas = archivos.filter((a) => a.situacion === "ya_aplicado").length;
+    const tras = async () => { await refrescar(); if (alCambiar) await alCambiar(); };
+    async function enBloque(modo) {
+      const r = await decidirTodas(slug, pendientes, modo);
+      avisar([r.aceptados ? `aceptados ${r.aceptados}` : "", r.descartados ? `descartados ${r.descartados}` : "",
+        r.chocan.length ? `${r.chocan.length} cambiaron después y siguen por revisar (${r.chocan.join(", ")})` : ""]
+        .filter(Boolean).join(" · ") || "Nada que cambiar", r.chocan.length ? "mal" : "");
+      await tras();
+    }
+    const lista = h("div", { class: "pila", hidden: plegado },
+      ...pendientes.map((p) => tarjetaPropuesta(slug, p, tras, { alAbrirEnEditor })));
+    const plegar = h("button", { type: "button", class: "boton pequeno fantasma", "aria-expanded": String(!plegado), texto: plegado ? "Mostrar" : "Ocultar" });
+    plegar.addEventListener("click", () => {
+      plegado = !plegado;
+      lista.hidden = plegado;
+      plegar.textContent = plegado ? "Mostrar" : "Ocultar";
+      plegar.setAttribute("aria-expanded", String(!plegado));
+    });
     vaciar(nodo,
       h("div", { class: "sugerencias-cabecera" },
         h("h3", { texto: "Por revisar" }),
-        insignia(String(pendientes.length), "nota")),
-      h("p", { class: "tenue", texto: "uxyn dejó cambios. Acéptalos, corrígelos o recházalos antes de seguir." }),
-      ...pendientes.map((p) => tarjetaPropuesta(slug, p, async () => {
-        await refrescar();
-        if (alCambiar) await alCambiar();
-      })));
-    try { nodo.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch { /* sin scroll */ }
+        insignia(String(pendientes.length), "nota"),
+        h("span", { class: "espacio" }),
+        plegar),
+      h("p", { class: "tenue", texto: "uxyn dejó cambios. Puedes aceptarlos, corregirlos o descartarlos cuando quieras: mientras tanto sigues pudiendo editar tus archivos y hablar con uxyn." }),
+      soloWeb ? h("p", { class: "tenue", texto: "Este sistema está solo en la web: lo que aceptes se aplica allí y se trae a este equipo." }) : null,
+      h("div", { class: "fila" },
+        boton("Aceptar todo", () => enBloque("aceptar"), { clase: "pequeno primario", icono: "check" }),
+        boton("Descartar todo", () => enBloque("rechazar"), { clase: "pequeno" }),
+        obsoletas ? boton(`Descartar lo ya aplicado (${obsoletas})`, () => enBloque("obsoletas"), { clase: "pequeno" }) : null),
+      lista);
     return pendientes;
   }
   return { nodo, refrescar };
@@ -285,7 +385,7 @@ export async function chatAgente(contexto, {
     vaciar(propuestaLocal, h("div", { class: "fila separada" }, h("b", { texto: `Propuesta para ${r.rel}` }), insignia(r.modelo)),
       vistaDiferencias(c.textarea.value, r.propuesta),
       h("div", { class: "fila" },
-        boton("Aceptar", () => { c.textarea.value = r.propuesta; vaciar(propuestaLocal); avisar("En el editor: revisa y pulsa «Guardar archivo»"); }, { clase: "pequeno primario" }),
+        boton("Aceptar", () => { c.textarea.value = r.propuesta; c.textarea.dispatchEvent(new Event("input")); vaciar(propuestaLocal); avisar("En el editor: revisa y pulsa «Guardar archivo»"); }, { clase: "pequeno primario" }),
         boton("Descartar", () => vaciar(propuestaLocal), { clase: "pequeno" })));
   }
   async function revisar() {

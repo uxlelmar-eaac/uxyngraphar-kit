@@ -43,7 +43,9 @@ AUDITADAS = {"/api/repo/instalar": "instalar", "/api/sistemas/traer": "traer del
              "/api/reportes/enviar": "reportar al autor",
              "/api/mis-sistemas/eliminar": "eliminar sistema (a la papelera)", "/api/mis-sistemas/restaurar": "restaurar de la papelera",
              "/api/mis-sistemas/vaciar": "vaciar papelera", "/api/mis-sistemas/duplicar": "duplicar sistema",
-             "/api/mis-sistemas/renombrar": "cambiar el nombre de un sistema"}
+             "/api/mis-sistemas/renombrar": "cambiar el nombre de un sistema", "/api/proyectos/quitar": "quitar proyecto del panel",
+             "/api/mis-sistemas/archivar": "archivar en el Taller", "/api/catalogo/archivo/borrar": "borrar archivo de un sistema",
+             "/api/catalogo/archivo/renombrar": "renombrar archivo de un sistema"}
 
 
 class FaltaCampo(ValueError):
@@ -382,7 +384,8 @@ def _agente_turno(d: dict) -> dict:
     import agente
     import creador
     pid = d.get("id") or None
-    if pid:
+    if pid and (catalogo.catalogo() / str(pid) / catalogo.base.MANIFIESTO).is_file():
+        # Solo si está en este equipo: un borrador que solo vive en la web se mejora allí directamente.
         try:
             creador.subir(str(pid))
         except creador.Conflicto as e:
@@ -408,7 +411,10 @@ def _agente_decidir(d: dict) -> dict:
     import creador
     slug = _campo(d, "slug", str)
     aceptar = [str(x) for x in d.get("aceptar") or []]
-    r = agente.decidir(slug, _entero(d, "propuesta"), aceptar, [str(x) for x in d.get("rechazar") or []])
+    r = agente.decidir(slug, _entero(d, "propuesta"), aceptar, [str(x) for x in d.get("rechazar") or []],
+                       forzar=d.get("forzar") is True)
+    if r.get("desfasada"):
+        return r
     if aceptar:
         try:
             creador.bajar(slug)
@@ -437,7 +443,7 @@ GET = {
     "/api/agente/info": lambda d: __import__("agente").info(),
     "/api/conexiones": lambda d: {"agentes": __import__("conexiones").resumen(proyectos.listar()),
                                   "mcp_manual": __import__("conexiones").mcp_manual()},
-    "/api/agente/propuestas": lambda d: __import__("agente").propuestas(_campo(d, "slug", str)),
+    "/api/agente/propuestas": lambda d: __import__("agente").propuestas(_campo(d, "slug", str), con_situacion=True),
     "/api/agente/progreso": lambda d: __import__("agente").progreso(_campo(d, "id", str)),
     "/api/agente/conversaciones": lambda d: __import__("agente").conversaciones(
         str(d["slug"]).strip() if d.get("slug") else None),
@@ -467,6 +473,8 @@ GET = {
     "/api/organizacion": lambda d: __import__("organizacion").leer(),
     "/api/mis-sistemas": lambda d: __import__("mis_sistemas").vista(),
     "/api/mis-sistemas/papelera": lambda d: __import__("mis_sistemas").papelera(),
+    "/api/proyectos/plan-quitar": lambda d: __import__("quitar_proyecto").plan(_campo(d, "ruta", str)),
+    "/api/mis-sistemas/archivados": lambda d: __import__("mis_sistemas").archivados(),
     "/api/mis-sistemas/avisos": lambda d: __import__("mis_sistemas").avisos_eliminar(_campo(d, "id", str)),
     "/api/grupos/matriz": lambda d: __import__("grupos").matriz(_campo(d, "nombre", str)),
     "/api/historial": lambda d: __import__("auditoria").leer(_entero(d, "limite", 100)),
@@ -499,6 +507,9 @@ POST = {
     "/api/catalogo/generar": lambda d: generador.desde_spec(_campo(d, "spec"), aplicar=bool(d.get("aplicar"))),
     "/api/catalogo/pieza": lambda d: (catalogo.agregar_pieza if _campo(d, "accion") == "agregar" else catalogo.quitar_pieza)(_campo(d, "id"), _campo(d, "pieza")),
     "/api/catalogo/archivo": lambda d: {"errores": catalogo.guardar_archivo(_campo(d, "id"), _campo(d, "rel"), _campo(d, "contenido"))},
+    "/api/catalogo/archivo/borrar": lambda d: _borrar_de_sistema(d),  # noqa: PLW0108 - se define más abajo
+    "/api/catalogo/archivo/renombrar": lambda d: {"rutas": catalogo.renombrar_archivo(_campo(d, "id", str), _campo(d, "de", str), _campo(d, "a", str)),
+                                                 "errores": __import__("especificacion").validar_sistema(catalogo.carpeta(d["id"]))},
     "/api/catalogo/version": lambda d: catalogo.versionar(_campo(d, "id"), _campo(d, "nivel"), nota=str(d.get("nota") or "")),
     "/api/catalogo/instalar-en": lambda d: [_instalar_en(r, list(_campo(d, "ids", list))) for r in _campo(d, "repos", list)],
     "/api/catalogo/publicar": lambda d: publicacion.publicar_local(
@@ -527,7 +538,7 @@ POST = {
     "/api/repo/deshacer": lambda d: transaccion.deshacer(_escribible(d, "deshacer", destructiva=True), d.get("respaldo") or None),
     # proyectos registrados
     "/api/proyectos/agregar": lambda d: _agregar(d),  # noqa: PLW0108 - _agregar se define más abajo
-    "/api/proyectos/quitar": lambda d: _quitar_proyecto(_campo(d, "ruta")),
+    "/api/proyectos/quitar": lambda d: _quitar_proyecto(_campo(d, "ruta"), d),
     # organización de «Mis proyectos»: carpetas, etiquetas y orden (solo la lista del panel)
     "/api/organizacion/carpeta": lambda d: _carpeta(d),  # noqa: PLW0108 - _carpeta se define más abajo
     "/api/organizacion/carpetas/ordenar": lambda d: __import__("organizacion").ordenar_carpetas(list(_campo(d, "ids", list))),
@@ -541,6 +552,8 @@ POST = {
     "/api/mis-sistemas/carpeta": lambda d: _carpeta_sistemas(d),  # noqa: PLW0108 - se define más abajo
     "/api/mis-sistemas/mover": lambda d: __import__("mis_sistemas").mover(list(_campo(d, "ids", list)), d.get("carpeta") or None,
                                                                          d.get("antes") or None),
+    "/api/mis-sistemas/archivar": lambda d: {"archivados": __import__("mis_sistemas").archivar(list(_campo(d, "ids", list)),
+                                                                                               d.get("archivar", True) is not False)},
     "/api/mis-sistemas/eliminar": lambda d: __import__("mis_sistemas").eliminar(list(_campo(d, "ids", list))),
     "/api/mis-sistemas/restaurar": lambda d: __import__("mis_sistemas").restaurar(_campo(d, "entrada", str)),
     "/api/mis-sistemas/vaciar": lambda d: {"borradas": _vaciar_papelera(d)},
@@ -622,9 +635,12 @@ def _agregar(d: dict) -> list[str]:
     return proyectos.agregar(rutas)
 
 
-def _quitar_proyecto(ruta: str) -> None:
-    proyectos.quitar(ruta)
-    __import__("organizacion").olvidar(ruta)
+def _quitar_proyecto(ruta: str, d: dict | None = None) -> dict:
+    """«Solo desvincular» por defecto; con {"todo": true} retira además lo de uxyngraphar (exige "confirmar")."""
+    todo = bool(d and d.get("todo") is True)
+    if todo and not d.get("confirmar"):   # type: ignore[union-attr]
+        raise FaltaConfirmacion("quitar todo lo de uxyngraphar del proyecto: confirma con «confirmar»")
+    return __import__("quitar_proyecto").quitar(ruta, todo)
 
 
 def _carpeta(d: dict) -> dict:
@@ -655,6 +671,16 @@ def _carpeta_sistemas(d: dict) -> dict:
                                     "confírmalo: los sistemas pasan a la raíz y no se borra ninguno")
         return ms.borrar_carpeta(d["id"], confirmar=True)
     raise ValueError(f"acción desconocida «{accion}»: crear, renombrar, mover o borrar")
+
+
+def _borrar_de_sistema(d: dict) -> dict:
+    pid, rel = _campo(d, "id", str), _campo(d, "rel", str)
+    if d.get("carpeta") is True:
+        borrados = catalogo.borrar_carpeta_de_sistema(pid, rel)
+    else:
+        catalogo.borrar_archivo(pid, rel)
+        borrados = [rel]
+    return {"borrados": borrados, "errores": __import__("especificacion").validar_sistema(catalogo.carpeta(pid))}
 
 
 def _vaciar_papelera(d: dict) -> int:

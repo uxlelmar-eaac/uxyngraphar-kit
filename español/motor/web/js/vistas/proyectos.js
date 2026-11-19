@@ -9,6 +9,7 @@ import { obtener, enviar } from "../api.js";
 import { h, vaciar, cabecera, boton, insignia, vacio, confirmar, avisar, dialogo, elegirVarios, pedirDatos, icono, menu } from "../ui.js";
 import { agregarProyectos } from "../explorador.js";
 import { MODOS } from "../flujo.js";
+import { quitarProyecto } from "./quitar-proyecto.js";
 
 export const COLORES = [["oro", "Oro"], ["naranja", "Naranja"], ["verde", "Verde"], ["rojo", "Rojo"], ["arena", "Arena"], ["gris", "Gris"]];
 const SIN_CARPETA = "_sin";
@@ -248,10 +249,9 @@ export async function vista(_params, { ir, recargar }) {
   }
 
   const quitar = async (p) => {
-    const r = await confirmar({ titulo: `Quitar ${p.nombre} de la lista`, texto: "Solo deja de aparecer en el panel. No se borra nada de la carpeta del proyecto.", si: "Quitar de la lista" });
+    const r = await quitarProyecto({ ruta: p.ruta, nombre: p.nombre });
     if (!r) return;
-    await enviar("/api/proyectos/quitar", { ruta: p.ruta });
-    avisar("Quitado de la lista");
+    grupos = await obtener("/api/grupos").catch(() => grupos);
     recargar();
   };
 
@@ -264,7 +264,7 @@ export async function vista(_params, { ir, recargar }) {
       try { await navigator.clipboard.writeText(p.ruta); avisar("Ruta copiada"); } catch { avisar(p.ruta); }
     } },
     "-",
-    { texto: "Quitar de la lista", icono: "cerrar", peligro: true, accion: () => quitar(p) },
+    { texto: "Quitar…", icono: "cerrar", peligro: true, accion: () => quitar(p) },
   ];
 
   async function crearGrupoDeCarpeta(c, ps) {

@@ -24,6 +24,7 @@ Mis sistemas (los de tu catálogo local; nada de esto toca el servidor ni lo pub
   restaurar <entrada|id>                     devuelve un sistema de la papelera al catálogo (y a su carpeta)
   duplicar <id> <nuevo-id> --titulo "…"      copia con otro id (prefijos de fichas nuevos)
   renombrar <id> [<nuevo-id>] --titulo "…"   cambia el título; con otro id, crea el nuevo y el anterior va a la papelera
+  archivar <id>… · desarchivar <id>…         los oculta del Taller (o los devuelve) sin borrar nada
 
 Creador (borradores de la web ↔ catálogo local; CREADOR en GENERADOR.md):
   creador borradores [--json]                tus borradores del Creador web y si ya están en este equipo
@@ -65,7 +66,8 @@ Repo (RUTA = raíz de la app; por defecto, el directorio actual):
   retirar [--repo RUTA] [--con-trabajo]      quita uxyngraphar del proyecto (el trabajo propio se conserva)
 
 Este equipo:
-  proyectos [agregar RUTA…|quitar RUTA|buscar RUTA]   proyectos que gestiona el panel
+  proyectos [agregar RUTA…|quitar RUTA [--todo] [--si]|buscar RUTA]   proyectos que gestiona el panel
+                                             quitar: solo de la lista; con --todo retira además lo que puso uxyngraphar
   flujos-guardados [guardar NOMBRE --repo RUTA|aplicar ID RUTA…|borrar ID|exportar ID|importar ARCHIVO]   flujos reutilizables
   accesos [menu,escritorio,barra|--quitar]   accesos directos al panel (sin argumentos: los disponibles)
   panel [--puerto N] [--no-abrir] [--mantener] [--primer-plano] [--cerrar]   panel del navegador, independiente de la terminal
@@ -376,10 +378,35 @@ def cmd_proyectos(a) -> int:
         for r, estaba in zip(proyectos.agregar(a.rutas), ya, strict=True):
             print(f"ya estaba en la lista: {r}" if estaba else f"añadido: {r}")
     elif a.accion == "quitar":
+        import quitar_proyecto as qp
         for r in a.rutas:
-            if not proyectos.registrado(str(Path(r).expanduser())):
+            ruta = str(Path(r).expanduser().resolve())
+            if not proyectos.registrado(ruta) and not getattr(a, "todo", False):
                 raise ValueError(f"no está en la lista de proyectos: {r}")
-            proyectos.quitar(str(Path(r).expanduser().resolve()))
+            if getattr(a, "todo", False):
+                p = qp.plan(ruta)
+                print(f"Quitar todo lo de uxyngraphar de {p['ruta']}:")
+                for linea in [*(f"  borrar  {x}" for x in p["borrar"]), *(f"  editar  {x}" for x in p["editar"]),
+                              *(f"  respaldar (lo modificaste) {x}" for x in p["respaldar"]),
+                              *(f"  conservar {x}" for x in p["ajenos"] + p["conservar"])]:
+                    print(linea)
+                if not p["existe"]:
+                    print("  la carpeta ya no existe: solo se quita de la lista")
+                if not a.si:
+                    if not sys.stdin.isatty():
+                        raise ValueError("quitar todo cambia archivos del proyecto: añade --si para confirmarlo")
+                    if input("¿Lo quito todo? [s/N] ").strip().lower() not in ("s", "si", "sí"):
+                        print("No he tocado nada.")
+                        return 1
+            res = qp.quitar(ruta, bool(getattr(a, "todo", False)))
+            for h in res["hechos"]:
+                print(f"  {h}")
+            if res["respaldo"]:
+                print(f"  copia de lo que habías modificado: {res['respaldo']}")
+            for g in res["grupos_borrados"]:
+                print(f"  grupo «{g}» borrado (se quedaba con un solo proyecto)")
+            for g in res["grupos_actualizados"]:
+                print(f"  sale del grupo «{g}»")
             print(f"quitado de la lista: {r}")
     elif a.accion == "buscar":
         hallados = proyectos.buscar(a.rutas[0] if a.rutas else ".")
@@ -536,6 +563,8 @@ def analizador() -> argparse.ArgumentParser:
     rn.add_argument("id")
     rn.add_argument("nuevo_id", metavar="nuevo-id", nargs="?")
     rn.add_argument("--titulo", required=True)
+    sub.add_parser("archivar").add_argument("ids", nargs="+")
+    sub.add_parser("desarchivar").add_argument("ids", nargs="+")
     co = sub.add_parser("construir")
     co.add_argument("ids", nargs="*")
     co.add_argument("--todos", action="store_true")
@@ -614,6 +643,8 @@ def analizador() -> argparse.ArgumentParser:
     pr = sub.add_parser("proyectos")
     pr.add_argument("accion", nargs="?", choices=("agregar", "quitar", "buscar"))
     pr.add_argument("rutas", nargs="*")
+    pr.add_argument("--todo", action="store_true", help="con quitar: retira también todo lo que puso uxyngraphar en el proyecto")
+    pr.add_argument("--si", action="store_true", help="con quitar --todo: no preguntar")
     fg = sub.add_parser("flujos-guardados")
     fg.add_argument("accion", nargs="?", choices=("guardar", "aplicar", "borrar", "exportar", "importar"))
     fg.add_argument("args", nargs="*")
@@ -920,6 +951,11 @@ def cmd_mis_sistemas(a) -> int:
             print(f"{r['id']}: nombre nuevo de {a.id}; el anterior está en la papelera ({r['anterior']['entrada']}).")
             print("Los proyectos que tenían instalado el anterior lo conservan con su id hasta que instales el nuevo;"
                   " un borrador web o lo publicado siguen con el id anterior.")
+    elif a.cmd in ("archivar", "desarchivar"):
+        ms.archivar(a.ids, a.cmd == "archivar")
+        hecho = "archivado: ya no sale en el Taller (sigue en tu catálogo y en tus proyectos)" if a.cmd == "archivar" else "de vuelta en el Taller"
+        for pid in a.ids:
+            print(f"{pid}: {hecho}")
     return 0
 
 
@@ -1020,7 +1056,7 @@ def _main(a) -> int:
             print(("scripts/comun al día en: " + ", ".join(cambiados)) if cambiados else "todas las copias de scripts/comun estaban al día")
         elif a.cmd == "version":
             print(catalogo.versionar(a.id, a.nivel, nota=a.nota))
-        elif a.cmd in ("mis-sistemas", "eliminar", "papelera", "restaurar", "duplicar", "renombrar"):
+        elif a.cmd in ("mis-sistemas", "eliminar", "papelera", "restaurar", "duplicar", "renombrar", "archivar", "desarchivar"):
             return cmd_mis_sistemas(a)
         elif a.cmd == "construir":
             for pid in _ids_o_todos(a):

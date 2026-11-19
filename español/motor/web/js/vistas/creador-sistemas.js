@@ -1,8 +1,9 @@
 // Taller de sistemas (ADR 0015): el objeto es el sistema; uxyn es secundario.
 // Layout: origen · ciclo · salida · archivos/editor · uxyn en columna estrecha.
 
-import { catalogo, obtener } from "../api.js";
-import { h, vaciar, boton, cabecera, insignia, icono, avisar, dialogo } from "../ui.js";
+import { catalogo, obtener, enviar } from "../api.js";
+import { h, vaciar, boton, cabecera, insignia, icono, avisar, avisarConAccion, dialogo, menu } from "../ui.js";
+import { eliminarSistemas } from "./mis-sistemas.js";
 import { anotar } from "../registro.js";
 import {
   editorSistema, crearSistema,
@@ -16,6 +17,7 @@ import {
 } from "./creador-estado.js";
 
 const CLAVE = "uxyn-taller-zonas-v1";
+const CLAVE_ARCHIVADOS = "uxyn-taller-mostrar-archivados";
 export const ZONAS = [
   ["lista", "Lista"],
   ["sistema", "Sistema"],
@@ -408,14 +410,48 @@ export async function vista(params, { ir }) {
       if (b.version_publicada || b.publicado) prev.publicado = true;
       porId.set(b.slug, prev);
     }
+    let archivados = [];
+    try { archivados = await obtener("/api/mis-sistemas/archivados"); } catch { /* sin archivados */ }
+    for (const m of porId.values()) m.archivado = archivados.includes(m.id);
     const items = [...porId.values()].sort((a, b) => (a.titulo || "").localeCompare(b.titulo || "", "es"));
+    let mostrarArchivados = false;
+    try { mostrarArchivados = localStorage.getItem(CLAVE_ARCHIVADOS) === "1"; } catch { /* */ }
 
     const filtro = h("input", { type: "search", placeholder: "Buscar…", "aria-label": "Buscar sistema" });
     const lista = h("ul", { class: "lista lista-sistemas" });
+    const conArchivados = h("input", { type: "checkbox", checked: mostrarArchivados });
+    const cuantosArchivados = items.filter((m) => m.archivado).length;
+    conArchivados.addEventListener("change", () => {
+      mostrarArchivados = conArchivados.checked;
+      try { localStorage.setItem(CLAVE_ARCHIVADOS, mostrarArchivados ? "1" : "0"); } catch { /* */ }
+      pintar();
+    });
+    const archivar = async (m, si) => {
+      await enviar("/api/mis-sistemas/archivar", { ids: [m.id], archivar: si });
+      await pintarLista();
+      const deshacer = async () => { await enviar("/api/mis-sistemas/archivar", { ids: [m.id], archivar: !si }); await pintarLista(); };
+      avisarConAccion(si ? `«${m.titulo}» archivado: ya no sale en el Taller (no se borró nada)` : `«${m.titulo}» de vuelta en el Taller`, "Deshacer", deshacer);
+    };
+    const opciones = (m) => [
+      { texto: "Abrir", icono: "editar", accion: () => abrir(m.id) },
+      m.archivado
+        ? { texto: "Volver al Taller", icono: "deshacer", accion: () => archivar(m, false).catch((e) => avisar(e.message, "mal")) }
+        : { texto: m.local ? "Archivar (ocultar del Taller)" : "Olvidar en el Taller (solo aquí)", icono: "lista",
+          accion: () => archivar(m, true).catch((e) => avisar(e.message, "mal")) },
+      m.local ? "-" : null,
+      m.local ? { texto: "Eliminar…", icono: "basura", peligro: true, accion: async () => {
+        const hechos = await eliminarSistemas([{ id: m.id, titulo: m.titulo }], {
+          instaladoEn: () => m.instalado, web: m.web ? [{ slug: m.id, publicado: m.publicado }] : [],
+          alCambiar: async () => { cache.cat = null; await pintarLista(); await pintarFranjas(); if (m.id === idAbierto) await pintarSistema(); },
+        }).catch((e) => { avisar(e.message, "mal"); return null; });
+        return hechos;
+      } } : null,
+    ];
     const pintar = () => {
       const t = filtro.value.trim().toLowerCase();
-      const visibles = items.filter((m) => !t || `${m.titulo} ${m.id}`.toLowerCase().includes(t));
-      vaciar(lista, visibles.map((m) => h("li", {},
+      const visibles = items.filter((m) => (!t || `${m.titulo} ${m.id}`.toLowerCase().includes(t))
+        && (mostrarArchivados || !m.archivado || m.id === idAbierto));
+      vaciar(lista, visibles.map((m) => h("li", { class: "elemento-con-menu" + (m.archivado ? " archivado" : "") },
         h("a", {
           href: `#/creador?id=${encodeURIComponent(m.id)}`,
           class: "elemento-sistema" + (m.id === idAbierto ? " activo" : ""),
@@ -428,8 +464,16 @@ export async function vista(params, { ir }) {
             m.local ? insignia("equipo", "bien") : null,
             m.instalado.length ? insignia("instalado", "bien") : null,
             m.publicado ? insignia("mercado", "acento") : null,
-            (m.errores || []).length ? insignia("le falta algo", "nota") : null)))));
-      if (!visibles.length) lista.append(h("li", { class: "tenue", texto: items.length ? "Nada coincide." : "Aún no hay sistemas en el taller." }));
+            m.archivado ? insignia("archivado", "nota") : null,
+            (m.errores || []).length ? insignia("le falta algo", "nota") : null)),
+        (() => {
+          const b = h("button", { type: "button", class: "boton fantasma pequeno solo-icono menu-sistema", "aria-haspopup": "menu", title: `Opciones de ${m.titulo}`, "aria-label": `Opciones de ${m.titulo}` }, icono("puntos"));
+          b.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); menu(b, opciones(m)); });
+          return b;
+        })())));
+      if (!visibles.length) {
+        lista.append(h("li", { class: "tenue", texto: items.length ? (t ? "Nada coincide." : "Todos tus sistemas están archivados.") : "Aún no hay sistemas en el taller." }));
+      }
     };
     filtro.addEventListener("input", pintar);
     pintar();
@@ -438,6 +482,7 @@ export async function vista(params, { ir }) {
         h("h2", { texto: "Taller" }),
         boton("Nuevo", () => abrir(""), { clase: "pequeno", icono: "mas", titulo: "Nuevo sistema" })),
       filtro, lista,
+      cuantosArchivados ? h("label", { class: "fila tenue mostrar-archivados" }, conArchivados, ` Mostrar archivados (${cuantosArchivados})`) : null,
       boton("Plantilla sin uxyn", async () => {
         const r = await crearSistema();
         if (!r) return;
@@ -470,17 +515,42 @@ export async function vista(params, { ir }) {
         titulo: `«${idAbierto}» no está en el catálogo local`,
         datos: { id: idAbierto },
       });
+      abierto = null;
+      const donde = await dondeEsta(idAbierto);
+      let enPapelera = null;
+      try { enPapelera = (await obtener("/api/mis-sistemas/papelera")).find((e) => e.id === idAbierto && !e.choca) || null; } catch { /* */ }
+      const traer = async () => {
+        await sincronizarBorrador("bajar", idAbierto, zonaSalidaDetalle, async (r) => {
+          cache.cat = null;
+          await catLocal(true);
+          await pintarLista();
+          abrir(r?.slug || r?.id || idAbierto);
+        });
+      };
       vaciar(zonaSistema,
-        h("div", { class: "banda aviso", texto: `«${idAbierto}» no está en este equipo.` }),
-        h("div", { class: "fila" },
-          boton("Traer de la web", async () => {
-            await sincronizarBorrador("bajar", idAbierto, zonaSalidaDetalle, async (r) => {
+        h("div", { class: "tarjeta pila solo-web" },
+          h("h2", { texto: donde.enWeb ? `«${idAbierto}» está en la web, no en este equipo` : `«${idAbierto}» no está en este equipo` }),
+          h("p", { texto: donde.enWeb
+            ? "Para ver y editar sus archivos aquí, tráelo: se copia a tu catálogo local y la web no cambia. Mientras tanto puedes revisar lo que dejó uxyn abajo y pedirle mejoras."
+            : "No está en tu catálogo local." }),
+          h("div", { class: "fila" },
+            donde.enWeb ? boton("Traer de la web para editar", traer, { clase: "primario", icono: "descargar" }) : null,
+            enPapelera ? boton("Restaurar de la papelera", async () => {
+              await enviar("/api/mis-sistemas/restaurar", { entrada: enPapelera.entrada });
               cache.cat = null;
               await catLocal(true);
-              abrir(r?.slug || r?.id || idAbierto);
-            });
-          }, { clase: "primario pequeno" }),
-          boton("Nuevo sistema", () => abrir(""), { clase: "pequeno" })),
+              await pintarLista();
+              avisar(`«${idAbierto}» restaurado de la papelera`);
+              abrir(idAbierto);
+            }, { clase: donde.enWeb ? "" : "primario", icono: "deshacer" }) : null,
+            boton("Mejorar con uxyn", async () => {
+              zonas.agente = true;
+              guardarZonas(zonas);
+              aplicar();
+              if (!chatMontado) await montarChat();
+            }, { icono: "chat" }),
+            boton("Nuevo sistema", () => abrir(""), { clase: "fantasma" })),
+          enPapelera ? h("p", { class: "tenue", texto: `Lo eliminaste de este equipo el ${String(enPapelera.eliminado || "").slice(0, 16).replace("T", " a las ")}; sigue en la papelera.` }) : null),
         huecoSugerencias);
       return;
     }
@@ -509,9 +579,17 @@ export async function vista(params, { ir }) {
       sugerenciasApi = null;
       return;
     }
+    const local = (await catLocal()).some((m) => m.id === idAbierto);
     sugerenciasApi = panelSugerencias(idAbierto, {
+      soloWeb: !local,
+      alAbrirEnEditor: local ? (a, p) => abierto?.abrirDiferencias?.(a.ruta, a.antes || "", a.despues || "", `Sugerencia #${p.id}`) : null,
       alCambiar: async () => {
-        if (abierto?.recargar) await abierto.recargar();
+        cache.cat = null;
+        if (!local && (await catLocal(true)).some((m) => m.id === idAbierto)) {
+          // Al aceptar, el borrador se trae a este equipo: ya se puede editar.
+          await pintarSistema();
+          await montarSugerencias();
+        } else if (abierto?.recargar) await abierto.recargar();
         await pintarLista();
         await pintarFranjas();
       },

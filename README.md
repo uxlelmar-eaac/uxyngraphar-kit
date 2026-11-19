@@ -50,11 +50,16 @@ Las actualizaciones nunca dejan la herramienta rota: cada versión se descarga, 
 | Volver a la versión anterior | `uxyngraphar usar anterior` |
 | Arreglar algo que no va | `uxyngraphar reparar` (añade `--proyectos` para revisar también tus proyectos) |
 | Si ni siquiera arranca | la línea de instalación con `--reparar` al final: `… \| python3 - --reparar` |
+| Quitar un proyecto del panel | En **Proyectos**, «Quitar…»: **Solo desvincular** (sale de la lista y de sus grupos; la carpeta no se toca) o **Quitar todo** (además retira lo que puso uxyngraphar). Antes enseña la lista exacta de archivos y sistemas y pide una segunda confirmación; lo que modificaste se copia a `respaldos/quitados/` y lo que no creó uxyngraphar se queda. CLI: `uxyngraphar proyectos quitar RUTA [--todo] [--si]` |
 | Desinstalar | `uxyngraphar desinstalar`: pregunta qué quitar (todo, solo la herramienta, uxyngraphar de tus proyectos o solo los accesos directos), enseña la lista exacta y pide confirmación |
 
 Los sistemas que escribes (`crear`, el Taller) se guardan en `~/.uxyngraphar/catalogo/`, fuera de las versiones: reparar, actualizar, volver atrás o podar versiones antiguas no los tocan (los que crearon versiones anteriores dentro de `versiones/` se mueven ahí solos). Desinstalar la herramienta los lista y no los borra salvo que lo confirmes (`--con-catalogo`; en el panel, la casilla).
 
 En el panel, **Mis sistemas** los ordena en carpetas (arrastrando o con «Mover a…»; solo es una vista, no mueve nada en el disco) y trae las herramientas de cada uno: abrir en el Taller, instalar, descargar, duplicar, cambiar el nombre y eliminar. Eliminar los lleva a una papelera recuperable (`uxyngraphar papelera`, `uxyngraphar restaurar <id>`); también hay `uxyngraphar eliminar`, `duplicar`, `renombrar` y `mis-sistemas`. Nada de esto toca el servidor ni lo publicado.
+
+Los sistemas que ya no trabajas se pueden **archivar** (menú «…» en el Taller o en Mis sistemas, o `uxyngraphar archivar <id>` / `desarchivar <id>`): dejan de salir en el Taller sin borrar nada; siguen en tu catálogo, en tus proyectos y en la web, y «Mostrar archivados» o «Volver al Taller» los traen de vuelta. Un borrador que solo está en la web se «olvida» solo en este equipo.
+
+En el Taller, los archivos de cada sistema se ven como en un editor de código: árbol con carpetas (crear, renombrar, mover y borrar), pestañas, resaltado de Markdown, JSON, Python, YAML y shell, números de línea, buscar y reemplazar (Ctrl+F / Ctrl+H), Ctrl+S, aviso de cambios sin guardar, vista previa de Markdown, «Ampliar» para usar toda la ventana y los errores de validación por archivo y línea. Las sugerencias de uxyn («Por revisar») se abren como diferencias en el editor y nunca bloquean: se aceptan, corrigen o descartan una a una o todas a la vez, y si un archivo cambió después de la sugerencia se elige entre aceptarla igualmente, aceptar solo lo que no choca o descartarla.
 
 Al desinstalar, el trabajo de cada proyecto (`uxyngraphar/trabajo/`) se conserva salvo que pidas borrarlo (`--con-trabajo`). Sin terminal: `uxyngraphar desinstalar --alcance todo|herramienta|proyectos|accesos [--proyectos RUTA,RUTA] [--con-trabajo] [--con-catalogo] [--simular] --si`.
 

@@ -122,7 +122,10 @@ def vista(raiz: Path | None = None) -> dict:
                          "errores": m.get("errores", []), "avisos": m.get("avisos", []),
                          "carpeta": (org["sistemas"].get(m["id"]) or {}).get("carpeta")})
     sistemas.sort(key=lambda s: (posicion.get(s["id"], len(posicion)), s["titulo"].lower()))
-    return {"carpetas": org["carpetas"], "orden": [s["id"] for s in sistemas], "sistemas": sistemas,
+    ocultos = set(archivados())
+    for s in sistemas:
+        s["archivado"] = s["id"] in ocultos
+    return {"carpetas": org["carpetas"], "orden": [s["id"] for s in sistemas], "sistemas": sistemas, "archivados": sorted(ocultos),
             "catalogo": str(catalogo.catalogo(raiz)), "papelera": len(papelera())}
 
 
@@ -254,11 +257,39 @@ def arbol(raiz: Path | None = None) -> list[str]:
             lineas.append(f"{'  ' * nivel}{c['nombre']}/")
             pintar(c["id"], nivel + 1)
         for s in [s for s in v["sistemas"] if s["carpeta"] == padre]:
-            estado = "valida" if not s["errores"] else f"{len(s['errores'])} error(es)"
+            estado = ("valida" if not s["errores"] else f"{len(s['errores'])} error(es)") + (", archivado" if s["archivado"] else "")
             lineas.append(f"{'  ' * nivel}- {s['id']}  {s['version']}  {s['titulo']}  ({estado})")
 
     pintar(None, 0)
     return lineas
+
+
+# Archivados: ocultos en el Taller --------------------------------------------------------------------------------
+
+ARCHIVADOS = "archivados.json"
+ID_ARCHIVABLE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+
+
+def archivados() -> list[str]:
+    """Ids que la persona ya no trabaja en el Taller (`archivados.json` de la carpeta de uxyngraphar). Sirve también para
+    borradores que solo están en la web: archivar solo los oculta en este equipo; no borra nada en ningún sitio."""
+    datos = casa.leer_json(ARCHIVADOS, {})
+    ids = datos.get("ids", []) if isinstance(datos, dict) else []
+    return sorted({i for i in ids if isinstance(i, str) and ID_ARCHIVABLE.match(i) and len(i) <= 80})
+
+
+def archivar(ids: list, archivar: bool = True) -> list[str]:
+    """Archiva (o vuelve a traer al Taller) los ids dados. Devuelve la lista completa de archivados."""
+    limpios = [str(i).strip() for i in ids]
+    if not limpios:
+        raise ValueError("no hay sistemas que archivar")
+    for i in limpios:
+        if not ID_ARCHIVABLE.match(i) or len(i) > 80:
+            raise ValueError(f"id no válido «{i}»")
+    actuales = set(archivados())
+    nuevos = sorted(actuales | set(limpios)) if archivar else sorted(actuales - set(limpios))
+    casa.escribir_json(ARCHIVADOS, {"formato": 1, "ids": nuevos})
+    return nuevos
 
 
 # Papelera ----------------------------------------------------------------------------------------------------------
