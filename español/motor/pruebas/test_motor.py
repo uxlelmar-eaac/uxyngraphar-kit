@@ -218,6 +218,7 @@ class TestPanel(unittest.TestCase):
         try:
             with self.assertRaises(urllib.error.HTTPError) as ctx:
                 urllib.request.urlopen(url + "/api/catalogo")
+            ctx.exception.close()   # la respuesta de error también es un archivo abierto (ResourceWarning en 3.15)
             self.assertEqual(ctx.exception.code, 403)
             pedido = urllib.request.Request(url + "/api/catalogo", headers={"X-Uxyn-Token": token})
             with urllib.request.urlopen(pedido) as r:

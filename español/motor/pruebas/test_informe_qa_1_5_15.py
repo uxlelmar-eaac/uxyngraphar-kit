@@ -20,7 +20,6 @@ import conexiones
 import desinstalacion
 import herramienta
 import nomenclatura
-import panel
 import proyectos
 import remoto
 import repo

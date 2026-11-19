@@ -58,6 +58,7 @@ class TestServidor(ConServidor):
         for malo in ("/../panel.py", "/%2e%2e/panel.py", "/js/../../cli.py", "/no-existe.js"):
             with self.assertRaises(urllib.error.HTTPError, msg=malo) as ctx:
                 urllib.request.urlopen(self.url + malo)
+            ctx.exception.close()
             self.assertEqual(ctx.exception.code, 404, malo)
 
     def test_token_y_sesion(self):
