@@ -1,5 +1,36 @@
 # Cambios
 
+## 1.5.20
+
+Nueva sección **Mis sistemas** en el panel para ver, ordenar y gestionar los sistemas que escribes.
+
+- Carpetas (también anidadas) para ordenar tus sistemas: se crean, renombran, mueven y borran
+  desde el árbol. Los sistemas se arrastran a una carpeta, entre carpetas, de vuelta a «Sin
+  carpeta» o sobre otro sistema para ordenarlos; las carpetas también se arrastran. Sin ratón
+  (o en el móvil) está «Mover a…», que además puede crear una carpeta. Borrar una carpeta con
+  algo dentro pide confirmación y deja sus sistemas en la raíz: no se borra ningún sistema.
+- Las carpetas solo ordenan la vista: se guardan en `.organizacion.json` dentro de la carpeta del
+  catálogo y no mueven nada en el disco (la CLI y el Taller siguen encontrando cada sistema). Lo
+  que falta en ese archivo sale en la raíz y lo que ya no existe se olvida solo.
+- Herramientas de cada sistema: abrir en el Taller, instalar en un proyecto, descargar como zip,
+  mover, duplicar, cambiar el nombre y eliminar; estado de validación, búsqueda, filtro por
+  familia, orden y selección múltiple para mover o eliminar varios a la vez.
+- Eliminar mueve el sistema a la papelera (`<carpeta de uxyngraphar>/papelera/`), con
+  «Deshacer» en el aviso. Antes avisa si está instalado en proyectos (que lo conservan) o si
+  tiene borrador web o está publicado; nada de eso se toca en el servidor. La vista Papelera
+  restaura (a su carpeta y su sitio) o borra para siempre.
+- Duplicar crea una copia con otro id y prefijos de fichas nuevos, justo detrás del original;
+  las frases de activación propias que chocarían con el original no se copian (te dice cuáles).
+- Cambiar el nombre: el título son las palabras del id (nomenclatura), así que con el mismo id
+  solo cambian tildes y mayúsculas. Para otro nombre se cambia también el id: se crea el
+  sistema con el id nuevo (mismos prefijos y frases) y el anterior va a la papelera. Los
+  proyectos donde estaba instalado siguen con el id anterior hasta que instales el nuevo.
+- CLI: `mis-sistemas`, `eliminar <id>… [--si]`, `papelera [vaciar [ENTRADA] --si]`,
+  `restaurar <entrada|id>`, `duplicar <id> <nuevo-id> --titulo` y
+  `renombrar <id> [<nuevo-id>] --titulo`.
+- Desinstalar la herramienta cuenta también los sistemas de la papelera como tuyos (no se
+  borran sin confirmarlo).
+
 ## 1.5.19
 
 Arreglos de crear un sistema desde el panel (Taller), paso a paso, como una persona normal.
