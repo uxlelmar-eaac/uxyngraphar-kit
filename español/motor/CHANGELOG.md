@@ -1,5 +1,13 @@
 # Cambios
 
+## 1.5.18
+
+- `buscar --familia` con una familia que no existe falla con un error en español que lista
+  las familias válidas (antes decía «sin resultados»).
+- Una opción desconocida en cualquier subcomando (`buscar --nada`, `creador modelos --x`…)
+  muestra el error y el uso de ese subcomando, con la pista `uxyngraphar <comando> --help`,
+  en vez de la ayuda general de uxyngraphar. Sale con código 2.
+
 ## 1.5.17
 
 Arreglos de usar la 1.5.16 como una persona normal (contenedor limpio con Python 3.10).
