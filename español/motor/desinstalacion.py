@@ -220,7 +220,8 @@ def ejecutar(alcance: str, rutas: list[str] | None = None, con_trabajo: bool = F
     if plan["catalogo"] and not con_catalogo:
         nombres = ", ".join(Path(r).name for r in plan["catalogo"][:8]) + (" …" if len(plan["catalogo"]) > 8 else "")
         raise CatalogoSinConfirmar(
-            f"se borrarían {len(plan['catalogo'])} sistemas que escribiste ({nombres}); no he tocado nada. Muévelos antes "
+            f"se borraría{'n' if len(plan['catalogo']) != 1 else ''} {len(plan['catalogo'])} "
+            f"{'sistema' if len(plan['catalogo']) == 1 else 'sistemas'} que escribiste ({nombres}); no he tocado nada. Muévelos antes "
             "fuera de la carpeta de uxyngraphar o confirma que quieres borrarlos (--con-catalogo; en el panel, la casilla)")
     home = str(casa.carpeta())
     informe = {**plan, "simulado": False, "resultados": [], "hechos": [], "pendiente": []}

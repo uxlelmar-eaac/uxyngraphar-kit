@@ -171,6 +171,11 @@ def cmd_reparar(a: argparse.Namespace) -> int:
     return 1 if informe["problemas"] or errores else 0
 
 
+def _se_borrarian(n: int, verbo: str) -> str:
+    """«se borraría 1 sistema que escribiste» / «se borrarían 3 sistemas que escribiste»."""
+    return f"{verbo} 1 sistema que escribiste" if n == 1 else f"{verbo}n {n} sistemas que escribiste"
+
+
 def _confirmar(pregunta: str, validas: tuple[str, ...] = ("s", "si", "sí", "y", "yes")) -> bool:
     try:
         return input(pregunta).strip().lower() in validas
@@ -214,10 +219,10 @@ def cmd_desinstalar(a: argparse.Namespace) -> int:
     con_catalogo = a.con_catalogo
     if plan.get("catalogo") and not con_catalogo:
         if a.si or not interactiva:
-            print(f"Sin cambios: se borrarían {len(plan['catalogo'])} sistemas que escribiste. Muévelos antes fuera de "
+            print(f"Sin cambios: {_se_borrarian(len(plan['catalogo']), 'se borraría')}. Muévelos antes fuera de "
                   f"{home()} o añade --con-catalogo para borrarlos también.", file=sys.stderr)
             return 2
-        con_catalogo = _confirmar(f"Se borrarán también {len(plan['catalogo'])} sistemas que escribiste (lista de arriba). "
+        con_catalogo = _confirmar(f"{_se_borrarian(len(plan['catalogo']), 'Se borrará')} (lista de arriba). "
                                   "Escribe «borrar» para confirmarlo: ", ("borrar",))
         if not con_catalogo:
             print("Sin cambios: tus sistemas siguen donde estaban.")

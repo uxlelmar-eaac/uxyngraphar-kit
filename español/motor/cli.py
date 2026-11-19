@@ -899,9 +899,11 @@ def _main(a) -> int:
         elif a.cmd == "nomenclatura" and a.accion == "migrar":
             return cmd_vocabulario(a)
         elif a.cmd == "nomenclatura":
-            for m in catalogo.listar():
-                for h in m["heredados"]:
-                    print(f"{m['id']}: {h}")
+            heredados = [(m["id"], h) for m in catalogo.listar() for h in m["heredados"]]
+            for pid, h in heredados:
+                print(f"{pid}: {h}")
+            if not heredados:
+                print("Nada pendiente: todos los sistemas del catálogo local siguen la nomenclatura actual.")
         elif a.cmd == "sincronizar-comun":
             cambiados = catalogo.sincronizar_comun()
             print(("scripts/comun al día en: " + ", ".join(cambiados)) if cambiados else "todas las copias de scripts/comun estaban al día")
@@ -955,8 +957,11 @@ def _main(a) -> int:
         elif a.cmd == "deshacer":
             raiz = Path(a.repo).resolve()
             if a.lista:
-                for r in transaccion.listar(raiz):
+                respaldos = transaccion.listar(raiz)
+                for r in respaldos:
                     print(f"{r['nombre']}\t{r['fecha']}\tantes de: {r['motivo']}")
+                if not respaldos:
+                    print(f"No hay cambios que deshacer en {raiz}.")
                 return 0
             r = transaccion.deshacer(raiz, a.respaldo)
             print(f"deshecho: {r['motivo']} ({r['fecha']}); para volver a como estaba: uxyngraphar deshacer --repo {raiz}")
