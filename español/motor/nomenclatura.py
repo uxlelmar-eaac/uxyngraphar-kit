@@ -169,10 +169,19 @@ def singular(palabra: str) -> str:
 
 
 def proponer_prefijo(pid: str, usados: set[str]) -> str:
-    palabras = [p for p in pid.split("-") if p not in NORMA["palabras_funcion"]]
-    letras = sin_tildes(palabras[0]).upper()
-    candidatos = [letras[:3], "".join(p[0] for p in palabras[:3]).upper()]
-    candidatos += [letras[0] + a + b for i, a in enumerate(letras[1:]) for b in letras[i + 2:]]
+    palabras = [sin_tildes(p).upper() for p in pid.split("-") if p and p not in NORMA["palabras_funcion"]] \
+        or [sin_tildes(p).upper() for p in pid.split("-") if p]
+    if not palabras:
+        raise ValueError(f"no encuentro un prefijo libre para «{pid}»: elígelo a mano")
+
+    def combinar(letras: str) -> list[str]:
+        return [letras[0] + a + b for i, a in enumerate(letras[1:]) for b in letras[i + 2:]] if letras else []
+
+    letras = palabras[0]
+    candidatos = [letras[:3], "".join(p[0] for p in palabras[:3])] + combinar(letras)
+    # Si la primera palabra es corta («mi-sistema»), se siguen probando las letras de todo el id.
+    todas = "".join(palabras)
+    candidatos += [todas[:3]] + combinar(todas)
     for c in candidatos:
         if PREFIJO.match(c) and c not in usados and c not in NORMA["prefijos_reservados"]:
             return c

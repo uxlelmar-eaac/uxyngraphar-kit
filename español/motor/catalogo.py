@@ -99,18 +99,22 @@ def crear(pid: str, titulo: str, descripcion: str = "", raiz: Path | None = None
     if c.exists():
         raise FileExistsError(f"ya existe {c}")
     shutil.copytree(esp.PLANTILLA, c, ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "piezas"))
-    m = base.leer_manifiesto(c)
-    resto = {k: v for k, v in m.items() if k not in ("id", "titulo", "descripcion", "familia", "activacion")}
-    _escribir_manifiesto(c, {"manifiesto_formato": m["manifiesto_formato"], "id": pid, "version": m["version"], "titulo": titulo,
-                             "descripcion": descripcion or titulo, "familia": familia, **resto,
-                             "activacion": [pid, pid.replace("-", " ")]})
-    for nombre in (base.ENTRADA, base.DESCRIPCION, base.MEMORIAS, base.LIMITES, base.PERMISOS):
-        ruta = c / nombre
-        ruta.write_text(ruta.read_text(encoding="utf-8").replace("{{titulo}}", titulo).replace("{{id}}", pid), encoding="utf-8")
-    usados = {d.get("prefijo") for _, mm in sistemas.values() for d in mm.get("fichas", {}).values()}
-    for p in piezas:
-        _agregar_pieza(c, p, usados)
-    entrada.actualizar(c)
+    try:
+        m = base.leer_manifiesto(c)
+        resto = {k: v for k, v in m.items() if k not in ("id", "titulo", "descripcion", "familia", "activacion")}
+        _escribir_manifiesto(c, {"manifiesto_formato": m["manifiesto_formato"], "id": pid, "version": m["version"], "titulo": titulo,
+                                 "descripcion": descripcion or titulo, "familia": familia, **resto,
+                                 "activacion": [pid, pid.replace("-", " ")]})
+        for nombre in (base.ENTRADA, base.DESCRIPCION, base.MEMORIAS, base.LIMITES, base.PERMISOS):
+            ruta = c / nombre
+            ruta.write_text(ruta.read_text(encoding="utf-8").replace("{{titulo}}", titulo).replace("{{id}}", pid), encoding="utf-8")
+        usados = {d.get("prefijo") for _, mm in sistemas.values() for d in mm.get("fichas", {}).values()}
+        for p in piezas:
+            _agregar_pieza(c, p, usados)
+        entrada.actualizar(c)
+    except BaseException:
+        shutil.rmtree(c, ignore_errors=True)   # sin restos a medias: reintentar no choca con «ya existe»
+        raise
     return c
 
 
