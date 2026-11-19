@@ -1,5 +1,19 @@
 # Cambios
 
+## 1.5.17
+
+Arreglos de usar la 1.5.16 como una persona normal (contenedor limpio con Python 3.10).
+
+- `crear` ya funciona con ids cuya primera palabra es corta (`mi-sistema` daba «no encuentro
+  un prefijo libre»): si hace falta, el prefijo sale de las letras de todo el id. Los prefijos
+  que ya se proponían no cambian.
+- Si `crear` falla a mitad, no deja una carpeta a medias en el catálogo (antes el reintento
+  decía «ya existe» y el sistema quedaba incoherente).
+- `buscar` con red guarda también el índice, así que `buscar` e `info` funcionan sin red
+  como dice la ayuda. Sin red y sin índice guardado, el error explica por qué.
+- `nomenclatura` y `deshacer --lista` dicen cuando no hay nada pendiente; `desinstalar`
+  habla en singular cuando solo hay un sistema tuyo.
+
 ## 1.5.16
 
 Arreglos del informe de QA de la 1.5.15.
