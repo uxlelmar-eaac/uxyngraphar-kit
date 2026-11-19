@@ -127,7 +127,19 @@ async function formularioBasico(id, alGuardar) {
   const problemas = h("textarea", { rows: 3, class: "breve", "aria-label": "Problemas que resuelve", texto: lineas(datos.alcance?.problemas, "descripcion") });
   const fuera = h("textarea", { rows: 2, class: "breve", "aria-label": "Lo que no resuelve", texto: lineas(datos.alcance?.fuera_de_alcance, "tema") });
   const activacion = h("input", { type: "text", value: (datos.activacion || []).join(", "), "aria-label": "Palabras que lo activan" });
-  const slug = (t, i) => (t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || `problema-${i + 1}`);
+  const sinTildes = (t) => t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  // Ids de problemas: como mucho 40 caracteres, cortando entre palabras (no «…-revision-a»).
+  const slug = (t, i) => {
+    let s = sinTildes(t).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    if (s.length > 40) {
+      const corte = s.slice(0, 41);
+      s = corte.includes("-") ? corte.replace(/-[^-]*$/, "") : s.slice(0, 40);
+    }
+    return s || `problema-${i + 1}`;
+  };
+  // Frases de activación: minúsculas ASCII sin tildes ni signos (como pide la nomenclatura).
+  const frase = (t) => sinTildes(t).replace(/[^a-z0-9 -]+/g, " ").replace(/\s+/g, " ")
+    .replace(/ ?-[ -]*/g, "-").replace(/^[ -]+|[ -]+$/g, "");
   const separar = (t) => t.value.split("\n").map((x) => x.trim()).filter(Boolean);
 
   async function guardar() {
@@ -135,7 +147,7 @@ async function formularioBasico(id, alGuardar) {
     actual.titulo = titulo.value.trim();
     actual.descripcion = descripcion.value.trim();
     actual.familia = familia.value;
-    actual.activacion = activacion.value.split(",").map((x) => x.trim()).filter(Boolean);
+    actual.activacion = [...new Set(activacion.value.split(",").map(frase).filter(Boolean))];
     actual.alcance = actual.alcance || {};
     const previos = actual.alcance.problemas || [];
     actual.alcance.problemas = separar(problemas).map((d, i) => ({ ...(previos[i] || {}), id: previos[i]?.id || slug(d, i), descripcion: d }));

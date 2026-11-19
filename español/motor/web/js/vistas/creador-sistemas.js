@@ -353,8 +353,9 @@ export async function vista(params, { ir }) {
         if (!id) return avisar("Abre un sistema primero.", "mal");
         const meta = (await catalogo(true)).find((m) => m.id === id);
         await instalarEnProyecto(id, meta?.titulo || id);
-        await pintarFranjas();
+        cache.proyectos = null;   // la franja y la salida tienen que ver el proyecto recién instalado
         await pintarLista();
+        await pintarFranjas();
       }, { clase: "pequeno" }),
       boton("Publicar", () => {
         if (!id) return avisar("Abre un sistema primero.", "mal");

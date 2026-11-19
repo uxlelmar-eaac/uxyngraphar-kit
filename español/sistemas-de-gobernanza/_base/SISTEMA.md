@@ -29,4 +29,4 @@
 
 ## Sistemas complementarios
 
-- {{id}}: {{por qué se combinan}}
+- {{otro sistema del catálogo, o «ninguno por ahora»}}: {{por qué se combinan}}
