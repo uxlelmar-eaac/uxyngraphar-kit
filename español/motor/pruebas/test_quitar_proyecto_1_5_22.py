@@ -6,6 +6,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+import unittest
 from pathlib import Path
 
 import _rutas  # noqa: F401
@@ -77,3 +78,21 @@ class TestQuitarSinRestos(ConProyecto):
         self.assertNotEqual(codigo, 0)
         self.assertIn("añade --si", err.getvalue())
         self.assertTrue((r / SISTEMAS / "pruebas-demo").is_dir())
+
+
+class TestSalidaCortada(unittest.TestCase):
+    @unittest.skipIf(sys.platform == "win32", "tubería rota: en POSIX es EPIPE seguro")
+    def test_lector_que_se_va_antes_no_deja_traza(self):
+        # `uxyngraphar --version | head -1`: head cierra la tubería y lo que queda por escribir no debe dar una traza.
+        import uxyngraphar
+        leer, escribir = os.pipe()
+        os.close(leer)
+        flujo = os.fdopen(escribir, "w", encoding="utf-8")
+        salida = uxyngraphar._SalidaPorLineas(flujo)
+        try:
+            self.assertEqual(salida.write("uxyngraphar 1.5.23\n"), len("uxyngraphar 1.5.23\n"))
+            salida.write("más\n")
+            salida.flush()
+        finally:
+            flujo.close()
+        self.assertTrue(salida._rota)

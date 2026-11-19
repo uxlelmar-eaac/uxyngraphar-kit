@@ -265,10 +265,6 @@ def _ejecutar(cmd: str, a: argparse.Namespace) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     ar.preparar_consola()
-    try:   # lo impreso sale en orden con los errores (stderr) también con la salida redirigida a un archivo
-        sys.stdout.reconfigure(line_buffering=True)  # type: ignore[union-attr]
-    except (AttributeError, ValueError):
-        pass
     argv = list(sys.argv[1:] if argv is None else argv)
     if not argv:
         if ar.puede_abrir_panel():
@@ -296,7 +292,48 @@ def main(argv: list[str] | None = None) -> int:
     return cli.main(argv)
 
 
+class _SalidaPorLineas:
+    """stdout por líneas (lo impreso sale en orden con los errores de stderr también redirigido a un archivo o a otro
+    programa) y sin ruido si quien lee se va antes de tiempo (`uxyngraphar --version | head -1`): lo que queda por
+    escribir va a /dev/null y el comando termina su trabajo igual."""
+
+    def __init__(self, flujo):
+        self._flujo, self._rota = flujo, False
+        try:
+            flujo.reconfigure(line_buffering=True)
+        except (AttributeError, ValueError):
+            pass
+
+    def _romper(self) -> None:
+        self._rota = True
+        try:
+            import os
+            os.dup2(os.open(os.devnull, os.O_WRONLY), self._flujo.fileno())   # el vaciado final ya no falla
+        except (OSError, ValueError, AttributeError):
+            pass
+
+    def write(self, texto: str) -> int:
+        if not self._rota:
+            try:
+                return self._flujo.write(texto)
+            except BrokenPipeError:
+                self._romper()
+        return len(texto)
+
+    def flush(self) -> None:
+        if not self._rota:
+            try:
+                self._flujo.flush()
+            except BrokenPipeError:
+                self._romper()
+
+    def __getattr__(self, nombre: str):
+        return getattr(self._flujo, nombre)
+
+
 if __name__ == "__main__":
+    if sys.stdout is not None:
+        sys.stdout = _SalidaPorLineas(sys.stdout)  # type: ignore[assignment]
     try:
         raise SystemExit(main())
     except KeyboardInterrupt:

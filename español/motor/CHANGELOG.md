@@ -1,5 +1,11 @@
 # Cambios
 
+## 1.5.23
+
+- Arreglado (regresión de 1.5.22): `uxyngraphar --version | head -1` y cualquier comando cuya salida se corta antes
+  de tiempo ya no terminan con «error: Broken pipe» y una traza; lo que queda por escribir se descarta y el comando
+  termina su trabajo. La salida sigue saliendo por líneas, en orden con los errores.
+
 ## 1.5.22
 
 Arreglos encontrados al instalar el kit desde cero y probarlo como un usuario nuevo.
