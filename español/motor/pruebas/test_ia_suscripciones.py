@@ -57,10 +57,31 @@ class TestSuscripcionesLocales(unittest.TestCase):
         self.bin = tempfile.TemporaryDirectory()
         self.path = os.environ.get("PATH", "")
         os.environ["PATH"] = self.bin.name
+        # Sin las CLI que traen las apps de escritorio de este equipo (p. ej. Claude Desktop): solo el PATH de la prueba.
+        self.incluidas = ia_local.INCLUIDAS
+        ia_local.INCLUIDAS = {}
 
     def tearDown(self):
+        ia_local.INCLUIDAS = self.incluidas
         os.environ["PATH"] = self.path
         self.bin.cleanup()
+
+    def test_claude_de_claude_desktop_fuera_del_path(self):
+        # Claude Desktop instala Claude Code en su carpeta y no en el PATH: el Creador también debe verlo.
+        app = Path(self.bin.name) / "app"
+        for version in ("2.1.9", "2.1.325"):
+            ruta = app / "claude-code" / version / "abc123" / ("claude.exe" if os.name == "nt" else "claude")
+            ruta.parent.mkdir(parents=True)
+            ruta.write_text(f"#!{sys.executable}\n" + CLAUDE_PY.lstrip("\n"), encoding="utf-8")
+            ruta.chmod(ruta.stat().st_mode | stat.S_IEXEC)
+        patron = str(app / "claude-code" / "*" / "*" / ("claude.exe" if os.name == "nt" else "claude"))
+        ia_local.INCLUIDAS = {"claude": (patron,)}
+        self.assertIn("2.1.325", ia_local.ejecutable("claude") or "")
+        por_id = {s["proveedor"]: s for s in ia_local.suscripciones()["disponibles"]}
+        self.assertTrue(por_id["claude"]["instalada"])
+        self.assertEqual([m["proveedor"] for m in ia_local.modelos() if m.get("suscripcion")], ["claude"])
+        ia_local.INCLUIDAS = {}
+        self.assertIsNone(ia_local.ejecutable("claude"))
 
     def _cli(self, nombre: str, cuerpo_py: str):
         """Deja `nombre` en el PATH vacío de la prueba (con `.cmd` en Windows)."""

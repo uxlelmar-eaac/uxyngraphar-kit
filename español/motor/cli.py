@@ -262,6 +262,13 @@ def cmd_validar(a) -> int:
         _json([{"id": m["id"], "version": m["version"], "titulo": m["titulo"], "errores": m["errores"], "avisos": m.get("avisos", []),
                 **({"completitud": catalogo.completitud(m["id"])} if a.completitud else {})} for m in filas])
         return 1 if any(m["errores"] for m in filas) else 0
+    pedidos = [] if a.cmd == "catalogo" else list(a.ids or [])
+    desconocidos = [i for i in pedidos if i not in {m["id"] for m in filas}]
+    if desconocidos:
+        print(f"no están en el catálogo local: {', '.join(desconocidos)} (míralos con: uxyngraphar catalogo)", file=sys.stderr)
+    if not filas and not pedidos:
+        print("El catálogo local está vacío: crea un sistema con «uxyngraphar crear <id> --titulo … --familia …» "
+              "o trae uno con «uxyngraphar creador bajar <borrador>».")
     for m in filas:
         print(f"{m['id']}\t{m['version']}\t{m['titulo']}" + ("" if not m["errores"] else "\n  ERRORES: " + "; ".join(m["errores"]))
               + "".join(f"\n  aviso: {x}" for x in m.get("avisos", [])))
@@ -270,7 +277,7 @@ def cmd_validar(a) -> int:
             print(f"  piezas: {', '.join(c['piezas']) or '(solo núcleo)'}"
                   + (f"\n  recomendadas que faltan: {', '.join(c['faltan_recomendadas'])}" if c["faltan_recomendadas"] else "")
                   + (f"\n  extensiones: {', '.join(c['extensiones'])}" if c["extensiones"] else ""))
-    return 1 if any(m["errores"] for m in filas) else 0
+    return 1 if desconocidos or any(m["errores"] for m in filas) else 0
 
 
 def cmd_grupos(a) -> int:
@@ -587,7 +594,8 @@ def analizador() -> argparse.ArgumentParser:
             s.add_argument("--trabajos", type=int, default=1, help="verificaciones a la vez (por defecto 1)")
     sub.add_parser("mcp", help="servidor MCP (stdio, solo lectura) para tus agentes; lo arrancan ellos")
     cx = sub.add_parser("conexiones", help="conectar tus agentes (Claude Code, Codex, Cursor…) con tus proyectos")
-    cx.add_argument("accion", choices=("ver", "conectar", "desconectar"))
+    cx.add_argument("accion", nargs="?", default="ver", choices=("ver", "conectar", "desconectar"),
+                    help="por defecto, ver")
     cx.add_argument("agente", nargs="?")
     cx.add_argument("proyectos", nargs="*")
     pa = sub.add_parser("panel")

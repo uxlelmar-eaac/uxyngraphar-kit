@@ -13,8 +13,10 @@ Las respuestas son texto: quien llama (panel) decide qué hacer con él; nunca s
 
 from __future__ import annotations
 
+import glob
 import json
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -71,12 +73,45 @@ NO_PERMITIDAS = {
                "Google ha suspendido cuentas por ello. Usa una clave de Google AI Studio en tu cuenta."),
 }
 PROVEEDORES = ("servidor", *LOCALES, *SUSCRIPCIONES)
+# CLI que una app de escritorio trae dentro sin ponerla en el PATH. Claude Desktop instala Claude Code en su propia
+# carpeta (`claude-code/<versión>/<id>/claude`); si solo tienes la app, `shutil.which("claude")` no la encuentra.
+# Por orden de preferencia; dentro de cada patrón gana la versión más alta.
+INCLUIDAS = {
+    "claude": (
+        "~/.config/Claude/claude-code/*/*/claude",
+        "~/Library/Application Support/Claude/claude-code/*/*/claude",
+        "~/AppData/Roaming/Claude/claude-code/*/*/claude.exe",
+        "~/.claude/local/claude",
+        "~/.config/Claude/claude-code-vm/*/claude",
+    ),
+}
 SEGUNDOS_CLI = 300
 MAX_ARGUMENTO = 100_000
 
 
 class IaNoDisponible(remoto.SinServidor):
     """El proveedor elegido no responde o rechazó la petición."""
+
+
+def _version_ruta(ruta: str) -> tuple[int, ...]:
+    """La versión que aparece en la ruta (p. ej. `.../claude-code/2.1.325/...` → (2, 1, 325)); () si no hay."""
+    for parte in reversed(re.split(r"[\\/]", ruta)):
+        if re.fullmatch(r"\d+(\.\d+)+", parte):
+            return tuple(int(n) for n in parte.split("."))
+    return ()
+
+
+def ejecutable(cli: str) -> str | None:
+    """Ruta de la CLI: la del PATH o, si no está, la que trae dentro su app de escritorio (`INCLUIDAS`)."""
+    exe = shutil.which(cli)
+    if exe is not None:
+        return exe
+    for patron in INCLUIDAS.get(cli, ()):
+        candidatos = [r for r in glob.glob(os.path.expanduser(patron))
+                      if os.path.isfile(r) and (os.name == "nt" or os.access(r, os.X_OK))]
+        if candidatos:
+            return max(candidatos, key=lambda r: (_version_ruta(r), r))
+    return None
 
 
 def _url_local(proveedor: str) -> str:
@@ -116,7 +151,7 @@ def modelos() -> list[dict]:
     except (IaNoDisponible, ValueError):
         pass
     salida += [{"proveedor": p, "modelo": "", "nombre": s["nombre"], "suscripcion": True, "riesgo": s["riesgo"]}
-               for p, s in SUSCRIPCIONES.items() if shutil.which(s["cli"]) is not None]
+               for p, s in SUSCRIPCIONES.items() if ejecutable(s["cli"]) is not None]
     return salida
 
 
@@ -125,7 +160,7 @@ def suscripciones() -> dict:
     return {
         "revisado": "2026-11-18",
         "disponibles": [{"proveedor": p, "nombre": s["nombre"], "planes": s["planes"], "cli": s["cli"],
-                         "instalada": shutil.which(s["cli"]) is not None, "iniciar_sesion": s["iniciar"],
+                         "instalada": ejecutable(s["cli"]) is not None, "iniciar_sesion": s["iniciar"],
                          "riesgo": s["riesgo"], "aviso": s["aviso"]} for p, s in SUSCRIPCIONES.items()],
         "no_permitidas": [{"id": k, "nombre": n, "motivo": m} for k, (n, m) in NO_PERMITIDAS.items()],
     }
@@ -144,9 +179,9 @@ def _plano(todos: list[dict]) -> str:
 def _cli(proveedor: str, texto: str) -> str:
     """Ejecuta la CLI oficial en una carpeta vacía y temporal (no ve tus proyectos) y devuelve su respuesta."""
     s = SUSCRIPCIONES[proveedor]
-    exe = shutil.which(s["cli"])
+    exe = ejecutable(s["cli"])
     if exe is None:
-        raise IaNoDisponible(f"{s['nombre']}: no está instalada en este equipo («{s['cli']}» no aparece en el PATH)")
+        raise IaNoDisponible(f"{s['nombre']}: no está instalada en este equipo («{s['cli']}» no aparece en el PATH ni dentro de su app de escritorio)")
     usa_argumento = "{texto}" in s["orden"]
     if usa_argumento and len(texto) > MAX_ARGUMENTO:
         raise ValueError(f"{s['nombre']}: la conversación es demasiado larga para pasarla a la CLI")

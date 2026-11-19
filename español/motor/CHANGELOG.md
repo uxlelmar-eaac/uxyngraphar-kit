@@ -1,5 +1,15 @@
 # Cambios
 
+## 1.5.15
+
+- **Creador:** encuentra Claude Code aunque solo tengas Claude Desktop (lo instala en
+  su carpeta, fuera del PATH); antes `creador modelos` decía que no había CLI mientras
+  `conexiones ver` lo daba por detectado.
+- `catalogo` y `validar` avisan cuando el catálogo local está vacío en vez de no
+  imprimir nada; `validar <id>` con un id que no existe lo dice y sale con 1.
+- `uxyngraphar conexiones` sin acción muestra el resumen (`ver`) en vez de un error de
+  argparse en inglés.
+
 ## 1.5.14
 
 - **Simulador:** con «uxyn (tu cuenta)» ya no envía un proveedor inválido; usa la IA de la cuenta.
