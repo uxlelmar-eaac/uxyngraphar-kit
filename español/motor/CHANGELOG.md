@@ -1,5 +1,17 @@
 # Cambios
 
+## 1.5.22
+
+Arreglos encontrados al instalar el kit desde cero y probarlo como un usuario nuevo.
+
+- «Quitar todo» de un proyecto ya no deja carpetas vacías: borra `uxyngraphar/trabajo/<id>/` de los sistemas retirados
+  si no tiene nada, y `trabajo/`, `sistemas-de-gobernanza/` y `uxyngraphar/` si se quedan vacías. Solo carpetas
+  vacías: tus fichas y cualquier archivo o carpeta ajena se quedan donde estaban. El plan lo dice antes («solo carpetas
+  vacías») y avisa de que `.claude/settings.json` se borra si solo tenía las reglas de uxyngraphar.
+- El resumen ya no dice «quitado de la lista del panel» cuando el proyecto no estaba en la lista.
+- La CLI escribe por líneas: con la salida redirigida a un archivo o a otro programa, el plan de
+  `proyectos quitar --todo` sale antes del error que pide `--si` (antes salía al revés).
+
 ## 1.5.21
 
 **«Por revisar» ya no atasca** (urgente), un editor de código para los archivos del Taller, archivar sistemas y

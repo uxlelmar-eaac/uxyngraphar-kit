@@ -4,6 +4,7 @@ ajenos que haya dentro de la carpeta de sistemas se dejan donde estaban y los ar
 modificó se copian antes a `respaldos/quitados/` de la carpeta de uxyngraphar."""
 from __future__ import annotations
 
+import contextlib
 import shutil
 import tempfile
 from datetime import datetime
@@ -79,7 +80,7 @@ def plan(ruta: str) -> dict:
                 nombre if solo_bloque else f"{nombre} (solo el bloque de uxyngraphar)")
     for nombre in (protecciones.CLAUDE, *protecciones.EXCLUSIONES):
         if (raiz / nombre).is_file():
-            salida["editar"].append(f"{nombre} (solo las reglas de uxyngraphar)")
+            salida["editar"].append(f"{nombre} (solo las reglas de uxyngraphar; si no queda nada más, se borra)")
     import conexiones
     import integracion
     try:
@@ -97,8 +98,12 @@ def plan(ruta: str) -> dict:
     ya = " ".join(salida["borrar"] + salida["editar"])
     salida["editar"] += [f"conexión de agente: {c}" for c in conectados
                          if not (c.startswith("bloque de uxyngraphar en ") and c.rsplit(" ", 1)[-1] in ya)]
-    if (raiz / base.CARPETA_TRABAJO).is_dir():
-        salida["conservar"].append(f"{base.CARPETA_TRABAJO}/ (tu trabajo con los sistemas)")
+    trabajo = raiz / base.CARPETA_TRABAJO
+    if trabajo.is_dir():
+        if any(x.is_file() for x in trabajo.rglob("*")):
+            salida["conservar"].append(f"{base.CARPETA_TRABAJO}/ (tu trabajo con los sistemas)")
+        else:
+            salida["borrar"].append(f"{base.CARPETA_TRABAJO}/ (solo carpetas vacías)")
     salida["conservar"].append("tu código y cualquier archivo que uxyngraphar no creó")
     return salida
 
@@ -154,8 +159,28 @@ def quitar(ruta: str, todo: bool = False) -> dict:
                         resultado["conservados"].append(rel)
         finally:
             shutil.rmtree(aparte, ignore_errors=True)
+        _podar_vacias(raiz, [x["id"] for x in p["sistemas"]])
     elif todo:
         resultado["hechos"].append("la carpeta ya no existe: solo se quita de la lista")
     resultado.update(desvincular(p["ruta"]))
-    resultado["hechos"].append("quitado de la lista del panel")
+    resultado["hechos"].append("quitado de la lista del panel" if p["registrado"] else "no estaba en la lista del panel")
     return resultado
+
+
+def _podar_vacias(raiz: Path, ids: list[str]) -> None:
+    """Borra las carpetas vacías que creó uxyngraphar: `uxyngraphar/trabajo/<id>/` de los sistemas retirados (con sus
+    subcarpetas vacías), `trabajo/`, `sistemas-de-gobernanza/` y `uxyngraphar/` si se quedan vacías. Solo carpetas
+    vacías: un archivo nunca se toca, ni ninguna otra carpeta."""
+    trabajo = raiz / base.CARPETA_TRABAJO
+    candidatas: list[Path] = []
+    for sid in ids:
+        d = trabajo / sid
+        if d.is_dir() and not d.is_symlink():
+            candidatas += sorted((x for x in d.rglob("*") if x.is_dir() and not x.is_symlink()),
+                                 key=lambda x: len(x.parts), reverse=True)
+            candidatas.append(d)
+    candidatas += [trabajo, raiz / base.CARPETA_SISTEMAS_DE_GOBERNANZA, raiz / base.CARPETA_RAIZ]
+    for d in candidatas:
+        if d.is_dir() and not d.is_symlink():
+            with contextlib.suppress(OSError):
+                d.rmdir()   # solo si está vacía

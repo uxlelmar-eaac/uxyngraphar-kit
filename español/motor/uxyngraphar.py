@@ -265,6 +265,10 @@ def _ejecutar(cmd: str, a: argparse.Namespace) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     ar.preparar_consola()
+    try:   # lo impreso sale en orden con los errores (stderr) también con la salida redirigida a un archivo
+        sys.stdout.reconfigure(line_buffering=True)  # type: ignore[union-attr]
+    except (AttributeError, ValueError):
+        pass
     argv = list(sys.argv[1:] if argv is None else argv)
     if not argv:
         if ar.puede_abrir_panel():
