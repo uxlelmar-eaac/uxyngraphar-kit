@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import json
 import os
-import shutil
 import sys
 from pathlib import Path
 
@@ -55,9 +54,28 @@ def _inicio() -> Path:
     return Path(os.environ.get("UXYNGRAPHAR_INICIO_AGENTES") or Path.home())
 
 
+def _carpeta_propia(agente: str, carpeta: Path) -> bool:
+    """True si la carpeta solo guarda lo que escribió uxyngraphar (~/.codex con nuestro bloque en config.toml): que
+    exista no prueba que el agente esté instalado."""
+    if agente != "codex" or carpeta != _toml_codex().parent:
+        return False
+    try:
+        if any(h.name != "config.toml" for h in carpeta.iterdir()):
+            return False
+        toml = _toml_codex()
+        return not toml.is_file() or not _sin_bloque_toml(toml.read_text(encoding="utf-8", errors="replace")).strip()
+    except OSError:
+        return False
+
+
 def detectar(agente: str) -> bool:
+    """True si el agente está en este equipo: su carpeta de configuración (si no la creamos nosotros) o su programa, en
+    el PATH o dentro de su app de escritorio (Claude Code de Claude Desktop, ver `ia_local.ejecutable`)."""
+    import ia_local
     datos = AGENTES[agente]
-    return any((_inicio() / c).exists() for c in datos["carpetas"]) or any(shutil.which(p) for p in datos["programas"])
+    if any((_inicio() / c).exists() and not _carpeta_propia(agente, _inicio() / c) for c in datos["carpetas"]):
+        return True
+    return any(ia_local.ejecutable(p) for p in datos["programas"])
 
 
 def comando_mcp() -> tuple[str, list[str]]:
@@ -108,7 +126,8 @@ def _sin_bloque_toml(texto: str) -> str:
         return texto
     antes, _, resto = texto.partition(TOML_INI)
     _, _, despues = resto.partition(TOML_FIN)
-    return (antes.rstrip("\n") + "\n" + despues.lstrip("\n")).strip("\n") + "\n"
+    resto_texto = (antes.rstrip("\n") + "\n" + despues.lstrip("\n")).strip("\n")
+    return resto_texto + "\n" if resto_texto else ""
 
 
 def _mcp_conectado(agente: str, proyecto: Path) -> bool | None:
@@ -157,7 +176,13 @@ def _quitar_mcp(agente: str, proyecto: Path, quedan_otros: bool) -> None:
     if tipo == "codex":
         ruta = _toml_codex()
         if not quedan_otros and ruta.is_file():
-            ruta.write_text(_sin_bloque_toml(ruta.read_text(encoding="utf-8")), encoding="utf-8")
+            resto = _sin_bloque_toml(ruta.read_text(encoding="utf-8"))
+            if resto.strip():
+                ruta.write_text(resto, encoding="utf-8")
+            else:   # solo tenía nuestro bloque: no se deja un config.toml vacío (ni la carpeta, si quedó vacía)
+                ruta.unlink()
+                if not any(ruta.parent.iterdir()):
+                    ruta.parent.rmdir()
         return
     ruta = proyecto / rel
     if not ruta.is_file():
@@ -244,6 +269,57 @@ def desconectar(agente: str, proyectos: list[str]) -> list[str]:
     estado[agente] = conocidos
     casa.escribir_json(ESTADO, estado)
     return hechos
+
+
+def retirar_proyecto(proyecto: Path) -> tuple[list[str], list[str]]:
+    """Desconecta todos los agentes de un proyecto que se desinstala: la entrada MCP de cada configuración, los bloques
+    de GEMINI.md y de Copilot, y el bloque global de Codex si ya no queda otro proyecto conectado. (hechos, problemas)."""
+    proyecto = Path(proyecto).resolve()
+    estado = _estado()
+    hechos: list[str] = []
+    problemas: list[str] = []
+    for agente, datos in AGENTES.items():
+        conocidos = [p for p in estado.get(agente, []) if p != str(proyecto)]
+        mcp = datos["mcp"]
+        try:
+            if mcp and mcp[0] == "codex":
+                if str(proyecto) in estado.get(agente, []) and not conocidos and _mcp_conectado(agente, proyecto):
+                    _quitar_mcp(agente, proyecto, quedan_otros=False)
+                    hechos.append(f"{datos['nombre']}: bloque MCP retirado de {_toml_codex()}")
+            elif mcp and _mcp_conectado(agente, proyecto):
+                _quitar_mcp(agente, proyecto, quedan_otros=bool(conocidos))
+                hechos.append(f"{datos['nombre']}: MCP retirado de {mcp[1]}")
+            inst = proyecto / datos["instrucciones"]
+            if datos["instrucciones"] not in generar.ARCHIVOS_AGENTE and inst.is_file() and \
+                    generar.INICIO in inst.read_text(encoding="utf-8", errors="replace"):
+                _quitar_instrucciones(agente, proyecto)
+                hechos.append(f"{datos['nombre']}: bloque retirado de {datos['instrucciones']}")
+        except (ConfiguracionInvalida, OSError) as e:
+            problemas.append(f"{datos['nombre']}: {e}")
+        if agente in estado:
+            estado[agente] = conocidos
+    casa.escribir_json(ESTADO, estado)
+    return hechos, problemas
+
+
+def restos(proyecto: Path) -> list[str]:
+    """Lo que aún conecta el proyecto con uxyngraphar a través de los agentes (comprobación final de la desinstalación)."""
+    proyecto = Path(proyecto)
+    salida = set()
+    for agente, datos in AGENTES.items():
+        mcp = datos["mcp"]
+        if mcp and mcp[0] != "codex" and _mcp_conectado(agente, proyecto):
+            salida.add(f"entrada MCP «{NOMBRE}» en {mcp[1]}")
+        inst = proyecto / datos["instrucciones"]
+        if inst.is_file() and not inst.is_symlink() and generar.INICIO in inst.read_text(encoding="utf-8", errors="replace"):
+            salida.add(f"bloque de uxyngraphar en {datos['instrucciones']}")
+    return sorted(salida)
+
+
+def codex_huerfano() -> bool:
+    """True si ~/.codex/config.toml conserva nuestro bloque MCP sin ningún proyecto conectado a Codex."""
+    ruta = _toml_codex()
+    return ruta.is_file() and TOML_INI in ruta.read_text(encoding="utf-8", errors="replace") and not _estado().get("codex")
 
 
 def resumen(proyectos: list[str]) -> list[dict]:

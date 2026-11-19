@@ -50,7 +50,8 @@ def _plan_proyecto(ruta: str, con_trabajo: bool) -> dict:
         ids = [m["id"] for m in generar.instalados(raiz)]
         fila["quitar"] = [f"{base.CARPETA_SISTEMAS_DE_GOBERNANZA}/{i}/" for i in ids] + [
             f"{base.CARPETA_RAIZ}/{esp.INDICE}", f"{base.CARPETA_RAIZ}/{esp.FLUJO}",
-            "bloque uxyngraphar de AGENTES.md/AGENTS.md/CLAUDE.md", "protecciones de uxyngraphar (.claude/settings.json, .cursorignore…)"]
+            "bloque uxyngraphar de AGENTES.md/AGENTS.md/CLAUDE.md", "protecciones de uxyngraphar (.claude/settings.json, .cursorignore…)",
+            "conexiones de tus agentes (entradas MCP de .mcp.json, .cursor/mcp.json, .gemini/settings.json… y GEMINI.md)"]
         trabajo = f"{base.CARPETA_TRABAJO}/"
         (fila["quitar"] if con_trabajo else fila["conservar"]).append(trabajo)
     return fila
@@ -145,8 +146,9 @@ def cerrar_panel(excepto_pid: int | None = None) -> str:
 
 
 def _quitar_proyecto(fila: dict, con_trabajo: bool) -> dict:
+    import conexiones
     raiz = Path(fila["ruta"])
-    resultado = {"ruta": fila["ruta"], "nombre": fila["nombre"], "tipo": fila["tipo"], "hechos": [], "error": ""}
+    resultado = {"ruta": fila["ruta"], "nombre": fila["nombre"], "tipo": fila["tipo"], "hechos": [], "error": "", "restos": []}
     try:
         if fila["tipo"] == "actual":
             ids = repo.desinstalar(raiz, con_trabajo)
@@ -155,9 +157,35 @@ def _quitar_proyecto(fila: dict, con_trabajo: bool) -> dict:
             resultado["hechos"].append("la carpeta ya no existe")
         else:
             resultado["hechos"].append("no tenía uxyngraphar")
+        if fila["tipo"] != "no_existe":   # las conexiones de los agentes (MCP e instrucciones) también son de uxyngraphar
+            hechos, problemas = conexiones.retirar_proyecto(raiz)
+            resultado["hechos"] += hechos
+            if problemas:
+                resultado["error"] = "; ".join(problemas)
+            resultado["restos"] = restos_proyecto(raiz, con_trabajo)
     except Exception as e:  # noqa: BLE001 - un proyecto que falla no impide seguir con los demás
         resultado["error"] = str(e)
     return resultado
+
+
+def restos_proyecto(raiz: Path, con_trabajo: bool = False) -> list[str]:
+    """Lo que queda de uxyngraphar en un proyecto ya desinstalado (fuera de `uxyngraphar/trabajo/` si se conserva):
+    la comprobación final solo dice «no queda nada» si esta lista está vacía."""
+    import conexiones
+    raiz = Path(raiz)
+    if not raiz.is_dir():
+        return []
+    salida = []
+    carpeta = raiz / base.CARPETA_RAIZ
+    trabajo = Path(base.CARPETA_TRABAJO).name
+    sobran = sorted(p.name for p in carpeta.iterdir() if con_trabajo or p.name != trabajo) if carpeta.is_dir() else []
+    if sobran:
+        salida.append(f"{base.CARPETA_RAIZ}/{', '.join(sobran)}")
+    for nombre in (*generar.ARCHIVOS_AGENTE, *generar.OPCIONALES):
+        ruta = raiz / nombre
+        if ruta.is_file() and not ruta.is_symlink() and generar.INICIO in ruta.read_text(encoding="utf-8", errors="replace"):
+            salida.append(f"bloque de uxyngraphar en {nombre}")
+    return sorted(set(salida + conexiones.restos(raiz)))
 
 
 def retirar_de_proyecto(ruta: str, con_trabajo: bool = False) -> dict:
@@ -228,6 +256,11 @@ def ejecutar(alcance: str, rutas: list[str] | None = None, con_trabajo: bool = F
         if not ar.ES_WINDOWS and os.path.exists(home):
             informe["pendiente"].append(f"queda la carpeta {home}")
     informe["pendiente"] += [f"{r['nombre']}: {r['error']}" for r in informe["resultados"] if r["error"]]
+    informe["pendiente"] += [f"{r['nombre']}: queda {x}" for r in informe["resultados"] for x in r.get("restos", [])]
+    if plan["proyectos"]:
+        import conexiones
+        if conexiones.codex_huerfano():
+            informe["pendiente"].append(f"queda el bloque MCP de uxyngraphar en {conexiones._toml_codex()}")  # noqa: SLF001
     informe["informe"] = guardar_informe(informe)
     return informe
 
