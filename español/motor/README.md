@@ -137,6 +137,8 @@ Todo error responde `{"error": {"codigo", "mensaje", "accion"}}`; `accion` dice 
 | `falta_confirmacion` | 400 | `confirmar` | acción que borra o mueve trabajo sin `confirmar` |
 | `ajustes_claude_invalidos` | 400 | `corregir_ajustes` | `.claude/settings.json` no es JSON válido |
 | `sin_sesion_cuenta` | 401 | `iniciar_sesion` | hace falta la sesión con tu cuenta (Cuenta › Conectar) |
+| `uxyn_sin_ia` | 400 | `configurar_ia` | uxyn no tiene ninguna IA: ni clave en la cuenta (Cuenta → IA y conexiones) ni IA de la plataforma |
+| `uxyn_limite`, `uxyn_proveedor`, `uxyn_solicitud`, `uxyn_interno` | 400 | `reintentar` | el turno de uxyn falló (límite de uso, proveedor de IA, petición o error interno; contrato uxyn 2) |
 | `de_pago` | 402 | `comprar` | el sistema es de pago y tu cuenta no lo tiene: cómpralo en el Mercado |
 | `sin_permiso` | 403 | — | el sistema de archivos no deja leer o escribir |
 | `no_encontrado` | 404 | — | no existe lo pedido (proyecto, sistema, archivo…) |

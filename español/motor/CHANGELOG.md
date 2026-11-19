@@ -1,5 +1,25 @@
 # Cambios
 
+## 1.5.27
+
+uxyn 2 en el panel: las mismas capacidades y la misma experiencia que en la web (contrato compartido
+`contrato-uxyn.json`, versión 2, con copia idéntica en el backend, la web y el kit).
+
+- Turno en vivo: el kit pide `POST v1/me/agente/turno/stream` (SSE) y guarda en memoria la fase y los pasos que
+  llegan, así «Trabajando en tu sistema» se actualiza sin preguntar al servidor cada 900 ms. Si el servidor no
+  ofrece el stream (404/405 u otra respuesta) se vuelve al turno clásico con sondeo el resto de la sesión del panel;
+  sin conexión se reintenta la próxima vez; si se agota el tiempo no se repite el turno (no se duplica).
+- Errores públicos de uxyn: `SIN_IA`, `LIMITE`, `PROVEEDOR`, `SOLICITUD` e `INTERNO` llegan a la interfaz como
+  `uxyn_sin_ia` (acción `configurar_ia`) y `uxyn_*` (acción `reintentar`), documentados en el README.
+- Sin IA configurada: el chat y «Empezar con uxyn» lo dicen antes de escribir (GET info → `ia.disponible`), con las
+  opciones concretas (clave en Cuenta → IA y conexiones, modelo local o suscripción); sin botón «Reintentar» inútil.
+- Tarjeta de cambios en cada respuesta que deja una propuesta: archivos nuevos, cambiados o borrados con +/− líneas,
+  totales y «Revisar y aceptar», que lleva a «Por revisar» (nada se escribe sin aceptarlo).
+- «Qué puede hacer uxyn» (capacidades del servidor) bajo el saludo y botón «Completar el sistema» con el mismo pedido
+  que la web: núcleo y después todo el esqueleto, como sugerencia.
+- El servidor (backend 1.0.12) da a uxyn el contexto de todos los archivos del sistema y del esqueleto completo,
+  lectura de varios archivos de una vez (`leer_archivos`) y crea el esqueleto completo, no solo el núcleo.
+
 ## 1.5.26
 
 Taller y Mis sistemas con una sola lista, esqueleto completo en todos los caminos de creación, importación que no

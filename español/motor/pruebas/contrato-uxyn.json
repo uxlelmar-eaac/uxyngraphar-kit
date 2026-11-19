@@ -1,0 +1,130 @@
+{
+  "version": 2,
+  "descripcion": "Contrato compartido de uxyn entre el backend, la web (uxyngraphar-frontend) y el panel del kit. Copias idénticas en los tres repos; cada uno tiene una prueba que lo lee.",
+  "endpoints": {
+    "info": "GET me/agente (web) · GET v1/me/agente (kit)",
+    "turno": "POST me/agente/turno · POST v1/me/agente/turno",
+    "turno_stream": "POST me/agente/turno/stream · POST v1/me/agente/turno/stream (SSE)",
+    "progreso": "GET me/agente/progreso/:id · GET v1/me/agente/progreso/:id (reserva por sondeo)"
+  },
+  "codigos_error": ["SIN_IA", "LIMITE", "PROVEEDOR", "SOLICITUD", "INTERNO"],
+  "esqueleto": [
+    "nucleo",
+    "cambios",
+    "prompts",
+    "config",
+    "proceso",
+    "skills",
+    "herramientas",
+    "plantillas",
+    "referencia",
+    "ejemplos",
+    "pruebas"
+  ],
+  "ejemplo_info": {
+    "nombre": "uxyn",
+    "herramientas": [
+      "listar_borradores",
+      "ver_borrador",
+      "leer_archivo",
+      "leer_archivos",
+      "validar_borrador",
+      "listar_propuestas",
+      "proponer_cambios",
+      "crear_borrador"
+    ],
+    "capacidades": [
+      {
+        "nombre": "leer_archivos",
+        "descripcion": "Lee varios archivos de un borrador de una vez (hasta 12)."
+      },
+      {
+        "nombre": "proponer_cambios",
+        "descripcion": "Deja una propuesta de cambios para que la persona la revise."
+      }
+    ],
+    "ia_incluida": false,
+    "ia": { "disponible": false, "origen": null },
+    "max_caracteres": 8000,
+    "streaming": true,
+    "contrato": 2
+  },
+  "ejemplo_eventos": [
+    { "tipo": "inicio", "conversacion": 12, "borrador": "contratos-de-pago" },
+    { "tipo": "fase", "fase": "pensando" },
+    {
+      "tipo": "paso",
+      "indice": 0,
+      "herramienta": "leer_archivos",
+      "etiqueta": "Leyendo 3 archivos",
+      "estado": "running"
+    },
+    {
+      "tipo": "paso",
+      "indice": 0,
+      "herramienta": "leer_archivos",
+      "etiqueta": "Leyendo 3 archivos",
+      "estado": "ok"
+    },
+    {
+      "tipo": "paso",
+      "indice": 1,
+      "herramienta": "proponer_cambios",
+      "etiqueta": "Proponiendo cambios: Prompts más claros",
+      "estado": "running"
+    },
+    {
+      "tipo": "paso",
+      "indice": 1,
+      "herramienta": "proponer_cambios",
+      "etiqueta": "Proponiendo cambios: Prompts más claros",
+      "estado": "ok"
+    },
+    { "tipo": "fase", "fase": "terminado" },
+    {
+      "tipo": "resultado",
+      "resultado": {
+        "conversacion": 12,
+        "respuesta": "He dejado una propuesta con los prompts revisados.",
+        "acciones": [
+          {
+            "herramienta": "leer_archivos",
+            "ok": true,
+            "resumen": "leer archivos",
+            "etiqueta": "Leyendo 3 archivos"
+          },
+          {
+            "herramienta": "proponer_cambios",
+            "ok": true,
+            "resumen": "proponer cambios",
+            "etiqueta": "Proponiendo cambios: Prompts más claros",
+            "propuesta": 41,
+            "borrador": "contratos-de-pago",
+            "cambios": [
+              {
+                "ruta": "prompts/agente.md",
+                "tipo": "cambiado",
+                "mas": 6,
+                "menos": 2
+              },
+              {
+                "ruta": "config/limites.json",
+                "tipo": "nuevo",
+                "mas": 5,
+                "menos": 0
+              }
+            ]
+          }
+        ],
+        "propuestas": [41],
+        "borrador": "contratos-de-pago",
+        "modelo": "modelo-de-prueba"
+      }
+    }
+  ],
+  "ejemplo_error": {
+    "tipo": "error",
+    "codigo": "SIN_IA",
+    "mensaje": "Añade una clave de IA en «Cuenta → IA y conexiones» para usar el agente."
+  }
+}

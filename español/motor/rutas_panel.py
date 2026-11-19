@@ -87,6 +87,10 @@ def codigo_error(e: BaseException) -> tuple[str, str]:
         return "ajustes_claude_invalidos", "corregir_ajustes"
     if _sin_sesion(e):
         return "sin_sesion_cuenta", "iniciar_sesion"
+    codigo_uxyn = getattr(e, "codigo", None) if type(e).__name__ == "AgenteError" else None
+    if isinstance(codigo_uxyn, str) and codigo_uxyn:
+        # Contrato uxyn 2: SIN_IA → uxyn_sin_ia (la interfaz explica cómo activar una IA), el resto se puede reintentar.
+        return f"uxyn_{codigo_uxyn.lower()}", ("configurar_ia" if codigo_uxyn == "SIN_IA" else "reintentar")
     if isinstance(e, PermissionError) and not isinstance(e, remoto.DePago):
         return "sin_permiso", ""
     return next(((c, a) for tipo, c, a in CODIGOS if isinstance(e, tipo)), ("pedido_invalido", ""))

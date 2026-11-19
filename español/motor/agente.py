@@ -8,8 +8,14 @@ el borrador a este equipo. Nada se escribe sin que la persona lo acepte. Las con
 
 from __future__ import annotations
 
+import json
+import os
 import re
+import threading
+import time
+import urllib.error
 import urllib.parse
+import urllib.request
 
 import remoto
 
@@ -25,6 +31,35 @@ MAX_CARACTERES_ADJUNTOS = 200_000
 
 class AgenteNoDisponible(remoto.SinServidor):
     """El servidor no responde o rechazó la petición."""
+
+
+class AgenteError(AgenteNoDisponible):
+    """El servidor explicó por qué no pudo hacer el turno (contrato uxyn 2). `codigo`: SIN_IA, LIMITE, PROVEEDOR,
+    SOLICITUD o INTERNO; el panel lo devuelve como `uxyn_<codigo>` para que la interfaz ofrezca la salida adecuada."""
+
+    def __init__(self, codigo: str, mensaje: str):
+        super().__init__(mensaje)
+        self.codigo = codigo if codigo in CODIGOS_ERROR else "INTERNO"
+
+
+class _SinStream(Exception):
+    """No hay turno en vivo (SSE): se usa el turno clásico con sondeo del progreso. `para_siempre`: el servidor no lo
+    ofrece (404/405 u otra respuesta), así que no se vuelve a intentar en esta sesión del panel; sin conexión, sí."""
+
+    def __init__(self, para_siempre: bool = True):
+        super().__init__()
+        self.para_siempre = para_siempre
+
+
+# Contrato uxyn 2 (contrato-uxyn.json, el mismo en el backend, la web y el kit).
+CONTRATO = 2
+CODIGOS_ERROR = ("SIN_IA", "LIMITE", "PROVEEDOR", "SOLICITUD", "INTERNO")
+# Progreso de los turnos en vivo que llegan por SSE: el panel lo lee de aquí sin preguntar al servidor.
+_PROGRESO_LOCAL: dict[str, dict] = {}
+_CANDADO = threading.Lock()
+_SEGUNDOS_PROGRESO_LOCAL = 900
+# Tras un fallo del transporte en vivo, el resto de la sesión del panel usa el turno clásico (como la web).
+_ESTADO = {"sin_stream": bool(os.environ.get("UXYNGRAPHAR_UXYN_SIN_STREAM"))}
 
 
 def _slug(valor: str) -> str:
@@ -103,8 +138,36 @@ def _progreso(valor) -> str:
     return valor
 
 
+def _anotar_evento(id_progreso: str | None, evento: dict) -> None:
+    """Guarda en memoria lo que cuenta un evento `fase`/`paso` del turno en vivo."""
+    if not id_progreso or not isinstance(evento, dict):
+        return
+    ahora = time.time()
+    with _CANDADO:
+        for clave in [k for k, v in _PROGRESO_LOCAL.items() if ahora - v["t"] > _SEGUNDOS_PROGRESO_LOCAL]:
+            del _PROGRESO_LOCAL[clave]
+        actual = _PROGRESO_LOCAL.setdefault(id_progreso, {"fase": None, "pasos": [], "t": ahora})
+        actual["t"] = ahora
+        if evento.get("tipo") == "fase":
+            actual["fase"] = evento.get("fase")
+        elif evento.get("tipo") == "paso":
+            paso = {"herramienta": str(evento.get("herramienta") or ""), "etiqueta": str(evento.get("etiqueta") or ""),
+                    "estado": evento.get("estado") if evento.get("estado") in ("running", "ok", "failed") else "running"}
+            indice = evento.get("indice")
+            pasos = actual["pasos"]
+            if isinstance(indice, int) and 0 <= indice < len(pasos):
+                pasos[indice] = paso
+            else:
+                pasos.append(paso)
+
+
 def progreso(id_progreso: str) -> dict:
-    """Qué está haciendo el agente en un turno en curso: {fase, pasos: [{herramienta, etiqueta, estado}]}."""
+    """Qué está haciendo el agente en un turno en curso: {fase, pasos: [{herramienta, etiqueta, estado}]}.
+    Si el turno llega en vivo (SSE), responde desde memoria; si no, pregunta al servidor (sondeo)."""
+    with _CANDADO:
+        local = _PROGRESO_LOCAL.get(_progreso(id_progreso))
+        if local is not None:
+            return {"fase": local["fase"], "pasos": [dict(p) for p in local["pasos"]], "en_vivo": True}
     codigo, r = remoto._pedir_json(f"/me/agente/progreso/{_progreso(id_progreso)}", metodo="GET", con_sesion=True,
                                    segundos=10)
     return _respuesta(codigo, r, "progreso")
@@ -129,12 +192,92 @@ def turno(mensaje: str, conversacion: int | None = None, borrador: str | None = 
         cuerpo["adjuntos"] = archivos
     if progreso_id:
         cuerpo["progreso"] = _progreso(progreso_id)
+    if not _ESTADO["sin_stream"]:
+        try:
+            return _turno_en_vivo(cuerpo, progreso_id)
+        except _SinStream as e:
+            _ESTADO["sin_stream"] = e.para_siempre
     codigo, r = remoto._pedir_json("/me/agente/turno", cuerpo, con_sesion=True, segundos=SEGUNDOS_TURNO)
     # Servidores antiguos rechazan «progreso» (forbidNonWhitelisted): reintenta sin él; el turno sigue, sin pasos en vivo.
     if codigo == 400 and cuerpo.get("progreso") and "progreso" in str(remoto._mensaje(r, "")).lower():
         sin = {k: v for k, v in cuerpo.items() if k != "progreso"}
         codigo, r = remoto._pedir_json("/me/agente/turno", sin, con_sesion=True, segundos=SEGUNDOS_TURNO)
     return _respuesta(codigo, r, "agente")
+
+
+def eventos_sse(lineas):
+    """Eventos (dict) de un flujo SSE: bloques `data:` separados por una línea vacía; los comentarios (`:`) se ignoran."""
+    datos: list[str] = []
+    for cruda in lineas:
+        linea = (cruda.decode("utf-8") if isinstance(cruda, bytes) else str(cruda)).rstrip("\r\n")
+        if not linea:
+            if datos:
+                try:
+                    evento = json.loads("\n".join(datos))
+                except ValueError:
+                    evento = None
+                datos = []
+                if isinstance(evento, dict):
+                    yield evento
+            continue
+        if linea.startswith("data:"):
+            datos.append(linea[5:].lstrip())
+    if datos:
+        try:
+            evento = json.loads("\n".join(datos))
+        except ValueError:
+            evento = None
+        if isinstance(evento, dict):
+            yield evento
+
+
+def resultado_de_eventos(eventos, id_progreso: str | None = None) -> dict:
+    """Recorre los eventos de un turno en vivo: anota fase y pasos y devuelve el `resultado` (o lanza el `error`)."""
+    for evento in eventos:
+        tipo = evento.get("tipo")
+        if tipo in ("fase", "paso"):
+            _anotar_evento(id_progreso, evento)
+        elif tipo == "resultado" and isinstance(evento.get("resultado"), dict):
+            return evento["resultado"]
+        elif tipo == "error":
+            raise AgenteError(str(evento.get("codigo") or "INTERNO"), str(evento.get("mensaje") or "uxyn no pudo terminar el turno"))
+    raise AgenteNoDisponible("la conexión con uxyn se cortó antes de terminar; el turno puede haber seguido en el servidor: "
+                             "vuelve a abrir la conversación para ver si dejó cambios")
+
+
+def _turno_en_vivo(cuerpo: dict, id_progreso: str | None) -> dict:
+    """POST turno/stream (SSE). Lanza _SinStream si el servidor no lo ofrece (404/405, otra respuesta o sin conexión)."""
+    url = remoto.servidor()
+    if not url:
+        raise _SinStream(para_siempre=False)
+    pedido = urllib.request.Request(  # noqa: S310 - servidor https configurado
+        url + "/me/agente/turno/stream", data=json.dumps(cuerpo).encode("utf-8"), method="POST",
+        headers={"User-Agent": f"uxyngraphar/{remoto.esp.VERSION_MOTOR}", "Accept": "text/event-stream",
+                 "Content-Type": "application/json", **remoto._autorizacion()})
+    try:
+        respuesta = urllib.request.urlopen(pedido, timeout=SEGUNDOS_TURNO)  # noqa: S310 - servidor https configurado
+    except urllib.error.HTTPError as e:
+        try:
+            datos = json.loads(e.read().decode("utf-8") or "{}")
+        except (ValueError, OSError):
+            datos = {}
+        finally:
+            e.close()
+        if e.code in (404, 405):
+            raise _SinStream() from None
+        return _respuesta(e.code, datos if isinstance(datos, dict) else {}, "agente")
+    except TimeoutError:
+        # El servidor pudo recibir el turno: repetirlo por la otra vía lo duplicaría.
+        raise AgenteNoDisponible("uxyn tardó demasiado en responder; vuelve a abrir la conversación para ver si dejó cambios") from None
+    except (urllib.error.URLError, OSError):
+        raise _SinStream(para_siempre=False) from None
+    with respuesta:
+        if "text/event-stream" not in str(respuesta.headers.get("Content-Type") or ""):
+            raise _SinStream()
+        try:
+            return resultado_de_eventos(eventos_sse(respuesta), id_progreso)
+        except OSError:
+            raise AgenteNoDisponible("la conexión con uxyn se cortó; vuelve a abrir la conversación para ver si dejó cambios") from None
 
 
 def propuestas(borrador: str, con_situacion: bool = False) -> list[dict]:

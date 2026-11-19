@@ -5,7 +5,7 @@ import { obtener, enviar } from "../api.js";
 import { h, vaciar, boton, avisar, insignia } from "../ui.js";
 import { anotar } from "../registro.js";
 import { cajaAgente, PREFIJO_CREAR } from "./creador-inicio.js";
-import { ayudaSinIA, mensajeAgente, nuevoIdProgreso, trabajando } from "./agente-chat.js";
+import { PEDIDO_COMPLETAR, ayudaSinIA, capacidadesAgente, mensajeAgente, nuevoIdProgreso, trabajando } from "./agente-chat.js";
 
 const MAX_LINEAS_LCS = 1500;
 
@@ -304,6 +304,13 @@ export async function chatAgente(contexto, {
       : h("div", { class: `mensaje ${quien}` }, h("div", { texto }), ...extra));
     hilo.scrollTop = hilo.scrollHeight;
   };
+  /** «Revisar y aceptar» de una tarjeta de cambios: lleva a «Por revisar», donde se aceptan o corrigen. */
+  function irARevisar() {
+    const destino = sugerencias?.nodo;
+    if (!destino) return;
+    destino.scrollIntoView({ behavior: "smooth", block: "start" });
+    destino.querySelector("button, [tabindex]")?.focus({ preventScroll: true });
+  }
   function pintarSaludo() {
     const primero = hilo.querySelector(".mensaje.ia");
     if (primero && hilo.children.length === 1) primero.textContent = enSimulador() ? saludoSimulador : saludoAsistente;
@@ -338,7 +345,7 @@ export async function chatAgente(contexto, {
       if (alTerminarTurno) await alTerminarTurno();
       const fallo = mensajeAgente(e.message || String(e), {
         error: true,
-        extra: [ayudaSinIA(e.message), h("div", { class: "fila" }, boton("Reintentar", async () => { fallo.remove(); await pedirTurno(cuerpo); }, { clase: "pequeno", icono: "deshacer" }))],
+        extra: [ayudaSinIA(e.message, e.codigo), e.codigo === "uxyn_sin_ia" ? null : h("div", { class: "fila" }, boton("Reintentar", async () => { fallo.remove(); await pedirTurno(cuerpo); }, { clase: "pequeno", icono: "deshacer" }))],
       });
       hilo.append(fallo);
       hilo.scrollTop = hilo.scrollHeight;
@@ -357,7 +364,7 @@ export async function chatAgente(contexto, {
       nivel: "info", origen: "agente", titulo: "Turno uxyn terminó",
       datos: { conversacion, propuestas: r.propuestas, borrador: r.borrador, traido: r.traido, acciones: (r.acciones || []).length },
     });
-    hilo.append(mensajeAgente(r.respuesta, { acciones: r.acciones }));
+    hilo.append(mensajeAgente(r.respuesta, { acciones: r.acciones, alRevisar: irARevisar }));
     hilo.scrollTop = hilo.scrollHeight;
     if (typeof refrescarLista === "function") void refrescarLista();
     if (r.propuestas?.length) {
@@ -375,7 +382,7 @@ export async function chatAgente(contexto, {
 
   /** Si el error es «no hay IA», lo explica en el hilo con opciones concretas (y no solo un aviso fugaz). */
   function explicarSiFaltaIA(e) {
-    const ayuda = ayudaSinIA(e?.message);
+    const ayuda = ayudaSinIA(e?.message, e?.codigo);
     if (!ayuda) return false;
     hilo.append(mensajeAgente(e.message, { error: true, extra: [ayuda] }));
     hilo.scrollTop = hilo.scrollHeight;
@@ -412,6 +419,15 @@ export async function chatAgente(contexto, {
     } catch (e) {
       if (!explicarSiFaltaIA(e)) throw e;
     }
+  }
+  /** «Completar el sistema»: el mismo pedido que la web (núcleo y después todo el esqueleto, como sugerencia). */
+  async function completar() {
+    abierto();
+    if (!conAgente()) {
+      avisar("«Completar el sistema» lo hace uxyn: elige «uxyn (tu cuenta)» en «Qué IA usar».", "mal");
+      return;
+    }
+    await turnoAgente(PEDIDO_COMPLETAR);
   }
   async function hablar() {
     const texto = pregunta.value.trim();
@@ -457,6 +473,7 @@ export async function chatAgente(contexto, {
   const btnAsistente = h("button", { type: "button", class: "boton pequeno conmutador", "aria-pressed": "true" }, "uxyn");
   const btnSimulador = h("button", { type: "button", class: "boton pequeno conmutador", "aria-pressed": "false" }, "Simulador");
   const atajos = h("div", { class: "fila atajos-chat" },
+    boton("Completar el sistema", completar, { clase: "pequeno", icono: "creador", titulo: "uxyn rellena el núcleo y todo el esqueleto y lo deja en «Por revisar»" }),
     boton("Revisar", revisar, { clase: "pequeno" }),
     boton("Mejorar archivo", mejorar, { clase: "pequeno", titulo: "Usa lo que escribas abajo como instrucción" }));
   const pistaModo = h("p", { class: "tenue pista-modo", texto: "Los cambios de uxyn salen en «Por revisar», arriba." });
@@ -542,12 +559,31 @@ export async function chatAgente(contexto, {
   adjuntos.ponerAccion(enviarBoton);
   void refrescarLista();
 
+  // Contrato uxyn 2: qué sabe hacer y si hay una IA con la que trabajar (sin clave en la cuenta ni plataforma).
+  const avisoIA = h("div", { class: "aviso-sin-ia", hidden: true });
+  const capacidades = h("div", {});
+  let sinIA = false;
+  const pintarAvisoIA = () => { avisoIA.hidden = !(sinIA && conAgente() && !enSimulador()); };
+  sel.addEventListener("change", pintarAvisoIA);
+  btnAsistente.addEventListener("click", pintarAvisoIA);
+  btnSimulador.addEventListener("click", pintarAvisoIA);
+  void obtener("/api/agente/info").then((info) => {
+    vaciar(capacidades, capacidadesAgente(info));
+    if (info?.ia && info.ia.disponible === false) {
+      sinIA = true;
+      vaciar(avisoIA, ayudaSinIA("", "uxyn_sin_ia"));
+      pintarAvisoIA();
+    }
+  }).catch(() => { /* sin información: el chat funciona igual y los errores lo explican */ });
+
   return h("div", { class: "chat-agente" },
     h("div", { class: "fila modos-chat", role: "group", "aria-label": "Modo del chat" }, btnAsistente, btnSimulador),
     pistaModo,
     barraHistorial,
     atajos,
+    capacidades,
     hilo,
+    avisoIA,
     propuestaLocal,
     h("label", { class: "campo ia-selector" }, "Qué IA usar", sel),
     adjuntos.nodo);

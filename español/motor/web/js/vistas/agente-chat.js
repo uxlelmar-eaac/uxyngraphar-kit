@@ -2,7 +2,7 @@
 // texto con formato seguro, pasos con etiquetas humanas, «trabajando…» con el progreso en vivo y pie con hora y copiar.
 
 import { obtener } from "../api.js";
-import { h, vaciar, icono } from "../ui.js";
+import { h, vaciar, icono, boton } from "../ui.js";
 import { anotar } from "../registro.js";
 
 /** El servidor (o el kit) dice que no hay ninguna IA con la que trabajar: sin clave en la cuenta ni plataforma. */
@@ -12,8 +12,8 @@ export const RE_SIN_IA = /a[ñn]ade una clave de ia|sin (ninguna )?clave de ia|n
  * Qué hacer cuando falta una IA, con opciones concretas (null si el error es otro). No compra ni guarda nada: solo
  * explica dónde añadir una clave y qué opciones locales admite el kit.
  */
-export function ayudaSinIA(mensaje) {
-  if (!RE_SIN_IA.test(String(mensaje || ""))) return null;
+export function ayudaSinIA(mensaje, codigo = "") {
+  if (codigo !== "uxyn_sin_ia" && !RE_SIN_IA.test(String(mensaje || ""))) return null;
   const item = (titulo, texto) => h("li", {}, h("b", { texto: titulo }), " ", texto);
   return h("div", { class: "pila banda aviso", role: "note", "data-ayuda": "sin-ia" },
     h("b", { texto: "uxyn necesita una IA para proponer cambios. Elige una de estas opciones:" }),
@@ -27,6 +27,59 @@ export function ayudaSinIA(mensaje) {
     h("p", {},
       "Con un modelo local o una suscripción, elígelo en «Qué IA usar» y vuelve a intentarlo (Mejorar, Revisar y el chat lo usan). Detalles y avisos de cada suscripción en ",
       h("a", { href: "#/conexiones", texto: "Conexiones" }), "."));
+}
+
+/** «Completar el sistema»: el mismo pedido que la web (uxyngraphar-frontend, creator.fillPrompt). */
+export const PEDIDO_COMPLETAR = "Completa el sistema entero: primero el núcleo (SISTEMA.md, LIMITES.md, PERMISOS.md, MEMORIAS.md, README.md y sistema.json) y después el resto del esqueleto (proceso/, skills/, HERRAMIENTAS.md, prompts/, config/, plantillas/, referencia/, ejemplos/, pruebas/ y CHANGELOG.md). Sustituye todos los marcadores {{…}} con gobernanza concreta para agentes de IA, crea las piezas que falten y déjalo como sugerencia en «Por revisar». En sistema.json, permisos.acciones.agente y solo_persona son listas de «scripts/….py [subcomando]» (o []); sin texto libre.";
+
+const TIPOS_CAMBIO = { nuevo: ["mas", "nuevo"], cambiado: ["editar", "cambiado"], borrado: ["basura", "borrado"] };
+
+/**
+ * Resumen de los archivos que tocan las propuestas de un turno (contrato uxyn 2: acciones[].cambios).
+ * Una ruta que aparece en varias propuestas se suma. Devuelve {archivos: [{ruta, tipo, mas, menos}], mas, menos}.
+ */
+export function resumenCambios(acciones) {
+  const porRuta = new Map();
+  for (const a of acciones || []) {
+    for (const c of Array.isArray(a?.cambios) ? a.cambios : []) {
+      if (!c || typeof c.ruta !== "string") continue;
+      const tipo = TIPOS_CAMBIO[c.tipo] ? c.tipo : "cambiado";
+      const previo = porRuta.get(c.ruta);
+      const mas = Number(c.mas) || 0;
+      const menos = Number(c.menos) || 0;
+      porRuta.set(c.ruta, previo ? { ...previo, tipo, mas: previo.mas + mas, menos: previo.menos + menos } : { ruta: c.ruta, tipo, mas, menos });
+    }
+  }
+  const archivos = [...porRuta.values()];
+  return { archivos, mas: archivos.reduce((s, c) => s + c.mas, 0), menos: archivos.reduce((s, c) => s + c.menos, 0) };
+}
+
+/** Tarjeta con los archivos que uxyn propone cambiar (+/−) y el botón para revisarlos; null si no hay cambios. */
+export function cambiosAgente(acciones, alRevisar = null) {
+  const { archivos, mas, menos } = resumenCambios(acciones);
+  if (!archivos.length) return null;
+  const titulo = archivos.length === 1 ? "1 archivo por revisar" : `${archivos.length} archivos por revisar`;
+  return h("div", { class: "tarjeta-cambios", "data-cambios": String(archivos.length) },
+    h("div", { class: "fila separada" },
+      h("b", { texto: titulo }),
+      h("span", { class: "totales-cambios" }, h("span", { class: "cambio-mas", texto: `+${mas}` }), " ", h("span", { class: "cambio-menos", texto: `−${menos}` }))),
+    h("ul", { class: "lista-cambios", "aria-label": "Archivos que cambian" },
+      archivos.map((c) => h("li", { class: `cambio-${c.tipo}` },
+        h("span", { class: "icono-cambio", "aria-hidden": "true" }, icono(TIPOS_CAMBIO[c.tipo][0])),
+        h("code", { texto: c.ruta, title: c.ruta }),
+        h("span", { class: "tipo-cambio", texto: TIPOS_CAMBIO[c.tipo][1] }),
+        h("span", { class: "cambio-mas", texto: `+${c.mas}` }),
+        h("span", { class: "cambio-menos", texto: `−${c.menos}` })))),
+    alRevisar ? h("div", { class: "fila" }, boton("Revisar y aceptar", alRevisar, { clase: "pequeno primario", icono: "check" })) : null);
+}
+
+/** Qué sabe hacer uxyn (GET info → capacidades), plegado bajo el saludo. */
+export function capacidadesAgente(info) {
+  const lista = Array.isArray(info?.capacidades) ? info.capacidades.filter((c) => c && c.nombre) : [];
+  if (!lista.length) return null;
+  return h("details", { class: "capacidades-agente" },
+    h("summary", { texto: "Qué puede hacer uxyn" }),
+    h("ul", {}, lista.map((c) => h("li", {}, h("code", { texto: c.nombre }), " ", c.descripcion || ""))));
 }
 
 /** Cada cuánto se pregunta por el progreso mientras el agente trabaja (igual que la web). */
@@ -112,13 +165,14 @@ export function pieMensaje(texto, fecha = new Date()) {
 }
 
 /** Respuesta del agente: avatar, texto con formato, pasos hechos, extras (botones) y pie. */
-export function mensajeAgente(texto, { acciones = [], extra = [], fecha, error = false, quien = "uxyn" } = {}) {
+export function mensajeAgente(texto, { acciones = [], extra = [], fecha, error = false, quien = "uxyn", alRevisar = null } = {}) {
   return h("div", { class: "mensaje-agente" },
     h("span", { class: "avatar-agente", "aria-hidden": "true" }, icono("creador")),
     h("div", { class: `mensaje ia${error ? " error" : ""}` },
       h("span", { class: "quien", texto: quien }),
       error ? h("p", { role: "alert", texto }) : textoAgente(texto),
       pasosAgente(pasosDeAcciones(acciones)),
+      error ? null : cambiosAgente(acciones, alRevisar),
       extra,
       error ? null : pieMensaje(texto, fecha ? new Date(fecha) : new Date())));
 }

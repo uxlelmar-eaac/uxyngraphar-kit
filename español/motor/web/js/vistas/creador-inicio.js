@@ -1,7 +1,7 @@
 // Crear un sistema con el agente (igual que en el Creador web): la persona cuenta su idea y/o adjunta archivos de
 // texto; el agente crea el borrador y deja el contenido como propuestas. El panel lo trae a este equipo.
 
-import { enviar } from "../api.js";
+import { enviar, obtener } from "../api.js";
 import { h, vaciar, boton, avisar, icono } from "../ui.js";
 import { anotar } from "../registro.js";
 import { ayudaSinIA, mensajeAgente, nuevoIdProgreso, trabajando } from "./agente-chat.js";
@@ -251,6 +251,7 @@ export function inicioConAgente({ alCrear, alAntesDeCrear = null, alDespuesDeCre
     h("span", { class: "tenue", texto: "Prueba con:" }),
     EJEMPLOS.map(([corto, texto]) => h("button", { type: "button", class: "ejemplo", texto: corto, title: texto, onclick: () => { idea.value = texto; idea.focus(); } })));
   const zonaEspera = h("div", {});
+  const avisoIA = h("div", { class: "aviso-sin-ia" });
   let fallo = null;
 
   async function crear() {
@@ -278,7 +279,7 @@ export function inicioConAgente({ alCrear, alAntesDeCrear = null, alDespuesDeCre
       } catch (e) {
         anotar({ nivel: "error", origen: "agente", titulo: "Turno uxyn falló al crear", detalle: e.message || String(e) });
         // El texto y los adjuntos siguen en la caja: «Reintentar» repite el mismo envío.
-        fallo = mensajeAgente(e.message || String(e), { error: true, extra: [ayudaSinIA(e.message), h("div", { class: "fila" }, boton("Reintentar", crear, { clase: "pequeno", icono: "deshacer" }))] });
+        fallo = mensajeAgente(e.message || String(e), { error: true, extra: [ayudaSinIA(e.message, e.codigo), e.codigo === "uxyn_sin_ia" ? null : h("div", { class: "fila" }, boton("Reintentar", crear, { clase: "pequeno", icono: "deshacer" }))] });
         zonaEspera.after(fallo);
         return false;
       }
@@ -326,6 +327,10 @@ export function inicioConAgente({ alCrear, alAntesDeCrear = null, alDespuesDeCre
       h("span", { class: "inicio-agente-insignia", "aria-hidden": "true" }, icono("creador")),
       h("div", {}, h("h3", { texto: "Empezar con uxyn" }),
         h("p", { class: "tenue", texto: "Idea o zip → archivos del sistema. Tú aceptas en «Por revisar»." }))) : null,
-    respuestas, zonaEspera, caja.nodo, ejemplos);
+    respuestas, zonaEspera, avisoIA, caja.nodo, ejemplos);
+  // Contrato uxyn 2: si la cuenta no tiene ninguna IA, se explica antes de escribir (y no tras un error).
+  void obtener("/api/agente/info").then((info) => {
+    if (info?.ia && info.ia.disponible === false) vaciar(avisoIA, ayudaSinIA("", "uxyn_sin_ia"));
+  }).catch(() => { /* sin información: los errores del turno lo explican */ });
   return { nodo, crear };
 }

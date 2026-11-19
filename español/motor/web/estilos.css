@@ -571,6 +571,24 @@ label.casilla.carpeta-opcion input { margin-top: 0; }
 .pasos-agente svg { width: 14px; height: 14px; flex-shrink: 0; }
 .pasos-agente .paso-ok svg { color: var(--bien); }
 .pasos-agente .paso-failed svg { color: var(--mal); }
+/* uxyn 2: tarjeta de cambios propuestos (+/−), capacidades y aviso sin IA (mismos datos que la web) */
+.tarjeta-cambios { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; padding: 10px 12px; border: 1px solid var(--borde-2); border-left: 3px solid var(--decide); border-radius: var(--radio-sm); background: var(--superficie); }
+.tarjeta-cambios .fila.separada { gap: 8px; }
+.totales-cambios { font-family: var(--font-mono); font-size: var(--font-size-xs); }
+.lista-cambios { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; font-size: var(--font-size-xs); }
+.lista-cambios li { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto auto auto; gap: 8px; align-items: center; }
+.lista-cambios code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-mono); }
+.icono-cambio svg { width: 14px; height: 14px; }
+.cambio-nuevo .icono-cambio { color: var(--bien); }
+.cambio-cambiado .icono-cambio { color: var(--texto-marca); }
+.cambio-borrado .icono-cambio { color: var(--mal); }
+.tipo-cambio { color: var(--tenue); }
+.cambio-mas { color: var(--bien); font-family: var(--font-mono); }
+.cambio-menos { color: var(--mal); font-family: var(--font-mono); }
+.capacidades-agente { font-size: var(--font-size-xs); color: var(--texto-2); }
+.capacidades-agente summary { cursor: pointer; color: var(--acento); }
+.capacidades-agente ul { margin: 6px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; }
+.aviso-sin-ia:empty { display: none; }
 .giro.chico { width: 10px; height: 10px; border-width: 2px; flex-shrink: 0; }
 .trabajando > .mensaje { border: 1px dashed var(--borde); background: transparent; }
 .trabajando p { margin: 0; }
