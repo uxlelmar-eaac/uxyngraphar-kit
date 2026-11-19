@@ -228,6 +228,21 @@ class TestRemoto(unittest.TestCase):
                                                              encoding="utf-8")
         self.assertEqual([s["id"] for s in remoto.buscar("demo")], ["pruebas-demo"])
 
+    def test_buscar_con_red_deja_el_indice_para_sin_red(self):
+        self.assertEqual([s["id"] for s in remoto.buscar("demo")], ["pruebas-demo"])
+        self.assertTrue((remoto.cache() / remoto.ARCHIVO_INDICE).is_file(), "buscar con red guarda el índice")
+        os.environ["UXYNGRAPHAR_SERVIDOR"] = "http://127.0.0.1:9/v1"
+        remoto._caido_hasta = 0.0  # noqa: SLF001
+        (remoto.cache() / remoto.ARCHIVO_INDICE).write_text(json.dumps({**remoto._indice_guardado(), "_recibido": 0}),  # noqa: SLF001
+                                                             encoding="utf-8")
+        self.assertEqual([s["id"] for s in remoto.buscar("demo")], ["pruebas-demo"])
+        self.assertEqual(remoto.resolver("pruebas-demo")["version"], Falso.fichas[0]["version"])
+
+    def test_sin_red_y_sin_indice_guardado_lo_explica(self):
+        os.environ["UXYNGRAPHAR_SERVIDOR"] = "http://127.0.0.1:9/v1"
+        with self.assertRaisesRegex(remoto.SinServidor, "aún no hay ninguno"):
+            remoto.buscar("demo")
+
     def test_resolver(self):
         version = Falso.fichas[0]["version"]
         self.assertEqual(remoto.resolver("pruebas-demo")["version"], version)

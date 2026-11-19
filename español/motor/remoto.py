@@ -12,6 +12,7 @@ Solo la biblioteca estándar (ADR 0001): urllib, json, hashlib.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import re
@@ -142,10 +143,11 @@ def indice(refrescar: bool = False) -> dict:
         cache().mkdir(parents=True, exist_ok=True)
         (cache() / ARCHIVO_INDICE).write_text(json.dumps(datos, ensure_ascii=False), encoding="utf-8")
         return datos
-    except SinServidor:
+    except SinServidor as fallo:
         if guardado.get("sistemas") is not None:
             return guardado
-        raise
+        raise SinServidor(f"{fallo}. Sin red solo puedo usar el último índice guardado y aún no hay ninguno: "
+                          "se guarda solo la primera vez que buscas o instalas con red") from None
 
 
 def _compatibles(s: dict) -> list[dict]:
@@ -215,12 +217,8 @@ def buscar(texto: str = "", familia: str = "") -> list[dict]:
     try:
         q = urllib.parse.urlencode({k: v for k, v in (("q", texto), ("familia", familia)) if v})
         datos = _json("/sistemas" + (f"?{q}" if q else ""))
-        return datos.get("sistemas", datos.get("items", [])) if isinstance(datos, dict) else datos
-    except SinServidor as fallo:
-        try:
-            guardados = indice().get("sistemas", [])
-        except SinServidor:
-            raise fallo from None
+    except SinServidor:
+        guardados = indice().get("sistemas", [])   # sin red: el índice guardado (o SinServidor con el motivo)
         palabras = [p for p in texto.lower().split() if p]
         salida = []
         for s in guardados:
@@ -229,6 +227,10 @@ def buscar(texto: str = "", familia: str = "") -> list[dict]:
             if all(p in pajar for p in palabras) and (not familia or s.get("familia") == familia):
                 salida.append(s)
         return salida
+    # Con red se guarda también el índice (si no está fresco), para que «buscar» e «info» sigan funcionando sin red.
+    with contextlib.suppress(SinServidor, NoEncontrado, OSError, ValueError):
+        indice()
+    return datos.get("sistemas", datos.get("items", [])) if isinstance(datos, dict) else datos
 
 
 def ficha(ref: str) -> dict:
