@@ -1,5 +1,20 @@
 # Cambios
 
+## 1.5.24
+
+Arreglos encontrados probando el kit con una cuenta real (borradores del Creador web).
+
+- Arreglado: `creador subir --conservar local` (y «Conservar lo de este equipo» en el panel) decía «subido a la web
+  (revisión 0)» sin haber subido nada, y dejaba este equipo creyendo que estaba al día. El servidor manda la revisión
+  del conflicto dentro de `details` y el kit la buscaba en la raíz, así que reintentaba con la revisión 0 y tomaba el
+  segundo rechazo por un éxito. Ahora lee la revisión donde viene, si la web vuelve a cambiar entre medias lo dice
+  como conflicto y nunca da por subido algo que el servidor no confirmó. El aviso de conflicto también enseña la
+  revisión real de la web (antes «revisión 0»).
+- `creador borradores` avisa cuando la web va por delante de lo que hay en este equipo («con la revisión N: la web
+  tiene cambios», y el comando para traerlos).
+- `archivar` de un borrador que solo está en la web dice «olvidado en el Taller de este equipo» en vez de «sigue en tu
+  catálogo y en tus proyectos».
+
 ## 1.5.23
 
 - Arreglado (regresión de 1.5.22): `uxyngraphar --version | head -1` y cualquier comando cuya salida se corta antes

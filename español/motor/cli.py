@@ -247,6 +247,9 @@ def cmd_creador(a) -> int:
                 _json(filas)
             for f in [] if a.json else filas:
                 aqui = "en este equipo" if f.get("en_equipo") else "solo en la web"
+                local, web = f.get("revision_equipo"), f.get("revision")
+                if f.get("en_equipo") and isinstance(local, int) and isinstance(web, int) and web > local:
+                    aqui += f", con la revisión {local}: la web tiene cambios (uxyngraphar creador bajar {f.get('slug')})"
                 print(f"{f.get('slug')}\trevisión {f.get('revision')}\t{f.get('titulo', '')}\t({aqui})")
             if not filas and not a.json:
                 print("No tienes borradores en el Creador web.")
@@ -964,9 +967,15 @@ def cmd_mis_sistemas(a) -> int:
                   " un borrador web o lo publicado siguen con el id anterior.")
     elif a.cmd in ("archivar", "desarchivar"):
         ms.archivar(a.ids, a.cmd == "archivar")
-        hecho = "archivado: ya no sale en el Taller (sigue en tu catálogo y en tus proyectos)" if a.cmd == "archivar" else "de vuelta en el Taller"
         for pid in a.ids:
-            print(f"{pid}: {hecho}")
+            local = (catalogo.catalogo() / pid / esp.base.MANIFIESTO).is_file()
+            if a.cmd == "desarchivar":
+                print(f"{pid}: de vuelta en el Taller")
+            elif local:
+                print(f"{pid}: archivado: ya no sale en el Taller (sigue en tu catálogo y en tus proyectos)")
+            else:
+                print(f"{pid}: olvidado en el Taller de este equipo (no está en tu catálogo local; "
+                      "un borrador web o lo publicado no se tocan)")
     return 0
 
 

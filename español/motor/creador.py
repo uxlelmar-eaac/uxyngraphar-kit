@@ -206,6 +206,18 @@ def _error(codigo: int, cuerpo: dict) -> None:
         raise remoto.SinServidor(remoto._mensaje(cuerpo, f"el servidor respondió HTTP {codigo}"))
 
 
+def _revision_de(cuerpo: object) -> int:
+    """Revisión de una respuesta del Creador: en la raíz (200) o en `details` (409, formato de error del servidor)."""
+    if not isinstance(cuerpo, dict):
+        return 0
+    detalles = cuerpo.get("details")
+    for fuente in (detalles if isinstance(detalles, dict) else {}, cuerpo):
+        valor = fuente.get("revision")
+        if isinstance(valor, int) and not isinstance(valor, bool) and valor > 0:
+            return valor
+    return 0
+
+
 def _web(slug: str) -> tuple[int, dict[str, str]]:
     codigo, cuerpo = remoto._pedir_json(f"/me/creador/borradores/{slug}", metodo="GET", con_sesion=True)
     _error(codigo, cuerpo)
@@ -248,17 +260,19 @@ def subir(slug: str, conservar: str | None = None, cat: Path | None = None) -> d
     cuerpo = {"revision": base_rev, "archivos": [{"ruta": r, "contenido": t} for r, t in sorted(local.items())]}
     codigo, respuesta = remoto._pedir_json(f"/me/creador/borradores/{slug}", cuerpo, metodo="PUT", con_sesion=True)
     if codigo == 409:
-        revision = int(respuesta.get("revision") or 0)
-        if conservar == "local":
+        revision = _revision_de(respuesta)
+        if conservar == "local" and revision:
             cuerpo["revision"] = revision
             codigo, respuesta = remoto._pedir_json(f"/me/creador/borradores/{slug}", cuerpo, metodo="PUT", con_sesion=True)
         elif conservar == "web":
             return bajar(slug, conservar="web", cat=cat)
-        else:
-            _, web = _web(slug)
+        if codigo == 409:   # sin --conservar, o la web volvió a cambiar mientras tanto: no se da por subido
+            revision, web = _web(slug)
             raise Conflicto(slug, revision, diferencias(web, local))
     _error(codigo, respuesta)
-    revision = int(respuesta.get("revision") or 0)
+    revision = _revision_de(respuesta)
+    if not revision:
+        raise remoto.SinServidor("el servidor no confirmó la revisión del borrador: no se ha dado por subido")
     _guardar_estado(slug, revision, local)
     return {"slug": slug, "revision": revision, "accion": "subido", "archivos": len(local)}
 

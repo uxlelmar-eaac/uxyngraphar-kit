@@ -9,6 +9,7 @@ import os
 import tempfile
 import threading
 import unittest
+from unittest import mock
 import zipfile
 from contextlib import redirect_stdout
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -69,7 +70,9 @@ class Servidor(BaseHTTPRequestHandler):
         b = self.borradores.get(slug)
         actual = b["revision"] if b else 0
         if cuerpo["revision"] != actual:
-            return self._json({"message": "conflicto", "revision": actual}, 409)
+            # el formato real del servidor: la revisión va en «details» (ver creator.service.ts)
+            return self._json({"statusCode": 409, "error": "Conflict", "message": "El borrador cambió",
+                               "details": {"revision": actual}}, 409)
         self.borradores[slug] = {"titulo": slug, "revision": actual + 1,
                                  "archivos": {a["ruta"]: a["contenido"] for a in cuerpo["archivos"]}}
         return self._json({"slug": slug, "revision": actual + 1})
@@ -224,6 +227,34 @@ class TestSincronizacion(ConServidor):
         r = creador.subir("contratos-de-pago", "local", cat=self.cat)
         self.assertEqual(r["revision"], 6)
         self.assertIn("Local.", Servidor.borradores["contratos-de-pago"]["archivos"]["LIMITES.md"])
+
+    def test_conservar_local_si_la_web_vuelve_a_cambiar_no_da_por_subido(self):
+        self._web()
+        creador.bajar("contratos-de-pago", cat=self.cat)
+        (self.cat / "contratos-de-pago" / "LIMITES.md").write_text("# Límites\n\nLocal.\n", encoding="utf-8")
+        Servidor.borradores["contratos-de-pago"]["revision"] = 5
+        original = Servidor.do_PUT
+
+        def otra_pestana(handler):   # la web cambia justo entre el 409 y el reintento
+            Servidor.borradores["contratos-de-pago"]["revision"] += 1
+            return original(handler)
+        with mock.patch.object(Servidor, "do_PUT", otra_pestana), self.assertRaises(creador.Conflicto):
+            creador.subir("contratos-de-pago", "local", cat=self.cat)
+        self.assertNotIn("Local.", Servidor.borradores["contratos-de-pago"]["archivos"]["LIMITES.md"])
+        self.assertEqual(creador._recordado("contratos-de-pago")["revision"], 3, "el estado local no cambia")
+
+    def test_borradores_avisa_si_la_web_va_por_delante(self):
+        import contextlib
+        import io
+
+        import cli
+        self._web()
+        creador.bajar("contratos-de-pago", cat=self.cat)
+        Servidor.borradores["contratos-de-pago"]["revision"] = 4
+        salida = io.StringIO()
+        with mock.patch.dict(os.environ, {"UXYNGRAPHAR_CATALOGO": str(self.cat)}), contextlib.redirect_stdout(salida):
+            cli.main(["creador", "borradores"])
+        self.assertIn("con la revisión 3: la web tiene cambios (uxyngraphar creador bajar contratos-de-pago)", salida.getvalue())
 
     def test_conservar_la_web(self):
         self._web()
