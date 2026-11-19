@@ -104,6 +104,13 @@ está fuera de alcance, deriva), las memorias (`MEMORIAS.md` y las vigentes del 
   (Borrador → En equipo → En proyecto → Mercado), barra de salida (Descargar .zip, Traer/Guardar,
   Instalar, Publicar), archivos/editor por defecto y uxyn en columna estrecha. «Por revisar» queda
   fijo encima del editor. **Guardar en la web** no es lo mismo que **Publicar en el Mercado**.
+- **Mis sistemas**: los sistemas de tu catálogo local en carpetas (anidadas) que ordenas arrastrando
+  o con «Mover a…». Las carpetas solo ordenan la vista (`.organizacion.json` en la carpeta del
+  catálogo; no mueven nada en el disco). Por sistema: abrir en el Taller, instalar, descargar .zip,
+  duplicar, cambiar el nombre y eliminar a la **papelera** (con «Deshacer»; la vista Papelera
+  restaura o borra para siempre). Nada de esto toca el servidor. Rutas: `/api/mis-sistemas`
+  (GET: vista, `papelera`, `avisos`; POST: `carpeta`, `mover`, `eliminar`, `restaurar`, `vaciar`,
+  `duplicar`, `renombrar`).
 - **Proyectos**: añade carpetas con el explorador. En cada proyecto: instalar, actualizar, reparar o
   quitar sistemas; memorias; flujo del asistente; revisión. Los **flujos guardados** se abren desde aquí.
 - **Mercado**: busca sistemas publicados en el servidor, tráelos e instálalos.

@@ -24,7 +24,7 @@ En Windows se usa `py` (el lanzador de Python que instala python.org); si no lo 
 
 El instalador llega **vacío**: los sistemas de gobernanza se guardan en el servidor de uxyngraphar y los traes cuando los necesitas, desde el panel (área **Mercado**) o con `uxyngraphar buscar <texto>` e `uxyngraphar instalar <id>`. Lo que traes queda guardado en tu equipo y sigue funcionando sin red. Quien escribe sistemas los publica con `uxyngraphar publicar <id>` (con la sesión de tu cuenta). Ver [ADR 0007](./decisiones/0007-sistemas-en-el-servidor.md).
 
-El instalador te pregunta si quieres un acceso directo en el menú de inicio, el escritorio o la barra de tareas. Después, el único comando que necesitas es **`uxyngraphar`** (o ese acceso directo): abre el panel en tu navegador. El panel se organiza en **Inicio**, **Taller**, **Proyectos**, **Mercado** y **Cuenta** ([ADR 0015](./decisiones/0015-taller-de-sistemas.md)): el objeto principal es el sistema de gobernanza (archivos, origen, ciclo y salida); uxyn propone cambios y tú decides.
+El instalador te pregunta si quieres un acceso directo en el menú de inicio, el escritorio o la barra de tareas. Después, el único comando que necesitas es **`uxyngraphar`** (o ese acceso directo): abre el panel en tu navegador. El panel se organiza en **Inicio**, **Taller**, **Mis sistemas**, **Proyectos**, **Mercado** y **Cuenta** ([ADR 0015](./decisiones/0015-taller-de-sistemas.md)): el objeto principal es el sistema de gobernanza (archivos, origen, ciclo y salida); uxyn propone cambios y tú decides.
 
 ## Tu cuenta: biblioteca, Taller y reportes
 
@@ -53,6 +53,8 @@ Las actualizaciones nunca dejan la herramienta rota: cada versión se descarga, 
 | Desinstalar | `uxyngraphar desinstalar`: pregunta qué quitar (todo, solo la herramienta, uxyngraphar de tus proyectos o solo los accesos directos), enseña la lista exacta y pide confirmación |
 
 Los sistemas que escribes (`crear`, el Taller) se guardan en `~/.uxyngraphar/catalogo/`, fuera de las versiones: reparar, actualizar, volver atrás o podar versiones antiguas no los tocan (los que crearon versiones anteriores dentro de `versiones/` se mueven ahí solos). Desinstalar la herramienta los lista y no los borra salvo que lo confirmes (`--con-catalogo`; en el panel, la casilla).
+
+En el panel, **Mis sistemas** los ordena en carpetas (arrastrando o con «Mover a…»; solo es una vista, no mueve nada en el disco) y trae las herramientas de cada uno: abrir en el Taller, instalar, descargar, duplicar, cambiar el nombre y eliminar. Eliminar los lleva a una papelera recuperable (`uxyngraphar papelera`, `uxyngraphar restaurar <id>`); también hay `uxyngraphar eliminar`, `duplicar`, `renombrar` y `mis-sistemas`. Nada de esto toca el servidor ni lo publicado.
 
 Al desinstalar, el trabajo de cada proyecto (`uxyngraphar/trabajo/`) se conserva salvo que pidas borrarlo (`--con-trabajo`). Sin terminal: `uxyngraphar desinstalar --alcance todo|herramienta|proyectos|accesos [--proyectos RUTA,RUTA] [--con-trabajo] [--con-catalogo] [--simular] --si`.
 

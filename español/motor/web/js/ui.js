@@ -96,6 +96,19 @@ export function avisar(texto, tipo = "") {
   setTimeout(() => a.remove(), tipo === "mal" ? 8000 : 4500);
 }
 
+// Aviso con un botón (p. ej. «Deshacer»): dura más que uno normal y se quita al pulsarlo.
+export function avisarConAccion(texto, textoBoton, accion, { segundos = 10 } = {}) {
+  const b = h("button", { type: "button", class: "aviso-accion" }, textoBoton);
+  const a = h("div", { class: "aviso con-accion" }, h("span", { texto }), b);
+  b.addEventListener("click", async () => {
+    b.disabled = true;
+    try { await accion(); a.remove(); } catch (e) { b.disabled = false; avisar(e.message || String(e), "mal"); }
+  });
+  document.getElementById("avisos").append(a);
+  setTimeout(() => a.remove(), segundos * 1000);
+  return a;
+}
+
 export const insignia = (texto, tipo = "") => h("span", { class: `insignia ${tipo}`, texto });
 export const cargando = (texto = "Cargando…") => h("div", { class: "cargando" }, h("span", { class: "giro" }), texto);
 export const vacio = (titulo, texto, ...acciones) => h("div", { class: "vacio" }, h("h3", { texto: titulo }), h("p", { texto }), h("div", { class: "fila", style: "justify-content:center" }, acciones));
