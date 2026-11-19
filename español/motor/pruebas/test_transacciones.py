@@ -85,7 +85,10 @@ class TestTransaccion(Base):
         self.assertIsNone(transaccion.interrumpida(self.repo))
 
     def test_respaldos_fuera_del_proyecto_y_podados(self):
-        for _ in range(transaccion.GUARDADOS + 2):
+        entrada = self.repo / base.CARPETA_SISTEMAS_DE_GOBERNANZA / "pruebas-demo" / base.ENTRADA
+        for i in range(transaccion.GUARDADOS + 2):   # cada vuelta cambia algo: rehace un sistema editado a mano
+            os.chmod(entrada, stat.S_IWUSR | stat.S_IREAD)
+            entrada.write_text(f"editado {i}\n", encoding="utf-8")
             repo.actualizar(self.repo, cat=self.cat, forzar=True)
         respaldos = transaccion.carpeta_respaldos(self.repo)
         self.assertTrue(respaldos.is_relative_to(self.casa))

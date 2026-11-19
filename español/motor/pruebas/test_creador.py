@@ -147,7 +147,7 @@ class TestPuente(unittest.TestCase):
         salida = io.StringIO()
         with redirect_stdout(salida):
             codigo = cli.main(["creador", "validar", "--dir", str(self.dir), "--json"])
-        self.assertEqual(codigo, 0)
+        self.assertEqual(codigo, 1, "un borrador inválido sale con 1 también en --json")
         self.assertFalse(json.loads(salida.getvalue())["valido"])
 
     def test_diferencias_por_archivo(self):

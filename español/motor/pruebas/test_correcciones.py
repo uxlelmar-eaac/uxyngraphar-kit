@@ -370,7 +370,8 @@ class TestHallazgosNuevos(Entorno):
         with mock.patch.object(repo, "instalar", side_effect=PermissionError(13, "Permiso denegado", str(app))):
             codigo, err = self.cli("instalar", "pruebas-demo", "--repo", str(app))
         self.assertEqual(codigo, 1)
-        self.assertIn("error: Permiso denegado", err)
+        self.assertIn("error: sin permiso", err)
+        self.assertNotIn("Errno", err)
 
     def test_flujos_guardados_sin_id(self):   # C-37
         for accion in ("borrar", "exportar", "aplicar", "importar", "guardar"):

@@ -77,7 +77,8 @@ class TestServidor(ConServidor):
         b = self.pedir("/api/biblioteca")
         self.assertEqual((b["sesion"], b["sistemas"], b["en_curso"]), (False, [], False))
         codigo, cuerpo = self.error("/api/biblioteca/sincronizar", {})
-        self.assertEqual(codigo, 400)
+        self.assertEqual(codigo, 401)
+        self.assertEqual(self.ultimo_error["accion"], "iniciar_sesion")
         self.assertIn("sin sesión", json.dumps(cuerpo, ensure_ascii=False))
 
     def test_herramienta_reparar_anterior_y_desinstalar_simulado(self):
@@ -134,7 +135,7 @@ class TestServidor(ConServidor):
         self.assertTrue(self.pedir("/api/catalogo/pendientes?id=pagos-de-proveedor")["listo"])
         malo = self.pedir("/api/catalogo/generar", {"spec": {**spec, "id": "otros-pagos", "titulo": "Pagos"}, "aplicar": True})
         self.assertTrue(malo["errores"])
-        self.assertEqual(self.error("/api/catalogo/pendientes?id=no-existe")[0], 400)
+        self.assertEqual(self.error("/api/catalogo/pendientes?id=no-existe")[0], 404)
 
     def test_explorador_y_errores_legibles(self):
         self.repo_git("zona", "app")
@@ -193,7 +194,7 @@ class TestPublicarCatalogo(ConServidor):
 
     def test_sin_sesion_no_publica(self):
         codigo, mensaje = self.error("/api/catalogo/publicar", {"id": "pruebas-demo", "simular": False})
-        self.assertEqual(codigo, 400)
+        self.assertEqual(codigo, 401)
         self.assertIn("sin sesión", mensaje.lower())
 
     def test_sistema_con_errores(self):

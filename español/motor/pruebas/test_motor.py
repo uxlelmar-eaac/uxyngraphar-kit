@@ -206,7 +206,7 @@ class TestLanzador(unittest.TestCase):
             uxyngraphar.main(["version", "pruebas-demo", "menor"])
             catalogo_main.assert_called_once_with(["version", "pruebas-demo", "menor"])
             uxyngraphar.main(["version"])
-            herramienta.assert_called_once_with([])
+            herramienta.assert_called_once()
 
 
 class TestPanel(unittest.TestCase):

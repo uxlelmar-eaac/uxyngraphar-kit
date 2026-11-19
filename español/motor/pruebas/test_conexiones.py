@@ -41,8 +41,9 @@ class PruebasConexiones(unittest.TestCase):
         conexiones.casa.escribir_json(conexiones.ESTADO, {})
 
     def test_detectar_por_carpeta(self):
+        import ia_local
         (self.inicio / ".gemini").mkdir()
-        with mock.patch.object(conexiones.shutil, "which", return_value=None):
+        with mock.patch.object(ia_local, "ejecutable", return_value=None):
             self.assertTrue(conexiones.detectar("gemini"))
             self.assertFalse(conexiones.detectar("cursor"))
 

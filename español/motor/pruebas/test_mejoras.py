@@ -258,7 +258,12 @@ class TestDeshacer(ConServidor):
         app = self.repo_git("app")
         self.pedir("/api/proyectos/agregar", {"rutas": [str(app)]})
         repo.instalar(app, ["pruebas-demo"])
-        for _ in range(6):
+        import especificacion
+        base = especificacion.base
+        entrada = app / base.CARPETA_SISTEMAS_DE_GOBERNANZA / "pruebas-demo" / base.ENTRADA
+        for i in range(6):   # cada actualización rehace un sistema editado a mano: cambia algo y deja respaldo
+            os.chmod(entrada, 0o644)
+            entrada.write_text(f"editado {i}\n", encoding="utf-8")
             repo.actualizar(app, forzar=True)
         self.assertEqual(len(transaccion.respaldos(app)), 5)
         lista = self.pedir(f"/api/repo/respaldos?repo={app}")
