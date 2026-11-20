@@ -330,7 +330,7 @@ export function inicioConAgente({ alCrear, alAntesDeCrear = null, alDespuesDeCre
     respuestas, zonaEspera, avisoIA, caja.nodo, ejemplos);
   // Contrato uxyn 2: si la cuenta no tiene ninguna IA, se explica antes de escribir (y no tras un error).
   void obtener("/api/agente/info").then((info) => {
-    if (info?.ia && info.ia.disponible === false) vaciar(avisoIA, ayudaSinIA("", "uxyn_sin_ia"));
+    if (info?.ia && info.ia.disponible === false) vaciar(avisoIA, ayudaSinIA("", "uxyn_sin_ia", { breve: true }));
   }).catch(() => { /* sin información: los errores del turno lo explican */ });
   return { nodo, crear };
 }

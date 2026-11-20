@@ -1,5 +1,15 @@
 # Cambios
 
+## 1.5.28
+
+Ajustes de uxyn 2 vistos al probar el panel contra la web en producción (backend 1.0.12).
+
+- Tarjeta de cambios: en la columna estrecha del chat las rutas salían cortadas («prom…»); ahora se ven enteras
+  (partidas donde haga falta) y debajo el tipo y las líneas +/−.
+- «Empezar con uxyn» sin IA: un aviso corto que solo ofrece lo que sirve al crear (la clave en Cuenta → IA y
+  conexiones) y recuerda «Crear desde cero» o subir material; los modelos locales y suscripciones se siguen
+  explicando en el chat del sistema, donde sí se pueden elegir.
+
 ## 1.5.27
 
 uxyn 2 en el panel: las mismas capacidades y la misma experiencia que en la web (contrato compartido

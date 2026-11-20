@@ -198,9 +198,11 @@ console.log(JSON.stringify([m.resumenCambios(acciones), m.resumenCambios(doble).
         self.assertIn("alRevisar: irARevisar", creador)
         self.assertIn('"Completar el sistema"', creador)
         self.assertIn("ayudaSinIA(e.message, e.codigo)", inicio)
+        self.assertIn('ayudaSinIA("", "uxyn_sin_ia", { breve: true })', inicio, "al crear solo cabe la clave de la cuenta")
         css = (WEB / "estilos.css").read_text(encoding="utf-8")
         for clase in (".tarjeta-cambios", ".lista-cambios", ".capacidades-agente", ".cambio-mas", ".cambio-menos"):
             self.assertIn(clase, css)
+        self.assertIn("overflow-wrap: anywhere", css[css.index(".lista-cambios code"):], "rutas enteras en la columna estrecha")
         self.assertNotIn("#", css[css.index(".tarjeta-cambios"):css.index(".aviso-sin-ia")], "colores desde los tokens")
 
 

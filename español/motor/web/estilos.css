@@ -576,8 +576,9 @@ label.casilla.carpeta-opcion input { margin-top: 0; }
 .tarjeta-cambios .fila.separada { gap: 8px; }
 .totales-cambios { font-family: var(--font-mono); font-size: var(--font-size-xs); }
 .lista-cambios { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; font-size: var(--font-size-xs); }
-.lista-cambios li { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto auto auto; gap: 8px; align-items: center; }
-.lista-cambios code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-mono); }
+.lista-cambios li { display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: center; }
+/* La columna del chat es estrecha: la ruta entera (partida donde haga falta) y debajo el tipo y las líneas. */
+.lista-cambios code { flex: 1 1 160px; min-width: 0; white-space: normal; overflow-wrap: anywhere; font-family: var(--font-mono); }
 .icono-cambio svg { width: 14px; height: 14px; }
 .cambio-nuevo .icono-cambio { color: var(--bien); }
 .cambio-cambiado .icono-cambio { color: var(--texto-marca); }

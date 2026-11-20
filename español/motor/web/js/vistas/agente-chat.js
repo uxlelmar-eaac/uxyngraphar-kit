@@ -12,8 +12,15 @@ export const RE_SIN_IA = /a[ñn]ade una clave de ia|sin (ninguna )?clave de ia|n
  * Qué hacer cuando falta una IA, con opciones concretas (null si el error es otro). No compra ni guarda nada: solo
  * explica dónde añadir una clave y qué opciones locales admite el kit.
  */
-export function ayudaSinIA(mensaje, codigo = "") {
+export function ayudaSinIA(mensaje, codigo = "", { breve = false } = {}) {
   if (codigo !== "uxyn_sin_ia" && !RE_SIN_IA.test(String(mensaje || ""))) return null;
+  // Al crear, uxyn siempre usa la IA de la cuenta: solo cabe la clave (los modelos locales sirven en el chat del sistema).
+  if (breve) {
+    return h("div", { class: "banda aviso", role: "note", "data-ayuda": "sin-ia" },
+      h("b", { texto: "uxyn necesita una IA para crear sistemas." }), " ",
+      "Añade la clave de tu proveedor en la web de uxyngraphar: Cuenta → IA y conexiones (se guarda cifrada en el servidor). ",
+      "Mientras tanto puedes «Crear desde cero» o subir tu material.");
+  }
   const item = (titulo, texto) => h("li", {}, h("b", { texto: titulo }), " ", texto);
   return h("div", { class: "pila banda aviso", role: "note", "data-ayuda": "sin-ia" },
     h("b", { texto: "uxyn necesita una IA para proponer cambios. Elige una de estas opciones:" }),
