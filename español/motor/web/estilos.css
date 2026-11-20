@@ -116,6 +116,11 @@
   --mal: color-mix(in srgb, var(--color-signal) 55%, var(--color-edge));
   --mal-suave: color-mix(in srgb, var(--color-signal) 20%, transparent);
   --mal-lleno: var(--color-signal);
+  /* Capas de uxyngraphar en la revisión de archivos (núcleo, estándar, común; lo propio queda neutro). */
+  --capa-nucleo: var(--texto-marca);
+  --capa-estandar: var(--bien);
+  --capa-comun: color-mix(in srgb, var(--color-tone) 50%, var(--color-edge));
+  --capa-propio: var(--tenue);
   --sobre-mal: var(--color-on-signal);
   /* Franja de marca (= --gradient-signal) */
   --franja: linear-gradient(90deg, var(--color-brand) 0 33.33%, var(--color-tone) 33.33% 66.66%, var(--color-affirm) 66.66% 100%);
@@ -1153,6 +1158,22 @@ main:has(.revision) { max-width: none; padding: var(--esp-4) var(--esp-6); }
 .revision-arbol, .revision-centro, .revision-notas { min-height: 0; overflow: auto; border: 1px solid var(--borde); border-radius: var(--radio); background: var(--superficie); padding: var(--esp-3); }
 .revision-centro { display: flex; flex-direction: column; gap: var(--esp-2); padding: 0; overflow: hidden; }
 .revision-doc-cabeza { display: flex; align-items: center; gap: var(--esp-2); flex-wrap: wrap; padding: var(--esp-3) var(--esp-4); border-bottom: 1px solid var(--borde); font-size: var(--font-size-sm); }
+/* Capas: cada ruta lleva el tono de su capa (franja, icono y nombre); la leyenda dice qué es cada una. */
+.capa-nucleo { --capa: var(--capa-nucleo); }
+.capa-estandar { --capa: var(--capa-estandar); }
+.capa-comun { --capa: var(--capa-comun); }
+.capa-propio { --capa: var(--capa-propio); }
+.capas-leyenda { list-style: none; margin: 0 0 var(--esp-2); padding: 0 0 var(--esp-2); display: flex; flex-wrap: wrap; gap: var(--esp-1) var(--esp-3); border-bottom: 1px solid var(--borde); font-size: var(--font-size-xs); position: sticky; top: calc(-1 * var(--esp-3)); background: var(--superficie); z-index: 1; padding-top: var(--esp-1); }
+.capas-leyenda li { display: inline-flex; align-items: center; gap: 6px; cursor: help; }
+.capa-punto { width: 10px; height: 10px; border-radius: 3px; background: var(--capa); flex-shrink: 0; }
+.revision-arbol .estructura-nodo:not(.capa-propio) { box-shadow: inset 3px 0 0 var(--capa); background: color-mix(in srgb, var(--capa) 7%, transparent); }
+.revision-arbol .estructura-nodo:not(.capa-propio):hover { background: color-mix(in srgb, var(--capa) 14%, transparent); }
+.revision-arbol .estructura-nodo:not(.capa-propio) .estructura-nombre,
+.revision-arbol .estructura-nodo:not(.capa-propio) svg { color: var(--capa); }
+.revision-arbol .estructura-nodo.capa-propio.es-carpeta svg { color: var(--tenue); }
+.revision-arbol .estructura-nodo.activo { background: color-mix(in srgb, var(--capa) 24%, transparent); box-shadow: inset 3px 0 0 var(--capa), inset 0 0 0 1px color-mix(in srgb, var(--capa) 45%, transparent); }
+.revision-arbol .estructura-nodo.activo.capa-propio { background: var(--acento-suave); box-shadow: none; }
+.capa-insignia { display: inline-flex; align-items: center; font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); padding: 1px 8px; border-radius: var(--radio-pildora); color: var(--capa); background: color-mix(in srgb, var(--capa) 16%, transparent); border: 1px solid color-mix(in srgb, var(--capa) 40%, transparent); cursor: help; }
 .revision-doc { flex: 1 1 auto; overflow: auto; margin: 0; padding: var(--esp-4) var(--esp-6); white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--font-body); font-size: var(--font-size-md); line-height: var(--line-height-relaxed); color: var(--texto); outline: none; }
 .revision-doc::selection, .revision-doc *::selection { background: var(--acento-suave); }
 .revision-pista { margin: 0; padding: var(--esp-2) var(--esp-4); border-top: 1px solid var(--borde); font-size: var(--font-size-xs); }

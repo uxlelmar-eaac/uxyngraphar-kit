@@ -7,7 +7,7 @@
 import { obtener, enviar } from "../api.js";
 import { h, vaciar, boton, avisar, icono, insignia } from "../ui.js";
 import { arbolDeRutas } from "./editor-archivos.js";
-import { QUE_ES, contarEstructura } from "./estructura-sistema.js";
+import { CAPAS, QUE_ES, capaDe, contarCapas, contarEstructura } from "./estructura-sistema.js";
 import { tramos, ubicar, pedidoParaUxyn } from "./anotaciones-texto.js";
 import { selectorIA, vistaDiferencias } from "./creador.js";
 
@@ -56,6 +56,16 @@ export async function vista(params, { ir }) {
   const botonUxyn = boton("Pedir a uxyn que use mis notas", pedirAUxyn, { clase: "primario pequeno", icono: "chat",
     titulo: "Abre el Taller y uxyn mejora el sistema guiándose por tus notas y resaltados abiertos" });
 
+  // ── Árbol (con la capa de uxyngraphar de cada ruta) ────────────────────────────────────────────────────────
+  const titulo = (rel) => `${CAPAS[capaDe(rel)].nombre} · ${QUE_ES[rel] || rel}`;
+  function leyenda() {
+    const n = contarCapas(rutas);
+    return h("ul", { class: "capas-leyenda", "aria-label": "Capas del sistema" },
+      ...Object.entries(CAPAS).filter(([c]) => n[c]).map(([c, { nombre, que }]) =>
+        h("li", { class: `capa-${c}`, title: que }, h("span", { class: "capa-punto", "aria-hidden": "true" }),
+          h("span", { texto: nombre }), h("span", { class: "tenue", texto: String(n[c]) }))));
+  }
+
   // ── Árbol ──────────────────────────────────────────────────────────────────────────────────────────────────
   function pintarArbol() {
     const items = [];
@@ -65,8 +75,8 @@ export async function vista(params, { ir }) {
       for (const rel of [...nodo.archivos].sort((a, b) => a.localeCompare(b))) {
         const n = notasDe(rel);
         items.push(h("li", {}, h("button", {
-          type: "button", class: `estructura-nodo es-archivo${rel === actual ? " activo" : ""}`, style: `--nivel:${nivel}`,
-          "aria-current": rel === actual ? "true" : null, title: QUE_ES[rel] || rel, onclick: () => abrir(rel),
+          type: "button", class: `estructura-nodo es-archivo capa-${capaDe(rel)}${rel === actual ? " activo" : ""}`, style: `--nivel:${nivel}`,
+          "aria-current": rel === actual ? "true" : null, title: titulo(rel), onclick: () => abrir(rel),
         }, h("span", { class: "estructura-flecha" }), icono("lista"), h("span", { class: "estructura-nombre", texto: rel.split("/").pop() }),
         n ? h("span", { class: "contador contador-notas", texto: String(n), title: plural(n, "anotación abierta", "anotaciones abiertas") }) : null)));
       }
@@ -75,8 +85,8 @@ export async function vista(params, { ir }) {
         const hijo = nodo.carpetas.get(nombre);
         const plegada = plegadas.has(rel);
         items.push(h("li", {}, h("button", {
-          type: "button", class: "estructura-nodo es-carpeta", style: `--nivel:${nivel}`, "aria-expanded": String(!plegada),
-          title: QUE_ES[rel] || rel, onclick: () => { if (plegada) plegadas.delete(rel); else plegadas.add(rel); pintarArbol(); },
+          type: "button", class: `estructura-nodo es-carpeta capa-${capaDe(rel)}`, style: `--nivel:${nivel}`, "aria-expanded": String(!plegada),
+          title: titulo(rel), onclick: () => { if (plegada) plegadas.delete(rel); else plegadas.add(rel); pintarArbol(); },
         }, h("span", { class: "estructura-flecha", texto: plegada ? "▸" : "▾" }), icono("carpeta"),
         h("span", { class: "estructura-nombre", texto: `${nombre}/` }), h("span", { class: "contador", texto: String(total(hijo)) }))));
         if (!plegada) recorrer(hijo, rel, nivel + 1);
@@ -92,7 +102,9 @@ export async function vista(params, { ir }) {
     cerrarMenus();
     try { history.replaceState(null, "", `#/revision?${new URLSearchParams({ id, archivo: rel })}`); } catch { /* */ }
     pintarArbol();
-    vaciar(cabezaDoc, h("code", { texto: rel }), QUE_ES[rel] ? h("span", { class: "tenue", texto: QUE_ES[rel] }) : null);
+    const capa = capaDe(rel);
+    vaciar(cabezaDoc, h("span", { class: `capa-insignia capa-${capa}`, title: CAPAS[capa].que, texto: CAPAS[capa].nombre }),
+      h("code", { texto: rel }), QUE_ES[rel] ? h("span", { class: "tenue", texto: QUE_ES[rel] }) : null);
     if (!ES_TEXTO.test(rel)) {
       texto = "";
       vaciar(doc, h("p", { class: "tenue", texto: "Este archivo no es de texto: ábrelo en el Taller para verlo." }));
@@ -286,7 +298,7 @@ export async function vista(params, { ir }) {
         botonUxyn,
         boton("Abrir en el Taller", () => ir("creador", actual ? { id, archivo: actual } : { id }), { clase: "pequeno", icono: "editar" }))),
     h("div", { class: "revision-cuerpo" },
-      h("nav", { class: "revision-arbol", "aria-label": "Archivos" }, arbol),
+      h("nav", { class: "revision-arbol", "aria-label": "Archivos" }, leyenda(), arbol),
       h("section", { class: "revision-centro", "aria-label": "Archivo" }, cabezaDoc, doc,
         h("p", { class: "tenue revision-pista", texto: "Selecciona texto para Mejorar, Añadir nota o Resaltar." })),
       h("aside", { class: "revision-notas", "aria-label": "Notas y resaltados" },

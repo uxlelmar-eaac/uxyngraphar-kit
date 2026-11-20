@@ -1,5 +1,17 @@
 # Cambios
 
+## 1.6.4
+
+- **Capas de uxyngraphar en la revisión de archivos**: cada archivo y carpeta del árbol lleva el tono de su capa, con
+  una leyenda arriba (cuántos hay de cada una) y una insignia junto al nombre del archivo abierto:
+  - **Núcleo** (dorado): `sistema.json`, `README.md`, `SISTEMA.md`, `MEMORIAS.md`, `LIMITES.md`, `PERMISOS.md` e
+    `INTEGRIDAD.json`.
+  - **Estándar** (verde): las piezas estándar (`proceso/`, `skills/`, `COMPONENTES.md`, `HERRAMIENTAS.md`,
+    `andamiaje/`, `plantillas/`, `referencia/`, `ejemplos/`, `pruebas/`, `CHANGELOG.md`).
+  - **Común** (melocotón): `scripts/comun/`, los scripts del motor iguales en todos los sistemas.
+  - **Propio** (neutro): las extensiones y todo lo demás del sistema.
+  Las listas son las de `_base/scripts/comun/uxyn_base.py` y una prueba comprueba que siguen iguales. Igual en la web.
+
 ## 1.6.3
 
 - **Revisar archivos**, a pantalla completa (`#/revision?id=…`, desde «Mis sistemas»): árbol de carpetas a la izquierda,
