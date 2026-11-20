@@ -282,8 +282,8 @@ export async function chatAgente(contexto, {
   let conversacion = conversacionInicial;
   let modo = "asistente";
   let adjuntos = null;
-  const saludoAsistente = "Hola, soy uxyn. Pídeme que complete el paso en el que estás, que revise el sistema o que mejore un archivo. Si dejo cambios, salen en «Por revisar».";
-  const saludoSimulador = "Simulador: actúo como el agente de IA que sigue este sistema. Pídeme algo que debería rechazar.";
+  const saludoAsistente = "Hola, soy uxyn. Dime qué quieres cambiar o elige una sugerencia de abajo. Lo que proponga queda en «Por revisar» hasta que lo aceptes.";
+  const saludoSimulador = "Ahora soy el agente que sigue este sistema. Pídeme algo que debería rechazar y comprueba que lo cumplo.";
   const hilo = h("div", { class: "pila conversacion", role: "log", "aria-live": "polite" },
     h("div", { class: "mensaje ia", texto: saludoAsistente }));
   const propuestaLocal = h("div", { class: "pila" });
@@ -470,24 +470,29 @@ export async function chatAgente(contexto, {
   }
   await refrescarSugerencias();
 
-  const btnAsistente = h("button", { type: "button", class: "boton pequeno conmutador", "aria-pressed": "true" }, "uxyn");
-  const btnSimulador = h("button", { type: "button", class: "boton pequeno conmutador", "aria-pressed": "false" }, "Simulador");
-  const atajos = h("div", { class: "fila atajos-chat" },
-    boton("Completar el sistema", completar, { clase: "pequeno", icono: "creador", titulo: "uxyn rellena el núcleo y todo el esqueleto y lo deja en «Por revisar»" }),
-    boton("Revisar", revisar, { clase: "pequeno" }),
-    boton("Mejorar archivo", mejorar, { clase: "pequeno", titulo: "Usa lo que escribas abajo como instrucción" }));
-  const pistaModo = h("p", { class: "tenue pista-modo", texto: "Los cambios de uxyn salen en «Por revisar»." });
+  const btnAsistente = h("button", { type: "button", class: "segmento", "aria-pressed": "true" }, "uxyn");
+  const btnSimulador = h("button", { type: "button", class: "segmento", "aria-pressed": "false", title: "Prueba el sistema como lo seguiría un agente de IA" }, "Simulador");
+  const sugerir = (texto, accion, titulo) => {
+    const b = boton(texto, accion, { clase: "chip-sugerencia", titulo });
+    return h("li", {}, b);
+  };
+  const atajos = h("div", { class: "chat-sugerencias" },
+    h("span", { class: "chat-sugerencias-titulo", texto: "Sugerencias" }),
+    h("ul", { class: "chat-sugerencias-lista" },
+      sugerir("Completar el sistema", completar, "uxyn rellena el núcleo y todo el esqueleto y lo deja en «Por revisar»"),
+      sugerir("Revisar el sistema", revisar, "uxyn te dice qué le falta o qué mejoraría"),
+      sugerir("Mejorar el archivo abierto", mejorar, "Si escribes algo abajo, uxyn lo usa como instrucción")));
   const enviarBoton = boton("Enviar", hablar, { clase: "pequeno primario" });
-  const selConversacion = h("select", { "aria-label": "Conversación guardada", class: "breve" });
+  const selConversacion = h("select", { "aria-label": "Conversación guardada", class: "chat-historial", hidden: true });
   const empezarDeNuevo = () => {
     conversacion = null;
     historiales[modo] = [];
     selConversacion.value = "";
     vaciar(hilo, h("div", { class: "mensaje ia", texto: enSimulador() ? saludoSimulador : saludoAsistente }));
   };
-  const barraHistorial = h("div", { class: "fila atajos-chat" },
-    selConversacion,
-    boton("Nueva", empezarDeNuevo, { clase: "pequeno" }));
+  const btnNueva = boton("", empezarDeNuevo, { clase: "pequeno fantasma solo-icono", icono: "mas", titulo: "Conversación nueva" });
+  btnNueva.setAttribute("aria-label", "Conversación nueva");
+  const barraHistorial = h("div", { class: "chat-historial-barra" }, selConversacion, btnNueva);
 
   async function cargarHistorial(id) {
     const previa = await obtener("/api/agente/conversacion", { id });
@@ -514,7 +519,8 @@ export async function chatAgente(contexto, {
       try { await cargarHistorial(lista[0].id); } catch { /* se empieza una nueva */ }
     }
     reanudada = true;
-    vaciar(selConversacion, h("option", { value: "", texto: lista.length ? "Conversación nueva" : "Sin conversaciones" }));
+    selConversacion.hidden = !lista.length && !conversacion;
+    vaciar(selConversacion, h("option", { value: "", texto: "Conversación nueva" }));
     for (const c of lista) {
       selConversacion.append(h("option", {
         value: String(c.id),
@@ -546,9 +552,6 @@ export async function chatAgente(contexto, {
     btnSimulador.setAttribute("aria-pressed", String(modo === "simulador"));
     atajos.hidden = modo === "simulador";
     barraHistorial.hidden = modo === "simulador";
-    pistaModo.textContent = modo === "simulador"
-      ? "Prueba el sistema como lo seguiría un agente de IA."
-      : "Los cambios de uxyn salen en «Por revisar».";
     pregunta.setAttribute("aria-label", modo === "simulador" ? "Mensaje para el simulador" : "Mensaje para uxyn");
     enviarBoton.textContent = "Enviar";
     pintarSaludo();
@@ -576,17 +579,19 @@ export async function chatAgente(contexto, {
     }
   }).catch(() => { /* sin información: el chat funciona igual y los errores lo explican */ });
 
+  // Arriba solo el modo y el historial; el hilo ocupa el espacio; debajo, sugerencias, la caja y la IA elegida.
   const raiz = h("div", { class: "chat-agente" },
-    h("div", { class: "fila modos-chat", role: "group", "aria-label": "Modo del chat" }, btnAsistente, btnSimulador),
-    pistaModo,
-    barraHistorial,
-    atajos,
-    capacidades,
+    h("div", { class: "chat-barra" },
+      h("div", { class: "segmentado modos-chat", role: "group", "aria-label": "Modo del chat" }, btnAsistente, btnSimulador),
+      barraHistorial),
     hilo,
     avisoIA,
     propuestaLocal,
+    atajos,
     adjuntos.nodo,
-    h("label", { class: "campo ia-selector" }, "Qué IA usar", sel));
+    h("div", { class: "chat-pie" },
+      h("label", { class: "ia-selector" }, h("span", { texto: "IA" }), sel),
+      capacidades));
   // El Taller guiado abre el simulador desde el paso «Probar» y vuelve a uxyn al pedirle un paso.
   raiz.ponerModo = (m) => { aplicarModo(m === "simulador" ? "simulador" : "asistente"); pintarAvisoIA(); };
   return raiz;

@@ -847,8 +847,15 @@ export async function vista(params, { ir, recargar }) {
     if (pagina && !pagina.isConnected) return;
     zonaRuta.hidden = false;
     vaciar(zonaSistema, zonaAhora, huecoSugerencias, zonaGuia, zonaTrabajo);
+    // «Abrir en el Taller» desde la estructura de Mis sistemas: entra en el paso de ese archivo y lo abre.
+    const pedido = typeof params.archivo === "string" && params.archivo ? params.archivo : null;
+    if (pedido) {
+      pasoActual = pasoDeArchivo(pedido);
+      if (pasoActual === "proposito") editorVisibleEnProposito = true;
+    }
     await pintarFranjas();
-    await pintarTrabajo({ abrirPrimero: true });
+    await pintarTrabajo({ abrirPrimero: !pedido });
+    if (pedido) await abierto.abrirArchivo(pedido).catch(() => {});
   }
 
   async function montarSugerencias() {
@@ -903,8 +910,7 @@ export async function vista(params, { ir, recargar }) {
     const plegar = boton("", () => interruptorAgente.click(), { clase: "pequeno fantasma solo-icono", icono: "cerrar", titulo: "Ocultar uxyn" });
     plegar.setAttribute("aria-label", "Ocultar uxyn");
     vaciar(zonaAgente,
-      h("div", { class: "fila separada" }, h("h2", {}, icono("chat"), " uxyn"), plegar),
-      h("p", { class: "tenue", texto: "Pídele que complete un paso, que revise o que mejore un archivo. Sus cambios llegan a «Por revisar»." }),
+      h("div", { class: "fila separada zona-agente-cabecera" }, h("h2", {}, icono("chat"), " uxyn"), plegar),
       chatNodo);
   }
 

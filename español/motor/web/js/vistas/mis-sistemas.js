@@ -8,6 +8,7 @@
 import { obtener, enviar } from "../api.js";
 import { h, vaciar, cabecera, boton, insignia, vacio, confirmar, avisar, avisarConAccion, dialogo, icono, menu } from "../ui.js";
 import { descargarZipSistema, instalarEnProyecto, FAMILIAS } from "./creador-editor.js";
+import { estructuraSistema } from "./estructura-sistema.js";
 
 const PREFERENCIAS = "uxyn-mis-sistemas";
 const RAIZ = "_raiz";
@@ -387,6 +388,7 @@ export async function vista(params, { ir }) {
       botonIcono("mas", "Nueva carpeta", () => nuevaCarpeta(carpeta(actual) ? actual : null))), filas);
   }
   function elegir(id) {
+    detalle = null;
     actual = id;
     pref.carpeta = id;
     guardarPreferencias(pref);
@@ -426,6 +428,7 @@ export async function vista(params, { ir }) {
         donde.length ? h("span", { title: donde.join(", ") }, icono("proyectos"), `Instalado en ${donde.length} proyecto(s)`) : null),
       h("div", { class: "acciones" },
         accionPrincipal(s),
+        s.estado === "local" ? boton("Ver archivos", () => verEstructura(s.id), { clase: "pequeno", icono: "lista", titulo: "Sus carpetas y archivos, con qué es cada uno" }) : null,
         boton("Mover a…", () => moverDialogo([s.id]), { clase: "pequeno", icono: "carpeta" })));
     el.dataset.estado = s.estado || "local";
     el.addEventListener("dblclick", (e) => { if (!e.target.closest("button, input, label")) ir("creador", { id: s.id }); });
@@ -518,8 +521,32 @@ export async function vista(params, { ir }) {
   // Pintado ---------------------------------------------------------------------------------------------------------
   const contenido = h("div", { class: "mis-sistemas-contenido" });
   const zona = h("div", { class: "mis-sistemas" }, arbol, contenido);
+  // Estructura de un sistema: carpetas y archivos con qué es cada uno y la vista previa.
+  let detalle = null;
+  function verEstructura(id) {
+    detalle = id;
+    pintar();
+    contenido.scrollIntoView({ block: "start", behavior: "smooth" });
+  }
+  function pintarDetalle() {
+    const s = datos.sistemas.find((x) => x.id === detalle);
+    if (!s) { detalle = null; return false; }
+    vaciar(contenido,
+      h("div", { class: "migas tenue" }, h("button", { type: "button", class: "enlace", texto: "← Mis sistemas", onclick: () => { detalle = null; pintar(); } })),
+      h("div", { class: "fila separada detalle-cabeza" },
+        h("div", { class: "proyecto-titulo" }, h("h2", { texto: s.titulo }), h("code", { class: "tenue", texto: `${s.id}${s.version ? ` v${s.version}` : ""}` })),
+        h("div", { class: "fila" },
+          boton("Abrir en el Taller", () => ir("creador", { id: s.id }), { clase: "primario pequeno", icono: "creador" }),
+          botonIcono("puntos", `Opciones de ${s.titulo}`, (b) => menu(b, opcionesSistema(s))))),
+      h("div", { class: "proyecto-estado" }, estado(s), s.familia ? insignia(FAMILIAS[s.familia] || s.familia) : null),
+      s.descripcion ? h("p", { class: "tenue", texto: s.descripcion }) : null,
+      estructuraSistema(s.id, { alAbrir: (rel) => ir("creador", { id: s.id, archivo: rel }) }));
+    return true;
+  }
+
   function pintar() {
     pintarArbol();
+    if (detalle && pintarDetalle()) return;
     if (actual === PAPELERA) {
       const cuerpo = h("div", { class: "pila" });
       vaciar(contenido, h("h2", {}, icono("basura"), " Papelera"), cuerpo);

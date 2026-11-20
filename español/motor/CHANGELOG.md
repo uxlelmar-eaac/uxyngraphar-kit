@@ -1,5 +1,16 @@
 # Cambios
 
+## 1.6.2
+
+- **Mis sistemas → «Ver archivos»**: cada sistema del equipo muestra su estructura completa, carpetas y archivos, con
+  qué es cada pieza (núcleo, `proceso/`, `skills/`, `config/`…), cuántas carpetas y archivos tiene y una vista previa
+  de solo lectura (Markdown legible). «Abrir en el Taller» lleva al paso de ese archivo y lo abre en el editor
+  (`#/creador?id=…&archivo=…`).
+- **Panel de uxyn en el Taller**, más limpio: arriba solo el modo (uxyn | Simulador) y el historial, que solo aparece si
+  hay conversaciones; el hilo ocupa el espacio; debajo, tres sugerencias («Completar el sistema», «Revisar el sistema»,
+  «Mejorar el archivo abierto»), la caja de mensaje y la IA elegida en una línea. Fuera los textos repetidos sobre
+  «Por revisar».
+
 ## 1.6.1
 
 - `importar --modo crear`: si el material ya trae sus ejemplos (`ejemplos/`), el ejemplo de arranque con marcadores
