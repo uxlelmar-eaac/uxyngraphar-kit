@@ -415,6 +415,8 @@ export async function vista(params, { ir }) {
         s.estado === "local" ? insignia("local", "bien") : null,
         s.web && s.estado !== "web" ? insignia("web", "acento") : null,
         s.publicado ? insignia("mercado", "acento") : null,
+        s.estado === "local" && s.implementado === true ? insignia("Implementado ✓", "bien") : null,
+        s.estado === "local" && s.implementado === false && !s.errores.length ? insignia("esqueleto: falta contenido", "aviso") : null,
         s.archivado ? insignia("archivado", "nota") : null,
         s.familia ? insignia(FAMILIAS[s.familia] || s.familia) : null,
         s.version ? h("span", { class: "tenue", texto: `v${s.version}` }) : null),

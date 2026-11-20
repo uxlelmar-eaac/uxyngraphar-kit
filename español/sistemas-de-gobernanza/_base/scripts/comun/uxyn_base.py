@@ -28,6 +28,10 @@ CARPETA_TRABAJO = "uxyngraphar/trabajo"
 # Memorias del proyecto: `uxyngraphar/trabajo/<id>/memorias/MEM-…md`; ninguna ficha usa esa carpeta ni ese prefijo.
 CARPETA_MEMORIAS = "memorias"
 PREFIJO_MEMORIA = "MEM"
+# Propuestas de mejora del sistema (el sistema instalado no se edita: se propone al autor):
+# `uxyngraphar/trabajo/<id>/propuestas-de-mejora/PMS-…md`; ninguna ficha usa esa carpeta ni ese prefijo.
+CARPETA_MEJORAS = "propuestas-de-mejora"
+PREFIJO_MEJORA = "PMS"
 FORMATO_MANIFIESTO = 1
 FORMATO_INTEGRIDAD = 1
 
@@ -216,8 +220,12 @@ def _validar_fichas(fichas) -> list[str]:
             errores.append(f"{donde}.carpeta: «.» solo vale si el sistema tiene un único tipo de ficha")
         elif d.get("carpeta") == CARPETA_MEMORIAS:
             errores.append(f"{donde}.carpeta: «{CARPETA_MEMORIAS}» está reservada para las memorias del proyecto")
+        elif d.get("carpeta") == CARPETA_MEJORAS:
+            errores.append(f"{donde}.carpeta: «{CARPETA_MEJORAS}» está reservada para las propuestas de mejora del sistema")
         if d.get("prefijo") == PREFIJO_MEMORIA:
             errores.append(f"{donde}.prefijo: «{PREFIJO_MEMORIA}» está reservado para las memorias del proyecto")
+        if d.get("prefijo") == PREFIJO_MEJORA:
+            errores.append(f"{donde}.prefijo: «{PREFIJO_MEJORA}» está reservado para las propuestas de mejora del sistema")
         estados, validos = d.get("estados"), d.get("status_validos")
         if (estados is None) == (validos is None):
             errores.append(f"{donde}: define «estados» (con carpetas) o «status_validos» (plana), no ambos")

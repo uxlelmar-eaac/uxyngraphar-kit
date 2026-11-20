@@ -221,11 +221,67 @@ def _titulo_de(pid: str) -> str:
     return t[:1].upper() + t[1:]
 
 
+MODOS = ("auto", "crear", "adaptar")
+
+
+def detectar_modo(archivos: dict[str, bytes]) -> str:
+    """«adaptar» si el material ya es un sistema (trae sistema.json con id, o SISTEMA.md con proceso/ o skills/);
+    si no, «crear» (sistema nuevo a partir de los archivos)."""
+    rutas, _ = _quitar_raiz_comun({r: b"" for r in archivos})
+    m = _manifiesto_de({r: archivos[r] for r in archivos if r.split("/")[-1] == base.MANIFIESTO and r.count("/") <= 1})
+    if isinstance(m, dict) and m.get("id"):
+        return "adaptar"
+    raiz = {r.split("/")[0].lower() for r in rutas if "/" in r}
+    if any(r.lower() == base.DESCRIPCION.lower() for r in rutas) and raiz & {"proceso", "skills"}:
+        return "adaptar"
+    return "crear"
+
+
+def _sha(datos: bytes) -> str:
+    import hashlib
+    return hashlib.sha256(datos).hexdigest()
+
+
+def preservacion(origenes: dict[str, bytes], destino_de_origen: dict[str, str], c: Path,
+                 fusionados: set[str], regenerados: set[str]) -> dict:
+    """Informe de preservación: por cada archivo de la persona, dónde quedó y si llegó byte a byte (sha256)."""
+    filas = []
+    for original, datos in sorted(origenes.items()):
+        dest = destino_de_origen.get(original)
+        ruta = c / dest if dest else None
+        sha_d = _sha(ruta.read_bytes()) if ruta and ruta.is_file() else None
+        sha_o = _sha(datos)
+        if sha_d == sha_o:
+            estado = "identico"
+        elif dest in fusionados:
+            estado = "fusionado"
+        elif dest in regenerados:
+            estado = "bloque_regenerado"
+        elif sha_d is None:
+            estado = "perdido"
+        else:
+            estado = "cambiado"
+        filas.append({"origen": original, "destino": dest, "sha256_origen": sha_o, "sha256_destino": sha_d, "estado": estado})
+    total = len(filas)
+    conservados = sum(1 for f in filas if f["estado"] != "perdido")
+    identicos = sum(1 for f in filas if f["estado"] == "identico")
+    bytes_o = sum(len(v) for v in origenes.values())
+    return {"total": total, "conservados": conservados, "identicos": identicos,
+            "perdidos": [f["origen"] for f in filas if f["estado"] == "perdido"],
+            "bytes_origen": bytes_o, "archivos": filas,
+            "resumen": f"{conservados}/{total} archivos conservados ({identicos} idénticos byte a byte)"}
+
+
 def importar(archivos: dict[str, bytes], pid: str = "", titulo: str = "", descripcion: str = "", familia: str = "",
-             raiz: Path | None = None, aplicar: bool = True, nombre_origen: str = "") -> dict:
+             raiz: Path | None = None, aplicar: bool = True, nombre_origen: str = "", modo: str = "auto") -> dict:
     """Crea un sistema con el esqueleto completo y coloca encima `archivos` ({ruta: bytes}) sin descartar ninguno.
 
+    `modo`: «crear» (sistema nuevo a partir de archivos: la base pone el esqueleto completo para completarlo),
+    «adaptar» (el material ya es un sistema: solo se añade o adapta el núcleo; fuera del núcleo y del manifiesto no
+    cambia nada) o «auto» (lo decide `detectar_modo`). Nunca toca el origen: trabaja con los bytes recibidos.
     Con `aplicar=False` no toca el catálogo: devuelve el mismo resumen como vista previa."""
+    if modo not in MODOS:
+        raise ImportacionInvalida(f"modo: uno de {', '.join(MODOS)}")
     if not archivos:
         raise ImportacionInvalida("no hay archivos que importar")
     ignorados = sorted(r for r in archivos if BASURA.search(r))
@@ -234,9 +290,13 @@ def importar(archivos: dict[str, bytes], pid: str = "", titulo: str = "", descri
         raise ImportacionInvalida("solo había archivos de sistema (.DS_Store, __MACOSX…): nada que importar")
     if len(archivos) > MAX_ARCHIVOS:
         raise ImportacionInvalida(f"demasiados archivos ({len(archivos)}; máximo {MAX_ARCHIVOS})")
+    if modo == "auto":
+        modo = detectar_modo(archivos)
     archivos, raiz_comun = _quitar_raiz_comun(archivos)
+    prefijo_raiz = f"{raiz_comun}/" if raiz_comun else ""
     renombrados = []
     limpios: dict[str, bytes] = {}
+    origen_de: dict[str, str] = {}
     for r, v in sorted(archivos.items()):
         nuevo = "/".join(_ascii(p) for p in r.split("/"))
         if nuevo != r:
@@ -244,6 +304,7 @@ def importar(archivos: dict[str, bytes], pid: str = "", titulo: str = "", descri
         while nuevo in limpios:
             nuevo = _con_sufijo(nuevo)
         limpios[nuevo] = v
+        origen_de[nuevo] = prefijo_raiz + r
     m_usuario = _manifiesto_de(limpios)
     pid = (pid or str(m_usuario.get("id") or "") or slug(str(m_usuario.get("titulo") or ""))
            or slug(Path(nombre_origen).stem if nombre_origen else "") or slug(raiz_comun)).strip()
@@ -263,7 +324,8 @@ def importar(archivos: dict[str, bytes], pid: str = "", titulo: str = "", descri
     catalogo.catalogo(raiz).mkdir(parents=True, exist_ok=True)
     temporal = Path(tempfile.mkdtemp(prefix=OCULTA, dir=catalogo.catalogo(raiz)))
     try:
-        c = catalogo.crear(pid, titulo, descripcion, raiz=temporal, familia=familia)
+        c = catalogo.crear(pid, titulo, descripcion, raiz=temporal, familia=familia,
+                           piezas=[] if modo == "adaptar" else None)
         de_la_base = set(base.archivos_del_sistema(c))
         m_base = base.leer_manifiesto(c)
         escritos: dict[str, str] = {}
@@ -318,11 +380,26 @@ def importar(archivos: dict[str, bytes], pid: str = "", titulo: str = "", descri
                 (c / original).write_bytes(limpios[base.MANIFIESTO])
                 conservados.append({"de": base.MANIFIESTO, "a": original, "motivo": "no es un JSON válido: guardado tal cual"})
             de_la_base.discard(base.MANIFIESTO)
+        if modo == "adaptar":
+            _solo_nucleo(c, escritos, de_la_base, m_usuario)
+        else:
+            _retirar_arranque(c, escritos, de_la_base)
         _declarar_extensiones(c, escritos)
+        antes_bloques = {n: (c / n).read_bytes() for n in (base.ENTRADA, base.PERMISOS) if (c / n).is_file()}
         try:
             entrada.actualizar(c)
         except (OSError, ValueError, KeyError) as e:
             avisos.append(f"no se pudo regenerar el bloque de entrada: {e}")
+        regenerados = {n for n, b in antes_bloques.items() if (c / n).is_file() and (c / n).read_bytes() != b}
+        destino_de_origen = {origen_de[o]: d for d, o in escritos.items()}
+        if base.MANIFIESTO in limpios:
+            destino_de_origen[origen_de[base.MANIFIESTO]] = next(
+                (x["a"] for x in conservados if x["de"] == base.MANIFIESTO), base.MANIFIESTO)
+        nombres_fusionados = {x["a"] for x in fusionados}
+        informe = preservacion({origen_de[k]: v for k, v in limpios.items()}, destino_de_origen, c,
+                               nombres_fusionados, regenerados)
+        if informe["perdidos"]:
+            raise ImportacionInvalida(f"se perderían archivos: {', '.join(informe['perdidos'][:5])}")
         binarios = sorted(d for d, o in escritos.items() if not _es_texto(limpios[o]))
         if binarios:
             avisos.append(f"{len(binarios)} archivo(s) binario(s) se guardan en tu equipo; el borrador web solo admite texto")
@@ -332,8 +409,13 @@ def importar(archivos: dict[str, bytes], pid: str = "", titulo: str = "", descri
             "de_la_base": sorted(r for r in de_la_base if not r.startswith("scripts/comun/")),
             "renombrados": renombrados, "ignorados": ignorados, "binarios": binarios,
             "archivos": base.archivos_del_sistema(c), "errores": esp.validar_sistema(c), "avisos": avisos,
-            "total_importados": len(limpios),
+            "total_importados": len(limpios), "modo": modo, "preservacion": informe,
         }
+        try:
+            import implementado
+            resumen["implementado"] = implementado.evaluar(c)
+        except Exception as e:  # noqa: BLE001 - la evaluación nunca impide importar
+            avisos.append(f"no se pudo evaluar «implementado»: {e}")
         if aplicar:
             if destino.exists():
                 raise FileExistsError(f"ya existe {destino}")
@@ -342,6 +424,59 @@ def importar(archivos: dict[str, bytes], pid: str = "", titulo: str = "", descri
         return resumen
     finally:
         shutil.rmtree(temporal, ignore_errors=True)
+
+
+def _borrar(c: Path, rel: str) -> None:
+    ruta = c / rel
+    if ruta.is_file():
+        ruta.unlink()
+        padre = ruta.parent
+        while padre != c and padre.is_dir() and not any(padre.iterdir()):
+            padre.rmdir()
+            padre = padre.parent
+
+
+ARRANQUE_REDUNDANTE = ("proceso", "skills")
+
+
+def _retirar_arranque(c: Path, escritos: dict[str, str], de_la_base: set[str]) -> None:
+    """Modo «crear»: si la persona ya trae fases o skills, el contenido de arranque de esa pieza
+    (con marcadores) sobra: se retira y el proceso queda con sus fases, en el orden de su manifiesto si lo trae."""
+    m = base.leer_manifiesto(c)
+    cambia = False
+    for pieza in ARRANQUE_REDUNDANTE:
+        if not any(d.startswith(pieza + "/") for d in escritos):
+            continue
+        for rel in sorted(r for r in de_la_base if r.startswith(pieza + "/")):
+            _borrar(c, rel)
+            de_la_base.discard(rel)
+            cambia = True
+    if cambia and (c / "proceso").is_dir():
+        presentes = sorted(p.stem for p in (c / "proceso").glob("*.md") if p.name.lower() != "readme.md")
+        orden = [f for f in (m.get("proceso") or []) if f in presentes]
+        m["proceso"] = orden + [f for f in presentes if f not in orden]
+    if cambia:
+        catalogo._escribir_manifiesto(c, m)
+
+
+def _solo_nucleo(c: Path, escritos: dict[str, str], de_la_base: set[str], m_usuario: dict) -> None:
+    """Modo «adaptar»: de la base solo queda el núcleo (y scripts/comun/); lo demás que puso la base y la persona no
+    trajo (prompts/, config/…) se retira, y las piezas que ya trae se declaran tal cual."""
+    for rel in sorted(de_la_base):
+        if rel in base.NUCLEO or rel.startswith(esp.DESTINO_COMUN + "/") or rel in escritos:
+            continue
+        _borrar(c, rel)
+        de_la_base.discard(rel)
+    m = base.leer_manifiesto(c)
+    ext = {k: v for k, v in (m.get("extensiones") or {}).items() if (c / k).exists()}
+    piezas = [p for p, ruta in base.PIEZAS.items() if (c / ruta).exists()]
+    declaradas = [p for p in (m_usuario.get("piezas") or []) if p in base.PIEZAS and (c / base.PIEZAS[p]).exists()]
+    m["piezas"] = sorted(set(piezas) | set(declaradas), key=list(base.PIEZAS).index)
+    if ext:
+        m["extensiones"] = ext
+    else:
+        m.pop("extensiones", None)
+    catalogo._escribir_manifiesto(c, m)
 
 
 def _declarar_extensiones(c: Path, escritos: dict[str, str]) -> None:

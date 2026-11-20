@@ -180,6 +180,15 @@ def _instalados_por_sistema() -> dict[str, list[str]]:
     return salida
 
 
+def _implementado(pid: str, raiz: Path | None) -> bool | None:
+    """¿Pasa la compuerta «implementado»? (None si no se pudo evaluar)."""
+    try:
+        import implementado
+        return bool(implementado.evaluar(catalogo.carpeta(pid, raiz))["implementado"])
+    except Exception:  # noqa: BLE001 - la insignia nunca rompe la lista
+        return None
+
+
 def vista(raiz: Path | None = None, con_web: bool = True) -> dict:
     """Carpetas, orden y TODOS mis sistemas para el Taller y «Mis sistemas» (la misma lista en las dos vistas).
 
@@ -202,14 +211,15 @@ def vista(raiz: Path | None = None, con_web: bool = True) -> dict:
                          "avisos": datos.get("avisos", []), "estado": estado, "local": estado == "local",
                          "web": b is not None, "publicado": bool(b and b.get("publicado")),
                          "archivado": pid in ocultos, "instalado": instalados.get(pid, []),
-                         "entrada": datos.get("entrada"),
+                         "entrada": datos.get("entrada"), "implementado": datos.get("implementado"),
                          "carpeta": (org["sistemas"].get(pid) or {}).get("carpeta")})
 
     vistos: set[str] = set()
     for m in catalogo.listar(raiz):
         vistos.add(m["id"])
         agregar(m["id"], "local", titulo=m.get("titulo"), descripcion=m.get("descripcion", ""), familia=m.get("familia", ""),
-                version=m.get("version", ""), errores=m.get("errores", []), avisos=m.get("avisos", []))
+                version=m.get("version", ""), errores=m.get("errores", []), avisos=m.get("avisos", []),
+                implementado=_implementado(m["id"], raiz))
     for e in papelera(raiz):   # lo más reciente primero: una entrada por id
         if e["id"] not in vistos:
             vistos.add(e["id"])

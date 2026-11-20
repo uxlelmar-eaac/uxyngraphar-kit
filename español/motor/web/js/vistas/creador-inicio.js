@@ -19,8 +19,15 @@ export function esBasura(ruta) {
   return String(ruta).split("/").some((p) => CARPETAS_BASURA.has(p)) || ARCHIVOS_BASURA.test(ruta);
 }
 
-export const PREFIJO_CREAR = "Quiero crear un sistema de gobernanza para agentes de IA. Créalo ahora (borrador y archivos núcleo completos como propuesta) a partir de esta idea y de los archivos adjuntos, si hay:";
-export const DESDE_ARCHIVOS = "Crea el sistema de gobernanza a partir de los archivos adjuntos.";
+export const PREFIJO_CREAR = "Quiero crear un sistema de gobernanza para agentes de IA. Créalo ahora completo e implementado (núcleo con contenido real, proceso por fases, skills y ejemplos, como propuestas que reviso) a partir de esta idea:";
+export const DESDE_ARCHIVOS = "Completa el sistema a partir de mis archivos.";
+/** Mensaje para uxyn tras importar los adjuntos sin pérdidas (kit 1.6.0): el material ya está en el borrador. */
+export function prefijoImportado(id, modo) {
+  const que = modo === "adaptar"
+    ? "ya era un sistema: conserva todo y solo añade o adapta el núcleo"
+    : "es un sistema nuevo a partir de mis archivos";
+  return `Importé mis archivos sin pérdidas en el sistema «${id}» (${que}). Mi material es la sustancia: no lo resumas ni lo reescribas; muévelo a su pieza si hace falta y completa lo que falte hasta que pase «implementado».`;
+}
 export const EJEMPLOS = [
   ["Revisión de código", "Gobernanza de revisión de código con IA: pruebas obligatorias, explicar riesgos, rechazar secretos y nunca tocar producción."],
   ["Soporte con IA", "Agente de atención al cliente: tono amable, qué puede prometer, cuándo escalar a una persona y qué datos no puede pedir."],
@@ -253,6 +260,7 @@ export function inicioConAgente({ alCrear, alAntesDeCrear = null, alDespuesDeCre
   const zonaEspera = h("div", {});
   const avisoIA = h("div", { class: "aviso-sin-ia" });
   let fallo = null;
+  let importado = null;
 
   async function crear() {
     const texto = idea.value.trim();
@@ -262,8 +270,26 @@ export function inicioConAgente({ alCrear, alAntesDeCrear = null, alDespuesDeCre
       return false;
     }
     if (alAntesDeCrear) await alAntesDeCrear({ idea: texto, adjuntos: archivos.map((a) => a.nombre) });
-    const mensaje = texto || DESDE_ARCHIVOS;
+    let mensaje = texto || DESDE_ARCHIVOS;
     if (fallo) { fallo.remove(); fallo = null; }
+    // Con archivos, primero se importan SIN PÉRDIDAS (byte a byte, al catálogo de este equipo); uxyn trabaja sobre el
+    // sistema importado en vez de reescribir el material desde el chat.
+    if (!conversacion && archivos.length && !importado) {
+      try {
+        importado = await enviar("/api/catalogo/importar", {
+          archivos: archivos.map((a) => ({ ruta: a.nombre, contenido: a.contenido })), aplicar: true, modo: "auto",
+        });
+      } catch (e) {
+        anotar({ nivel: "error", origen: "creador", titulo: "No se pudieron importar los archivos", detalle: e.message || String(e) });
+        avisar(`No se pudieron importar tus archivos: ${e.message || e}`, "mal");
+        return false;
+      }
+      const pres = importado.preservacion || {};
+      anotar({ nivel: "info", origen: "creador", titulo: `Importado sin pérdidas: ${importado.id}`, datos: { modo: importado.modo, preservacion: pres.resumen } });
+      zonaEspera.before(mensajeAgente(`Tus archivos ya están en «${importado.id}»: ${pres.resumen || "importados"}. `
+        + (importado.modo === "adaptar" ? "Ya era un sistema: solo se añade o adapta el núcleo." : "uxyn completa lo que falta sin resumir tu material.")));
+    }
+    if (importado && !conversacion) mensaje = `${prefijoImportado(importado.id, importado.modo)}\n\n${texto}`.trim();
     anotar({
       nivel: "info", origen: "agente", titulo: conversacion ? "Turno uxyn (seguir creación)" : "Turno uxyn (crear sistema)",
       datos: { adjuntos: archivos.length, charsIdea: mensaje.length, conversacion },
@@ -275,9 +301,17 @@ export function inicioConAgente({ alCrear, alAntesDeCrear = null, alDespuesDeCre
     try {
       let r;
       try {
-        r = await enviar("/api/agente/turno", { mensaje: conversacion ? mensaje : `${PREFIJO_CREAR}\n\n${mensaje}`, conversacion, adjuntos: archivos, progreso });
+        r = importado
+          ? await enviar("/api/agente/turno", { mensaje, conversacion, id: importado.id, progreso })
+          : await enviar("/api/agente/turno", { mensaje: conversacion ? mensaje : `${PREFIJO_CREAR}\n\n${mensaje}`, conversacion, adjuntos: archivos, progreso });
       } catch (e) {
         anotar({ nivel: "error", origen: "agente", titulo: "Turno uxyn falló al crear", detalle: e.message || String(e) });
+        if (importado && alCrear) {
+          // El material ya está a salvo en el catálogo: se abre aunque uxyn no haya podido seguir.
+          avisar(`«${importado.id}» se importó sin pérdidas; uxyn no pudo seguir: ${e.message || e}`, "mal");
+          await alCrear(importado.id, { importado });
+          return importado.id;
+        }
         // El texto y los adjuntos siguen en la caja: «Reintentar» repite el mismo envío.
         fallo = mensajeAgente(e.message || String(e), { error: true, extra: [ayudaSinIA(e.message, e.codigo), e.codigo === "uxyn_sin_ia" ? null : h("div", { class: "fila" }, boton("Reintentar", crear, { clase: "pequeno", icono: "deshacer" }))] });
         zonaEspera.after(fallo);
@@ -326,7 +360,7 @@ export function inicioConAgente({ alCrear, alAntesDeCrear = null, alDespuesDeCre
     cabecera ? h("div", { class: "inicio-agente-cabecera" },
       h("span", { class: "inicio-agente-insignia", "aria-hidden": "true" }, icono("creador")),
       h("div", {}, h("h3", { texto: "Empezar con uxyn" }),
-        h("p", { class: "tenue", texto: "Idea o zip → archivos del sistema. Tú aceptas en «Por revisar»." }))) : null,
+        h("p", { class: "tenue", texto: "Idea → sistema completo. Archivos, carpeta o zip → se importan sin pérdidas y uxyn completa el núcleo. Tú aceptas en «Por revisar»." }))) : null,
     respuestas, zonaEspera, avisoIA, caja.nodo, ejemplos);
   // Contrato uxyn 2: si la cuenta no tiene ninguna IA, se explica antes de escribir (y no tras un error).
   void obtener("/api/agente/info").then((info) => {

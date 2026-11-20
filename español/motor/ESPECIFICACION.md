@@ -26,7 +26,7 @@ Un sistema resuelve su trabajo como `<carpeta-del-sistema>/../../trabajo/<id>/`.
 
 ## 2. Sistema: el protocolo
 
-La base (`sistemas-de-gobernanza/_base/`) es un **protocolo**, no un molde: fija cómo se organiza un sistema, no qué tiene que contener. Cada sistema es un monolito autosuficiente y especializado (un conjunto acotado de problemas o acciones): copiar su carpeta a otro `uxyngraphar/sistemas-de-gobernanza/` basta para usarlo, y cada pieza se agrega, mejora o quita sin tocar las demás. Tres niveles:
+La base (`sistemas-de-gobernanza/_base/`) es un **protocolo con un listón de contenido**: fija cómo se organiza un sistema y, desde el motor 1.6.0, el mínimo de contenido para considerarlo *implementado* (§2.6); el tema y la forma concreta del contenido son del autor. Cada sistema es un monolito autosuficiente y especializado (un conjunto acotado de problemas o acciones): copiar su carpeta a otro `uxyngraphar/sistemas-de-gobernanza/` basta para usarlo, y cada pieza se agrega, mejora o quita sin tocar las demás. Tres niveles:
 
 **Nivel 1. Núcleo obligatorio** (lo único que da errores si falta):
 
@@ -40,8 +40,8 @@ La base (`sistemas-de-gobernanza/_base/`) es un **protocolo**, no un molde: fija
   LIMITES.md                      reglas duras y cuándo detenerse a preguntar (§2.4)
   PERMISOS.md                     qué hace el agente solo, qué decide una persona y qué rutas no toca (§2.4)
   scripts/comun/                  infraestructura común (nace de sistemas-de-gobernanza/_base): uxyn_base.py, uxyn_fichas.py, fichas.py,
-                                  uxyn_memorias.py, memorias.py, uxyn_permisos.py, verificar.py, verificar-integridad.py,
-                                  andamiar.py
+                                  uxyn_memorias.py, memorias.py, uxyn_mejoras.py, mejoras.py, uxyn_permisos.py, verificar.py,
+                                  verificar-integridad.py, andamiar.py
   INTEGRIDAD.json                 solo en sistemas construidos/instalados (§4)
 ```
 
@@ -66,7 +66,7 @@ Cualquier otra entrada de primer nivel es un error: o es una pieza estándar, o 
 
 ### 2.1 `SISTEMA.md`
 
-Empieza por `# <título>` y una o dos frases de lo que garantiza. Secciones obligatorias: «Qué resuelve», «Problemas que cubre» (cita cada id de `alcance.problemas` entre comillas invertidas), «Fuera de alcance», «Cuándo usarlo», «Entradas y salidas». Recomendadas: «Cuándo no usarlo», «Sistemas complementarios».
+Empieza por `# <título>` y una o dos frases de lo que garantiza; después, «Rol del agente» (quién es el agente con este sistema, de qué responde y cómo decide; la introducción puede hacer ese papel si lo dice). Secciones obligatorias: «Qué resuelve», «Problemas que cubre» (cita cada id de `alcance.problemas` entre comillas invertidas), «Fuera de alcance», «Cuándo usarlo», «Entradas y salidas». Recomendadas: «Cuándo no usarlo», «Sistemas complementarios».
 
 ### 2.2 Errores y avisos
 
@@ -76,6 +76,21 @@ El validador separa lo que rompe el sistema de lo que solo orienta:
 - **Avisos:** más de 5 problemas (posible sistema generalista); un problema que no cubre ninguna fase ni skill; una skill sin `resuelve`; piezas recomendadas para la familia que faltan; marcadores en piezas opcionales; scripts sin documentar en `HERRAMIENTAS.md`; `scripts/comun/` distinto de `_base`.
 
 `uxyngraphar validar --completitud` muestra, por sistema, las piezas presentes, las recomendadas que faltan y las extensiones.
+
+### 2.6 Núcleo implementado (motor 1.6.0)
+
+Validar dice si un sistema *cumple el protocolo*; la compuerta **implementado** (`uxyngraphar validar <id> --implementado`, `implementado.evaluar`) dice si su contenido basta para que cualquier agente trabaje con él. Se aplica al crear con uxyn, al marcar «listo» y al publicar (el servidor no publica sin ella). El protocolo sigue siendo v1.
+
+- **Errores** (bloquean): texto sin rellenar (`{{…}}`, `TODO`, `FIXME`, «por definir») en el núcleo, `proceso/`, `skills/`, `ejemplos/`, `CHANGELOG.md`, `HERRAMIENTAS.md` o `COMPONENTES.md`; `alcance.problemas` vacío; menos de 2 temas en `fuera_de_alcance` (cada uno con `derivar_a`, o `null`) o de 2 frases de `activacion`; `SISTEMA.md` sin «Rol del agente» (o introducción equivalente) o con una sección obligatoria casi vacía; un problema sin explicar en `SISTEMA.md` o sin fase ni skill que lo cubra; `LIMITES.md` con menos de 5 reglas numeradas o de 3 casos en «Cuándo detenerse y preguntar»; `MEMORIAS.md` con menos de 2 puntos en «Qué recordar» o en «Qué no recordar»; `PERMISOS.md` sin su bloque; sin al menos una fase (con «Objetivo», «Pasos» —2 o más— y «Criterio de salida»), una skill, un ejemplo y `CHANGELOG.md`; scripts propios sin `HERRAMIENTAS.md` o sin pruebas; citar archivos de otro sistema instalado (`sistemas-de-gobernanza/<otro>/`) fuera de `ejemplos/`, `referencia/`, `plantillas/` y `andamiaje/`: los sistemas solo se combinan con flujos.
+- **Avisos** (solo se muestran, no impiden publicar): núcleo de menos de 9 KB; menos de 3 fases o de 2 skills; fases con menos de 3 pasos; más de 5 problemas (conviene dividir el sistema y unirlo con un flujo); `PERMISOS.md` sin «Por qué»; `README.md` sin parte del autor.
+
+Los sistemas publicados antes de la compuerta, o que no la pasan, llevan en el Mercado un aviso permanente («por debajo de implementado»), sin plazo.
+
+**Crear a partir de archivos** (`uxyngraphar importar … --modo auto|crear|adaptar`): el origen nunca se toca. `crear` hace un sistema nuevo con el esqueleto completo y coloca encima los archivos de la persona byte a byte; `adaptar` (el material ya es un sistema) conserva id, versión y todos los archivos y solo añade o adapta el núcleo: fuera del núcleo y del manifiesto no cambia nada. Ambos devuelven un **informe de preservación** (N/N archivos, sha256 de origen y destino por archivo, y si llegó idéntico, fusionado o con el bloque generado al día); si se perdiera alguno, la importación se cancela.
+
+### 2.7 Propuestas de mejora
+
+El sistema instalado no se edita nunca. Si se queda corto o falla, el agente del proyecto escribe una propuesta con `python3 $P/scripts/comun/mejoras.py nueva --slug … --titulo … --que …` en `uxyngraphar/trabajo/<id>/propuestas-de-mejora/PMS-AAAAMMDD-<slug>.md` (carpeta y prefijo `PMS` reservados: ningún tipo de ficha puede usarlos). Puede llevar un diff **de archivos del propio sistema** (nunca código del proyecto; el script lo comprueba). La persona la envía con `uxyngraphar reportar <id> --mejora PMS-…` (vista previa obligatoria); llega a «Sugerencias» del autor, uxyn la convierte en una propuesta de cambios, el autor la acepta o rechaza y, si acepta, publica una versión nueva que los proyectos reciben con `uxyngraphar actualizar`.
 
 ### 2.3 Memorias
 
@@ -235,6 +250,10 @@ más de 50 MB descomprimido, y lo valida como construido. La sha256 del zip es l
 - Un sistema nombrado en el pedido siempre se aplica, sea cual sea el modo.
 - `conflictos: "preguntar"`: si dos sistemas activos se contradicen, el agente se detiene y pregunta.
 - Todo id citado debe estar instalado.
+
+### 5.1 Flujos publicados
+
+Un flujo guardado (`uxyngraphar flujos-guardados guardar`) se publica en el Mercado con `uxyngraphar flujos-guardados publicar <id>` si todos sus sistemas están publicados; viaja solo su nombre, descripción, sistemas (`editor/id`) y `FLUJO.json`. Otros lo traen con `flujos-guardados traer <editor>/<flujo>` (trae también sus sistemas) y lo valoran con estrellas y comentarios, como los sistemas.
 
 ## 6. Activación
 

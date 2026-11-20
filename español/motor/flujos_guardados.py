@@ -157,3 +157,58 @@ def importar(datos: dict) -> str:
         raise ValueError("el archivo no es un flujo guardado")
     datos = {k: v for k, v in datos.items() if k != "id"}
     return guardar(datos)
+
+
+# ── Mercado de flujos (servidor >= 1.1.0) ────────────────────────────────────────────────────────────────────────────
+# Un flujo publicado solo cita sistemas publicados (editor/id): así cualquiera puede traerlo e instalarlo. No viaja nada
+# del proyecto: nombre, descripción, sistemas y FLUJO.json.
+
+def para_publicar(fid: str) -> dict:
+    """Lo que se publicaría: {slug, nombre, descripcion, sistemas: [{editor, id}], flujo}. Falla si algún sistema no
+    está publicado (el Mercado no puede ofrecer un flujo que no se puede instalar)."""
+    import remoto
+    datos = leer(fid)
+    disponibles = remoto.versiones_disponibles()
+    refs, faltan = [], []
+    for pid in datos.get("sistemas") or []:
+        d = disponibles.get(pid)
+        if d and d.get("editor"):
+            refs.append({"editor": d["editor"], "id": pid})
+        else:
+            faltan.append(pid)
+    if faltan:
+        raise ValueError("para publicar un flujo, sus sistemas deben estar publicados en el Mercado; faltan: " + ", ".join(faltan))
+    if not refs:
+        raise ValueError("el flujo no tiene sistemas")
+    return {"slug": fid, "nombre": datos.get("nombre") or fid, "descripcion": datos.get("descripcion") or "",
+            "sistemas": refs, "flujo": {**esp.FLUJO_INICIAL, **(datos.get("flujo") or {})}}
+
+
+def publicar(fid: str, simular: bool = False) -> dict:
+    import remoto
+    cuerpo = para_publicar(fid)
+    if simular:
+        return {"vista_previa": cuerpo, "publicado": False}
+    if not remoto.token():
+        raise PermissionError("sin sesión: uxyngraphar iniciar-sesion")
+    codigo, r = remoto._pedir_json("/me/flujos", cuerpo, con_sesion=True)  # noqa: SLF001 - cliente HTTP del propio kit
+    if codigo == 404:
+        raise remoto.SinServidor("este servidor aún no tiene el Mercado de flujos (hace falta el servidor 1.1.0)")
+    if codigo >= 400:
+        raise remoto.SinServidor(remoto._mensaje(r, f"el servidor respondió HTTP {codigo}"))  # noqa: SLF001
+    return {"vista_previa": cuerpo, "publicado": True, **(r if isinstance(r, dict) else {})}
+
+
+def traer(ref: str) -> str:
+    """Trae un flujo del Mercado (editor/slug): sus sistemas al catálogo y el flujo a «flujos guardados»."""
+    import remoto
+    m = re.fullmatch(r"([a-z0-9]+(?:-[a-z0-9]+)*)/([a-z0-9]+(?:-[a-z0-9]+)*)", str(ref or "").strip())
+    if not m:
+        raise ValueError(f"flujo inválido «{ref}» (usa editor/flujo)")
+    datos = remoto._json(f"/flujos/{m.group(1)}/{m.group(2)}")  # noqa: SLF001
+    ids = []
+    for s in datos.get("sistemas") or []:
+        remoto.traer(f"{s['editor']}/{s['id']}")
+        ids.append(s["id"])
+    return guardar({"nombre": datos.get("nombre") or m.group(2), "descripcion": datos.get("descripcion") or "",
+                    "sistemas": ids, "flujo": datos.get("flujo") or {}})

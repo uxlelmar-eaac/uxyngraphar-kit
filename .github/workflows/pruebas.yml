@@ -67,7 +67,7 @@ jobs:
         run: >-
           mypy --config-file ../../pyproject.toml
           transaccion.py repo.py panel.py rutas_panel.py procesos.py casa.py vocabulario.py
-          distribucion/publicar.py distribucion/arranque_descarga.py conexiones.py mcp_servidor.py agente.py mis_sistemas.py quitar_proyecto.py importar.py
+          distribucion/publicar.py distribucion/arranque_descarga.py conexiones.py mcp_servidor.py agente.py mis_sistemas.py quitar_proyecto.py importar.py implementado.py
 
   cobertura:
     name: cobertura

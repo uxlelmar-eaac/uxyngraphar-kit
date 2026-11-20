@@ -1,5 +1,30 @@
 # Cambios
 
+## 1.6.0
+
+Núcleo implementado: un sistema de gobernanza ya no puede salir de uxyn como un esqueleto, el material de la persona
+llega entero y el sistema instalado mejora sin editarlo.
+
+- Compuerta **implementado** (`uxyngraphar validar <id> --implementado`, también en `creador validar`, en
+  `importar` y en el panel con la insignia «Implementado ✓»): exige contenido real en el núcleo (rol del agente,
+  problemas explicados, al menos 5 límites comprobables y 3 casos de «detente y pregunta», memorias, permisos), al
+  menos una fase, una skill, un ejemplo y el CHANGELOG, y prohíbe citar archivos de otro sistema (solo flujos). Los
+  avisos de calidad (núcleo de menos de 9 KB, menos de 3 fases o 2 skills) solo se muestran. ESPECIFICACION.md §2.6.
+- `importar --modo auto|crear|adaptar`: «adaptar» conserva id, versión y todos los archivos y solo añade o adapta el
+  núcleo (cero cambios fuera del núcleo y del manifiesto); «crear» ya no deja fases ni skills de arranque cuando la
+  persona trae las suyas. Las dos devuelven el **informe de preservación** (N/N, sha256 por archivo) y se cancelan si
+  se perdiera alguno. El origen nunca se toca.
+- «Empezar con uxyn» con archivos, carpeta o zip: primero se importan sin pérdidas y uxyn trabaja sobre el sistema
+  importado, en vez de reescribir el material desde el chat. Fuera la frase «archivos núcleo» del mensaje a uxyn.
+- Propuestas de mejora: `scripts/comun/mejoras.py` (nueva, listar, ver) escribe
+  `uxyngraphar/trabajo/<id>/propuestas-de-mejora/PMS-….md` (carpeta y prefijo reservados), con diff opcional solo de
+  archivos del sistema; `uxyngraphar reportar <id> --mejora PMS-…` la envía al autor con vista previa (hasta 12 000
+  caracteres; servidor 1.1.0). AGENTES.md lo indica a los agentes.
+- La base trae «Rol del agente» en SISTEMA.md, la regla «No edites este sistema» y huecos para 5 límites, 3 casos de
+  «detente y pregunta» y 3 + 2 memorias.
+- Mercado del panel: estrellas, valoración e insignia «implementado» de cada sistema, y «Flujos del Mercado»
+  (traer un flujo con sus sistemas). `flujos-guardados publicar` y `traer` (servidor 1.1.0).
+
 ## 1.5.29
 
 El Taller, rehecho como una ruta guiada para construir sistemas de gobernanza. La pantalla anterior apilaba cuatro

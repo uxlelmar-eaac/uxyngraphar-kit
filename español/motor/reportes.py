@@ -18,6 +18,7 @@ import remoto
 TIPOS = {"problema": "PROBLEMA", "mejora": "MEJORA", "duda": "DUDA"}
 NOMBRES = {"PROBLEMA": "Problema", "MEJORA": "Mejora", "DUDA": "Duda"}
 MINIMO, MAXIMO = 10, 4000
+MAXIMO_MEJORA = 12000   # una propuesta de mejora (PMS-…) puede traer un diff de archivos del sistema (servidor >= 1.1.0)
 
 
 def contexto() -> dict:
@@ -42,14 +43,33 @@ def armar(ref: str, tipo: str, texto: str, repo: Path | None = None) -> dict:
     limpio = (texto or "").replace("\r\n", "\n").strip()
     if len(limpio) < MINIMO:
         raise ValueError(f"cuenta un poco más (al menos {MINIMO} caracteres)")
-    if len(limpio) > MAXIMO:
-        raise ValueError(f"el reporte admite hasta {MAXIMO} caracteres")
+    tope = MAXIMO_MEJORA if clave == "mejora" else MAXIMO
+    if len(limpio) > tope:
+        raise ValueError(f"el reporte admite hasta {tope} caracteres")
     pid = m["id"]
     editor = m["editor"] or (remoto.versiones_disponibles().get(pid) or {}).get("editor")
     if not editor:
         raise ValueError(f"no sé de quién es «{pid}»: indica editor/{pid} (lo ves en «uxyngraphar info {pid}»)")
     return {"editor": editor, "id": pid, "version": m["version"] or _version_instalada(pid, repo),
             "tipo": TIPOS[clave], "texto": limpio, "contexto": contexto()}
+
+
+def propuesta_instalada(ref: str, mid: str, repo: Path | None) -> tuple[Path, object]:
+    """(carpeta del sistema instalado, propuesta PMS-…) de `uxyngraphar/trabajo/<id>/propuestas-de-mejora/` del proyecto."""
+    import importlib
+    m = remoto.REFERENCIA.match((ref or "").strip())
+    if not m:
+        raise ValueError(f"sistema inválido «{ref}» (usa id, editor/id o editor/id@versión)")
+    raiz = Path(repo or Path.cwd()).resolve()
+    sistema = raiz / base_carpeta_sistemas() / m["id"]
+    if not (sistema / "sistema.json").is_file():
+        raise FileNotFoundError(f"«{m['id']}» no está instalado en {raiz} (usa --repo <proyecto>)")
+    mejoras = importlib.import_module("uxyn_mejoras")
+    return sistema, mejoras.buscar(sistema, mid)
+
+
+def base_carpeta_sistemas() -> str:
+    return esp.base.CARPETA_SISTEMAS_DE_GOBERNANZA
 
 
 def vista_previa(datos: dict) -> str:
@@ -60,7 +80,7 @@ def vista_previa(datos: dict) -> str:
               f"Equipo: uxyngraphar {c['kit']} · {c['sistema_operativo']} · Python {c['python']}",
               "Texto:"]
     lineas += [f"  {linea}" for linea in datos["texto"].splitlines()]
-    lineas.append("No se envían rutas, nombres de proyectos ni código. El autor verá tu @usuario.")
+    lineas.append("No se envían rutas, nombres de proyectos ni código del proyecto. El autor verá tu @usuario.")
     return "\n".join(lineas)
 
 

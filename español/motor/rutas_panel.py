@@ -33,6 +33,7 @@ AUDITADAS = {"/api/repo/instalar": "instalar", "/api/sistemas/traer": "traer del
              "/api/repo/memorias/archivar": "archivar memoria",
              "/api/grupos/aplicar-flujo": "aplicar flujo al grupo",
              "/api/catalogo/instalar-en": "instalar", "/api/flujos/aplicar": "aplicar flujo",
+             "/api/flujos/traer": "traer flujo del Mercado",
              "/api/herramienta/proyectos": "actualizar proyectos", "/api/herramienta/desinstalar": "desinstalar",
              "/api/herramienta/actualizar": "actualizar herramienta", "/api/herramienta/usar": "usar versión",
              "/api/herramienta/anterior": "volver a la versión anterior", "/api/herramienta/reparar": "reparar",
@@ -454,7 +455,16 @@ def _importar(d: dict) -> dict:
         raise ValueError("manda «zip», «archivos» o «carpeta»")
     return importar.importar(archivos, pid=str(d.get("id") or "").strip(), titulo=str(d.get("titulo") or "").strip(),
                              descripcion=str(d.get("descripcion") or "").strip(), familia=str(d.get("familia") or ""),
-                             aplicar=d.get("aplicar", True) is not False, nombre_origen=str(d.get("nombre") or ""))
+                             aplicar=d.get("aplicar", True) is not False, nombre_origen=str(d.get("nombre") or ""),
+                             modo=str(d.get("modo") or "auto"))
+
+
+def _flujos_mercado() -> dict:
+    try:
+        r = remoto._json("/flujos")  # noqa: SLF001 - cliente HTTP del propio kit
+        return {"flujos": r.get("flujos", []) if isinstance(r, dict) else []}
+    except (remoto.SinServidor, remoto.NoEncontrado, OSError, ValueError) as e:
+        return {"flujos": [], "error": str(e)}
 
 
 GET = {
@@ -496,6 +506,7 @@ GET = {
     # flujos guardados
     "/api/flujos": lambda d: guardados.listar(),
     "/api/flujos/exportar": lambda d: guardados.exportar(_campo(d, "id")),
+    "/api/flujos/mercado": lambda d: _flujos_mercado(),
     # herramienta
     "/api/herramienta": lambda d: herramienta.info(),
     "/api/herramienta/ultima": lambda d: herramienta.ultima(bool(d.get("forzar"))),
@@ -600,6 +611,7 @@ POST = {
     # flujos guardados
     "/api/flujos/guardar": lambda d: guardados.guardar(_campo(d, "flujo")),
     "/api/flujos/desde-proyecto": lambda d: guardados.desde_proyecto(_raiz(d), _campo(d, "nombre", str), d.get("descripcion", "")),
+    "/api/flujos/traer": lambda d: {"id": guardados.traer(_campo(d, "ref", str))},
     "/api/flujos/aplicar": lambda d: guardados.aplicar(_campo(d, "id", str), _registrados(_campo(d, "repos", list))),
     "/api/flujos/duplicar": lambda d: guardados.duplicar(_campo(d, "id")),
     "/api/flujos/borrar": lambda d: guardados.borrar(_campo(d, "id")),

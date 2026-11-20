@@ -301,12 +301,21 @@ def cmd_creador(a) -> int:
     return 0
 
 
+def _implementado(pid: str) -> dict:
+    import implementado
+    return implementado.evaluar(catalogo.carpeta(pid))
+
+
 def cmd_validar(a) -> int:
     filas = [m for m in catalogo.listar() if a.cmd == "catalogo" or not a.ids or m["id"] in a.ids]
+    exigir = getattr(a, "implementado", False)
+    imp = {m["id"]: _implementado(m["id"]) for m in filas} if exigir else {}
+    falla = any(m["errores"] for m in filas) or any(not r["implementado"] for r in imp.values())
     if getattr(a, "json", False):
         _json([{"id": m["id"], "version": m["version"], "titulo": m["titulo"], "errores": m["errores"], "avisos": m.get("avisos", []),
-                **({"completitud": catalogo.completitud(m["id"])} if a.completitud else {})} for m in filas])
-        return 1 if any(m["errores"] for m in filas) else 0
+                **({"completitud": catalogo.completitud(m["id"])} if a.completitud else {}),
+                **({"implementado": imp[m["id"]]} if exigir else {})} for m in filas])
+        return 1 if falla else 0
     pedidos = [] if a.cmd == "catalogo" else list(a.ids or [])
     desconocidos = [i for i in pedidos if i not in {m["id"] for m in filas}]
     if desconocidos:
@@ -322,7 +331,13 @@ def cmd_validar(a) -> int:
             print(f"  piezas: {', '.join(c['piezas']) or '(solo núcleo)'}"
                   + (f"\n  recomendadas que faltan: {', '.join(c['faltan_recomendadas'])}" if c["faltan_recomendadas"] else "")
                   + (f"\n  extensiones: {', '.join(c['extensiones'])}" if c["extensiones"] else ""))
-    return 1 if desconocidos or any(m["errores"] for m in filas) else 0
+        if exigir:
+            r = imp[m["id"]]
+            print("  Implementado ✓" if r["implementado"] else f"  NO IMPLEMENTADO ({len(r['errores'])}):"
+                  + "".join(f"\n    - {x}" for x in r["errores"]))
+            for x in r["avisos"]:
+                print(f"  aviso de calidad: {x}")
+    return 1 if desconocidos or falla else 0
 
 
 def cmd_grupos(a) -> int:
@@ -443,7 +458,8 @@ def cmd_proyectos(a) -> int:
 
 def cmd_flujos_guardados(a) -> int:
     import flujos_guardados as guardados
-    necesarios = {"guardar": "NOMBRE", "aplicar": "ID", "borrar": "ID", "exportar": "ID", "importar": "ARCHIVO"}
+    necesarios = {"guardar": "NOMBRE", "aplicar": "ID", "borrar": "ID", "exportar": "ID", "importar": "ARCHIVO",
+                  "publicar": "ID", "traer": "EDITOR/FLUJO"}
     if a.accion in necesarios and not a.args:
         raise ValueError(f"flujos-guardados {a.accion}: falta {necesarios[a.accion]}")
     if a.accion == "guardar":
@@ -461,6 +477,11 @@ def cmd_flujos_guardados(a) -> int:
         print(json.dumps(guardados.exportar(a.args[0]), ensure_ascii=False, indent=2))
     elif a.accion == "importar":
         print(guardados.importar(json.loads(Path(a.args[0]).read_text(encoding="utf-8"))))
+    elif a.accion == "publicar":
+        r = guardados.publicar(a.args[0], simular=a.simular)
+        print(json.dumps(r, ensure_ascii=False, indent=2))
+    elif a.accion == "traer":
+        print(guardados.traer(a.args[0]))
     else:
         lista = guardados.listar()
         for g in lista:
@@ -534,6 +555,8 @@ def analizador() -> argparse.ArgumentParser:
     im.add_argument("--id", default="")
     im.add_argument("--titulo", default="")
     im.add_argument("--familia", default="", choices=["", *nomenclatura.NORMA["familias"]])
+    im.add_argument("--modo", default="auto", choices=("auto", "crear", "adaptar"),
+                    help="crear: sistema nuevo a partir de los archivos; adaptar: ya es un sistema, solo se añade o adapta el núcleo; auto: lo detecta")
     im.add_argument("--comprobar", action="store_true", help="solo muestra el resumen; no crea nada")
     im.add_argument("--json", action="store_true")
     g = sub.add_parser("generar")
@@ -555,6 +578,7 @@ def analizador() -> argparse.ArgumentParser:
     v = sub.add_parser("validar")
     v.add_argument("ids", nargs="*")
     v.add_argument("--completitud", action="store_true")
+    v.add_argument("--implementado", action="store_true", help="además del formato, exige el contenido de un sistema implementado (no un esqueleto)")
     v.add_argument("--json", action="store_true")
     pz = sub.add_parser("pieza")
     pz.add_argument("id")
@@ -622,8 +646,10 @@ def analizador() -> argparse.ArgumentParser:
     ca.add_argument("accion", nargs="?", choices=("limpiar",))
     rp = sub.add_parser("reportar")
     rp.add_argument("ref", help="sistema: id, editor/id o editor/id@versión")
-    rp.add_argument("--tipo", required=True, choices=("problema", "mejora", "duda"))
-    rp.add_argument("--texto", required=True, help="qué pasó o qué falta («-» lo lee de la entrada estándar)")
+    rp.add_argument("--tipo", choices=("problema", "mejora", "duda"))
+    rp.add_argument("--texto", help="qué pasó o qué falta («-» lo lee de la entrada estándar)")
+    rp.add_argument("--mejora", metavar="PMS-…", help="envía una propuesta de mejora escrita por el agente en "
+                    "uxyngraphar/trabajo/<id>/propuestas-de-mejora/ (implica --tipo mejora)")
     rp.add_argument("--repo", help="proyecto donde lo usas (para indicar la versión instalada)")
     rp.add_argument("--si", action="store_true", help="enviar sin preguntar (tras mostrar la vista previa)")
     rp.add_argument("--simular", action="store_true", help="solo la vista previa; no envía nada")
@@ -668,7 +694,8 @@ def analizador() -> argparse.ArgumentParser:
     pr.add_argument("--todo", action="store_true", help="con quitar: retira también todo lo que puso uxyngraphar en el proyecto")
     pr.add_argument("--si", action="store_true", help="con quitar --todo: no preguntar")
     fg = sub.add_parser("flujos-guardados")
-    fg.add_argument("accion", nargs="?", choices=("guardar", "aplicar", "borrar", "exportar", "importar"))
+    fg.add_argument("accion", nargs="?", choices=("guardar", "aplicar", "borrar", "exportar", "importar", "publicar", "traer"))
+    fg.add_argument("--simular", action="store_true", help="con publicar: solo la vista previa")
     fg.add_argument("args", nargs="*")
     fg.add_argument("--repo", default=".")
     fg.add_argument("--descripcion", default="")
@@ -822,7 +849,18 @@ def cmd_sincronizar(a) -> int:
 
 def cmd_reportar(a) -> int:
     import reportes
-    texto = sys.stdin.read() if a.texto == "-" else a.texto
+    propuesta = None
+    if a.mejora:
+        if a.texto:
+            print("error: usa --mejora o --texto, no ambos", file=sys.stderr)
+            return 2
+        _, propuesta = reportes.propuesta_instalada(a.ref, a.mejora, Path(a.repo) if a.repo else None)
+        a.tipo, texto = "mejora", f"[{propuesta.id}] " + propuesta.cuerpo.strip()
+    else:
+        if not a.tipo or a.texto is None:
+            print("error: indica --tipo y --texto (o --mejora PMS-…)", file=sys.stderr)
+            return 2
+        texto = sys.stdin.read() if a.texto == "-" else a.texto
     datos = reportes.armar(a.ref, a.tipo, texto, Path(a.repo) if a.repo else None)
     if a.json and (a.simular or not a.si):
         _json({"vista_previa": datos, "enviado": False})
@@ -840,6 +878,8 @@ def cmd_reportar(a) -> int:
             print("no se envió nada")
             return 0
     r = reportes.enviar(datos)
+    if propuesta is not None:
+        __import__("uxyn_mejoras").marcar_enviada(propuesta)
     if a.json:
         _json({"vista_previa": datos, "enviado": True, **r})
     else:
@@ -1030,7 +1070,7 @@ def cmd_importar(a) -> int:
     else:
         archivos = {r.name: r.read_bytes() for r in rutas}
     r = importar.importar(archivos, pid=a.id, titulo=a.titulo, familia=a.familia, aplicar=not a.comprobar,
-                          nombre_origen=rutas[0].name)
+                          nombre_origen=rutas[0].name, modo=a.modo)
     if a.json:
         _json(r)
         return 0
@@ -1049,8 +1089,13 @@ def cmd_importar(a) -> int:
         print(f"  ignorado (archivo de sistema): {x}")
     for x in r["avisos"]:
         print(f"  aviso: {x}")
+    print(f"Modo: {'adaptar un sistema existente (solo el núcleo)' if r['modo'] == 'adaptar' else 'sistema nuevo a partir de tus archivos'}")
+    print(f"Preservación: {r['preservacion']['resumen']}")
     if r["errores"]:
         print(f"Pendiente de completar ({len(r['errores'])}); «uxyngraphar generar pendientes {r['id']}» dice dónde.")
+    imp = r.get("implementado")
+    if imp:
+        print("Implementado ✓" if imp["implementado"] else f"Aún no implementado ({len(imp['errores'])} pendiente(s)): «uxyngraphar validar {r['id']} --implementado»")
     return 0
 
 

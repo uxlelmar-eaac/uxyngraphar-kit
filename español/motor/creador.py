@@ -68,9 +68,11 @@ def validar(carpeta: Path) -> dict:
     pid = _unico(carpeta)
     m = catalogo.listar(carpeta)[0]
     p = generador.pendientes(pid, carpeta)
+    import implementado
+    imp = implementado.evaluar(catalogo.carpeta(pid, carpeta))
     return {"id": pid, "version": m.get("version", ""), "titulo": m.get("titulo", ""), "valido": not m["errores"],
             "listo": p["listo"], "errores": m["errores"], "avisos": m.get("avisos", []), "marcadores": p["marcadores"],
-            "faltan_recomendadas": p["faltan_recomendadas"], "siguiente": p["siguiente"]}
+            "faltan_recomendadas": p["faltan_recomendadas"], "siguiente": p["siguiente"], "implementado": imp}
 
 
 def leer(carpeta: Path, pid: str) -> dict[str, str]:

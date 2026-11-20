@@ -2,6 +2,11 @@
 
 {{Una o dos frases: qué garantiza este sistema y en qué trabajo se usa.}}
 
+## Rol del agente
+
+{{Quién es el agente cuando trabaja con este sistema (p. ej. «revisor de arquitectura»), de qué responde, con qué
+criterio decide y qué tono usa con la persona.}}
+
 ## Qué resuelve
 
 {{El problema de fondo, en lenguaje llano: qué sale mal sin este sistema.}}
