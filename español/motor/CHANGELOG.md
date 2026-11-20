@@ -1,5 +1,12 @@
 # Cambios
 
+## 1.6.1
+
+- `importar --modo crear`: si el material ya trae sus ejemplos (`ejemplos/`), el ejemplo de arranque con marcadores
+  se retira como ya se hacía con `proceso/` y `skills/`. Un sistema completo importado como «crear» queda
+  implementado sin tener que borrar a mano el caso de ejemplo de la base.
+- Importar un JSON de `config/` que la base no amplía conserva sus bytes tal cual (también en Windows).
+
 ## 1.6.0
 
 Núcleo implementado: un sistema de gobernanza ya no puede salir de uxyn como un esqueleto, el material de la persona

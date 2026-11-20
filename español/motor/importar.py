@@ -440,11 +440,11 @@ def _borrar(c: Path, rel: str) -> None:
             padre = padre.parent
 
 
-ARRANQUE_REDUNDANTE = ("proceso", "skills")
+ARRANQUE_REDUNDANTE = ("proceso", "skills", "ejemplos")
 
 
 def _retirar_arranque(c: Path, escritos: dict[str, str], de_la_base: set[str]) -> None:
-    """Modo «crear»: si la persona ya trae fases o skills, el contenido de arranque de esa pieza
+    """Modo «crear»: si la persona ya trae fases, skills o ejemplos, el contenido de arranque de esa pieza
     (con marcadores) sobra: se retira y el proceso queda con sus fases, en el orden de su manifiesto si lo trae."""
     m = base.leer_manifiesto(c)
     cambia = False

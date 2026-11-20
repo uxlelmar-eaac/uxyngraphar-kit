@@ -315,6 +315,8 @@ class Importacion(unittest.TestCase):
         destino = Path(r["ruta"])
         self.assertFalse((destino / "skills" / "accion-principal").exists())
         self.assertEqual(base.leer_manifiesto(destino)["proceso"], ["preparar", "revisar", "cerrar"])
+        self.assertFalse((destino / "ejemplos" / "caso.md").exists(), "trae sus ejemplos: el de arranque sobra")
+        self.assertTrue(r["implementado"]["implementado"], r["implementado"])
 
     def test_modo_invalido(self):
         with self.assertRaises(importar.ImportacionInvalida):
