@@ -1,6 +1,6 @@
 # Cambios
 
-## Sin publicar
+## 1.6.5
 
 - **Carpetas propias sin miedo (extensiones)**: el núcleo es inmutable y lo que lo rodea es flexible, así que validar
   nunca empuja a borrar las carpetas de la persona:
