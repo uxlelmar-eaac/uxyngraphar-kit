@@ -282,7 +282,7 @@ export async function chatAgente(contexto, {
   let conversacion = conversacionInicial;
   let modo = "asistente";
   let adjuntos = null;
-  const saludoAsistente = "Hola, soy uxyn. A la izquierda tienes archivos y origen; arriba el ciclo del sistema. Si dejo cambios, salen en «Por revisar».";
+  const saludoAsistente = "Hola, soy uxyn. Pídeme que complete el paso en el que estás, que revise el sistema o que mejore un archivo. Si dejo cambios, salen en «Por revisar».";
   const saludoSimulador = "Simulador: actúo como el agente de IA que sigue este sistema. Pídeme algo que debería rechazar.";
   const hilo = h("div", { class: "pila conversacion", role: "log", "aria-live": "polite" },
     h("div", { class: "mensaje ia", texto: saludoAsistente }));
@@ -476,7 +476,7 @@ export async function chatAgente(contexto, {
     boton("Completar el sistema", completar, { clase: "pequeno", icono: "creador", titulo: "uxyn rellena el núcleo y todo el esqueleto y lo deja en «Por revisar»" }),
     boton("Revisar", revisar, { clase: "pequeno" }),
     boton("Mejorar archivo", mejorar, { clase: "pequeno", titulo: "Usa lo que escribas abajo como instrucción" }));
-  const pistaModo = h("p", { class: "tenue pista-modo", texto: "Los cambios de uxyn salen en «Por revisar», arriba." });
+  const pistaModo = h("p", { class: "tenue pista-modo", texto: "Los cambios de uxyn salen en «Por revisar»." });
   const enviarBoton = boton("Enviar", hablar, { clase: "pequeno primario" });
   const selConversacion = h("select", { "aria-label": "Conversación guardada", class: "breve" });
   const empezarDeNuevo = () => {
@@ -548,7 +548,7 @@ export async function chatAgente(contexto, {
     barraHistorial.hidden = modo === "simulador";
     pistaModo.textContent = modo === "simulador"
       ? "Prueba el sistema como lo seguiría un agente de IA."
-      : "Los cambios de uxyn salen en «Por revisar», arriba.";
+      : "Los cambios de uxyn salen en «Por revisar».";
     pregunta.setAttribute("aria-label", modo === "simulador" ? "Mensaje para el simulador" : "Mensaje para uxyn");
     enviarBoton.textContent = "Enviar";
     pintarSaludo();
@@ -576,7 +576,7 @@ export async function chatAgente(contexto, {
     }
   }).catch(() => { /* sin información: el chat funciona igual y los errores lo explican */ });
 
-  return h("div", { class: "chat-agente" },
+  const raiz = h("div", { class: "chat-agente" },
     h("div", { class: "fila modos-chat", role: "group", "aria-label": "Modo del chat" }, btnAsistente, btnSimulador),
     pistaModo,
     barraHistorial,
@@ -585,8 +585,11 @@ export async function chatAgente(contexto, {
     hilo,
     avisoIA,
     propuestaLocal,
-    h("label", { class: "campo ia-selector" }, "Qué IA usar", sel),
-    adjuntos.nodo);
+    adjuntos.nodo,
+    h("label", { class: "campo ia-selector" }, "Qué IA usar", sel));
+  // El Taller guiado abre el simulador desde el paso «Probar» y vuelve a uxyn al pedirle un paso.
+  raiz.ponerModo = (m) => { aplicarModo(m === "simulador" ? "simulador" : "asistente"); pintarAvisoIA(); };
+  return raiz;
 }
 
 function conflicto(r, alElegir) {

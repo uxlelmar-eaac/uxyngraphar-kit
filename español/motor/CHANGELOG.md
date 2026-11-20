@@ -1,5 +1,25 @@
 # Cambios
 
+## 1.5.29
+
+El Taller, rehecho como una ruta guiada para construir sistemas de gobernanza. La pantalla anterior apilaba cuatro
+bandas (origen, ciclo, una acción suelta y la barra de salida) antes de llegar al sistema, repetía «Taller» y «Nuevo»,
+enseñaba botones de salida desactivados y no decía qué hacer a continuación.
+
+- Inicio del Taller: «Cuéntale a uxyn qué deben seguir tus agentes» con la caja de la idea a la vista, y al lado
+  «Subir tu material» y «Empezar desde cero» (la especificación JSON queda como enlace). Debajo, los cinco pasos de un
+  sistema y «Continúa con un sistema» con su estado (a medias, listo para entregar, en uso, en el Mercado).
+- Sistema abierto: cabecera con el título, dónde está y «Sistemas» para cambiar de uno a otro; la ruta Propósito →
+  Reglas → Flujo y piezas → Probar → Entregar, con los huecos de cada paso; «Ahora» con una sola acción (ir al paso,
+  ir al primer hueco, revisar los cambios de uxyn, abrir el simulador o entregar).
+- Cada paso explica qué se decide en él y lista sus archivos con los huecos y su papel (LIMITES.md: las reglas duras;
+  PERMISOS.md: qué queda para la persona…). «Rellenar» abre el archivo en el hueco; «Que uxyn complete este paso» le
+  pide a uxyn solo ese paso. Propósito usa el formulario de lo básico; Reglas y Flujo y piezas, el editor; Probar,
+  la validación y el simulador; Entregar, instalar, la web, el .zip, el Mercado y la versión.
+- Abrir un archivo desde cualquier sitio (la guía, «Por revisar» o un error) lleva al paso que lo trabaja.
+- uxyn queda abierto al lado por defecto (se pliega y se recuerda); sus cambios siguen en «Por revisar», arriba del
+  paso. En móvil la ruta se desplaza en horizontal.
+
 ## 1.5.28
 
 Ajustes de uxyn 2 vistos al probar el panel contra la web en producción (backend 1.0.12).

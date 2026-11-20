@@ -174,7 +174,7 @@ async function formularioBasico(id, alGuardar) {
  * Editor de un sistema del catálogo local. Archivos visibles por defecto.
  * Devuelve { nodo, rutaActual, textarea, recargar, abrirPestana, panelPublicar }.
  */
-export async function editorSistema(id, { alCambiar = async () => {}, pestanaInicial = "archivos" } = {}) {
+export async function editorSistema(id, { alCambiar = async () => {}, pestanaInicial = "archivos", alPedirSeccion = null } = {}) {
   const piezas = h("div", { class: "piezas" });
   const basico = h("div", { class: "pila" });
   const sincronia = h("div", { class: "pila salida-panel", "aria-label": "Publicar en el Mercado" });
@@ -227,12 +227,14 @@ export async function editorSistema(id, { alCambiar = async () => {}, pestanaIni
     // Evita tormenta de pintados al montar el editor (lista + franjas en cascada).
     if (notificar) await alCambiar();
   }
+  // En el Taller guiado (sin pestañas) las secciones viven en pasos: abrir un archivo lleva al paso que lo trabaja.
+  const mostrarSeccion = (s, rel) => (alPedirSeccion ? alPedirSeccion(s, rel) : elegirPestana(s));
   async function abrirArchivo(rel, opciones) {
-    elegirPestana("archivos");
+    await mostrarSeccion("archivos", rel);
     if (rel) await archivos.abrirArchivo(rel, opciones);
   }
-  function abrirDiferencias(...args) {
-    elegirPestana("archivos");
+  async function abrirDiferencias(...args) {
+    await mostrarSeccion("archivos", args[0]);
     archivos.abrirDiferencias(...args);
   }
 
@@ -268,6 +270,9 @@ export async function editorSistema(id, { alCambiar = async () => {}, pestanaIni
     nodo,
     rutaActual: () => archivos.rutaActual(),
     textarea: archivos.area,
+    secciones,
+    version,
+    subirVersion,
     recargar,
     abrirPestana: elegirPestana,
     abrirArchivo,
