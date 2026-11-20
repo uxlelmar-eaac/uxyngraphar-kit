@@ -345,7 +345,11 @@ def importar(archivos: dict[str, bytes], pid: str = "", titulo: str = "", descri
                     actual = json.loads(ruta.read_text(encoding="utf-8"))
                     suyo = json.loads(datos.decode("utf-8"))
                     if isinstance(actual, dict) and isinstance(suyo, dict):
-                        ruta.write_text(json.dumps(_fusionar(actual, suyo), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+                        fusion = _fusionar(actual, suyo)
+                        if fusion == suyo:   # nada que añadir: se conservan sus bytes tal cual
+                            ruta.write_bytes(datos)
+                        else:
+                            ruta.write_text(json.dumps(fusion, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
                         de_la_base.discard(dest)
                         escritos[dest] = rel
                         fusionados.append({"de": rel, "a": dest, "motivo": "JSON fusionado con el de la base: tus valores mandan"})

@@ -335,7 +335,7 @@ class Mejoras(unittest.TestCase):
         diff = "--- a/LIMITES.md\n+++ b/LIMITES.md\n@@ -1 +1 @@\n-x\n+y\n"
         ruta = mejoras.crear(self.sistema, "falta-regla", "Falta una regla de secretos", "No dice qué hacer con secretos en el diff.",
                              archivo="LIMITES.md", diff=diff)
-        self.assertEqual(ruta.parent, self.proyecto / base.CARPETA_TRABAJO / self.sistema.name / base.CARPETA_MEJORAS)
+        self.assertEqual(ruta.parent.resolve(), (self.proyecto / base.CARPETA_TRABAJO / self.sistema.name / base.CARPETA_MEJORAS).resolve())
         self.assertTrue(ruta.name.startswith("PMS-"))
         texto = ruta.read_text(encoding="utf-8")
         self.assertIn("```diff", texto)
