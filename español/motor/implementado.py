@@ -272,6 +272,19 @@ def evaluar(carpeta: Path) -> dict:
         if otros:
             errores.append(f"{rel}: cita archivos de otro sistema ({', '.join(otros[:3])}); los sistemas solo se combinan con flujos")
 
+    # ── extensiones: en el borrador son avisos (se declaran solas); para publicar tienen que estar declaradas ──
+    import piezas as estructura
+    if base.extensiones_en_lista(m.get("extensiones")):
+        errores.append(f"sistema.json: «extensiones» es una lista; para publicar debe ser un objeto {{\"carpeta\": \"para qué "
+                       f"sirve\"}}, p. ej. {base.ejemplo_extensiones(m.get('extensiones'))} («uxyngraphar indice-sistema {pid}» la "
+                       "convierte). Tus carpetas no se tocan")
+    for nombre in estructura.sin_declarar(carpeta, m):
+        errores.append(f"{nombre}: {estructura.AVISO_SIN_DECLARAR}; para publicar, declárala (botón «Declarar como extensión» o "
+                       f"«uxyngraphar extension {pid} declarar {nombre} \"para qué sirve\"»). Nunca hace falta borrarla")
+    provisionales = sorted(k.strip("/") for k, v in base.extensiones_declaradas(m).items() if v == base.EXTENSION_PROVISIONAL)
+    if provisionales:
+        avisos.append(f"extensiones: {', '.join(provisionales)} con la frase provisional; escribe para qué sirve cada una")
+
     # ── avisos de calidad (no bloquean) ──
     nucleo_bytes = sum(len(textos.get(n, "").encode("utf-8")) for n in base.NUCLEO)
     if nucleo_bytes < AVISO_NUCLEO_BYTES:

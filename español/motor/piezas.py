@@ -224,7 +224,11 @@ def validar(carpeta: Path, m: dict) -> Resultado:
     carpeta = Path(carpeta)
     errores, avisos = [], []
     declaradas = [p for p in m.get("piezas") or [] if p in base.PIEZAS]
-    extensiones = m.get("extensiones") or {}
+    extensiones = base.extensiones_declaradas(m)
+    if base.extensiones_en_lista(m.get("extensiones")):
+        avisos.append(f"extensiones: es una lista; debe ser un objeto {{\"carpeta\": \"para qué sirve\"}}, p. ej. "
+                      f"{base.ejemplo_extensiones(m.get('extensiones'))}. «uxyngraphar indice-sistema {m.get('id')}» la convierte "
+                      "sola; tus carpetas no se tocan")
     for pieza in declaradas:
         if not (carpeta / base.PIEZAS[pieza]).exists():
             errores.append(f"pieza «{pieza}»: declarada pero falta {base.PIEZAS[pieza]}")
@@ -238,12 +242,22 @@ def validar(carpeta: Path, m: dict) -> Resultado:
     for ruta in extensiones:
         if not (carpeta / ruta.strip("/")).exists():
             errores.append(f"extensiones.{ruta}: declarada pero no existe")
-    permitidos = base.RESERVADOS | {r.strip("/") for r in extensiones}
-    for p in sorted(carpeta.iterdir()):
-        if p.name not in permitidos and not base.IGNORAR.search(p.name) and not p.name.startswith("."):
-            errores.append(f"{p.name}: no es parte del núcleo ni una pieza estándar; declárala en «extensiones» o usa una pieza")
+    for nombre in sin_declarar(carpeta, m):
+        avisos.append(f"{nombre}: {AVISO_SIN_DECLARAR}; se declara sola al regenerar el índice («uxyngraphar indice-sistema "
+                      f"{m.get('id')}») o añade a «extensiones» \"{nombre}\": \"para qué sirve\". Tu carpeta no se toca; "
+                      "al publicar tiene que estar declarada")
     avisos += especializacion(carpeta, m, declaradas)
     return errores, avisos
+
+
+AVISO_SIN_DECLARAR = "carpeta propia sin declarar en «extensiones»"
+
+
+def sin_declarar(carpeta: Path, m: dict) -> list[str]:
+    """Entradas de primer nivel que no son núcleo, pieza estándar ni extensión declarada (las propias de la persona)."""
+    permitidos = base.RESERVADOS | {k.strip("/") for k in base.extensiones_declaradas(m)}
+    return [p.name for p in sorted(Path(carpeta).iterdir())
+            if p.name not in permitidos and not base.IGNORAR.search(p.name) and not p.name.startswith(".")]
 
 
 def especializacion(carpeta: Path, m: dict, declaradas: list[str]) -> list[str]:
@@ -275,7 +289,7 @@ def completitud(carpeta: Path, m: dict) -> dict:
     recomendadas = [*RECOMENDADAS.get(m.get("familia"), ()), *COMUNES]
     return {"piezas": declaradas, "faltan_recomendadas": [p for p in recomendadas if p not in declaradas],
             "otras_disponibles": [p for p in base.PIEZAS if p not in declaradas and p not in recomendadas],
-            "extensiones": sorted(m.get("extensiones") or {}), "problemas": sorted(base.ids_problemas(m))}
+            "extensiones": sorted(k.strip("/") for k in base.extensiones_declaradas(m)), "problemas": sorted(base.ids_problemas(m))}
 
 
 def limites_y_permisos(carpeta: Path, m: dict) -> list[str]:

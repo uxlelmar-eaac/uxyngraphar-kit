@@ -61,12 +61,25 @@ export function resumenCambios(acciones) {
   return { archivos, mas: archivos.reduce((s, c) => s + c.mas, 0), menos: archivos.reduce((s, c) => s + c.menos, 0) };
 }
 
+/** Rutas que las propuestas del turno borrarían (archivos de la persona: nada se borra sin que ella lo acepte). */
+export function archivosQueBorra(acciones) {
+  return resumenCambios(acciones).archivos.filter((c) => c.tipo === "borrado").map((c) => c.ruta);
+}
+
+/** Aviso en rojo de la tarjeta cuando una propuesta borra archivos. */
+export function avisoBorrado(rutas) {
+  const lista = rutas.slice(0, 5).join(", ") + (rutas.length > 5 ? ` y ${rutas.length - 5} más` : "");
+  return `Esta propuesta borra archivos tuyos: ${lista}. Si no lo pediste, recházala en «Por revisar».`;
+}
+
 /** Tarjeta con los archivos que uxyn propone cambiar (+/−) y el botón para revisarlos; null si no hay cambios. */
 export function cambiosAgente(acciones, alRevisar = null) {
   const { archivos, mas, menos } = resumenCambios(acciones);
   if (!archivos.length) return null;
   const titulo = archivos.length === 1 ? "1 archivo por revisar" : `${archivos.length} archivos por revisar`;
-  return h("div", { class: "tarjeta-cambios", "data-cambios": String(archivos.length) },
+  const borra = archivosQueBorra(acciones);
+  return h("div", { class: `tarjeta-cambios${borra.length ? " borra-archivos" : ""}`, "data-cambios": String(archivos.length) },
+    borra.length ? h("p", { class: "aviso-borrado", role: "alert", texto: avisoBorrado(borra) }) : null,
     h("div", { class: "fila separada" },
       h("b", { texto: titulo }),
       h("span", { class: "totales-cambios" }, h("span", { class: "cambio-mas", texto: `+${mas}` }), " ", h("span", { class: "cambio-menos", texto: `−${menos}` }))),

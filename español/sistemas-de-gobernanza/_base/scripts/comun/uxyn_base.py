@@ -458,13 +458,55 @@ def _validar_piezas(m: dict) -> list[str]:
     if m.get("fichas") and "plantillas" not in piezas:
         errores.append("fichas: necesitan la pieza «plantillas» en «piezas»")
     extensiones = m.get("extensiones", {})
-    if not isinstance(extensiones, dict):
-        errores.append("extensiones: objeto {ruta: para qué sirve}")
+    if extensiones_en_lista(extensiones):
+        pass   # forma antigua o escrita a mano: es un aviso (piezas.py) y «indice-sistema» la convierte en objeto
+    elif not isinstance(extensiones, dict):
+        errores.append(f"{ERROR_EXTENSIONES}: debe ser un objeto {{\"carpeta\": \"para qué sirve\"}}, p. ej. "
+                       f"{ejemplo_extensiones(extensiones)}; tus carpetas no se tocan")
     else:
         for ruta, para in extensiones.items():
-            if not _relativa(ruta) or "/" in ruta.strip("/") or ruta in RESERVADOS or not _texto(para):
-                errores.append(f"extensiones.{ruta}: nombre de primer nivel no reservado y una frase de para qué sirve")
+            if not _nombre_extension(ruta) or not _texto(para):
+                errores.append(f"{ERROR_EXTENSIONES}.{ruta}: carpeta o archivo de primer nivel no reservado y una frase de para qué "
+                               f"sirve, p. ej. {{\"{str(ruta).strip('/') or 'prompts'}\": \"Prompts para el agente\"}}; tus carpetas no se tocan")
     return errores
+
+
+# ---------- extensiones (carpetas propias declaradas) ----------
+ERROR_EXTENSIONES = "extensiones"
+EXTENSION_PROVISIONAL = "Extensión propia: revisa para qué sirve"
+
+
+def _nombre_extension(ruta) -> bool:
+    return isinstance(ruta, str) and _relativa(ruta) and "/" not in ruta.strip("/") and ruta.strip("/") not in RESERVADOS
+
+
+def extensiones_en_lista(valor) -> bool:
+    """«extensiones» escrita como lista de nombres (["prompts", "config"]) en vez de objeto: se acepta con aviso."""
+    return isinstance(valor, list) and all(_nombre_extension(x) for x in valor)
+
+
+def extensiones_declaradas(m: dict) -> dict[str, str]:
+    """Las extensiones del manifiesto como objeto {carpeta: para qué sirve}, acepte la forma que acepte (objeto o lista)."""
+    valor = m.get("extensiones") if isinstance(m, dict) else None
+    if isinstance(valor, dict):
+        return {k: v for k, v in valor.items() if isinstance(k, str)}
+    if extensiones_en_lista(valor):
+        return {x.strip("/"): EXTENSION_PROVISIONAL for x in valor}
+    if isinstance(valor, list):
+        return {x.strip("/"): EXTENSION_PROVISIONAL for x in valor if _nombre_extension(x)}
+    return {}
+
+
+def ejemplo_extensiones(valor) -> str:
+    """El objeto que habría que escribir, con los nombres que ya trae (o prompts/config de ejemplo)."""
+    nombres = [x.strip("/") for x in valor if isinstance(x, str) and x.strip("/")] if isinstance(valor, list) else []
+    nombres = nombres or ["prompts", "config"]
+    return "{" + ", ".join(f'"{n}": "para qué sirve"' for n in nombres[:4]) + "}"
+
+
+def solo_errores_de_extensiones(errores: list[str]) -> bool:
+    """El manifiesto solo falla por «extensiones»: el resto del sistema se puede seguir validando."""
+    return bool(errores) and all(e.startswith(ERROR_EXTENSIONES) for e in errores)
 
 
 # ---------- integridad ----------

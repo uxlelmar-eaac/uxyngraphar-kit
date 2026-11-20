@@ -472,7 +472,7 @@ def _solo_nucleo(c: Path, escritos: dict[str, str], de_la_base: set[str], m_usua
         _borrar(c, rel)
         de_la_base.discard(rel)
     m = base.leer_manifiesto(c)
-    ext = {k: v for k, v in (m.get("extensiones") or {}).items() if (c / k).exists()}
+    ext = {k: v for k, v in base.extensiones_declaradas(m).items() if (c / k).exists()}
     piezas = [p for p, ruta in base.PIEZAS.items() if (c / ruta).exists()]
     declaradas = [p for p in (m_usuario.get("piezas") or []) if p in base.PIEZAS and (c / base.PIEZAS[p]).exists()]
     m["piezas"] = sorted(set(piezas) | set(declaradas), key=list(base.PIEZAS).index)
@@ -487,10 +487,10 @@ def _declarar_extensiones(c: Path, escritos: dict[str, str]) -> None:
     """Las carpetas y archivos de primer nivel que trajo la persona y no son núcleo ni pieza quedan declarados en
     «extensiones» (así el sistema valida sin moverlos ni borrarlos)."""
     m = base.leer_manifiesto(c)
-    ext = dict(m.get("extensiones") or {})
-    nuevos = False
+    ext = base.extensiones_declaradas(m)
+    nuevos = isinstance(m.get("extensiones"), list)   # una lista se guarda siempre como objeto
     for p in sorted(c.iterdir()):
-        if p.name in base.RESERVADOS or p.name in ext or p.name.startswith(".") or base.IGNORAR.search(p.name):
+        if p.name in base.RESERVADOS or p.name in {k.strip("/") for k in ext} or p.name.startswith(".") or base.IGNORAR.search(p.name):
             continue
         origen = sorted({o.split("/")[0] for d, o in escritos.items() if d.split("/")[0] == p.name})
         ext[p.name] = f"Importado tal cual ({', '.join(origen) or p.name}): revisa para qué sirve"

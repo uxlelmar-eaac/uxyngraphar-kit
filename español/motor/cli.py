@@ -9,6 +9,7 @@ Catálogo (aquí se crean y editan los sistemas):
   generar pendientes <id> [--json]           qué le falta a un sistema (archivo:línea) y la siguiente acción
   validar [<id>…] [--completitud] [--json]   valida sistemas del catálogo; --completitud: piezas que tiene y que le faltan
   pieza <id> agregar|quitar <pieza>          añade una pieza estándar desde _base o la retira (y actualiza el manifiesto)
+  extension <id> declarar <carpeta> <frase> [--json]   declara una carpeta propia en «extensiones» (no la toca)
   indice-sistema [<id>…]                     regenera el bloque de entrada del README de cada sistema
   nomenclatura                               status heredados del catálogo pendientes de pasar al vocabulario
   nomenclatura migrar [--repo RUTA] [--aplicar]   fichas de un proyecto al vocabulario de NOMENCLATURA.md (por defecto simula)
@@ -584,6 +585,12 @@ def analizador() -> argparse.ArgumentParser:
     pz.add_argument("id")
     pz.add_argument("accion", choices=("agregar", "quitar"))
     pz.add_argument("pieza", choices=list(esp.base.PIEZAS))
+    ex = sub.add_parser("extension")
+    ex.add_argument("id")
+    ex.add_argument("accion", choices=("declarar",))
+    ex.add_argument("carpeta")
+    ex.add_argument("frase")
+    ex.add_argument("--json", action="store_true")
     ip = sub.add_parser("indice-sistema")
     ip.add_argument("ids", nargs="*")
     ve = sub.add_parser("version", description="Sube la versión de un sistema del catálogo y añade su entrada al CHANGELOG.md. "
@@ -1150,6 +1157,13 @@ def _main(a) -> int:
             errores = hacer(a.id, a.pieza)
             print(f"{a.id}: pieza «{a.pieza}» {'agregada' if a.accion == 'agregar' else 'quitada'}"
                   + "".join(f"\n  pendiente: {e}" for e in errores))
+        elif a.cmd == "extension":
+            errores = catalogo.declarar_extension(a.id, a.carpeta, a.frase)
+            if a.json:
+                _json({"id": a.id, "carpeta": a.carpeta.strip().strip("/"), "errores": errores})
+            else:
+                print(f"{a.id}: «{a.carpeta.strip().strip('/')}» declarada en «extensiones»"
+                      + "".join(f"\n  pendiente: {e}" for e in errores))
         elif a.cmd == "indice-sistema":
             for pid in a.ids or [m["id"] for m in catalogo.listar()]:
                 print(f"{pid}: {'README actualizado' if catalogo.indice_sistema(pid) else 'al día'}")

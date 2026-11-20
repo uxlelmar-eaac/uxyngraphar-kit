@@ -71,7 +71,8 @@ class TestCatalogo(Base):
     def test_editar_y_versionar(self):
         self.assertEqual(catalogo.guardar_archivo("pruebas-demo", "plantillas/nueva.md", "# Guía\n", self.cat), [])
         self.assertIn("plantillas/nueva.md", catalogo.archivos("pruebas-demo", self.cat))
-        self.assertTrue(catalogo.guardar_archivo("pruebas-demo", "docs/nueva.md", "# Guía\n", self.cat))
+        # 1.6.5: una carpeta propia sin declarar ya no es error en el catálogo (aviso; error solo para publicar)
+        self.assertEqual(catalogo.guardar_archivo("pruebas-demo", "docs/nueva.md", "# Guía\n", self.cat), [])
         self.assertEqual(catalogo.versionar("pruebas-demo", "menor", self.cat), "0.2.0")
         with self.assertRaises(ValueError):
             catalogo.leer_archivo("pruebas-demo", "../pruebas-otras/README.md", self.cat)

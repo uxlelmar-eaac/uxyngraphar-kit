@@ -1,5 +1,18 @@
 # Cambios
 
+## Sin publicar
+
+- **Carpetas propias sin miedo (extensiones)**: el núcleo es inmutable y lo que lo rodea es flexible, así que validar
+  nunca empuja a borrar las carpetas de la persona:
+  - «extensiones» escrita como lista (`["prompts", "config"]`) ya no rompe el manifiesto: es un aviso con el objeto
+    exacto que hay que escribir, `indice-sistema` la convierte en objeto y para publicar debe ser objeto.
+  - Una carpeta propia sin declarar es un aviso en el catálogo y en los borradores (`indice-sistema` la declara sola
+    con una frase provisional) y un error solo para publicar (`validar --implementado`).
+  - Nuevo `uxyngraphar extension <id> declarar <carpeta> "<frase>" [--json]`: declara sin tocar la carpeta.
+  - Si el manifiesto solo falla por «extensiones», el validador sigue con el resto: el informe sale completo.
+  - Mensajes accionables («debe ser un objeto {"carpeta": "para qué sirve"}, p. ej. …; tus carpetas no se tocan»).
+  - `importar` acepta «extensiones» como lista (antes fallaba) y la guarda como objeto.
+
 ## 1.6.4
 
 - **Capas de uxyngraphar en la revisión de archivos**: cada archivo y carpeta del árbol lleva el tono de su capa, con

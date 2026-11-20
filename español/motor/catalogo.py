@@ -186,9 +186,58 @@ def quitar_pieza(pid: str, pieza: str, raiz: Path | None = None) -> list[str]:
     return esp.validar_sistema(c)
 
 
+def normalizar_extensiones(c: Path) -> bool:
+    """«extensiones» como objeto y las carpetas propias sin declarar, declaradas con una frase provisional. Nunca mueve
+    ni borra nada: solo reescribe el manifiesto. True si lo cambió."""
+    import piezas
+    try:
+        m = base.leer_manifiesto(c)
+    except (OSError, ValueError):
+        return False
+    valor = m.get("extensiones")
+    if valor is not None and not isinstance(valor, (dict, list)):
+        return False   # forma rara: lo dice el validador con el ejemplo; no se adivina
+    ext = base.extensiones_declaradas(m)
+    for nombre in piezas.sin_declarar(c, {**m, "extensiones": ext}):
+        if base._nombre_extension(nombre):
+            ext[nombre] = base.EXTENSION_PROVISIONAL
+    nuevo = ext or None
+    if (valor if valor not in ({}, []) else None) == nuevo:
+        return False
+    if nuevo:
+        m["extensiones"] = nuevo
+    else:
+        m.pop("extensiones", None)
+    _escribir_manifiesto(c, m)
+    return True
+
+
 def indice_sistema(pid: str, raiz: Path | None = None) -> bool:
-    """Regenera el bloque de entrada del README y el de PERMISOS.md del sistema a partir de su manifiesto."""
-    return entrada.actualizar(carpeta(pid, raiz))
+    """Pone «extensiones» en forma (objeto; carpetas propias declaradas) y regenera el bloque de entrada del README y el
+    de PERMISOS.md a partir del manifiesto. True si cambió algo."""
+    c = carpeta(pid, raiz)
+    cambio = normalizar_extensiones(c)
+    return entrada.actualizar(c) or cambio
+
+
+def declarar_extension(pid: str, nombre: str, para: str, raiz: Path | None = None) -> list[str]:
+    """Declara (o redescribe) una carpeta o archivo propio de primer nivel en «extensiones». No toca la carpeta."""
+    c = carpeta(pid, raiz)
+    nombre = (nombre or "").strip().strip("/")
+    para = " ".join((para or "").split())
+    if not base._nombre_extension(nombre):
+        raise ValueError(f"«{nombre}»: tiene que ser una carpeta o archivo de primer nivel que no sea del núcleo ni una pieza estándar")
+    if not (c / nombre).exists():
+        raise ValueError(f"«{nombre}» no existe en el sistema; solo se declaran carpetas o archivos que ya están")
+    if not para:
+        raise ValueError("falta la frase de para qué sirve")
+    m = base.leer_manifiesto(c)
+    ext = {k: v for k, v in base.extensiones_declaradas(m).items() if k.strip("/") != nombre}
+    ext[nombre] = para
+    m["extensiones"] = ext
+    _escribir_manifiesto(c, m)
+    entrada.actualizar(c)
+    return esp.validar_sistema(c)
 
 
 def completitud(pid: str, raiz: Path | None = None) -> dict:

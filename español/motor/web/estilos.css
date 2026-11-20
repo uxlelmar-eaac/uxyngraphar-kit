@@ -539,6 +539,8 @@ label.casilla.carpeta-opcion input { margin-top: 0; }
 /* uxyn 2: tarjeta de cambios propuestos (+/−), capacidades y aviso sin IA (mismos datos que la web) */
 .tarjeta-cambios { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; padding: 10px 12px; border: 1px solid var(--borde-2); border-left: 3px solid var(--decide); border-radius: var(--radio-sm); background: var(--superficie); }
 .tarjeta-cambios .fila.separada { gap: 8px; }
+.tarjeta-cambios.borra-archivos { border-left-color: var(--color-signal); }
+.aviso-borrado { margin: 0; padding: 6px 8px; border-radius: var(--radio-sm); color: var(--color-on-signal); background: var(--color-signal); font-weight: var(--font-weight-semibold); }
 .totales-cambios { font-family: var(--font-mono); font-size: var(--font-size-xs); }
 .lista-cambios { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; font-size: var(--font-size-xs); }
 .lista-cambios li { display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: center; }

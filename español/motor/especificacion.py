@@ -74,8 +74,10 @@ def validar_sistema(carpeta: Path, construido: bool = False) -> list[str]:
     except (OSError, ValueError) as e:
         return [f"{base.MANIFIESTO}: {e}"]
     errores = base.validar_manifiesto(m)
-    if errores:
+    if errores and not base.solo_errores_de_extensiones(errores):
         return errores
+    # Si solo falla «extensiones», se sigue validando el resto: el informe sale completo y nadie supone que el núcleo
+    # está bien sin haberlo comprobado.
     if carpeta.name != m["id"]:
         errores.append(f"la carpeta se llama «{carpeta.name}» pero el id es «{m['id']}»")
     for campo in ("titulo", "descripcion"):

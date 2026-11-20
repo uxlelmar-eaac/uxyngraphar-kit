@@ -89,10 +89,12 @@ class TestAgregarYQuitar(Base):
 
 
 class TestEstructura(Base):
-    def test_carpeta_no_declarada_es_error_y_extension_la_admite(self):
+    def test_carpeta_no_declarada_es_aviso_y_extension_la_admite(self):
+        # 1.6.5: en el borrador es un aviso (se declara sola con «indice-sistema»); para publicar, error (implementado).
         (self.c / "diagramas").mkdir()
         (self.c / "diagramas" / "flujo.md").write_text("# Flujo\n", encoding="utf-8")
-        self.assertTrue(any(e.startswith("diagramas:") for e in self.errores()))
+        self.assertFalse(any(e.startswith("diagramas:") for e in self.errores()))
+        self.assertTrue(any(a.startswith("diagramas: carpeta propia sin declarar") for a in self.avisos()))
         de_serie = catalogo.base.leer_manifiesto(self.c)["extensiones"]   # prompts/ y config/ (esqueleto de 1.5.26)
         self.manifiesto(extensiones={**de_serie, "diagramas/": "diagramas del flujo"})
         self.assertEqual(self.errores(), [])

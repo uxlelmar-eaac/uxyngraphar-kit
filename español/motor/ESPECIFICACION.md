@@ -62,7 +62,7 @@ La base (`sistemas-de-gobernanza/_base/`) es un **protocolo con un listón de co
 
 **Nivel 3. Extensiones libres:** carpetas o archivos de primer nivel propios del sistema, declarados en «extensiones» con una frase de para qué sirven. Solo cumplen las reglas de portabilidad.
 
-Cualquier otra entrada de primer nivel es un error: o es una pieza estándar, o se declara como extensión. Los scripts propios del sistema van en `scripts/` (fuera de `scripts/comun/`).
+Cualquier otra entrada de primer nivel es una carpeta propia sin declarar: en el catálogo y en los borradores es un **aviso** (`uxyngraphar indice-sistema <id>` la declara sola con una frase provisional, y `uxyngraphar extension <id> declarar <carpeta> "<frase>"` con la tuya) y **para publicar es un error** (`validar --implementado`). Nunca hace falta borrarla ni moverla. «extensiones» escrita como lista de nombres (`["prompts", "config"]`) se acepta con aviso, `indice-sistema` la convierte en objeto y para publicar debe ser objeto. Los scripts propios del sistema van en `scripts/` (fuera de `scripts/comun/`).
 
 ### 2.1 `SISTEMA.md`
 
@@ -72,7 +72,7 @@ Empieza por `# <título>` y una o dos frases de lo que garantiza; después, «Ro
 
 El validador separa lo que rompe el sistema de lo que solo orienta:
 
-- **Errores:** falta un archivo del núcleo; marcadores `{{…}}` en el núcleo (`sistema.json`, `README.md`, `SISTEMA.md`, `MEMORIAS.md`, `LIMITES.md`, `PERMISOS.md`); secciones obligatorias de `SISTEMA.md`, `MEMORIAS.md` o `LIMITES.md`; bloque de `PERMISOS.md` desfasado; `permisos` inválido o que cita scripts inexistentes; `limites` en «piezas» o `protegidos`/`fuera_de_ia` sueltos; un tipo de ficha con carpeta `memorias` o prefijo `MEM`; bloque de entrada del README desfasado (`uxyngraphar indice-sistema <id>` lo regenera); una pieza declarada que falta o no sigue su forma; una pieza presente sin declarar; una fase o skill citada que no existe; un `resuelve` que cita un problema inexistente; una extensión declarada que falta; una entrada de primer nivel no declarada; portabilidad.
+- **Errores:** falta un archivo del núcleo; marcadores `{{…}}` en el núcleo (`sistema.json`, `README.md`, `SISTEMA.md`, `MEMORIAS.md`, `LIMITES.md`, `PERMISOS.md`); secciones obligatorias de `SISTEMA.md`, `MEMORIAS.md` o `LIMITES.md`; bloque de `PERMISOS.md` desfasado; `permisos` inválido o que cita scripts inexistentes; `limites` en «piezas» o `protegidos`/`fuera_de_ia` sueltos; un tipo de ficha con carpeta `memorias` o prefijo `MEM`; bloque de entrada del README desfasado (`uxyngraphar indice-sistema <id>` lo regenera); una pieza declarada que falta o no sigue su forma; una pieza presente sin declarar; una fase o skill citada que no existe; un `resuelve` que cita un problema inexistente; una extensión declarada que falta; portabilidad. Si el manifiesto solo falla por «extensiones», el resto se valida igual.
 - **Avisos:** más de 5 problemas (posible sistema generalista); un problema que no cubre ninguna fase ni skill; una skill sin `resuelve`; piezas recomendadas para la familia que faltan; marcadores en piezas opcionales; scripts sin documentar en `HERRAMIENTAS.md`; `scripts/comun/` distinto de `_base`.
 
 `uxyngraphar validar --completitud` muestra, por sistema, las piezas presentes, las recomendadas que faltan y las extensiones.
@@ -160,7 +160,7 @@ Reglas:
 | `piezas` | lista | piezas estándar presentes (§2), sin repetir; puede estar vacía |
 | `proceso` | lista | solo con la pieza `proceso`: fases en orden (kebab-case), una por `proceso/<fase>.md` |
 | `andamiaje` | objeto | solo con la pieza `andamiaje`: `{variante: {descripcion, destino}}`; `destino` relativo a la raíz de la app, admite `{nombre}` |
-| `extensiones` | objeto | opcional; `{ruta-de-primer-nivel: para qué sirve}` |
+| `extensiones` | objeto | opcional; `{ruta-de-primer-nivel: para qué sirve}` (una lista de nombres se acepta con aviso en el borrador) |
 | `editor` | texto | opcional; kebab-case; quién publica el sistema en el servidor (por defecto `uxyngraphar`) |
 | `idioma` | texto | opcional; código de dos letras (por defecto `es`) |
 | `licencia` | texto | opcional; expresión SPDX o `propietaria` (por defecto `CC-BY-4.0`) |
