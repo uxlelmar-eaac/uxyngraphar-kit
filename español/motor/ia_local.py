@@ -299,6 +299,28 @@ def mejorar(proveedor: str, modelo: str, ruta: str, contenido: str, instruccion:
     return {**r, "propuesta": sin_cercas(r["texto"])}
 
 
+INSTRUCCIONES_FRAGMENTO = (
+    "Eres el asistente del Creador de uxyngraphar. Mejoras UN fragmento de un archivo de un sistema de gobernanza para "
+    "agentes de IA: más claro, concreto y comprobable. Devuelve SOLO el texto que sustituye al fragmento, sin "
+    "explicaciones, comillas ni bloques ```. Conserva el idioma, el formato Markdown o JSON del fragmento y su extensión "
+    "aproximada; no repitas el resto del archivo.")
+
+
+def mejorar_fragmento(proveedor: str, modelo: str, ruta: str, contenido: str, fragmento: str, instruccion: str) -> dict:
+    """Reescribe solo `fragmento` (con el archivo como contexto). Devuelve {texto, modelo, proveedor, propuesta}."""
+    if not fragmento.strip():
+        raise ValueError("fragmento: selecciona el texto que quieres mejorar")
+    pedido = (f"Archivo: {ruta}\nQué mejorar: {instruccion or 'claridad, precisión y lo que falte'}\n\n"
+              f"=== Archivo completo (contexto) ===\n{contenido[:MAX_CARACTERES // 2]}\n\n"
+              f"=== Fragmento que debes reescribir ===\n{fragmento}")
+    r = completar(proveedor, [{"role": "user", "content": pedido}], INSTRUCCIONES_FRAGMENTO, modelo)
+    propuesta = sin_cercas(r["texto"])
+    # Conserva los saltos de línea del borde del fragmento original (la IA suele recortarlos).
+    if not fragmento.endswith("\n"):
+        propuesta = propuesta.rstrip("\n")
+    return {**r, "propuesta": propuesta}
+
+
 def revisar(proveedor: str, modelo: str, archivos: dict[str, str]) -> dict:
     cuerpo = "\n\n".join(f"=== {rel} ===\n{t}" for rel, t in sorted(archivos.items()))[:MAX_CARACTERES - 4000]
     return completar(proveedor, [{"role": "user", "content": cuerpo}], INSTRUCCIONES_REVISAR, modelo)

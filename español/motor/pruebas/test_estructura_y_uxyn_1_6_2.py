@@ -40,10 +40,9 @@ class TestEstructura(unittest.TestCase):
         r = self.node("console.log(JSON.stringify(['LIMITES.md', 'proceso', 'skills', 'config'].map((k) => Boolean(m.QUE_ES[k]))));")
         self.assertEqual(r, [True, True, True, True])
 
-    def test_mis_sistemas_ofrece_ver_archivos_y_el_taller_abre_el_archivo(self):
+    def test_mis_sistemas_ofrece_revisar_archivos_y_el_taller_abre_el_archivo(self):
         mis = (VISTAS / "mis-sistemas.js").read_text(encoding="utf-8")
-        self.assertIn('"Ver archivos"', mis)
-        self.assertIn("estructuraSistema(", mis)
+        self.assertIn('"Revisar archivos"', mis)  # 1.6.3: lleva a la revisión a pantalla completa
         taller = (VISTAS / "creador-sistemas.js").read_text(encoding="utf-8")
         self.assertIn("params.archivo", taller)
 

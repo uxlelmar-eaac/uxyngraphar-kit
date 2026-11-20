@@ -358,6 +358,18 @@ def _creador_mejorar(d: dict) -> dict:
     return {"id": pid, "rel": rel, "original": original, "propuesta": r["propuesta"], "modelo": r["modelo"]}
 
 
+def _mejorar_fragmento(d: dict) -> dict:
+    """«Mejorar» de la revisión de archivos: la IA reescribe solo el fragmento elegido, con el archivo como contexto."""
+    import ia_local
+    pid, rel, fragmento = _campo(d, "id", str), _campo(d, "rel", str), _campo(d, "fragmento", str)
+    proveedor, modelo = _ia(d)
+    if proveedor == "agente":  # «uxyn (tu cuenta)» no completa texto suelto: la IA de la cuenta sí
+        proveedor, modelo = "servidor", ""
+    r = ia_local.mejorar_fragmento(proveedor, modelo, rel, catalogo.leer_archivo(pid, rel), fragmento,
+                                   str(d.get("instruccion") or ""))
+    return {"id": pid, "rel": rel, "fragmento": fragmento, "propuesta": r["propuesta"], "modelo": r["modelo"]}
+
+
 def _creador_revisar(d: dict) -> dict:
     import creador
     import ia_local
@@ -476,6 +488,7 @@ GET = {
     # catálogo
     "/api/catalogo": lambda d: catalogo.listar(),
     "/api/catalogo/archivos": lambda d: catalogo.archivos(_campo(d, "id")),
+    "/api/anotaciones": lambda d: __import__("anotaciones").listar(_campo(d, "id", str)),
     "/api/catalogo/archivo": lambda d: catalogo.abrir_archivo(_campo(d, "id"), _campo(d, "rel")),
     "/api/creador/borrador": lambda d: _borrador_web(_campo(d, "slug", str)),
     "/api/catalogo/completitud": lambda d: catalogo.completitud(_campo(d, "id")),
@@ -535,6 +548,15 @@ POST = {
     "/api/creador/bajar": lambda d: _creador_sincronizar("bajar", d),
     "/api/creador/subir": lambda d: _creador_sincronizar("subir", d),
     "/api/creador/mejorar": _creador_mejorar,
+    "/api/creador/mejorar-fragmento": lambda d: _mejorar_fragmento(d),  # noqa: PLW0108 - se define más abajo
+    "/api/anotaciones/crear": lambda d: __import__("anotaciones").crear(
+        _campo(d, "id", str), _campo(d, "archivo", str), _campo(d, "tipo", str), _campo(d, "cita", str),
+        _campo(d, "inicio", int), _campo(d, "fin", int), str(d.get("nota") or "")),
+    "/api/anotaciones/cambiar": lambda d: __import__("anotaciones").cambiar(
+        _campo(d, "id", str), _campo(d, "anotacion", str),
+        estado=d.get("estado") if isinstance(d.get("estado"), str) else None,
+        nota=d.get("nota") if isinstance(d.get("nota"), str) else None),
+    "/api/anotaciones/borrar": lambda d: __import__("anotaciones").borrar(_campo(d, "id", str), _campo(d, "anotacion", str)),
     "/api/creador/revisar": _creador_revisar,
     "/api/creador/chat": _creador_chat,
     "/api/agente/turno": _agente_turno,

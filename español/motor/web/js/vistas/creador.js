@@ -5,6 +5,7 @@ import { obtener, enviar } from "../api.js";
 import { h, vaciar, boton, avisar, insignia } from "../ui.js";
 import { anotar } from "../registro.js";
 import { cajaAgente, PREFIJO_CREAR } from "./creador-inicio.js";
+import { pedidoParaUxyn } from "./anotaciones-texto.js";
 import { PEDIDO_COMPLETAR, ayudaSinIA, capacidadesAgente, mensajeAgente, nuevoIdProgreso, trabajando } from "./agente-chat.js";
 
 const MAX_LINEAS_LCS = 1500;
@@ -47,7 +48,7 @@ function textoMostrado(texto) {
   return limpio.startsWith(PREFIJO_CREAR) ? limpio.slice(PREFIJO_CREAR.length).trim() || limpio : limpio;
 }
 
-async function selectorIA() {
+export async function selectorIA() {
   const sel = h("select", { "aria-label": "Qué IA usar" },
     h("option", { value: "agente|", texto: "uxyn (tu cuenta)" }),
     h("option", { value: "servidor|", texto: "Solo chat con mi clave o suscripción de la web (cuenta)" }));
@@ -472,6 +473,26 @@ export async function chatAgente(contexto, {
 
   const btnAsistente = h("button", { type: "button", class: "segmento", "aria-pressed": "true" }, "uxyn");
   const btnSimulador = h("button", { type: "button", class: "segmento", "aria-pressed": "false", title: "Prueba el sistema como lo seguiría un agente de IA" }, "Simulador");
+  // «Usar mis notas»: las notas y los resaltados de la revisión de archivos guían a uxyn.
+  const botonNotas = boton("Usar mis notas", () => usarNotas(), { clase: "chip-sugerencia", titulo: "uxyn mejora el sistema guiándose por tus notas y resaltados abiertos" });
+  const chipNotas = h("li", { hidden: true }, botonNotas);
+  async function leerNotas() {
+    const id = slugDe();
+    if (!id) return [];
+    try { return await obtener("/api/anotaciones", { id }); } catch { return []; }
+  }
+  async function refrescarNotas() {
+    const abiertas = (await leerNotas()).filter((a) => a.estado === "abierta").length;
+    chipNotas.hidden = !abiertas;
+    botonNotas.lastChild.textContent = `Usar mis notas (${abiertas})`;
+  }
+  async function usarNotas() {
+    const texto = pedidoParaUxyn(await leerNotas());
+    if (!texto) { avisar("No tienes notas ni resaltados abiertos. Déjalos en «Revisar archivos» de Mis sistemas.", "mal"); return; }
+    if (conAgente()) return turnoAgente(texto);
+    pregunta.value = texto;
+    return hablar();
+  }
   const sugerir = (texto, accion, titulo) => {
     const b = boton(texto, accion, { clase: "chip-sugerencia", titulo });
     return h("li", {}, b);
@@ -481,7 +502,8 @@ export async function chatAgente(contexto, {
     h("ul", { class: "chat-sugerencias-lista" },
       sugerir("Completar el sistema", completar, "uxyn rellena el núcleo y todo el esqueleto y lo deja en «Por revisar»"),
       sugerir("Revisar el sistema", revisar, "uxyn te dice qué le falta o qué mejoraría"),
-      sugerir("Mejorar el archivo abierto", mejorar, "Si escribes algo abajo, uxyn lo usa como instrucción")));
+      sugerir("Mejorar el archivo abierto", mejorar, "Si escribes algo abajo, uxyn lo usa como instrucción"),
+      chipNotas));
   const enviarBoton = boton("Enviar", hablar, { clase: "pequeno primario" });
   const selConversacion = h("select", { "aria-label": "Conversación guardada", class: "chat-historial", hidden: true });
   const empezarDeNuevo = () => {
@@ -559,6 +581,7 @@ export async function chatAgente(contexto, {
   btnAsistente.addEventListener("click", () => aplicarModo("asistente"));
   btnSimulador.addEventListener("click", () => aplicarModo("simulador"));
   adjuntos = cajaAgente({ etiqueta: "Mensaje", textarea: pregunta });
+  void refrescarNotas();
   adjuntos.ponerAccion(enviarBoton);
   void refrescarLista();
 
@@ -594,6 +617,7 @@ export async function chatAgente(contexto, {
       capacidades));
   // El Taller guiado abre el simulador desde el paso «Probar» y vuelve a uxyn al pedirle un paso.
   raiz.ponerModo = (m) => { aplicarModo(m === "simulador" ? "simulador" : "asistente"); pintarAvisoIA(); };
+  raiz.usarNotas = usarNotas;
   return raiz;
 }
 

@@ -15,10 +15,12 @@ import * as conexiones from "./vistas/conexiones.js";
 import * as logs from "./vistas/logs.js";
 import * as cuenta from "./vistas/cuenta.js";
 import * as bienvenida from "./vistas/bienvenida.js";
+import * as revision from "./vistas/revision.js";
 
 const VISTAS = {
   inicio, proyectos, proyecto, flujos, catalogo, creador, conexiones, herramienta, logs, cuenta, bienvenida,
   "mis-sistemas": misSistemas,
+  revision,
   // Alias de producto
   taller: creador,
   mercado: catalogo,
@@ -28,6 +30,7 @@ const SECCION_DE = {
   creador: "creador",
   taller: "creador",
   "mis-sistemas": "mis-sistemas",
+  revision: "mis-sistemas",
   catalogo: "catalogo",
   mercado: "catalogo",
   herramienta: "cuenta",

@@ -159,6 +159,7 @@ function insigniasDonde({ enEquipo, enProyecto, publicado, enWeb }) {
 export async function vista(params, { ir, recargar }) {
   const idAbierto = params.id || "";
   const zonas = leerZonas();
+  if (params.pedir === "notas") zonas.agente = true;
   let abierto = null;
   let propuestasPendientes = 0;
   let proponiendo = false;
@@ -882,6 +883,7 @@ export async function vista(params, { ir, recargar }) {
     await sugerenciasApi.refrescar();
   }
 
+  let notasPedidas = false;
   async function montarChat() {
     if (chatMontado || !vivo() || !idAbierto) return;
     chatMontado = true;
@@ -912,6 +914,12 @@ export async function vista(params, { ir, recargar }) {
     vaciar(zonaAgente,
       h("div", { class: "fila separada zona-agente-cabecera" }, h("h2", {}, icono("chat"), " uxyn"), plegar),
       chatNodo);
+    // Desde «Revisar archivos»: «Pedir a uxyn que use mis notas» llega aquí y se lo pide una sola vez.
+    if (params.pedir === "notas" && !notasPedidas) {
+      notasPedidas = true;
+      try { history.replaceState(null, "", `#/creador?${new URLSearchParams({ id: idAbierto })}`); } catch { /* */ }
+      void chatNodo.usarNotas?.();
+    }
   }
 
   async function pintarAgente() {

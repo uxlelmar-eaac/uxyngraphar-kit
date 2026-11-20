@@ -1138,3 +1138,47 @@ dialog:has(.asistente-crear) { width: min(880px, 96vw); }
   .estructura { grid-template-columns: minmax(0, 1fr); }
   .estructura-lado, .estructura-previa { max-height: none; }
 }
+
+/* Revisión de archivos (1.6.3): un sistema a pantalla completa con notas, resaltados y «Mejorar» */
+.marco:has(.revision) { grid-template-columns: minmax(0, 1fr); }
+.marco:has(.revision) .lateral { display: none; }
+main:has(.revision) { max-width: none; padding: var(--esp-4) var(--esp-6); }
+.revision { position: relative; display: flex; flex-direction: column; gap: var(--esp-3); height: calc(100vh - 2 * var(--esp-4)); }
+.revision-cabeza { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--esp-3); flex-wrap: wrap; }
+.revision-titulo { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.revision-titulo h1 { margin: 0; font-size: var(--font-size-xl); }
+.revision-acciones { gap: var(--esp-2); align-items: center; flex-wrap: wrap; }
+.revision-acciones .chat-pie { flex: 0 1 16rem; }
+.revision-cuerpo { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(14rem, 18rem) minmax(0, 1fr) minmax(16rem, 22rem); gap: var(--esp-3); }
+.revision-arbol, .revision-centro, .revision-notas { min-height: 0; overflow: auto; border: 1px solid var(--borde); border-radius: var(--radio); background: var(--superficie); padding: var(--esp-3); }
+.revision-centro { display: flex; flex-direction: column; gap: var(--esp-2); padding: 0; overflow: hidden; }
+.revision-doc-cabeza { display: flex; align-items: center; gap: var(--esp-2); flex-wrap: wrap; padding: var(--esp-3) var(--esp-4); border-bottom: 1px solid var(--borde); font-size: var(--font-size-sm); }
+.revision-doc { flex: 1 1 auto; overflow: auto; margin: 0; padding: var(--esp-4) var(--esp-6); white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--font-body); font-size: var(--font-size-md); line-height: var(--line-height-relaxed); color: var(--texto); outline: none; }
+.revision-doc::selection, .revision-doc *::selection { background: var(--acento-suave); }
+.revision-pista { margin: 0; padding: var(--esp-2) var(--esp-4); border-top: 1px solid var(--borde); font-size: var(--font-size-xs); }
+.marca { display: inline; color: inherit; border-radius: 3px; padding: 1px 0; cursor: pointer; }
+.marca-resaltado { background: var(--aviso-suave); box-shadow: inset 0 -2px 0 var(--aviso); }
+.marca-nota { background: var(--acento-suave); box-shadow: inset 0 -2px 0 var(--acento); }
+.marca.destacada, .revision-nota.destacada { outline: 2px solid var(--acento); outline-offset: 2px; }
+.revision-menu { position: absolute; z-index: 20; display: flex; gap: 4px; padding: 4px; border: 1px solid var(--borde); border-radius: var(--radio); background: var(--superficie-2); box-shadow: var(--sombra-flotante); }
+.revision-menu[hidden], .revision-flotante[hidden] { display: none; }
+.revision-flotante { position: absolute; z-index: 21; width: min(36rem, calc(100% - 16px)); display: flex; flex-direction: column; gap: var(--esp-2); padding: var(--esp-3); border: 1px solid var(--borde); border-radius: var(--radio); background: var(--superficie-2); box-shadow: var(--sombra-dialogo); max-height: 70vh; overflow: auto; }
+.revision-flotante-cita { font-size: var(--font-size-sm); color: var(--tenue); border-left: 3px solid var(--acento); padding-left: var(--esp-2); white-space: pre-wrap; }
+.revision-notas { display: flex; flex-direction: column; gap: var(--esp-2); }
+.revision-notas h2 { margin: 0; font-size: var(--font-size-md); }
+.revision-notas-lista { display: flex; flex-direction: column; gap: var(--esp-2); }
+.revision-vacio { margin: 0; font-size: var(--font-size-sm); }
+.revision-nota { display: flex; flex-direction: column; gap: 6px; padding: var(--esp-2) var(--esp-3); border: 1px solid var(--borde); border-left: 3px solid var(--acento); border-radius: var(--radio-sm); background: var(--hundido); }
+.revision-nota-resaltado { border-left-color: var(--aviso); }
+.revision-nota-tipo { display: inline-flex; align-items: center; gap: 4px; font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); color: var(--tenue); }
+.revision-nota-tipo svg { width: 14px; height: 14px; }
+.revision-nota-archivo { font-family: var(--font-mono); font-size: var(--font-size-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 12rem; }
+.revision-nota-cita { all: unset; cursor: pointer; font-size: var(--font-size-sm); color: var(--texto); white-space: pre-wrap; overflow-wrap: anywhere; }
+.revision-nota-texto { margin: 0; font-size: var(--font-size-sm); }
+.contador-notas { background: var(--acento-suave); color: var(--acento); }
+@media (max-width: 1100px) {
+  .revision { height: auto; }
+  .revision-cuerpo { grid-template-columns: minmax(0, 1fr); }
+  .revision-arbol, .revision-notas { max-height: 40vh; }
+  .revision-centro { min-height: 60vh; }
+}

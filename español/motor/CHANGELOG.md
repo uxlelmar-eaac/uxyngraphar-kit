@@ -1,5 +1,20 @@
 # Cambios
 
+## 1.6.3
+
+- **Revisar archivos**, a pantalla completa (`#/revision?id=…`, desde «Mis sistemas»): árbol de carpetas a la izquierda,
+  el archivo en el centro y tus notas y resaltados a la derecha, sin el menú lateral para leer con calma. Al
+  seleccionar texto aparece un menú con tres herramientas:
+  - **Mejorar**: la IA reescribe solo ese fragmento (con el archivo como contexto), ves el antes y el después y lo
+    aplicas en el archivo si te convence (`POST /api/creador/mejorar-fragmento`).
+  - **Añadir nota** y **Resaltar**: quedan guardados en `.anotaciones.json` del catálogo, fuera del sistema (no cambian
+    su validación, su zip ni lo que se instala). Se pueden resolver, reabrir y borrar
+    (`/api/anotaciones`, `/api/anotaciones/crear|cambiar|borrar`).
+- **uxyn usa tus notas**: «Pedir a uxyn que use mis notas» (en la revisión) y la sugerencia «Usar mis notas (N)» del
+  panel de uxyn le mandan tus notas y resaltados abiertos como guía; sus cambios llegan a «Por revisar». El texto del
+  pedido es el mismo que en la web.
+- «Ver archivos» de Mis sistemas pasa a ser «Revisar archivos» y abre esa pantalla.
+
 ## 1.6.2
 
 - **Mis sistemas → «Ver archivos»**: cada sistema del equipo muestra su estructura completa, carpetas y archivos, con
