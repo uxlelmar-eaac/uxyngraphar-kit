@@ -15,10 +15,14 @@ MiniMax) quiere usarlo en el Creador en vez de pagar además una clave de API. L
 | Claude Pro/Max | El inicio de sesión solo vale dentro de Claude Code y Claude.ai (feb 2026); terceros, como uso extra | No | `claude -p` (es Claude Code) · riesgo medio |
 | ChatGPT Go/Plus/Pro | «Sign in with ChatGPT» en vista previa: abierto a proyectos locales; apps comerciales con aprobación | OAuth con `client_id` propio · riesgo medio | `codex exec` · riesgo bajo |
 | SuperGrok / X Premium+ | OAuth de xAI para agentes; cuota no documentada | OAuth (código de dispositivo) con `client_id` propio · riesgo medio | — |
-| Google AI Pro/Ultra | Prohibido desde software de terceros, aunque envuelva su CLI; suspenden cuentas | No | No |
+| Google AI Pro/Ultra | Prohibido desde software de terceros, aunque envuelva su CLI; suspenden cuentas | No | `gemini -p` · riesgo alto, bajo responsabilidad de la persona |
 | Copilot Pro/Pro+ | Acuerdo formal solo con OpenCode | No | `copilot -p` · riesgo medio |
 | Qwen | El OAuth gratuito cerró el 2026-04-15; ahora Coding Plan con clave | Clave del plan | `qwen -p` · riesgo bajo |
-| GLM, Kimi, MiniMax, Ollama Cloud | El plan da una clave para herramientas | Clave del plan | Vía la cuenta |
+| Kimi Code | El plan da acceso a agentes de programación | Clave del plan | `kimi -p` · riesgo bajo |
+| Cursor | CLI pensada para scripts (`-p`) | No | `cursor-agent -p` · riesgo bajo |
+| OpenCode | Acuerdo formal con GitHub Copilot; Zen y planes con clave | No | `opencode run` · riesgo bajo |
+| GLM, MiniMax, Ollama Cloud | El plan da una clave para herramientas | Clave del plan | Vía la cuenta |
+| DeepSeek | Sin plan mensual: chat web gratuito y API de saldo prepagado | Clave de DeepSeek Platform | Vía la cuenta |
 
 ## Decisión
 
@@ -31,7 +35,7 @@ MiniMax) quiere usarlo en el Creador en vez de pagar además una clave de API. L
 3. **En la web**: OAuth solo si quien administra el servidor registró uxyngraphar con el proveedor
    (`AI_OAUTH_<ID>_CLIENT_ID`); con riesgo no bajo hay que marcar «Entiendo el riesgo» y queda en la auditoría. Los
    planes con clave se pegan como cualquier clave. OpenRouter se conecta en un clic con su PKCE público.
-4. **Lo prohibido no se ofrece** (Google AI Pro/Ultra): se explica por qué y se ofrece la clave de API.
+4. **Lo prohibido se avisa con riesgo alto** (Google AI Pro/Ultra, revisado el 2026-11-24): solo en el equipo con su CLI oficial, con el aviso de posible suspensión y la clave de API como alternativa.
 5. En cada aviso se recomienda la clave de API, que es lo que recomiendan los proveedores.
 
 ## Consecuencias

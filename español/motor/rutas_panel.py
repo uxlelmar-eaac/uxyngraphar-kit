@@ -497,6 +497,7 @@ GET = {
     # Creador local
     "/api/creador/modelos": lambda d: __import__("ia_local").modelos(),
     "/api/ia/suscripciones": lambda d: __import__("ia_local").suscripciones(),
+    "/api/ia/suscripciones/estado": lambda d: __import__("ia_local").estado_sesion_cli(_campo(d, "id", str)),
     "/api/creador/borradores": lambda d: __import__("creador").borradores(),
     "/api/agente/info": lambda d: __import__("agente").info(),
     "/api/conexiones": lambda d: {"agentes": __import__("conexiones").resumen(proyectos.listar()),
@@ -562,6 +563,9 @@ POST = {
     "/api/agente/turno": _agente_turno,
     "/api/conexiones/conectar": lambda d: __import__("conexiones").conectar(_campo(d, "agente", str), list(_campo(d, "proyectos", list))),
     "/api/conexiones/desconectar": lambda d: __import__("conexiones").desconectar(_campo(d, "agente", str), list(_campo(d, "proyectos", list))),
+    "/api/ia/suscripciones/iniciar": lambda d: __import__("ia_local").iniciar_sesion_cli(
+        _campo(d, "proveedor", str), abrir_navegador=d.get("abrir_navegador", True) is not False),
+    "/api/ia/suscripciones/cancelar": lambda d: __import__("ia_local").cancelar_sesion_cli(_campo(d, "id", str)),
     "/api/agente/decidir": _agente_decidir,
     "/api/agente/corregir": lambda d: __import__("agente").corregir(
         _campo(d, "slug", str), _entero(d, "propuesta"), _campo(d, "ruta", str),

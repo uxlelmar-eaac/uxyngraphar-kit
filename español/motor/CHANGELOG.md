@@ -1,5 +1,17 @@
 # Cambios
 
+## 1.6.6
+
+- **Inicio de sesión directo con un botón y más suscripciones de IA**:
+  - En el panel local (**Conexiones › Tus suscripciones de IA**), cada CLI instalada tiene un botón **«Iniciar sesión»**
+    que lanza su flujo oficial, captura el enlace y código de dispositivo y abre directamente el navegador del proveedor,
+    junto a **«Abrir clave en la web»** para ir directo a las claves del proveedor.
+  - Nuevas CLI admitidas en el Creador: Cursor CLI (`cursor-agent -p`), Kimi Code CLI (`kimi -p`), OpenCode
+    (`opencode run`, la vía aprobada por GitHub para Copilot) y Gemini CLI (`gemini -p`, Google AI Pro/Ultra, con riesgo
+    alto y aviso explícito).
+  - Nueva subsección de planes por clave en la web (DeepSeek, GLM/Z.ai, MiniMax, Ollama Cloud, SuperGrok/xAI y
+    OpenRouter) con botón directo a la página de claves y a la cuenta de uxyngraphar.
+
 ## 1.6.5
 
 - **Carpetas propias sin miedo (extensiones)**: el núcleo es inmutable y lo que lo rodea es flexible, así que validar

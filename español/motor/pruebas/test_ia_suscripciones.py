@@ -10,6 +10,7 @@ import os
 import stat
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -98,15 +99,15 @@ class TestSuscripcionesLocales(unittest.TestCase):
             ruta.write_text(f"#!{sys.executable}\n" + cuerpo_py.lstrip("\n"), encoding="utf-8")
             ruta.chmod(ruta.stat().st_mode | stat.S_IEXEC)
 
-    def test_lista_con_avisos_y_sin_google(self):
+    def test_lista_con_avisos_y_gemini_riesgo_alto(self):
         self._cli("claude", CLAUDE_PY)
         r = ia_local.suscripciones()
         por_id = {s["proveedor"]: s for s in r["disponibles"]}
         self.assertTrue(por_id["claude"]["instalada"])
         self.assertFalse(por_id["codex"]["instalada"])
         self.assertTrue(all(s["aviso"] for s in r["disponibles"]))
-        self.assertNotIn("gemini", por_id)
-        self.assertEqual([n["id"] for n in r["no_permitidas"]], ["gemini"])
+        self.assertEqual(por_id["gemini"]["riesgo"], "alto")
+        self.assertEqual(r["no_permitidas"], [])
         self.assertEqual([m["proveedor"] for m in ia_local.modelos() if m.get("suscripcion")], ["claude"])
 
     def test_claude_por_la_entrada_estandar_en_carpeta_vacia(self):
@@ -129,6 +130,38 @@ class TestSuscripcionesLocales(unittest.TestCase):
     def test_no_instalada(self):
         with self.assertRaisesRegex(ia_local.IaNoDisponible, "no está instalada"):
             ia_local.completar("qwen", [{"role": "user", "content": "hola"}])
+
+    def test_iniciar_sesion_cli_captura_url_codigo_y_completa(self):
+        login_py = (
+            "import sys, time\n"
+            "print('Abre https://github.com/login/device e introduce ABCD-1234', flush=True)\n"
+            "time.sleep(0.05)\n"
+            "print('Sesión iniciada', flush=True)\n"
+        )
+        self._cli("copilot", login_py)
+        abiertas = []
+        original_open = ia_local.webbrowser.open
+        ia_local.webbrowser.open = lambda u: (abiertas.append(u), True)[1]
+        try:
+            est = ia_local.iniciar_sesion_cli("copilot", abrir_navegador=True)
+            for _ in range(40):
+                if est["estado"] != "en_curso":
+                    break
+                time.sleep(0.05)
+                est = ia_local.estado_sesion_cli(est["id"])
+        finally:
+            ia_local.webbrowser.open = original_open
+        self.assertEqual(est["estado"], "listo")
+        self.assertEqual(est["url"], "https://github.com/login/device")
+        self.assertEqual(est["codigo"], "ABCD-1234")
+        self.assertEqual(abiertas, ["https://github.com/login/device"])
+
+    def test_suscripciones_incluye_web_y_enlaces_de_claves(self):
+        r = ia_local.suscripciones()
+        self.assertTrue(r["url_cuenta_ia"].endswith("/editor/cuenta/ia"))
+        self.assertTrue(all(s["url_claves"].startswith("https://") for s in r["disponibles"]))
+        ids_web = {w["id"] for w in r["web"]}
+        self.assertTrue({"deepseek", "glm", "minimax", "ollama", "supergrok", "openrouter"}.issubset(ids_web))
 
 
 if __name__ == "__main__":

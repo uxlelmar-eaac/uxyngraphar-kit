@@ -30,7 +30,7 @@ export function ayudaSinIA(mensaje, codigo = "", { breve = false } = {}) {
       item("Un modelo en este equipo, sin clave:",
         "Ollama (http://127.0.0.1:11434) o LM Studio con su servidor local activo (http://127.0.0.1:1234) y al menos un modelo descargado."),
       item("Tu suscripción, con su CLI oficial instalada y la sesión iniciada:",
-        "Claude Code, Codex, GitHub Copilot CLI o Qwen Code.")),
+        "Claude Code, Codex, GitHub Copilot CLI, Qwen Code, Cursor CLI, Kimi Code CLI, OpenCode o Gemini CLI.")),
     h("p", {},
       "Con un modelo local o una suscripción, elígelo en «Qué IA usar» y vuelve a intentarlo (Mejorar, Revisar y el chat lo usan). Detalles y avisos de cada suscripción en ",
       h("a", { href: "#/conexiones", texto: "Conexiones" }), "."));

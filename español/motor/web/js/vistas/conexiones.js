@@ -50,6 +50,85 @@ export async function vista(params, { recargar }) {
       boton("Conectar", () => elegir(a, "conectar"), { clase: "primario pequeno", icono: "mas" }),
       a.proyectos.length ? boton("Desconectar", () => elegir(a, "desconectar"), { clase: "pequeno" }) : null));
 
+  function abrirUrl(url) {
+    if (url) window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  async function iniciarSesionCli(s) {
+    let estado;
+    try {
+      estado = await enviar("/api/ia/suscripciones/iniciar", { proveedor: s.proveedor });
+    } catch (e) {
+      avisar(e?.message || `No se pudo iniciar sesión en ${s.nombre}`, "mal");
+      return;
+    }
+    const contenedor = h("div", { class: "pila" });
+    let vivo = true;
+    let temporizador = null;
+
+    function pintar(est) {
+      const nodos = [];
+      if (est.estado === "listo") {
+        nodos.push(h("div", { class: "banda acento", style: "display:block" },
+          h("strong", { texto: "Sesión iniciada. " }), `Ya puedes elegir ${s.nombre} en «Creador de sistemas».`));
+      } else if (est.estado === "error") {
+        nodos.push(h("div", { class: "banda aviso", style: "display:block" },
+          h("strong", { texto: "No se completó el inicio de sesión: " }),
+          est.error || `prueba a ejecutar «${s.iniciar_sesion}» en una terminal.`));
+      } else {
+        nodos.push(h("p", { class: "tenue", texto: est.url
+          ? "Se abrió la página del proveedor en tu navegador. Completa el inicio de sesión allí y vuelve aquí."
+          : `Esperando enlace de inicio de sesión de ${s.nombre}…` }));
+      }
+      if (est.codigo) {
+        nodos.push(h("div", { class: "banda acento fila separada" },
+          h("span", {}, "Código: ", h("strong", { style: "font-size:1.15em;letter-spacing:0.08em", texto: est.codigo })),
+          boton("Copiar código", async () => { await navigator.clipboard.writeText(est.codigo); avisar("Código copiado"); }, { clase: "pequeno" })));
+      }
+      if (est.url) {
+        nodos.push(h("div", { class: "acciones" },
+          boton("Abrir página de inicio de sesión", () => abrirUrl(est.url), { clase: "primario pequeno" }),
+          boton("Copiar enlace", async () => { await navigator.clipboard.writeText(est.url); avisar("Enlace copiado"); }, { clase: "pequeno" })));
+      }
+      if (est.salida?.length) {
+        nodos.push(h("pre", { class: "informe", texto: est.salida.join("\n") }));
+      }
+      vaciar(contenedor, nodos);
+    }
+
+    pintar(estado);
+    if (estado.estado === "listo") avisar(`${s.nombre}: sesión iniciada`, "bien");
+
+    const sondear = async () => {
+      if (!vivo || estado.estado !== "en_curso") return;
+      try {
+        estado = await obtener(`/api/ia/suscripciones/estado?id=${encodeURIComponent(estado.id)}`);
+        if (!vivo) return;
+        pintar(estado);
+        if (estado.estado === "listo") {
+          avisar(`${s.nombre}: sesión iniciada`, "bien");
+          return;
+        }
+        if (estado.estado === "en_curso") temporizador = setTimeout(sondear, 1200);
+      } catch {
+        if (vivo) temporizador = setTimeout(sondear, 2000);
+      }
+    };
+    if (estado.estado === "en_curso") temporizador = setTimeout(sondear, 1000);
+
+    await dialogo({
+      titulo: `Iniciar sesión en ${s.nombre}`,
+      contenido: contenedor,
+      cancelar: "Cerrar",
+      acciones: s.url_claves ? [{ texto: "Abrir página de claves", clase: "pequeno", accion: () => { abrirUrl(s.url_claves); return false; } }] : [],
+    });
+    vivo = false;
+    if (temporizador) clearTimeout(temporizador);
+    if (estado.estado === "en_curso") {
+      enviar("/api/ia/suscripciones/cancelar", { id: estado.id }).catch(() => {});
+    }
+  }
+
   // Suscripciones en este equipo (ADR 0014): la CLI oficial de cada proveedor responde con tu sesión.
   const tarjetaSuscripcion = (s) => h("div", { class: "tarjeta tarjeta-item" },
     h("div", { class: "fila separada" }, h("h3", { texto: s.nombre }),
@@ -59,14 +138,30 @@ export async function vista(params, { recargar }) {
     h("p", { class: "tenue", texto: s.planes }),
     h("div", { class: s.riesgo === "bajo" ? "banda acento" : "banda aviso", style: "display:block" },
       h("strong", { texto: s.riesgo === "bajo" ? "Cómo funciona: " : "Antes de usar tu suscripción: " }), s.aviso),
-    h("p", { class: "tenue", texto: `Inicia sesión en la CLI y elígela en «Creador de sistemas»: ${s.iniciar_sesion}` }),
+    h("p", { class: "tenue", texto: `Comando de sesión: ${s.iniciar_sesion}` }),
     h("div", { class: "acciones" },
-      boton("Copiar comando", async () => { await navigator.clipboard.writeText(s.iniciar_sesion.split("  ")[0]); avisar("Copiado"); }, { clase: "pequeno" })));
+      s.instalada
+        ? boton("Iniciar sesión", () => iniciarSesionCli(s), { clase: "primario pequeno" })
+        : (s.url_instalar ? boton("Instalar CLI", () => abrirUrl(s.url_instalar), { clase: "primario pequeno" }) : null),
+      s.url_claves ? boton("Abrir clave en la web", () => abrirUrl(s.url_claves), { clase: "pequeno" }) : null,
+      boton("Copiar comando", async () => { await navigator.clipboard.writeText(s.iniciar_sesion.split("  ")[0]); avisar("Copiado"); }, { clase: "pequeno fantasma" })));
+
+  const tarjetaWeb = (w) => h("div", { class: "tarjeta tarjeta-item" },
+    h("div", { class: "fila separada" }, h("h3", { texto: w.nombre }),
+      insignia(`riesgo ${w.riesgo}`, w.riesgo === "bajo" ? "bien" : "nota")),
+    h("p", { class: "tenue", texto: w.planes }),
+    h("div", { class: w.riesgo === "bajo" ? "banda acento" : "banda aviso", style: "display:block" },
+      h("strong", { texto: "Cómo funciona: " }), w.aviso),
+    h("div", { class: "acciones" },
+      boton("Abrir clave en la web", () => abrirUrl(w.url_claves), { clase: "primario pequeno" }),
+      subs?.url_cuenta_ia ? boton("Pegar en mi cuenta", () => abrirUrl(subs.url_cuenta_ia), { clase: "pequeno" }) : null));
 
   const seccionSuscripciones = subs ? h("div", { class: "pila" },
     h("h2", { texto: "Tus suscripciones de IA" }),
-    h("p", { class: "tenue", texto: "Usa en el Creador el plan que ya pagas, sin claves: el kit le pide la respuesta a la CLI oficial del proveedor con tu sesión, en una carpeta vacía y sin herramientas. Tus tokens nunca salen de su CLI. Los proveedores recomiendan una clave de API para usar sus modelos desde otras aplicaciones; en cada una te decimos su riesgo. Las suscripciones que se inician en la web (ChatGPT, SuperGrok, planes con clave) se usan aquí con «Solo chat con mi clave o suscripción de la web (cuenta)»." }),
+    h("p", { class: "tenue", texto: "Inicia sesión con un botón en las CLI instaladas en tu equipo, o abre directamente la página web del proveedor para obtener tu clave y pegarla en tu cuenta." }),
     h("div", { class: "rejilla" }, subs.disponibles.map(tarjetaSuscripcion)),
+    subs.web?.length ? h("h3", { texto: "Planes y suscripciones por clave en la web" }) : null,
+    subs.web?.length ? h("div", { class: "rejilla" }, subs.web.map(tarjetaWeb)) : null,
     subs.no_permitidas.map((n) => h("div", { class: "banda aviso", style: "display:block" },
       h("strong", { texto: `${n.nombre}: no disponible. ` }), n.motivo)),
     h("p", { class: "tenue", texto: `Términos revisados el ${subs.revisado}.` })) : null;
