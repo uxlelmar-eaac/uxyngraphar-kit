@@ -69,7 +69,7 @@ Repo (RUTA = raíz de la app; por defecto, el directorio actual):
 Este equipo:
   proyectos [agregar RUTA…|quitar RUTA [--todo] [--si]|buscar RUTA]   proyectos que gestiona el panel
                                              quitar: solo de la lista; con --todo retira además lo que puso uxyngraphar
-  flujos-guardados [guardar NOMBRE --repo RUTA|aplicar ID RUTA…|borrar ID|exportar ID|importar ARCHIVO]   flujos reutilizables
+  flujos-guardados [guardar NOMBRE --repo RUTA|aplicar ID RUTA…|borrar ID|exportar ID|importar ARCHIVO|publicar ID|traer EDITOR/FLUJO]   flujos reutilizables y publicables
   accesos [menu,escritorio,barra|--quitar]   accesos directos al panel (sin argumentos: los disponibles)
   panel [--puerto N] [--no-abrir] [--mantener] [--primer-plano] [--cerrar]   panel del navegador, independiente de la terminal
                                              (se cierra solo sin pestañas abiertas; --cerrar lo cierra)

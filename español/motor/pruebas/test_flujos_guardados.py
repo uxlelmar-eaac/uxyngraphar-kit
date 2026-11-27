@@ -67,5 +67,23 @@ class TestFlujosGuardados(Entorno):
             guardados.borrar("no-existe")
 
 
+class TestNavegacionDelPanel(unittest.TestCase):
+    """Los flujos son un concepto central: deben verse en el menú del panel, no solo como un botón en Inicio."""
+
+    def test_flujos_esta_en_la_navegacion(self):
+        from pathlib import Path
+        web = Path(__file__).resolve().parents[1] / "web"
+        html = (web / "index.html").read_text(encoding="utf-8")
+        self.assertIn('href="#/flujos" data-seccion="flujos" data-icono="flujos">Flujos</a>', html)
+        # El ítem va entre Proyectos y Mercado, visible en el menú principal.
+        self.assertLess(html.index('href="#/proyectos"'), html.index('href="#/flujos"'))
+        self.assertLess(html.index('href="#/flujos"'), html.index('href="#/catalogo"'))
+        app = (web / "js" / "app.js").read_text(encoding="utf-8")
+        self.assertIn('import * as flujos from "./vistas/flujos.js"', app)
+        self.assertIn('flujos: "flujos"', app)
+        self.assertTrue((web / "js" / "vistas" / "flujos.js").is_file())
+        self.assertTrue((web / "flujos.css").is_file())
+
+
 if __name__ == "__main__":
     unittest.main()

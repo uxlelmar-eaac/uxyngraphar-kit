@@ -1,5 +1,5 @@
 // Arranque del panel: navegación por #/sección, latido para que el servidor sepa que hay una pestaña abierta y cierre.
-// Áreas: Inicio · Taller · Proyectos · Mercado · Cuenta (ADR 0015).
+// Áreas: Inicio · Taller · Proyectos · Flujos · Mercado · Cuenta (ADR 0015; Flujos volvió al menú: los sistemas se encadenan solo a través de un flujo).
 
 import { canjearCodigo, VIENE_CON_CODIGO, BIENVENIDA_EN_URL, obtener, enviar, latir, cuandoSeDesconecte, cuandoPierdaSesion, esperarServidor } from "./api.js";
 import { h, vaciar, icono, cargando, avisar, confirmar } from "./ui.js";
@@ -36,7 +36,7 @@ const SECCION_DE = {
   herramienta: "cuenta",
   conexiones: "cuenta",
   logs: "cuenta",
-  flujos: "proyectos",
+  flujos: "flujos",
   cuenta: "cuenta",
 };
 const main = document.getElementById("contenido");

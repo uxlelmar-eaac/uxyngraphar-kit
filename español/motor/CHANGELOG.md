@@ -1,5 +1,10 @@
 # Cambios
 
+## 1.6.7
+
+- **Flujos de nuevo a la vista en el panel**: en 1.5.12, al reordenar el menú (Taller · Proyectos · Mercado · Cuenta), «Flujos guardados» salió de la barra lateral y dejó de verse, aunque las pantallas, la API y el CLI seguían ahí. Los flujos son un concepto central (los sistemas solo se encadenan a través de un flujo), así que **Flujos** vuelve al menú, entre Proyectos y Mercado. La ayuda de `uxyngraphar flujos-guardados` cita también `publicar` y `traer`.
+
+
 ## 1.6.6
 
 - **Inicio de sesión directo con un botón y más suscripciones de IA**:
